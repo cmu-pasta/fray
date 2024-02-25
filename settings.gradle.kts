@@ -5,3 +5,6 @@ rootProject.name = "sfuzz"
 include("jdk")
 include("runtime")
 include("examples")
+include("jvmti")
+include("core")
+include("instrumentation")

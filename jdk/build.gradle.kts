@@ -1,5 +1,8 @@
+import org.gradle.internal.impldep.org.apache.commons.io.output.ByteArrayOutputStream
+
 plugins {
     kotlin("jvm") version "1.9.22"
+    java
 }
 
 repositories {
@@ -8,10 +11,8 @@ repositories {
 
 dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.22")
-    implementation("org.ow2.asm:asm:9.6")
-    implementation("org.ow2.asm:asm-tree:9.6")
     implementation(project(":runtime"))
+    implementation(project(":instrumentation"))
 }
 
 tasks.test {
@@ -22,17 +23,41 @@ kotlin {
 }
 
 tasks.compileJava {
-    options.compilerArgs = listOf("--add-exports", "jdk.jlink/jdk.tools.jlink.plugin=ALL-UNNAMED")
+    options.compilerArgumentProviders.add(CommandLineArgumentProvider {
+        // Provide compiled Kotlin classes to javac – needed for Java/Kotlin mixed sources to work
+        listOf("--patch-module", "cmu.pasta.sfuzz.jdk=${sourceSets["main"].output.asPath}")
+    })
 }
-
 
 tasks.jar {
     manifest {
         attributes(mapOf("Premain-Class" to "cmu.pasta.sfuzz.jdk.agent.AgentKt"))
     }
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from({
-        configurations.runtimeClasspath.get().filter { it.isDirectory }.map { it } +
-                configurations.runtimeClasspath.get().filter { !it.isDirectory }.map { zipTree(it) }
-    })
+
+    dependsOn("copyDependencies")
+}
+
+tasks.register<Copy>("copyDependencies") {
+    from(configurations.runtimeClasspath)
+    into("${layout.buildDirectory.get().asFile}/libs")
+}
+
+
+tasks.register<Exec>("jlink") {
+    var path = "${layout.buildDirectory.get().asFile}/libs"
+    var jdkPath = "${layout.buildDirectory.get().asFile}/jdk"
+    delete(file(jdkPath))
+    var runtimeJar = "$path/${project.name}-$version.jar"
+    val jarDir = file(path)
+
+    val jars = jarDir.listFiles { file -> file.extension == "jar" }
+        ?.joinToString(separator = ":") { it.absolutePath }
+        ?: "No JAR files found."
+    println(listOf("jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars",
+        "-J--add-modules=cmu.pasta.sfuzz.jdk", "-J--class-path=$jars",
+        "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH").joinToString(" "))
+    commandLine(listOf("jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars",
+        "-J--add-modules=cmu.pasta.sfuzz.jdk", "-J--class-path=$jars",
+        "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH", "--sfuzz-instrumentation"))
+    dependsOn(tasks.jar)
 }
