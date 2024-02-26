@@ -36,3 +36,9 @@ We should **strictly** enforce sequential execution. If a new thread is created/
 should wait for them to finish bootstrap and fully stopped before proceeding.
 
 Thread rescheduling can only be called by the current scheduled thread.
+
+
+# Limitations
+
+We can not control which thread to resume when multiple threads are waiting for `object.wait` and 
+one thread calls `object.notify`.

@@ -26,7 +26,7 @@ class ApplicationCodeTransformer: ClassFileTransformer {
         }
 
         var classReader = ClassReader(classfileBuffer)
-        var classWriter = ClassWriter(classReader, 0)
+        var classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_FRAMES)
 
         var cv: ClassVisitor = ObjectNotifyInstrumenter(classWriter)
         classReader.accept(cv, 0)

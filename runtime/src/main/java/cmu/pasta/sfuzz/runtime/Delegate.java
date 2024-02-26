@@ -22,6 +22,9 @@ public class Delegate {
     public void onObjectNotify(Object o) {
     }
 
+    public void onObjectNotifyAll(Object o) {
+    }
+
     public void onObjectNotifyDone(Object o) {
     }
 }

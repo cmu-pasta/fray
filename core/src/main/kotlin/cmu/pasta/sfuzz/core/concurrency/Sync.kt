@@ -2,21 +2,25 @@ package cmu.pasta.sfuzz.core.concurrency
 
 // Simple sync structure to block a thread and wait
 // for signals.
-class Sync(private var checkSignal: Boolean = false): Object() {
-    private var signaled = false
+class Sync(val goal: Int): Object() {
+    private var count = 0
+    @Synchronized
     fun block() {
-        if (checkSignal && signaled) {
-            signaled = false
+        if (count == goal) {
+            count = 0
             return
         }
-        synchronized(this) {
-            this.wait()
-        }
-        signaled = false
+        // We don't need synchronized here because
+        // it is already inside a synchronized method
+        this.wait()
+        // At this point no concurrency.
+        count = 0
     }
+
+    @Synchronized
     fun unblock() {
-        signaled = true
-        synchronized(this) {
+        count += 1
+        if (count == goal) {
             this.notify()
         }
     }

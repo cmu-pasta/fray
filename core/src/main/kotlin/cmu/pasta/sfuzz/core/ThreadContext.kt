@@ -11,7 +11,7 @@ enum class ThreadState {
 }
 class ThreadContext(val thread: Thread) {
     var state = ThreadState.Enabled
-    val sync = Sync(true)
+    val sync = Sync(1)
     fun block() {
         sync.block()
     }

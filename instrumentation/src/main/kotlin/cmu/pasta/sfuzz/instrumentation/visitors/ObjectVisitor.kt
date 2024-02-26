@@ -13,7 +13,8 @@ class ObjectVisitor(cv: ClassVisitor): ClassVisitorBase(cv, Object::class.java.n
         exceptions: Array<out String>?
     ): MethodVisitor {
         var mv = super.visitMethod(access, name, descriptor, signature, exceptions)
-        if (shouldInstrument && name == "wait" && descriptor == "(L)V") {
+        if (shouldInstrument && name == "wait" && descriptor == "(J)V") {
+            println("Instrument wait?!")
             return MethodExitInstrumenter(MethodEnterInstrumenter(mv, Runtime::onObjectWait), Runtime::onObjectWaitDone)
         }
         return mv

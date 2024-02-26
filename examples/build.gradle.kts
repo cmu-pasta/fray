@@ -32,7 +32,7 @@ tasks.register<JavaExec>("runWith") {
     var jdk = project(":jdk")
     classpath = files(tasks.jar)
     executable("${jdk.layout.buildDirectory.get().asFile}/jdk/bin/java")
-    mainClass.set("cmu.pasta.sfuzz.Main")
+    mainClass.set("example.Main")
     jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so")
     jvmArgs("-javaagent:${core.layout.buildDirectory.get().asFile}/libs/${core.name}-${core.version}.jar")
 }

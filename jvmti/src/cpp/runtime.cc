@@ -28,7 +28,9 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved) {
 
   jvmtiEventCallbacks callbacks = {0};
   callbacks.ThreadStart = ThreadStart;
+  callbacks.ThreadEnd = ThreadStop;
   jvmti->SetEventCallbacks(&callbacks, sizeof(callbacks));
   jvmti->SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_THREAD_START, NULL);
+  jvmti->SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_THREAD_END, NULL);
   return 0;
 }
