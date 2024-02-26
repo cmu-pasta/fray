@@ -1,6 +1,8 @@
 package cmu.pasta.sfuzz.cmu.pasta.sfuzz.core
 
 import cmu.pasta.sfuzz.core.concurrency.Sync
+import cmu.pasta.sfuzz.core.concurrency.operations.Operation
+import cmu.pasta.sfuzz.core.concurrency.operations.ThreadStartOperation
 import java.util.concurrent.Semaphore
 
 enum class ThreadState {
@@ -11,6 +13,9 @@ enum class ThreadState {
 }
 class ThreadContext(val thread: Thread) {
     var state = ThreadState.Enabled
+
+    // Pending operation is null if a thread is just resumed/blocked.
+    var pendingOperation: Operation? = ThreadStartOperation()
     val sync = Sync(1)
     fun block() {
         sync.block()

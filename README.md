@@ -1,11 +1,22 @@
 # Runtime
 
-Runtime should be **super** light weight. It should
-not include any dependencies. It should not call any JDK methods.
+Runtime should be **super** light weight. It should not include any dependencies. It should not call any JDK methods.
+It is a delegate between **core** and **instrumentation**.
+
+# Scheduling
+
+It is operations' responsibility to decide whether an operation triggers a reschedule.
 
 # Threads
 
 Each thread should only try to block itself.
+
+We should reschedule a thread **before** a non-local operation. This gives us the opportunity to 
+schedule operations based on the knowledge of their effects.
+
+SFuzz should proactively maintain the state of each thread instead of reactively.
+
+
 
 # Locks
 
@@ -42,3 +53,4 @@ Thread rescheduling can only be called by the current scheduled thread.
 
 We can not control which thread to resume when multiple threads are waiting for `object.wait` and 
 one thread calls `object.notify`.
+

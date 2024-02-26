@@ -7,17 +7,17 @@ import cmu.pasta.sfuzz.runtime.Delegate
 class RuntimeDelegate: Delegate() {
     override fun onThreadStart(t: Thread) {
         if (t is SFuzzThread) return
-        GlobalContext.registerThread(t)
+        GlobalContext.threadStart(t)
     }
 
     override fun onThreadStartDone(t: Thread) {
         if (t is SFuzzThread) return
-        GlobalContext.registerThreadDone(t)
+        GlobalContext.threadStartDone(t)
     }
 
     override fun onThreadRun() {
         if (Thread.currentThread() is SFuzzThread) return
-        GlobalContext.onThreadRun()
+        GlobalContext.threadRun()
     }
 
     override fun onThreadEnd() {

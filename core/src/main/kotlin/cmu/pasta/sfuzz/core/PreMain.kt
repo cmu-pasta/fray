@@ -7,10 +7,10 @@ import java.lang.instrument.Instrumentation
 fun premain(arguments: String?, instrumentation: Instrumentation) {
     println("Premain launched on thread ${Thread.currentThread().threadId()}")
     Runtime.DELEGATE = RuntimeDelegate()
-    GlobalContext.registerThread(Thread.currentThread())
+    GlobalContext.threadStart(Thread.currentThread())
     GlobalContext.synchronizationPoints[Thread.currentThread()]?.unblock()
     GlobalContext.currentThreadId = Thread.currentThread().threadId()
-    GlobalContext.registerThreadDone(Thread.currentThread())
+    GlobalContext.threadStartDone(Thread.currentThread())
 
     // Unblock main thread since Thread.run[main] will be called later
     GlobalContext.registeredThreads[GlobalContext.currentThreadId]?.unblock()
