@@ -31,15 +31,13 @@ public class Runtime {
         DELEGATE.onObjectWait(o);
     }
 
-    public static void onObjectWaitDone(Object o) {
-        DELEGATE.onObjectWaitDone(o);
-    }
 
     public static void onObjectNotify(Object o) {
         DELEGATE.onObjectNotify(o);
     }
 
-    public static void onObjectNotifyDone(Object o) {
-        DELEGATE.onObjectNotifyDone(o);
+    public static void onObjectNotifyAll(Object o) {
+        DELEGATE.onObjectNotifyAll(o);
     }
+
 }

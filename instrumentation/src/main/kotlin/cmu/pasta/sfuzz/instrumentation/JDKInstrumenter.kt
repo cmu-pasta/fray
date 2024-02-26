@@ -1,11 +1,8 @@
 package cmu.pasta.sfuzz.instrumentation
 
-import cmu.pasta.sfuzz.instrumentation.visitors.ClassVisitorBase
-import cmu.pasta.sfuzz.instrumentation.visitors.ObjectNotifyInstrumenter
-import cmu.pasta.sfuzz.instrumentation.visitors.ObjectVisitor
+import cmu.pasta.sfuzz.instrumentation.visitors.ObjectInstrumenter
 import cmu.pasta.sfuzz.instrumentation.visitors.ReentrantLockVisitor
 import cmu.pasta.sfuzz.instrumentation.visitors.ThreadClassVisitor
-import org.objectweb.asm.Attribute
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
@@ -25,8 +22,7 @@ fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
 
     var cv:ClassVisitor = ThreadClassVisitor(classWriter)
     cv = ReentrantLockVisitor(cv)
-    cv = ObjectVisitor(cv)
-    cv = ObjectNotifyInstrumenter(cv)
+    cv = ObjectInstrumenter(cv)
     classReader.accept(cv, 0)
     var out = classWriter.toByteArray()
     File("/tmp/out/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)

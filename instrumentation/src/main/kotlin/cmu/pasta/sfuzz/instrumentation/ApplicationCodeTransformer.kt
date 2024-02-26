@@ -1,6 +1,6 @@
 package cmu.pasta.sfuzz.instrumentation
 
-import cmu.pasta.sfuzz.instrumentation.visitors.ObjectNotifyInstrumenter
+import cmu.pasta.sfuzz.instrumentation.visitors.ObjectInstrumenter
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
@@ -28,7 +28,7 @@ class ApplicationCodeTransformer: ClassFileTransformer {
         var classReader = ClassReader(classfileBuffer)
         var classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_FRAMES)
 
-        var cv: ClassVisitor = ObjectNotifyInstrumenter(classWriter)
+        var cv: ClassVisitor = ObjectInstrumenter(classWriter)
         classReader.accept(cv, 0)
         return classWriter.toByteArray()
     }

@@ -6,7 +6,7 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ASM9
 
-class ObjectNotifyInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
+class ObjectInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
     override fun visitMethod(
         access: Int,
         name: String?,
@@ -22,7 +22,17 @@ class ObjectNotifyInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
                 descriptor: String?,
                 isInterface: Boolean
             ) {
-                if (name == "notify" && descriptor == "()V") {
+                if (name == "wait" && descriptor == "()V") {
+                    super.visitInsn(Opcodes.DUP);
+                    super.visitInsn(Opcodes.DUP);
+                    super.visitInsn(Opcodes.MONITOREXIT)
+                    super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                        Runtime::class.java.name.replace(".", "/"),
+                        Runtime::onObjectNotify.name,
+                        Utils.kFunctionToJvmMethodDescriptor(Runtime::onObjectWait),
+                        false)
+                    super.visitInsn(Opcodes.MONITORENTER)
+                } else if (name == "notify" && descriptor == "()V") {
                     super.visitInsn(Opcodes.DUP);
                     super.visitInsn(Opcodes.DUP);
                     super.visitMethodInsn(Opcodes.INVOKESTATIC,
@@ -30,12 +40,7 @@ class ObjectNotifyInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
                         Runtime::onObjectNotify.name,
                         Utils.kFunctionToJvmMethodDescriptor(Runtime::onObjectNotify),
                         false)
-                    super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
-                    super.visitMethodInsn(Opcodes.INVOKESTATIC,
-                        Runtime::class.java.name.replace(".", "/"),
-                        Runtime::onObjectNotifyDone.name,
-                        Utils.kFunctionToJvmMethodDescriptor(Runtime::onObjectNotifyDone),
-                        false)
+//                    super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
                 } else {
                     super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
                 }

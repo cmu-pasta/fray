@@ -31,12 +31,6 @@ class RuntimeDelegate: Delegate() {
         GlobalContext.objectWait(o)
     }
 
-    override fun onObjectWaitDone(o: Any) {
-        if (o is SFuzzThread) return
-        if (o is Sync) return
-        GlobalContext.objectWaitDone(o)
-    }
-
     override fun onObjectNotify(o: Any) {
         if (o is SFuzzThread) return
         if (o is Sync) return
@@ -49,9 +43,4 @@ class RuntimeDelegate: Delegate() {
         GlobalContext.objectNotifyAll(o)
     }
 
-    override fun onObjectNotifyDone(o: Any) {
-        if (o is SFuzzThread) return
-        if (o is Sync) return
-        GlobalContext.objectNotifyDone(o)
-    }
 }
