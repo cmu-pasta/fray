@@ -28,8 +28,6 @@ class MonitorInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
     ): MethodVisitor {
         if (className.startsWith("jdk/internal/loader/") || className.startsWith("java/util/zip/") ||
             className.startsWith("java/net/URL") || className.startsWith("jdk/internal/ref")) {
-            // Let's skip this class because it does not guard `wait`
-            // https://github.com/openjdk/jdk/blob/jdk-21-ga/src/java.base/share/classes/java/lang/ref/NativeReferenceQueue.java#L48
             return super.visitMethod(access, name, descriptor, signature, exceptions)
         }
 
