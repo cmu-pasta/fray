@@ -1,5 +1,6 @@
 package cmu.pasta.sfuzz.instrumentation
 
+import cmu.pasta.sfuzz.instrumentation.visitors.AtomicOperationClassVisitor
 import cmu.pasta.sfuzz.instrumentation.visitors.MonitorInstrumenter
 import cmu.pasta.sfuzz.instrumentation.visitors.ObjectInstrumenter
 import cmu.pasta.sfuzz.instrumentation.visitors.ThreadClassVisitor
@@ -21,6 +22,7 @@ fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
     var classWriter = ClassWriter(classReader, 0)
 
     var cv:ClassVisitor = ThreadClassVisitor(classWriter)
+    cv = AtomicOperationClassVisitor(cv)
     cv = ObjectInstrumenter(cv)
     // MonitorInstrumenter should come first because ObjectInstrumenter will insert more
     // monitors.
@@ -38,7 +40,6 @@ fun instrumentModuleInfo(inputStream: InputStream, packages: List<String>):ByteA
 
     var attrs = mutableListOf(ModuleTargetAttribute(), ModuleResolutionAttribute(), ModuleHashesAttribute())
     cr.accept(cn, attrs.toTypedArray(), 0)
-
     cn.module.exports.add(ModuleExportNode("cmu/pasta/sfuzz/runtime", 0, null))
     cn.module.packages.addAll(packages)
     var cw = ClassWriter(0)

@@ -45,4 +45,8 @@ public class Runtime {
     public static void onObjectNotifyAll(Object o) {
         DELEGATE.onObjectNotifyAll(o);
     }
+
+    public static void onAtomicOperation(Object o) {
+        DELEGATE.onAtomicOperation(o);
+    }
 }

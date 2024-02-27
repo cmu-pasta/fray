@@ -43,5 +43,9 @@ public class Delegate {
 
     public void onReentrantLockUnlock(Object l) {
     }
+
+    public void onAtomicOperation(Object o) {
+    }
+
 }
 

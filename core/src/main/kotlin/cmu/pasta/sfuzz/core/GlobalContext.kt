@@ -5,10 +5,11 @@ import cmu.pasta.sfuzz.cmu.pasta.sfuzz.core.ThreadState
 import cmu.pasta.sfuzz.core.concurrency.ReentrantLockMonitor
 import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.core.concurrency.Sync
-import cmu.pasta.sfuzz.core.concurrency.operations.*
+import cmu.pasta.sfuzz.core.concurrency.operations.AtomicOperation
+import cmu.pasta.sfuzz.core.concurrency.operations.ObjectWaitOperation
+import cmu.pasta.sfuzz.core.concurrency.operations.ReentrantLockLockOperation
 import cmu.pasta.sfuzz.core.scheduler.FifoScheduler
 import cmu.pasta.sfuzz.core.scheduler.Scheduler
-import java.util.concurrent.locks.ReentrantLock
 
 object GlobalContext {
 
@@ -43,7 +44,6 @@ object GlobalContext {
     }
 
     fun threadCompleted(t: Thread) {
-
         reentrantLockLock(t)
         // Thread.notify is called from JNI, and we don't have
         // instrumentation for it. Therefore, we need to handle
@@ -53,22 +53,33 @@ object GlobalContext {
 
         registeredThreads[t.threadId()]?.state = ThreadState.Completed
 
-        scheduleNextOperation(false)
-        println("Thread completed: ${t.threadId()}")
+        var t = object: SFuzzThread() {
+            override fun run() {
+                while (t.isAlive) {
+                    yield()
+                }
+                scheduleNextOperation(false)
+                println("Thread completed: ${t.threadId()}")
+            }
+        }
+        t.isDaemon = true
+        t.start()
     }
 
     fun objectWait(o: Any) {
-        println("Object wait")
         val t = Thread.currentThread().threadId()
         registeredThreads[t]?.pendingOperation = ObjectWaitOperation()
         scheduleNextOperation(true)
 
+        println("on Object wait")
         // If we resume executing, the Object.wait is executed. We should update the
         // state of current thread.
         registeredThreads[t]?.pendingOperation = null
         registeredThreads[t]?.state = ThreadState.Paused
         // We need to unlock the reentrant lock as well.
-        reentrantLockMonitor.unlock(o)
+        // Unlock and wait is an atomic operation, we should not
+        // reschedule here.
+        reentrantLockUnlock(o)
         if (o !in objectWatcher) {
             objectWatcher[o] = mutableListOf()
         }
@@ -81,9 +92,6 @@ object GlobalContext {
 
     fun objectNotify(o: Any) {
         println("Object notify")
-        registeredThreads[Thread.currentThread().threadId()]?.pendingOperation = ObjectNotifyOperation()
-        scheduleNextOperation(true)
-
         objectWatcher[o]?.let {
             if (it.size > 0) {
                 val t = it.removeFirst()
@@ -93,16 +101,12 @@ object GlobalContext {
                 if (it.size == 0) {
                     objectWatcher.remove(o)
                 }
-                scheduleNextOperation(true)
             }
         }
     }
 
     fun objectNotifyAll(o: Any) {
         println("Object notifyall")
-        registeredThreads[Thread.currentThread().threadId()]?.pendingOperation = ObjectNotifyAllOperation()
-        scheduleNextOperation(true)
-
         objectWatcher[o]?.let {
             if (it.size > 0) {
                 for (t in it) {
@@ -110,7 +114,6 @@ object GlobalContext {
                     registeredThreads[t]?.state = ThreadState.Enabled
                 }
                 objectWatcher.remove(o)
-                scheduleNextOperation(true)
             }
         }
     }
@@ -154,14 +157,23 @@ object GlobalContext {
             // threads hold the same lock.
             scheduleNextOperation(true)
         }
+        if (lock is Thread) {
+            println("Thread ${lock.threadId()} is locked by thread $t!");
+        }
     }
 
     fun reentrantLockUnlock(lock: Any) {
         val t = Thread.currentThread().threadId()
-        registeredThreads[t]?.pendingOperation = ReentrantLockUnlock()
-        scheduleNextOperation(true)
-
         reentrantLockMonitor.unlock(lock)
+        if (lock is Thread) {
+            println("Thread ${lock.threadId()} is unlocked by thread $t!");
+        }
+    }
+
+    fun atomicOperation(op: Any) {
+        val t = Thread.currentThread().threadId()
+        registeredThreads[t]?.pendingOperation = AtomicOperation()
+        scheduleNextOperation(true)
     }
 
 

@@ -8,12 +8,20 @@ class RuntimeDelegate: Delegate() {
 
     var entered = ThreadLocal.withInitial { false }
 
-
     private fun checkEntered(): Boolean {
         if (entered.get()) {
             return true
         }
         entered.set(true)
+        if (Thread.currentThread() is SFuzzThread) {
+            entered.set(false)
+            return true
+        }
+        // We do not process threads created outside of application.
+        if (!GlobalContext.registeredThreads.containsKey(Thread.currentThread().threadId())) {
+            entered.set(false)
+            return true
+        }
         return false
     }
 
@@ -87,4 +95,12 @@ class RuntimeDelegate: Delegate() {
         entered.set(false)
     }
 
+    override fun onAtomicOperation(o: Any) {
+        if (checkEntered()) return
+        GlobalContext.atomicOperation(o)
+        entered.set(false)
+    }
+
+//    override fun onAtomicOperation(l: Any) {
+//    }
 }
