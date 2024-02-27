@@ -5,42 +5,86 @@ import cmu.pasta.sfuzz.core.concurrency.Sync
 import cmu.pasta.sfuzz.runtime.Delegate
 
 class RuntimeDelegate: Delegate() {
+
+    var entered = ThreadLocal.withInitial { false }
+
+
+    private fun checkEntered(): Boolean {
+        if (entered.get()) {
+            return true
+        }
+        entered.set(true)
+        return false
+    }
+
     override fun onThreadStart(t: Thread) {
+        if (checkEntered()) return
         if (t is SFuzzThread) return
         GlobalContext.threadStart(t)
+        entered.set(false)
     }
 
     override fun onThreadStartDone(t: Thread) {
+        if (checkEntered()) return
         if (t is SFuzzThread) return
         GlobalContext.threadStartDone(t)
+        entered.set(false)
     }
 
     override fun onThreadRun() {
+        if (checkEntered()) return
         if (Thread.currentThread() is SFuzzThread) return
         GlobalContext.threadRun()
+        entered.set(false)
     }
 
     override fun onThreadEnd() {
+        if (checkEntered()) return
         if (Thread.currentThread() is SFuzzThread) return
         GlobalContext.threadCompleted(Thread.currentThread())
+        entered.set(false)
     }
 
     override fun onObjectWait(o: Any) {
+        if (checkEntered()) return
         if (o is SFuzzThread) return
         if (o is Sync) return  // Do not propagate if o is Sync
         GlobalContext.objectWait(o)
+        entered.set(false)
     }
 
     override fun onObjectNotify(o: Any) {
+        if (checkEntered()) return
         if (o is SFuzzThread) return
         if (o is Sync) return
         GlobalContext.objectNotify(o)
+        entered.set(false)
     }
 
     override fun onObjectNotifyAll(o: Any) {
+        if (checkEntered()) return
         if (o is SFuzzThread) return
         if (o is Sync) return
         GlobalContext.objectNotifyAll(o)
+        entered.set(false)
+    }
+
+    override fun onReentrantLockLock(l: Any) {
+        if (checkEntered()) return
+        GlobalContext.reentrantLockLock(l)
+        entered.set(false)
+    }
+
+    override fun onReentrantLockTryLock(l: Any) {
+        if (checkEntered()) return
+        GlobalContext.reentrantLockTrylock(l)
+        entered.set(false)
+    }
+
+    override fun onReentrantLockUnlock(l: Any) {
+        if (checkEntered()) return
+        GlobalContext.reentrantLockUnlock(l)
+        entered.set(false)
     }
 
 }

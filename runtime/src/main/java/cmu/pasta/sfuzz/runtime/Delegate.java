@@ -14,18 +14,34 @@ public class Delegate {
     }
 
     public void onObjectWait(Object o) {
-    }
-
-    public void onObjectWaitDone(Object o) {
+        synchronized (o) {
+            try {
+                o.wait();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public void onObjectNotify(Object o) {
+        synchronized (o) {
+            o.notify();
+        }
     }
 
     public void onObjectNotifyAll(Object o) {
+        synchronized (o) {
+            o.notifyAll();
+        }
     }
 
-    public void onObjectNotifyDone(Object o) {
+    public void onReentrantLockTryLock(Object l) {
+    }
+
+    public void onReentrantLockLock(Object l) {
+    }
+
+    public void onReentrantLockUnlock(Object l) {
     }
 }
 

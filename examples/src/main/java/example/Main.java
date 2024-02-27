@@ -10,22 +10,27 @@ public class Main {
         public void run() {
             System.out.println("Hello world!");
             System.out.println("I am blocked!");
-            try {
-                t.blockThread();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+//            try {
+//                t.blockThread();
+//            } catch (InterruptedException e) {
+//                throw new RuntimeException(e);
+//            }
             System.out.println("I am unblocked!");
         }
     }
     public static void main(String[] args) throws InterruptedException {
         T t = new T();
         t.start();
-
         Thread.sleep(1000);
-
-        t.t.unblockThread();
+//        t.t.unblockThread();
         t.join();
+    }
+
+    public static void testSync() throws InterruptedException {
+        Object o = new Object();
+        synchronized (o) {
+            o.wait();
+        }
     }
 
     public static class ThreadBlocker {

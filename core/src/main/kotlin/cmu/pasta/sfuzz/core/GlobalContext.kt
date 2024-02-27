@@ -5,10 +5,7 @@ import cmu.pasta.sfuzz.cmu.pasta.sfuzz.core.ThreadState
 import cmu.pasta.sfuzz.core.concurrency.ReentrantLockMonitor
 import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.core.concurrency.Sync
-import cmu.pasta.sfuzz.core.concurrency.operations.ObjectNotifyAllOperation
-import cmu.pasta.sfuzz.core.concurrency.operations.ObjectNotifyOperation
-import cmu.pasta.sfuzz.core.concurrency.operations.ObjectWaitOperation
-import cmu.pasta.sfuzz.core.concurrency.operations.ReentrantLockLockOperation
+import cmu.pasta.sfuzz.core.concurrency.operations.*
 import cmu.pasta.sfuzz.core.scheduler.FifoScheduler
 import cmu.pasta.sfuzz.core.scheduler.Scheduler
 import java.util.concurrent.locks.ReentrantLock
@@ -46,14 +43,18 @@ object GlobalContext {
     }
 
     fun threadCompleted(t: Thread) {
-        println("Thread completed: ${t.threadId()}")
+
+        reentrantLockLock(t)
         // Thread.notify is called from JNI, and we don't have
         // instrumentation for it. Therefore, we need to handle
         // object notify here.
         objectNotifyAll(t)
-
+        reentrantLockUnlock(t)
 
         registeredThreads[t.threadId()]?.state = ThreadState.Completed
+
+        scheduleNextOperation(false)
+        println("Thread completed: ${t.threadId()}")
     }
 
     fun objectWait(o: Any) {
@@ -66,11 +67,16 @@ object GlobalContext {
         // state of current thread.
         registeredThreads[t]?.pendingOperation = null
         registeredThreads[t]?.state = ThreadState.Paused
+        // We need to unlock the reentrant lock as well.
+        reentrantLockMonitor.unlock(o)
         if (o !in objectWatcher) {
             objectWatcher[o] = mutableListOf()
         }
         objectWatcher[o]!!.add(t)
         scheduleNextOperation(true)
+
+        // We are back! We should block until reentrant monitor is released.
+        reentrantLockLock(o)
     }
 
     fun objectNotify(o: Any) {
@@ -109,8 +115,14 @@ object GlobalContext {
         }
     }
 
-    fun reentrantLockLock(lock: ReentrantLock) {
-        println("Reentrant lock")
+    fun reentrantLockTrylock(lock: Any) {
+        val t = Thread.currentThread().threadId()
+        registeredThreads[t]?.pendingOperation = ReentrantLockLockOperation()
+        scheduleNextOperation(true)
+        reentrantLockMonitor.lock(lock, false)
+    }
+
+    fun reentrantLockLock(lock: Any) {
         val t = Thread.currentThread().threadId()
         registeredThreads[t]?.pendingOperation = ReentrantLockLockOperation()
         scheduleNextOperation(true)
@@ -133,7 +145,7 @@ object GlobalContext {
         *  }
         *  t1.1, t2.1, t1.2, t3.1 will make t2.1 lock again.
         */
-        while (!reentrantLockMonitor.lock(lock)) {
+        while (!reentrantLockMonitor.lock(lock, true)) {
             registeredThreads[t]?.state = ThreadState.Paused
 
             // We want to block current thread because we do
@@ -144,9 +156,12 @@ object GlobalContext {
         }
     }
 
+    fun reentrantLockUnlock(lock: Any) {
+        val t = Thread.currentThread().threadId()
+        registeredThreads[t]?.pendingOperation = ReentrantLockUnlock()
+        scheduleNextOperation(true)
 
-    fun reentrantLockUnlock(lock: ReentrantLock) {
-        // We should pick one
+        reentrantLockMonitor.unlock(lock)
     }
 
 
@@ -156,7 +171,16 @@ object GlobalContext {
         assert(currentThreadId == Thread.currentThread().threadId())
         val currentThread = registeredThreads[currentThreadId]
         val nextThread = scheduler.scheduleNextOperation(registeredThreads.values.toList())
-            ?: throw RuntimeException("Dead lock!")
+
+        if (nextThread == null) {
+            if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
+                println("WOW execution finished")
+                return
+            } else {
+                println("Dead lock!")
+                return
+            }
+        }
         currentThreadId = nextThread.thread.threadId()
         println("New thread scheduled $currentThreadId")
         if (currentThread != nextThread) {

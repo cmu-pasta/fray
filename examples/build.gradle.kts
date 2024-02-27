@@ -19,7 +19,7 @@ tasks.test {
 }
 
 tasks.register<JavaExec>("runExample") {
-    mainClass.set("cmu.pasta.sfuzz.Main")
+    mainClass.set("example.Main")
 }
 
 tasks.compileJava {
@@ -37,4 +37,3 @@ tasks.register<JavaExec>("runWith") {
     jvmArgs("-javaagent:${core.layout.buildDirectory.get().asFile}/libs/${core.name}-${core.version}.jar")
 }
 
-//tasks.ru

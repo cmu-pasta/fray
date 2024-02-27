@@ -4,6 +4,7 @@ package cmu.pasta.sfuzz.core.concurrency
 // for signals.
 class Sync(val goal: Int): Object() {
     private var count = 0
+
     @Synchronized
     fun block() {
         if (count == goal) {
