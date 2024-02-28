@@ -23,6 +23,7 @@ class JlinkPlugin: Plugin {
         return Plugin.Category.TRANSFORMER
     }
     override fun transform(input: ResourcePool, output: ResourcePoolBuilder): ResourcePool {
+        println("Start sfuzz plugin!")
         input.transformAndCopy({entry ->
             var resourcePoolEntry = entry
             if (resourcePoolEntry.type() == ResourcePoolEntry.Type.CLASS_OR_RESOURCE && resourcePoolEntry.path().endsWith("" +
@@ -38,7 +39,6 @@ class JlinkPlugin: Plugin {
                             runtime.getInputStream(re).readAllBytes())
                         output.add(ResourcePoolEntry.create("/java.base/" + re.name, runtime.getInputStream
                             (re).readAllBytes()))
-                        println(re.name)
                         packages.add(re.name.substring(0, re.name.lastIndexOf('/')))
                     }
                     runtime.close()

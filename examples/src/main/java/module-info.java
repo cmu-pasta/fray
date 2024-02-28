@@ -1,0 +1,2 @@
+module sfuzz.examples.main {
+}

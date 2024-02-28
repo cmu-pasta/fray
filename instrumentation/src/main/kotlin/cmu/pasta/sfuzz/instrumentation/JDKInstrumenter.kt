@@ -1,9 +1,6 @@
 package cmu.pasta.sfuzz.instrumentation
 
-import cmu.pasta.sfuzz.instrumentation.visitors.AtomicOperationClassVisitor
-import cmu.pasta.sfuzz.instrumentation.visitors.MonitorInstrumenter
-import cmu.pasta.sfuzz.instrumentation.visitors.ObjectInstrumenter
-import cmu.pasta.sfuzz.instrumentation.visitors.ThreadClassVisitor
+import cmu.pasta.sfuzz.instrumentation.visitors.*
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
@@ -12,6 +9,7 @@ import org.objectweb.asm.commons.ModuleResolutionAttribute
 import org.objectweb.asm.commons.ModuleTargetAttribute
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.ModuleExportNode
+import org.objectweb.asm.tree.ModuleProvideNode
 import java.io.File
 import java.io.InputStream
 
@@ -22,6 +20,7 @@ fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
     var classWriter = ClassWriter(classReader, 0)
 
     var cv:ClassVisitor = ThreadClassVisitor(classWriter)
+    cv = SystemModulesMapInstrumenter(cv)
     cv = AtomicOperationClassVisitor(cv)
     cv = ObjectInstrumenter(cv)
     // MonitorInstrumenter should come first because ObjectInstrumenter will insert more
@@ -44,5 +43,7 @@ fun instrumentModuleInfo(inputStream: InputStream, packages: List<String>):ByteA
     cn.module.packages.addAll(packages)
     var cw = ClassWriter(0)
     cn.accept(cw)
-    return cw.toByteArray()
+    var out = cw.toByteArray()
+    File("/tmp/out/java.base.module-info.class").writeBytes(out)
+    return out
 }
