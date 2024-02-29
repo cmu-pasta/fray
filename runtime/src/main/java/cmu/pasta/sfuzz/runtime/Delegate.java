@@ -47,5 +47,17 @@ public class Delegate {
     public void onAtomicOperation(Object o) {
     }
 
+    public void onFieldRead(Object o, String owner, String name, String descriptor) {
+    }
+
+    public void onFieldWrite(Object o, String owner, String name, String descriptor) {
+    }
+
+    public void onStaticFieldRead(String owner, String name, String descriptor) {
+    }
+
+    public void onStaticFieldWrite(String owner, String name, String descriptor) {
+    }
+
 }
 

@@ -9,7 +9,6 @@ import org.objectweb.asm.commons.ModuleResolutionAttribute
 import org.objectweb.asm.commons.ModuleTargetAttribute
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.ModuleExportNode
-import org.objectweb.asm.tree.ModuleProvideNode
 import java.io.File
 import java.io.InputStream
 
@@ -23,6 +22,8 @@ fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
     cv = SystemModulesMapInstrumenter(cv)
     cv = AtomicOperationClassVisitor(cv)
     cv = ObjectInstrumenter(cv)
+    cv = VolatileFieldsInstrumenter(cv)
+    cv = UnsafeClassVisitor(cv)
     // MonitorInstrumenter should come first because ObjectInstrumenter will insert more
     // monitors.
     cv = MonitorInstrumenter(cv)

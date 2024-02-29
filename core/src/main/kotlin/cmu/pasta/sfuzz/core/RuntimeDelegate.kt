@@ -101,6 +101,24 @@ class RuntimeDelegate: Delegate() {
         entered.set(false)
     }
 
-//    override fun onAtomicOperation(l: Any) {
-//    }
+    override fun onFieldRead(o: Any?, owner: String?, name: String?, descriptor: String?) {
+        if (checkEntered()) return
+        entered.set(false)
+    }
+
+    override fun onFieldWrite(o: Any?, owner: String?, name: String?, descriptor: String?) {
+        if (checkEntered()) return
+        entered.set(false)
+    }
+
+
+    override fun onStaticFieldRead(owner: String?, name: String?, descriptor: String?) {
+        if (checkEntered()) return
+        entered.set(false)
+    }
+
+    override fun onStaticFieldWrite(owner: String?, name: String?, descriptor: String?) {
+        if (checkEntered()) return
+        entered.set(false)
+    }
 }

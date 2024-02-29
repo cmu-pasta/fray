@@ -6,10 +6,12 @@ import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ASM9
 import kotlin.reflect.KFunction
 
-class MethodEnterInstrumenter(mv: MethodVisitor, val method: KFunction<*>): MethodVisitor(ASM9, mv) {
+class MethodEnterInstrumenter(mv: MethodVisitor, val method: KFunction<*>, val loadThis: Boolean = true): MethodVisitor(ASM9, mv) {
     override fun visitCode() {
         super.visitCode()
-        visitVarInsn(Opcodes.ALOAD, 0) // Load this
+        if (loadThis) {
+            visitVarInsn(Opcodes.ALOAD, 0)
+        }
         visitMethodInsn(Opcodes.INVOKESTATIC,
             Runtime::class.java.name.replace(".", "/"), method.name,
             Utils.kFunctionToJvmMethodDescriptor(method), false)

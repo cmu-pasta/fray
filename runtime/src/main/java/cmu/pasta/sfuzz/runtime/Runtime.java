@@ -49,4 +49,24 @@ public class Runtime {
     public static void onAtomicOperation(Object o) {
         DELEGATE.onAtomicOperation(o);
     }
+
+    public static void onUnsafeOperation() {
+    }
+
+    public static void onFieldRead(Object o, String owner, String name, String descriptor) {
+        DELEGATE.onFieldRead(o, owner, name, descriptor);
+    }
+
+    public static void onFieldWrite(Object o, String owner, String name, String descriptor) {
+        DELEGATE.onFieldWrite(o, owner, name, descriptor);
+    }
+
+    public static void onStaticFieldRead(String owner, String name, String descriptor) {
+        DELEGATE.onStaticFieldRead(owner, name, descriptor);
+    }
+
+    public static void onStaticFieldWrite(String owner, String name, String descriptor) {
+        DELEGATE.onStaticFieldWrite(owner, name, descriptor);
+    }
+
 }

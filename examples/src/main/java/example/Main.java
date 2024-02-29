@@ -19,11 +19,23 @@ public class Main {
         }
     }
     public static void main(String[] args) throws InterruptedException {
-        T t = new T();
-        t.start();
-        Thread.sleep(1000);
-//        t.t.unblockThread();
-        t.join();
+        testUninitializedThis();
+//        T t = new T();
+//        t.start();
+//        Thread.sleep(1000);
+////        t.t.unblockThread();
+//        t.join();
+    }
+
+    public static class O {
+        public O() {
+            System.out.println(System.identityHashCode(this));
+        }
+
+    }
+
+    public static void testUninitializedThis() {
+        O o = new O();
     }
 
     public static void testSync() throws InterruptedException {
