@@ -32,7 +32,19 @@ class ObjectInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
             // https://github.com/openjdk/jdk/blob/jdk-21-ga/src/java.base/share/classes/java/lang/ref/NativeReferenceQueue.java#L48
             return super.visitMethod(access, name, descriptor, signature, exceptions)
         }
+        if (className == "org/apache/lucene/index/IndexWriter" && name == "doWait") {
+            println("?")
+        }
         return object: MethodVisitor(ASM9, super.visitMethod(access, name, descriptor, signature, exceptions)) {
+            override fun visitFrame(
+                type: Int,
+                numLocal: Int,
+                local: Array<out Any>?,
+                numStack: Int,
+                stack: Array<out Any>?
+            ) {
+                super.visitFrame(type, numLocal, local, numStack, stack)
+            }
             override fun visitMethodInsn(
                 opcode: Int,
                 owner: String?,
@@ -41,7 +53,6 @@ class ObjectInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
                 isInterface: Boolean
             ) {
                 if (callee == "wait" && (descriptor == "()V" || descriptor == "(J)V" || descriptor == "(JI)V")) {
-                    println("Instrumenting ${className}:${name}:${callee}")
                     // Now we just treat wait(long) and wait(long, int) as wait()
                     if (descriptor == "(J)V") {
                         super.visitInsn(Opcodes.POP2)

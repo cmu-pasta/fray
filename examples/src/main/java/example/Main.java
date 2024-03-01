@@ -9,6 +9,13 @@ public class Main {
         public void run() {
             System.out.println("Hello world!");
             System.out.println("I am blocked!");
+            try {
+                synchronized (this) {
+                    this.wait(10000000);
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
 //            try {
 //                t.blockThread();
 //            } catch (InterruptedException e) {
@@ -21,7 +28,9 @@ public class Main {
 //        testUninitializedThis();
         T t = new T();
         t.start();
-        Thread.sleep(1000);
+        synchronized (t) {
+            t.notify();
+        }
 //        t.t.unblockThread();
         t.join();
     }

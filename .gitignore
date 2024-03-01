@@ -41,3 +41,4 @@ bin/
 ### Mac OS ###
 .DS_Store
 *.log
+scratch

@@ -18,10 +18,11 @@ dependencies {
     implementation("org.ow2.asm:asm:9.6")
     implementation("org.ow2.asm:asm-tree:9.6")
     implementation("org.ow2.asm:asm-commons:9.6")
-    compileOnly(project(":runtime"))
+    implementation(project(":runtime"))
 }
 
 tasks.compileJava {
+    println(sourceSets["main"].output.asPath)
     options.compilerArgumentProviders.add(CommandLineArgumentProvider {
         // Provide compiled Kotlin classes to javac – needed for Java/Kotlin mixed sources to work
         listOf("--patch-module", "cmu.pasta.sfuzz.instrumentation=${sourceSets["main"].output.asPath}")
@@ -45,3 +46,9 @@ tasks.named<ShadowJar>("shadowJar") {
 tasks.test {
     useJUnitPlatform()
 }
+
+
+//javaexec {
+////    mainModule = "cmu.pasta.sfuzz.instrumentation"
+//    jvmArgs = listOf("--patch-module", "cmu.pasta.sfuzz.instrumentation=${sourceSets["main"].output.asPath}")
+//}
