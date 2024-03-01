@@ -12,6 +12,7 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    implementation(project(":core"))
 }
 
 tasks.test {
@@ -27,13 +28,17 @@ tasks.compileJava {
 }
 
 tasks.register<JavaExec>("runWith") {
+    doFirst {
+      println(executable + " " + jvmArgs!!.joinToString(" ") + " -cp " + classpath.getAsPath() + " cmu.pasta.sfuzz.core.MainKt")
+    }
     var jvmti = project(":jvmti")
-    var core = project(":core")
     var jdk = project(":jdk")
-    classpath = files(tasks.jar)
-    executable("${jdk.layout.buildDirectory.get().asFile}/jdk/bin/java")
-    mainClass.set("example.Main")
+    var instrumentation = project(":instrumentation")
+    classpath = sourceSets["main"].runtimeClasspath
+    executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
+    mainClass.set("cmu.pasta.sfuzz.core.MainKt")
+    args = listOf("example.Main", "-o", "${layout.buildDirectory.get().asFile}/report")
     jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so")
-    jvmArgs("-javaagent:${core.layout.buildDirectory.get().asFile}/libs/${core.name}-${core.version}.jar")
+    jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
 }
 

@@ -1,4 +1,7 @@
 package cmu.pasta.sfuzz.core.concurrency.operations
 
-interface Operation {
+import kotlinx.serialization.Serializable
+
+@Serializable
+sealed interface Operation {
 }

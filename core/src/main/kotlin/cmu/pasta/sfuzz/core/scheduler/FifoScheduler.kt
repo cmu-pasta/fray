@@ -5,6 +5,6 @@ import cmu.pasta.sfuzz.cmu.pasta.sfuzz.core.ThreadState
 
 class FifoScheduler: Scheduler {
     override fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext? {
-        return threads.sortedBy { it.thread.threadId() }.firstOrNull { it.state == ThreadState.Enabled }
+        return threads.sortedBy { it.thread.id }.firstOrNull { it.state == ThreadState.Enabled }
     }
 }

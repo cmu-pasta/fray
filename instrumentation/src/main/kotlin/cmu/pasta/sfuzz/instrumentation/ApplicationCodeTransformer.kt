@@ -19,13 +19,16 @@ class ApplicationCodeTransformer: ClassFileTransformer {
         val dotClassName = className.replace('/', '.')
         // Check if the class loader is null (bootstrap class loader)
         // and if the class name starts with known JDK prefixes.
-        if (loader == null && (dotClassName.startsWith("java.") || dotClassName.startsWith("javax.")
-                    || dotClassName.startsWith("jdk.") || dotClassName.startsWith("sun.")
-                    || dotClassName.startsWith("cmu.pasta.sfuzz"))) {
+        if (dotClassName.startsWith("java.")
+                    || dotClassName.startsWith("javax.")
+                    || dotClassName.startsWith("jdk.")
+                    || dotClassName.startsWith("sun.")
+                    || dotClassName.startsWith("kotlin.")
+                    || dotClassName.startsWith("kotlinx.")
+                    || dotClassName.startsWith("cmu.pasta.sfuzz")) {
             // This is likely a JDK class, so skip transformation
-            return super.transform(loader, className, classBeingRedefined, protectionDomain, classfileBuffer)
+            return classfileBuffer
         }
-
         var classReader = ClassReader(classfileBuffer)
         var classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_FRAMES)
 

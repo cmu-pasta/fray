@@ -1,6 +1,10 @@
 package cmu.pasta.sfuzz.runtime;
 
 public class Delegate {
+
+    public void start() {
+    }
+
     public void onThreadStart(Thread t) {
     }
 
@@ -57,6 +61,9 @@ public class Delegate {
     }
 
     public void onStaticFieldWrite(String owner, String name, String descriptor) {
+    }
+
+    public void onUnsafeOperation() {
     }
 
 }

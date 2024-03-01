@@ -16,7 +16,7 @@ import java.io.InputStream
 fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
     var classReader = ClassReader(inputStream)
 //    var classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_FRAMES or ClassWriter.COMPUTE_MAXS)
-    var classWriter = ClassWriter(classReader, 0)
+    var classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
 
     var cv:ClassVisitor = ThreadClassVisitor(classWriter)
     cv = SystemModulesMapInstrumenter(cv)

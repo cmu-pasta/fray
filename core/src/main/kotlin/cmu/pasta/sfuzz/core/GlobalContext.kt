@@ -5,11 +5,16 @@ import cmu.pasta.sfuzz.cmu.pasta.sfuzz.core.ThreadState
 import cmu.pasta.sfuzz.core.concurrency.ReentrantLockMonitor
 import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.core.concurrency.Sync
-import cmu.pasta.sfuzz.core.concurrency.operations.AtomicOperation
+import cmu.pasta.sfuzz.core.concurrency.logger.LoggerBase
+import cmu.pasta.sfuzz.core.concurrency.operations.MemoryOperation
 import cmu.pasta.sfuzz.core.concurrency.operations.ObjectWaitOperation
 import cmu.pasta.sfuzz.core.concurrency.operations.ReentrantLockLockOperation
+import cmu.pasta.sfuzz.core.concurrency.operations.ThreadStartOperation
 import cmu.pasta.sfuzz.core.scheduler.FifoScheduler
 import cmu.pasta.sfuzz.core.scheduler.Scheduler
+import cmu.pasta.sfuzz.instrumentation.memory.MemoryManager
+import cmu.pasta.sfuzz.runtime.Delegate
+import cmu.pasta.sfuzz.runtime.Runtime
 
 object GlobalContext {
 
@@ -18,29 +23,49 @@ object GlobalContext {
     private val scheduler: Scheduler = FifoScheduler()
     private val objectWatcher = mutableMapOf<Any, MutableList<Long>>()
     private val reentrantLockMonitor = ReentrantLockMonitor()
+    private val memoryManager = MemoryManager()
+    private val loggers = mutableListOf<LoggerBase>()
     val synchronizationPoints = mutableMapOf<Any, Sync>()
 
+    fun start() {
+        var t = Thread.currentThread();
+        currentThreadId = t.id
+        registeredThreads[t.id] = ThreadContext(t)
+        loggers.forEach {
+            it.executionStart()
+         }
+        scheduleNextOperation(true)
+    }
+
+    fun done() {
+        Runtime.DELEGATE = Delegate()
+        loggers.forEach {
+            it.executionDone()
+        }
+    }
+
+
+    fun registerLogger(l: LoggerBase) {
+        loggers.add(l)
+    }
+
     fun threadStart(t: Thread) {
-        println("New thread registered ${t.threadId()}")
-        registeredThreads[t.threadId()] = ThreadContext(t)
+        registeredThreads[t.id] = ThreadContext(t)
         synchronizationPoints[t] = Sync(1)
     }
 
     fun threadStartDone(t: Thread) {
-        println("Thread registration done ${t.threadId()}")
         // Wait for the new thread runs.
         synchronizationPoints[t]?.block()
         synchronizationPoints.remove(t)
-//        scheduleNextOperation(true)
     }
 
     fun threadRun() {
         var t = Thread.currentThread()
-        println("Thread run: ${t.threadId()}")
-        registeredThreads[t.threadId()]?.pendingOperation = null
-        registeredThreads[t.threadId()]?.state = ThreadState.Enabled
+        registeredThreads[t.id]?.pendingOperation = ThreadStartOperation()
+        registeredThreads[t.id]?.state = ThreadState.Enabled
         synchronizationPoints[t]?.unblock() // Thread is enabled
-        registeredThreads[t.threadId()]?.block()
+        registeredThreads[t.id]?.block()
     }
 
     fun threadCompleted(t: Thread) {
@@ -50,16 +75,13 @@ object GlobalContext {
         // object notify here.
         objectNotifyAll(t)
         reentrantLockUnlock(t)
-
-        registeredThreads[t.threadId()]?.state = ThreadState.Completed
-
+        registeredThreads[t.id]?.state = ThreadState.Completed
         var t = object: SFuzzThread() {
             override fun run() {
                 while (t.isAlive) {
                     yield()
                 }
                 scheduleNextOperation(false)
-                println("Thread completed: ${t.threadId()}")
             }
         }
         t.isDaemon = true
@@ -67,11 +89,10 @@ object GlobalContext {
     }
 
     fun objectWait(o: Any) {
-        val t = Thread.currentThread().threadId()
+        val t = Thread.currentThread().id
         registeredThreads[t]?.pendingOperation = ObjectWaitOperation()
         scheduleNextOperation(true)
 
-        println("on Object wait")
         // If we resume executing, the Object.wait is executed. We should update the
         // state of current thread.
         registeredThreads[t]?.pendingOperation = null
@@ -91,11 +112,10 @@ object GlobalContext {
     }
 
     fun objectNotify(o: Any) {
-        println("Object notify")
         objectWatcher[o]?.let {
             if (it.size > 0) {
                 val t = it.removeFirst()
-                registeredThreads[t]?.pendingOperation = null
+                registeredThreads[t]?.pendingOperation = ThreadStartOperation()
                 registeredThreads[t]?.state = ThreadState.Enabled
                 it.remove(t)
                 if (it.size == 0) {
@@ -106,11 +126,10 @@ object GlobalContext {
     }
 
     fun objectNotifyAll(o: Any) {
-        println("Object notifyall")
         objectWatcher[o]?.let {
             if (it.size > 0) {
                 for (t in it) {
-                    registeredThreads[t]?.pendingOperation = null
+                    registeredThreads[t]?.pendingOperation = ThreadStartOperation()
                     registeredThreads[t]?.state = ThreadState.Enabled
                 }
                 objectWatcher.remove(o)
@@ -119,14 +138,14 @@ object GlobalContext {
     }
 
     fun reentrantLockTrylock(lock: Any) {
-        val t = Thread.currentThread().threadId()
+        val t = Thread.currentThread().id
         registeredThreads[t]?.pendingOperation = ReentrantLockLockOperation()
         scheduleNextOperation(true)
         reentrantLockMonitor.lock(lock, false)
     }
 
     fun reentrantLockLock(lock: Any) {
-        val t = Thread.currentThread().threadId()
+        val t = Thread.currentThread().id
         registeredThreads[t]?.pendingOperation = ReentrantLockLockOperation()
         scheduleNextOperation(true)
 
@@ -158,21 +177,22 @@ object GlobalContext {
             scheduleNextOperation(true)
         }
         if (lock is Thread) {
-            println("Thread ${lock.threadId()} is locked by thread $t!");
         }
     }
 
     fun reentrantLockUnlock(lock: Any) {
-        val t = Thread.currentThread().threadId()
+        val t = Thread.currentThread().id
         reentrantLockMonitor.unlock(lock)
-        if (lock is Thread) {
-            println("Thread ${lock.threadId()} is unlocked by thread $t!");
-        }
     }
 
-    fun atomicOperation(op: Any) {
-        val t = Thread.currentThread().threadId()
-        registeredThreads[t]?.pendingOperation = AtomicOperation()
+    fun fieldOperation(owner: String, name: String, descriptor: String) {
+        if (!memoryManager.isVolatile(owner, name)) return
+        memoryOperation(null, MemoryOperation.Type.FIELD)
+    }
+
+    fun memoryOperation(op: Any?, type: MemoryOperation.Type) {
+        val t = Thread.currentThread().id
+        registeredThreads[t]?.pendingOperation = MemoryOperation(type)
         scheduleNextOperation(true)
     }
 
@@ -180,21 +200,24 @@ object GlobalContext {
     fun scheduleNextOperation(shouldBlockCurrentThread: Boolean) {
         // Our current design makes sure that reschedule is only called
         // by scheduled thread.
-        assert(currentThreadId == Thread.currentThread().threadId())
+        assert(currentThreadId == Thread.currentThread().id)
         val currentThread = registeredThreads[currentThreadId]
         val nextThread = scheduler.scheduleNextOperation(registeredThreads.values.toList())
-
-        if (nextThread == null) {
-            if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
+            ?: if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
                 println("WOW execution finished")
+
+                // We are done here, we should go back to the
+                //
                 return
             } else {
                 println("Dead lock!")
                 return
             }
+        currentThreadId = nextThread.thread.id
+        loggers.forEach {
+            it.newOperationScheduled(registeredThreads[currentThreadId]!!.pendingOperation!!)
         }
-        currentThreadId = nextThread.thread.threadId()
-        println("New thread scheduled $currentThreadId")
+        registeredThreads[currentThreadId]!!.pendingOperation = null
         if (currentThread != nextThread) {
             nextThread.unblock()
             if (shouldBlockCurrentThread) {

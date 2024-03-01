@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    kotlin("plugin.serialization") version "1.9.22"
 }
 
 repositories {
@@ -8,20 +9,12 @@ repositories {
 
 dependencies {
     compileOnly(project(":runtime"))
-    implementation(project(":instrumentation"))
+    compileOnly(project(":instrumentation"))
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.6")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 }
 
 tasks.test {
     useJUnitPlatform()
-}
-kotlin {
-    jvmToolchain(21)
-}
-tasks.jar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    manifest {
-        attributes(mapOf("Premain-Class" to "cmu.pasta.sfuzz.core.PreMainKt"))
-    }
-    from(configurations.runtimeClasspath.get().map({ if (it.isDirectory) it else zipTree(it) }))
 }

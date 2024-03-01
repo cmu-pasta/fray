@@ -51,6 +51,7 @@ public class Runtime {
     }
 
     public static void onUnsafeOperation() {
+        DELEGATE.onUnsafeOperation();
     }
 
     public static void onFieldRead(Object o, String owner, String name, String descriptor) {

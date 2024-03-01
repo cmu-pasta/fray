@@ -1,7 +1,6 @@
 package example;
 
 import java.sql.Time;
-import jdk.internal.misc.Blocker;
 
 public class Main {
     public static class T extends Thread {
@@ -19,12 +18,12 @@ public class Main {
         }
     }
     public static void main(String[] args) throws InterruptedException {
-        testUninitializedThis();
-//        T t = new T();
-//        t.start();
-//        Thread.sleep(1000);
-////        t.t.unblockThread();
-//        t.join();
+//        testUninitializedThis();
+        T t = new T();
+        t.start();
+        Thread.sleep(1000);
+//        t.t.unblockThread();
+        t.join();
     }
 
     public static class O {

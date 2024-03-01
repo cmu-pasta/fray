@@ -2,6 +2,7 @@ package cmu.pasta.sfuzz.core
 
 import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.core.concurrency.Sync
+import cmu.pasta.sfuzz.core.concurrency.operations.MemoryOperation
 import cmu.pasta.sfuzz.runtime.Delegate
 
 class RuntimeDelegate: Delegate() {
@@ -18,13 +19,18 @@ class RuntimeDelegate: Delegate() {
             return true
         }
         // We do not process threads created outside of application.
-        if (!GlobalContext.registeredThreads.containsKey(Thread.currentThread().threadId())) {
+        if (!GlobalContext.registeredThreads.containsKey(Thread.currentThread().id)) {
             entered.set(false)
             return true
         }
         return false
     }
 
+    override fun start() {
+        if (checkEntered()) return
+        GlobalContext.start()
+        entered.set(false)
+    }
     override fun onThreadStart(t: Thread) {
         if (checkEntered()) return
         if (t is SFuzzThread) return
@@ -97,28 +103,38 @@ class RuntimeDelegate: Delegate() {
 
     override fun onAtomicOperation(o: Any) {
         if (checkEntered()) return
-        GlobalContext.atomicOperation(o)
+        GlobalContext.memoryOperation(null, MemoryOperation.Type.ATOMIC)
         entered.set(false)
     }
 
-    override fun onFieldRead(o: Any?, owner: String?, name: String?, descriptor: String?) {
+    override fun onUnsafeOperation() {
         if (checkEntered()) return
+        GlobalContext.memoryOperation(null, MemoryOperation.Type.UNSAFE)
         entered.set(false)
     }
 
-    override fun onFieldWrite(o: Any?, owner: String?, name: String?, descriptor: String?) {
+    override fun onFieldRead(o: Any, owner: String, name: String, descriptor: String) {
         if (checkEntered()) return
+        GlobalContext.fieldOperation(owner, name, descriptor)
+        entered.set(false)
+    }
+
+    override fun onFieldWrite(o: Any, owner: String, name: String, descriptor: String) {
+        if (checkEntered()) return
+        GlobalContext.fieldOperation(owner, name, descriptor)
         entered.set(false)
     }
 
 
-    override fun onStaticFieldRead(owner: String?, name: String?, descriptor: String?) {
+    override fun onStaticFieldRead(owner: String, name: String, descriptor: String) {
         if (checkEntered()) return
+        GlobalContext.fieldOperation(owner, name, descriptor)
         entered.set(false)
     }
 
-    override fun onStaticFieldWrite(owner: String?, name: String?, descriptor: String?) {
+    override fun onStaticFieldWrite(owner: String, name: String, descriptor: String) {
         if (checkEntered()) return
+        GlobalContext.fieldOperation(owner, name, descriptor)
         entered.set(false)
     }
 }

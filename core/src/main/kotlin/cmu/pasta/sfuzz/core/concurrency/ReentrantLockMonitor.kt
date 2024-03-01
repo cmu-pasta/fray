@@ -2,7 +2,6 @@ package cmu.pasta.sfuzz.core.concurrency
 
 import cmu.pasta.sfuzz.cmu.pasta.sfuzz.core.ThreadState
 import cmu.pasta.sfuzz.core.GlobalContext
-import java.util.concurrent.locks.ReentrantLock
 
 class ReentrantLockMonitor {
     val lockHolders = mutableMapOf<Int, Long>()
@@ -14,14 +13,14 @@ class ReentrantLockMonitor {
     fun lock(lock: Any, shouldBlock: Boolean): Boolean {
         val t = Thread.currentThread()
         val id = System.identityHashCode(lock)
-        if (!lockHolders.contains(id) || lockHolders[id] == t.threadId()) {
-            lockHolders[id] = t.threadId()
+        if (!lockHolders.contains(id) || lockHolders[id] == t.id) {
+            lockHolders[id] = t.id
             return true
         } else if (shouldBlock) {
             if (!lockWaiters.contains(id)) {
                 lockWaiters[id] = mutableListOf()
             }
-            lockWaiters[id]?.add(t.threadId())
+            lockWaiters[id]?.add(t.id)
         }
         return false
     }
@@ -32,14 +31,14 @@ class ReentrantLockMonitor {
     fun tryLock(lock: Any) {
         val t = Thread.currentThread()
         val id = System.identityHashCode(lock)
-        if (!lockHolders.contains(id) || lockHolders[id] == t.threadId()) {
-            lockHolders[id] = t.threadId()
+        if (!lockHolders.contains(id) || lockHolders[id] == t.id) {
+            lockHolders[id] = t.id
         }
     }
 
     fun unlock(lock: Any) {
         val id = System.identityHashCode(lock)
-        assert(lockHolders[id] == Thread.currentThread().threadId())
+        assert(lockHolders[id] == Thread.currentThread().id)
         lockHolders.remove(id)
         lockWaiters[id]?.let {
             if (it.size > 0) {
