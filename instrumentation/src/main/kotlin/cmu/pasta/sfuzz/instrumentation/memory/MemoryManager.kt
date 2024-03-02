@@ -4,7 +4,7 @@ import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 
 class MemoryManager {
-    val volatileFields = HashMap<String, Boolean>()
+    private val volatileFields = HashMap<String, Boolean>()
 
     fun isVolatile(name: String, fieldName: String): Boolean {
         val key = "$name:$fieldName"

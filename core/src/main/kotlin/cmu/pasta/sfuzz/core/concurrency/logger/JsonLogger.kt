@@ -20,6 +20,6 @@ class JsonLogger(val base: String): LoggerBase {
     }
 
     fun dump() {
-        File(base + "/report.json").writeText(json.encodeToString(executions))
+        File("$base/timeline.json").writeText(json.encodeToString(executions))
     }
 }

@@ -10,12 +10,10 @@ void CallRuntimeMethod(const char* method, JNIEnv_ *jni_env) {
 }
 
 void JNICALL ThreadStart(jvmtiEnv *jvmti_env, JNIEnv *jni_env, jthread thread) {
-    std::cout << "Thread run" << std::endl;
     CallRuntimeMethod("onThreadRun", jni_env);
 }
 
 void JNICALL ThreadStop(jvmtiEnv *jvmti_env, JNIEnv *jni_env, jthread thread) {
-    std::cout << "Thread end" << std::endl;
     CallRuntimeMethod("onThreadEnd", jni_env);
 }
 

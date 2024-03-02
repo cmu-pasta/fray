@@ -76,27 +76,27 @@ object GlobalContext {
         objectNotifyAll(t)
         reentrantLockUnlock(t)
         registeredThreads[t.id]?.state = ThreadState.Completed
-        var t = object: SFuzzThread() {
+        var daemon = object: SFuzzThread() {
             override fun run() {
-                while (t.isAlive) {
+                while (t.isAlive()) {
                     yield()
                 }
                 scheduleNextOperation(false)
             }
         }
-        t.isDaemon = true
-        t.start()
+        daemon.isDaemon = true
+        daemon.start()
     }
 
     fun objectWait(o: Any) {
         val t = Thread.currentThread().id
         registeredThreads[t]?.pendingOperation = ObjectWaitOperation()
         scheduleNextOperation(true)
-
         // If we resume executing, the Object.wait is executed. We should update the
         // state of current thread.
         registeredThreads[t]?.pendingOperation = null
         registeredThreads[t]?.state = ThreadState.Paused
+
         // We need to unlock the reentrant lock as well.
         // Unlock and wait is an atomic operation, we should not
         // reschedule here.
@@ -204,13 +204,11 @@ object GlobalContext {
         val currentThread = registeredThreads[currentThreadId]
         val nextThread = scheduler.scheduleNextOperation(registeredThreads.values.toList())
             ?: if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
-                println("WOW execution finished")
 
                 // We are done here, we should go back to the
                 //
                 return
             } else {
-                println("Dead lock!")
                 return
             }
         currentThreadId = nextThread.thread.id

@@ -1,7 +1,7 @@
 package cmu.pasta.sfuzz.core
 
-import cmu.pasta.sfuzz.core.concurrency.logger.JsonLogger
 import cmu.pasta.sfuzz.runtime.Runtime
+import cmu.pasta.sfuzz.core.concurrency.logger.JsonLogger
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
@@ -11,6 +11,8 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
 
 fun runProgram(className: String, reportPath: String, targetArgs: String) {
+    println("Start analysing $className:main")
+    println("Report is available at: $reportPath")
     prepareReportPath(reportPath)
     val clazz = Class.forName(className)
     val m = clazz.getMethod("main", Array<String>::class.java)
@@ -22,6 +24,7 @@ fun runProgram(className: String, reportPath: String, targetArgs: String) {
     m.invoke(null, targetArgs.split(" ").toTypedArray())
     GlobalContext.done()
     logger.dump()
+    println("Analysis done!")
 }
 
 @OptIn(ExperimentalPathApi::class)

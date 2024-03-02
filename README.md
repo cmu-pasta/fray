@@ -51,6 +51,5 @@ Thread rescheduling can only be called by the current scheduled thread.
 
 # Limitations
 
-We can not control which thread to resume when multiple threads are waiting for `object.wait` and 
-one thread calls `object.notify`.
+- We cannot remove monitors in JDK, but we can for applications.
 

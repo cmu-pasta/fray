@@ -1,13 +1,12 @@
 package cmu.pasta.sfuzz.instrumentation
 
-import cmu.pasta.sfuzz.instrumentation.visitors.AtomicOperationClassVisitor
 import cmu.pasta.sfuzz.instrumentation.visitors.MonitorInstrumenter
 import cmu.pasta.sfuzz.instrumentation.visitors.ObjectInstrumenter
 import cmu.pasta.sfuzz.instrumentation.visitors.VolatileFieldsInstrumenter
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.tree.ClassNode
+import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.security.ProtectionDomain
 
@@ -36,18 +35,13 @@ class ApplicationCodeTransformer: ClassFileTransformer {
         var classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
 
 
-        if (dotClassName == "org.apache.lucene.index.IndexWriter") {
-            println("Instrument class: $dotClassName")
-        }
-
         var cv: ClassVisitor = ObjectInstrumenter(classWriter)
         cv = VolatileFieldsInstrumenter(cv)
-        cv = MonitorInstrumenter(cv)
+        cv = MonitorInstrumenter(cv, false)
         classReader.accept(cv, 0)
 
-        // We want to write to bytes after all instrumentation is done.
-        // This prevents the class writer to load other classes
-        // during instrumentation.
-        return classWriter.toByteArray()
+        val out = classWriter.toByteArray()
+        File("/tmp/out/${className.replace("/", ".").removePrefix(".")}.class").writeBytes(out)
+        return out
     }
 }

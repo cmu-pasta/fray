@@ -11,6 +11,7 @@ import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.ModuleExportNode
 import java.io.File
 import java.io.InputStream
+import java.util.concurrent.locks.ReentrantLock
 
 
 fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
@@ -19,14 +20,15 @@ fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
     var classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
 
     var cv:ClassVisitor = ThreadClassVisitor(classWriter)
+    cv = ReentrantLockInstrumenter(cv)
     cv = SystemModulesMapInstrumenter(cv)
-    cv = AtomicOperationClassVisitor(cv)
+    cv = AtomicOperationInstrumenter(cv)
     cv = ObjectInstrumenter(cv)
     cv = VolatileFieldsInstrumenter(cv)
     cv = UnsafeClassVisitor(cv)
     // MonitorInstrumenter should come first because ObjectInstrumenter will insert more
     // monitors.
-    cv = MonitorInstrumenter(cv)
+    cv = MonitorInstrumenter(cv, true)
     classReader.accept(cv, 0)
     var out = classWriter.toByteArray()
     File("/tmp/out/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)

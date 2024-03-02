@@ -2,12 +2,10 @@ package cmu.pasta.sfuzz.instrumentation.visitors
 
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes
-import org.objectweb.asm.Opcodes.ASM9
 import java.util.concurrent.locks.ReentrantLock
 import cmu.pasta.sfuzz.runtime.Runtime
 
-class ReentrantLockVisitor(cv:ClassVisitor): ClassVisitorBase(cv, ReentrantLock::class.java.name) {
+class ReentrantLockInstrumenter(cv:ClassVisitor): ClassVisitorBase(cv, ReentrantLock::class.java.name) {
     override fun visitMethod(
         access: Int,
         name: String?,

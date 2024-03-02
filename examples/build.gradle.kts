@@ -20,7 +20,10 @@ tasks.test {
 }
 
 tasks.register<JavaExec>("runExample") {
+    var jdk = project(":jdk")
+    classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("example.Main")
+    executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
 }
 
 tasks.compileJava {

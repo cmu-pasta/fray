@@ -2,25 +2,29 @@ package example;
 
 import java.sql.Time;
 
+import cmu.pasta.sfuzz.cmu.pasta.sfuzz.core.ThreadState;
+import cmu.pasta.sfuzz.core.GlobalContext;
+import cmu.pasta.sfuzz.core.concurrency.operations.ThreadStartOperation;
+
 public class Main {
     public static class T extends Thread {
+        public boolean blocked = false;
         public ThreadBlocker t = new ThreadBlocker();
+        public synchronized void unblock() throws InterruptedException {
+            blocked = false;
+            this.notify();
+        }
+        public static synchronized void test2() {
+            System.out.println(T.class.getName());
+        }
         @Override
         public void run() {
-            System.out.println("Hello world!");
-            System.out.println("I am blocked!");
             try {
-                synchronized (this) {
-                    this.wait(10000000);
-                }
-            } catch (InterruptedException e) {
+                unblock();
+            } catch (Exception e) {
+                e.printStackTrace();
                 throw new RuntimeException(e);
             }
-//            try {
-//                t.blockThread();
-//            } catch (InterruptedException e) {
-//                throw new RuntimeException(e);
-//            }
             System.out.println("I am unblocked!");
         }
     }
@@ -28,12 +32,27 @@ public class Main {
 //        testUninitializedThis();
         T t = new T();
         t.start();
+
         synchronized (t) {
-            t.notify();
+            t.blocked = true;
+            while (t.blocked) {
+                t.wait();
+            }
         }
 //        t.t.unblockThread();
         t.join();
+        System.out.println(t.isAlive());
     }
+
+    public static void testThread() {
+        Thread t1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+            }
+        });
+        t1.start();
+    }
+
 
     public static class O {
         public O() {

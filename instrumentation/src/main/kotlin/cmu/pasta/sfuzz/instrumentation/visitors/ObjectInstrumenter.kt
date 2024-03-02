@@ -32,9 +32,6 @@ class ObjectInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
             // https://github.com/openjdk/jdk/blob/jdk-21-ga/src/java.base/share/classes/java/lang/ref/NativeReferenceQueue.java#L48
             return super.visitMethod(access, name, descriptor, signature, exceptions)
         }
-        if (className == "org/apache/lucene/index/IndexWriter" && name == "doWait") {
-            println("?")
-        }
         return object: MethodVisitor(ASM9, super.visitMethod(access, name, descriptor, signature, exceptions)) {
             override fun visitFrame(
                 type: Int,
@@ -61,24 +58,26 @@ class ObjectInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
                         super.visitInsn(Opcodes.POP)
                         super.visitInsn(Opcodes.POP2)
                     }
-                    super.visitInsn(Opcodes.DUP);
-                    super.visitInsn(Opcodes.DUP);
-                    super.visitInsn(Opcodes.MONITOREXIT)
+                    if (className == "java/lang/Thread") {
+                        super.visitInsn(Opcodes.DUP);
+                        super.visitInsn(Opcodes.DUP);
+                        super.visitInsn(Opcodes.MONITOREXIT)
+                    }
                     super.visitMethodInsn(Opcodes.INVOKESTATIC,
                         Runtime::class.java.name.replace(".", "/"),
                         Runtime::onObjectWait.name,
                         Utils.kFunctionToJvmMethodDescriptor(Runtime::onObjectWait),
                         false)
-                    super.visitInsn(Opcodes.MONITORENTER)
+                    if (className == "java/lang/Thread") {
+                        super.visitInsn(Opcodes.MONITORENTER)
+                    }
                 } else if (callee == "notify" && descriptor == "()V") {
-                    println("Instrumenting ${className}:${name}:${callee}")
                     super.visitMethodInsn(Opcodes.INVOKESTATIC,
                         Runtime::class.java.name.replace(".", "/"),
                         Runtime::onObjectNotify.name,
                         Utils.kFunctionToJvmMethodDescriptor(Runtime::onObjectNotify),
                         false)
                 } else if (callee == "notifyAll" && descriptor == "()V") {
-                    println("Instrumenting ${className}:${name}:${callee}")
                     super.visitMethodInsn(Opcodes.INVOKESTATIC,
                         Runtime::class.java.name.replace(".", "/"),
                         Runtime::onObjectNotifyAll.name,

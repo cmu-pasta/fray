@@ -5,11 +5,10 @@ import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes.ACC_PUBLIC
-import java.lang.invoke.VarHandle
 import java.util.*
 import java.util.concurrent.atomic.*
 
-class AtomicOperationClassVisitor(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
+class AtomicOperationInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
     var className = ""
 
     override fun visit(
