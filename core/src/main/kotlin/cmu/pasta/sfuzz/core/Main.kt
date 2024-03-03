@@ -2,10 +2,12 @@ package cmu.pasta.sfuzz.core
 
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.core.concurrency.logger.JsonLogger
+import cmu.pasta.sfuzz.instrumentation.visitors.TargetExitInstrumenter
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
+import java.lang.reflect.InvocationTargetException
 import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
@@ -25,12 +27,13 @@ fun runProgram(className: String, reportPath: String, targetArgs: String) {
 
     try {
         m.invoke(null, targetArgs.split(" ").toTypedArray())
-    } catch (e: TargetTerminateException) {
-        println("target terminated: ${e.status}")
-    } catch (e: Throwable) {
-        e.printStackTrace()
+    } catch (e: InvocationTargetException) {
+        if (e.cause is TargetTerminateException) {
+            println("target terminated: ${(e.cause as TargetTerminateException).status}")
+        } else {
+            e.cause?.printStackTrace()
+        }
     }
-
     GlobalContext.done()
     logger.dump()
     println("Analysis done!")

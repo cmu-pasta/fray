@@ -42,6 +42,7 @@ public class Main {
 //        t.t.unblockThread();
         t.join();
         System.out.println(t.isAlive());
+        System.exit(0);
     }
 
     public static void testThread() {

@@ -6,6 +6,7 @@ import cmu.pasta.sfuzz.core.concurrency.Sync
 import cmu.pasta.sfuzz.core.concurrency.operations.MemoryOperation
 import cmu.pasta.sfuzz.core.concurrency.operations.ThreadStartOperation
 import cmu.pasta.sfuzz.runtime.Delegate
+import cmu.pasta.sfuzz.runtime.TargetTerminateException
 
 class RuntimeDelegate: Delegate() {
 
@@ -138,5 +139,9 @@ class RuntimeDelegate: Delegate() {
         if (checkEntered()) return
         GlobalContext.fieldOperation(owner, name, descriptor)
         entered.set(false)
+    }
+
+    override fun onExit(status: Int) {
+        throw TargetTerminateException(status)
     }
 }

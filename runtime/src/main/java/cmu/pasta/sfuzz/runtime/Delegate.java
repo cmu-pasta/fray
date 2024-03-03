@@ -66,5 +66,9 @@ public class Delegate {
     public void onUnsafeOperation() {
     }
 
+    public void onExit(int status) {
+        java.lang.Runtime.getRuntime().exit(0);
+    }
+
 }
 

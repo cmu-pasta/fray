@@ -70,4 +70,8 @@ public class Runtime {
         DELEGATE.onStaticFieldWrite(owner, name, descriptor);
     }
 
+    public static void onExit(int code) {
+        DELEGATE.onExit(code);
+    }
+
 }

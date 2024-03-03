@@ -1,14 +1,14 @@
 package cmu.pasta.sfuzz.instrumentation.visitors
 
-import cmu.pasta.sfuzz.runtime.TargetTerminateException
+import cmu.pasta.sfuzz.runtime.Runtime
 import org.objectweb.asm.ClassVisitor
-import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ASM9
+import org.objectweb.asm.Opcodes.POP
 import org.objectweb.asm.tree.MethodNode
 
-class TargetExitInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv, System::class.java.name) {
+class TargetExitInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
     override fun visitMethod(
         access: Int,
         name: String?,
@@ -16,18 +16,24 @@ class TargetExitInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv, System::cla
         signature: String?,
         exceptions: Array<out String>?
     ): MethodVisitor {
-        val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
-        if (name == "exit") {
-            mv.visitCode()
-            mv.visitTypeInsn(Opcodes.NEW, TargetTerminateException::class.java.name.replace(".", "/"))
-            mv.visitInsn(Opcodes.DUP)
-            mv.visitLdcInsn(1)
-            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, TargetTerminateException::class.java.name.replace(".", "/"),
-                "<init>", "(I)V", false)
-            mv.visitInsn(Opcodes.ATHROW)
-            return MethodNode()
-        } else {
-            return mv
+        var mv = super.visitMethod(access, name, descriptor, signature, exceptions)
+        return object: MethodVisitor(ASM9, mv) {
+            override fun visitMethodInsn(
+                opcode: Int,
+                owner: String,
+                name: String,
+                descriptor: String?,
+                isInterface: Boolean
+            ) {
+                if (owner == System::class.java.name.replace(".", "/") && name == "exit") {
+                    super.visitMethodInsn(Opcodes.INVOKESTATIC, Runtime::class.java.name.replace(".", "/"),
+                        Runtime::onExit.name,
+                        Utils.kFunctionToJvmMethodDescriptor(Runtime::onExit),
+                        false)
+                } else {
+                    super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
+                }
+            }
         }
     }
 }

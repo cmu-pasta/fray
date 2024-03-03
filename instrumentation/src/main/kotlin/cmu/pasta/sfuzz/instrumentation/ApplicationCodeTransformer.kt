@@ -38,6 +38,7 @@ class ApplicationCodeTransformer: ClassFileTransformer {
 
         try {
             var cv: ClassVisitor = ObjectInstrumenter(classWriter)
+            cv = TargetExitInstrumenter(cv)
             cv = VolatileFieldsInstrumenter(cv)
             cv = MonitorInstrumenter(cv, false)
             classReader.accept(cv, 0)

@@ -34,7 +34,6 @@ object GlobalContext {
         loggers.forEach {
             it.executionStart()
          }
-        scheduleNextOperation(true)
     }
 
     fun done() {

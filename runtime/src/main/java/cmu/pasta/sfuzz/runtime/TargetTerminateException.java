@@ -11,8 +11,4 @@ public class TargetTerminateException extends RuntimeException {
         return status;
     }
 
-    @Override
-    public void printStackTrace() {
-        super.printStackTrace();
-    }
 }
