@@ -14,14 +14,15 @@ class ReentrantLockInstrumenter(cv:ClassVisitor): ClassVisitorBase(cv, Reentrant
         exceptions: Array<out String>?
     ): MethodVisitor {
         var mv = super.visitMethod(access, name, descriptor, signature, exceptions)
-
         if (!shouldInstrument) return mv
-
         if (name == "tryLock") {
-            return MethodEnterInstrumenter(mv, Runtime::onReentrantLockTryLock)
+            return MethodEnterVisitor(mv, Runtime::onReentrantLockTryLock)
         }
         if (name == "lock" || name == " lockInterruptibly") {
-            return MethodEnterInstrumenter(mv, Runtime::onReentrantLockLock)
+            return MethodEnterVisitor(mv, Runtime::onReentrantLockLock)
+        }
+        if (name == "unlock") {
+            return MethodEnterVisitor(mv, Runtime::onReentrantLockUnlock)
         }
         return mv
     }

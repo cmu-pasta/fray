@@ -176,8 +176,6 @@ object GlobalContext {
             // threads hold the same lock.
             scheduleNextOperation(true)
         }
-        if (lock is Thread) {
-        }
     }
 
     fun reentrantLockUnlock(lock: Any) {

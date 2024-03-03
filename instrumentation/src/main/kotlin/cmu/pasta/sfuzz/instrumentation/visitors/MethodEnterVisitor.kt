@@ -6,7 +6,7 @@ import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ASM9
 import kotlin.reflect.KFunction
 
-class MethodEnterInstrumenter(mv: MethodVisitor, val method: KFunction<*>, val loadThis: Boolean = true): MethodVisitor(ASM9, mv) {
+class MethodEnterVisitor(mv: MethodVisitor, val method: KFunction<*>, val loadThis: Boolean = true): MethodVisitor(ASM9, mv) {
     override fun visitCode() {
         super.visitCode()
         if (loadThis) {

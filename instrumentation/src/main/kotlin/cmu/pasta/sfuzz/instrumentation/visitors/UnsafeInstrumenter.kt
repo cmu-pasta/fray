@@ -4,7 +4,7 @@ import cmu.pasta.sfuzz.runtime.Runtime
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 
-class UnsafeClassVisitor(cv: ClassVisitor): ClassVisitorBase(cv, "sun.misc.Unsafe") {
+class UnsafeInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv, "sun.misc.Unsafe") {
     override fun visitMethod(
         access: Int,
         name: String?,
@@ -15,7 +15,7 @@ class UnsafeClassVisitor(cv: ClassVisitor): ClassVisitorBase(cv, "sun.misc.Unsaf
         // TODO(aoli): consider passing more information (memory location, ect)
         val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
         if (unsafeMethodNames.contains(name)) {
-            return MethodEnterInstrumenter(mv, Runtime::onUnsafeOperation, false)
+            return MethodEnterVisitor(mv, Runtime::onUnsafeOperation, false)
         }
         return mv
     }

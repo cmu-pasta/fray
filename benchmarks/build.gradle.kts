@@ -7,7 +7,8 @@ plugins {
 val buildPath = layout.buildDirectory.get().asFile
 
 dependencies {
-    implementation(fileTree(mapOf("dir" to "${buildPath}/libs/unzipped", "include" to listOf("*.jar"))))
+//    implementation(fileTree(mapOf("dir" to "${buildPath}/libs/unzipped", "include" to listOf("*.jar"))))
+    implementation(fileTree(mapOf("dir" to "/home/aoli/repos/dacapobench/benchmarks", "include" to listOf("*.jar"))))
     implementation(project(":core"))
 }
 
@@ -39,5 +40,18 @@ tasks.register<JavaExec>("runWith") {
     args = listOf("Harness", "-o", "${layout.buildDirectory.get().asFile}/report", "-a", "luindex")
     jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so")
     jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
+//    jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005")
 }
 
+tasks.register<JavaExec>("runDebug") {
+    var jvmti = project(":jvmti")
+    var jdk = project(":jdk")
+    var instrumentation = project(":instrumentation")
+    classpath = sourceSets["main"].runtimeClasspath
+    executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
+    mainClass.set("cmu.pasta.sfuzz.core.MainKt")
+    args = listOf("Harness", "-o", "${layout.buildDirectory.get().asFile}/report", "-a", "luindex")
+    jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so")
+    jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
+    jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005")
+}

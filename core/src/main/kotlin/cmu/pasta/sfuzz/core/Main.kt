@@ -2,6 +2,7 @@ package cmu.pasta.sfuzz.core
 
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.core.concurrency.logger.JsonLogger
+import cmu.pasta.sfuzz.runtime.TargetTerminateException
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
@@ -9,6 +10,7 @@ import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
+import kotlin.jvm.Throws
 
 fun runProgram(className: String, reportPath: String, targetArgs: String) {
     println("Start analysing $className:main")
@@ -21,7 +23,14 @@ fun runProgram(className: String, reportPath: String, targetArgs: String) {
     GlobalContext.start()
     Runtime.DELEGATE = RuntimeDelegate()
 
-    m.invoke(null, targetArgs.split(" ").toTypedArray())
+    try {
+        m.invoke(null, targetArgs.split(" ").toTypedArray())
+    } catch (e: TargetTerminateException) {
+        println("target terminated: ${e.status}")
+    } catch (e: Throwable) {
+        e.printStackTrace()
+    }
+
     GlobalContext.done()
     logger.dump()
     println("Analysis done!")

@@ -33,7 +33,7 @@ class AtomicOperationInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
         var mv = super.visitMethod(access, name, descriptor, signature, exceptions)
         if (atomicClasses.contains(className) && !atomicNonVolatileMethodNames.contains(name)
             && access and ACC_PUBLIC != 0) {
-            return MethodEnterInstrumenter(mv, Runtime::onAtomicOperation)
+            return MethodEnterVisitor(mv, Runtime::onAtomicOperation)
         }
         return mv
     }

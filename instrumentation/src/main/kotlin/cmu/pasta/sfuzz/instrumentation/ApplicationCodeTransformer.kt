@@ -2,6 +2,7 @@ package cmu.pasta.sfuzz.instrumentation
 
 import cmu.pasta.sfuzz.instrumentation.visitors.MonitorInstrumenter
 import cmu.pasta.sfuzz.instrumentation.visitors.ObjectInstrumenter
+import cmu.pasta.sfuzz.instrumentation.visitors.TargetExitInstrumenter
 import cmu.pasta.sfuzz.instrumentation.visitors.VolatileFieldsInstrumenter
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
@@ -35,13 +36,19 @@ class ApplicationCodeTransformer: ClassFileTransformer {
         var classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
 
 
-        var cv: ClassVisitor = ObjectInstrumenter(classWriter)
-        cv = VolatileFieldsInstrumenter(cv)
-        cv = MonitorInstrumenter(cv, false)
-        classReader.accept(cv, 0)
+        try {
+            var cv: ClassVisitor = ObjectInstrumenter(classWriter)
+            cv = VolatileFieldsInstrumenter(cv)
+            cv = MonitorInstrumenter(cv, false)
+            classReader.accept(cv, 0)
 
-        val out = classWriter.toByteArray()
-        File("/tmp/out/${className.replace("/", ".").removePrefix(".")}.class").writeBytes(out)
-        return out
+            val out = classWriter.toByteArray()
+            File("/tmp/out/${className.replace("/", ".").removePrefix(".")}.class").writeBytes(out)
+            return out
+        } catch (e: Throwable) {
+            println("Failed to instrument: $className")
+            e.printStackTrace()
+        }
+        return classfileBuffer
     }
 }
