@@ -1,7 +1,8 @@
 package cmu.pasta.sfuzz.core
 
 import cmu.pasta.sfuzz.runtime.Runtime
-import cmu.pasta.sfuzz.core.concurrency.logger.JsonLogger
+import cmu.pasta.sfuzz.core.logger.JsonLogger
+import cmu.pasta.sfuzz.core.runtime.AnalysisResult
 import cmu.pasta.sfuzz.instrumentation.visitors.TargetExitInstrumenter
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
 import kotlinx.cli.ArgParser
@@ -22,19 +23,21 @@ fun runProgram(className: String, reportPath: String, targetArgs: String) {
     val m = clazz.getMethod("main", Array<String>::class.java)
     val logger = JsonLogger(reportPath)
     GlobalContext.registerLogger(logger)
+
+
     GlobalContext.start()
     Runtime.DELEGATE = RuntimeDelegate()
-
     try {
         m.invoke(null, targetArgs.split(" ").toTypedArray())
     } catch (e: InvocationTargetException) {
         if (e.cause is TargetTerminateException) {
+
             println("target terminated: ${(e.cause as TargetTerminateException).status}")
         } else {
             e.cause?.printStackTrace()
         }
     }
-    GlobalContext.done()
+    GlobalContext.done(AnalysisResult.COMPLETE)
     logger.dump()
     println("Analysis done!")
 }

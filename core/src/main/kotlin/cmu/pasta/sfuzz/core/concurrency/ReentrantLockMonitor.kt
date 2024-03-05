@@ -2,6 +2,7 @@ package cmu.pasta.sfuzz.core.concurrency
 
 import cmu.pasta.sfuzz.cmu.pasta.sfuzz.core.ThreadState
 import cmu.pasta.sfuzz.core.GlobalContext
+import cmu.pasta.sfuzz.core.concurrency.operations.ThreadResumeOperation
 
 class ReentrantLockMonitor {
     val lockHolders = mutableMapOf<Int, Long>()
@@ -43,6 +44,7 @@ class ReentrantLockMonitor {
         lockWaiters[id]?.let {
             if (it.size > 0) {
                 var result = it.removeFirst()
+                GlobalContext.registeredThreads[result]?.pendingOperation = ThreadResumeOperation()
                 GlobalContext.registeredThreads[result]?.state = ThreadState.Enabled
             }
             if (it.size == 0) {

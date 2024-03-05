@@ -5,16 +5,15 @@ import cmu.pasta.sfuzz.cmu.pasta.sfuzz.core.ThreadState
 import cmu.pasta.sfuzz.core.concurrency.ReentrantLockMonitor
 import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.core.concurrency.Sync
-import cmu.pasta.sfuzz.core.concurrency.logger.LoggerBase
-import cmu.pasta.sfuzz.core.concurrency.operations.MemoryOperation
-import cmu.pasta.sfuzz.core.concurrency.operations.ObjectWaitOperation
-import cmu.pasta.sfuzz.core.concurrency.operations.ReentrantLockLockOperation
-import cmu.pasta.sfuzz.core.concurrency.operations.ThreadStartOperation
+import cmu.pasta.sfuzz.core.logger.LoggerBase
+import cmu.pasta.sfuzz.core.concurrency.operations.*
+import cmu.pasta.sfuzz.core.runtime.AnalysisResult
 import cmu.pasta.sfuzz.core.scheduler.FifoScheduler
 import cmu.pasta.sfuzz.core.scheduler.Scheduler
 import cmu.pasta.sfuzz.instrumentation.memory.MemoryManager
 import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.Runtime
+import cmu.pasta.sfuzz.runtime.TargetTerminateException
 
 object GlobalContext {
 
@@ -34,12 +33,13 @@ object GlobalContext {
         loggers.forEach {
             it.executionStart()
          }
+        scheduleNextOperation(true)
     }
 
-    fun done() {
+    fun done(result: AnalysisResult) {
         Runtime.DELEGATE = Delegate()
         loggers.forEach {
-            it.executionDone()
+            it.executionDone(result)
         }
     }
 
@@ -114,7 +114,7 @@ object GlobalContext {
         objectWatcher[o]?.let {
             if (it.size > 0) {
                 val t = it.removeFirst()
-                registeredThreads[t]?.pendingOperation = ThreadStartOperation()
+                registeredThreads[t]?.pendingOperation = ThreadResumeOperation()
                 registeredThreads[t]?.state = ThreadState.Enabled
                 it.remove(t)
                 if (it.size == 0) {
@@ -128,7 +128,7 @@ object GlobalContext {
         objectWatcher[o]?.let {
             if (it.size > 0) {
                 for (t in it) {
-                    registeredThreads[t]?.pendingOperation = ThreadStartOperation()
+                    registeredThreads[t]?.pendingOperation = ThreadResumeOperation()
                     registeredThreads[t]?.state = ThreadState.Enabled
                 }
                 objectWatcher.remove(o)
@@ -199,18 +199,22 @@ object GlobalContext {
         // by scheduled thread.
         assert(currentThreadId == Thread.currentThread().id)
         val currentThread = registeredThreads[currentThreadId]
-        val nextThread = scheduler.scheduleNextOperation(registeredThreads.values.toList())
-            ?: if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
+        val enabledOperations = registeredThreads.values.toList()
+            .filter { it.state == ThreadState.Enabled }
+            .sortedBy { it.thread.id }
 
+        val nextThread = scheduler.scheduleNextOperation(enabledOperations)
+            ?: if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
                 // We are done here, we should go back to the
-                //
                 return
             } else {
+                throw TargetTerminateException(-1)
                 return
             }
+        val index = enabledOperations.indexOf(nextThread)
         currentThreadId = nextThread.thread.id
         loggers.forEach {
-            it.newOperationScheduled(registeredThreads[currentThreadId]!!.pendingOperation!!)
+            it.newOperationScheduled(registeredThreads[currentThreadId]!!.pendingOperation!!, Pair(index, enabledOperations.size))
         }
         registeredThreads[currentThreadId]!!.pendingOperation = null
         if (currentThread != nextThread) {
