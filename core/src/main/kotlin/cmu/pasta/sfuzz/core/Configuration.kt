@@ -50,7 +50,6 @@ class PCT: ScheduleAlgorithm("pct") {
 }
 
 class Configuration: CliktCommand() {
-
     val clazz by argument()
     val report by option("-o").default("report")
     val targetArgs by option("-a", "--args", help = "Arguments passed to target application").default("")
@@ -59,6 +58,7 @@ class Configuration: CliktCommand() {
         "fifo" to Fifo()
     )
     val storeAllSchedules by option("-s", "--save").boolean().default(false)
+
     override fun run() {
         run(this)
     }

@@ -1,3 +1,19 @@
+# Run SFuzz
+
+- To run SFuzz, you first need to build the project and create a instrumented JDK.
+
+```bash
+./gradlew build
+./gradlew jlink
+./gradlew shadowJar
+```
+
+
+- Next, you 
+
+
+
+
 # Runtime
 
 Runtime should be **super** light weight. It should not include any dependencies. It should not call any JDK methods.

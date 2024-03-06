@@ -2,9 +2,6 @@ plugins {
     id("java")
 }
 
-group = "cmu.pasta.sfuzz"
-version = "1.0-SNAPSHOT"
-
 repositories {
     mavenCentral()
 }
@@ -12,7 +9,7 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    implementation(project(":core"))
+//    implementation(project(":core"))
 }
 
 tasks.test {
@@ -30,18 +27,22 @@ tasks.compileJava {
     options.compilerArgs.addAll(listOf("--add-exports", "java.base/jdk.internal.misc=ALL-UNNAMED"))
 }
 
-tasks.register<JavaExec>("runWith") {
-    doFirst {
-      println(executable + " " + jvmArgs!!.joinToString(" ") + " -cp " + classpath.getAsPath() + " cmu.pasta.sfuzz.core.MainKt")
-    }
-    var jvmti = project(":jvmti")
-    var jdk = project(":jdk")
-    var instrumentation = project(":instrumentation")
-    classpath = sourceSets["main"].runtimeClasspath
+tasks.register<JavaExec>("run") {
+    val jvmti = project(":jvmti")
+    val jdk = project(":jdk")
+    val instrumentation = project(":instrumentation")
+    val core = project(":core")
+    val cp = sourceSets["main"].runtimeClasspath.toMutableList()
+    cp.add(File("${core.layout.buildDirectory.get().asFile}/libs/${core.name}-${core.version}-all.jar"))
+    classpath(cp.toTypedArray())
     executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
     mainClass.set("cmu.pasta.sfuzz.core.MainKt")
-    args = listOf("example.Main", "-o", "${layout.buildDirectory.get().asFile}/report")
+    args = listOf("example.Main", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", "fifo")
     jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so")
     jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
+    doFirst {
+        // Printing the full command
+        println("Executing command: ${executable} ${jvmArgs!!.joinToString(" ")} -cp ${classpath.asPath} ${mainClass.get()} ${args!!.joinToString(" ")}")
+    }
 }
 
