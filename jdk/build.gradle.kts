@@ -52,7 +52,7 @@ tasks.register<Exec>("jlink") {
         ?: "No JAR files found."
     val command = listOf("jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars",
         "-J--add-modules=cmu.pasta.sfuzz.jdk", "-J--class-path=$jars",
-        "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH",  "--system-modules=batch-size=75", "--sfuzz-instrumentation")
+        "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH",  "--sfuzz-instrumentation")
     println(command.joinToString(" "))
     commandLine(command)
     /* commandLine(listOf("java", "--version")) */

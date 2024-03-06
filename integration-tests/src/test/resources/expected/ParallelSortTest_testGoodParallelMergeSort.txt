@@ -1,0 +1,30 @@
+[0]: doSort([0, 0, 3, 0, 6], 0, 4) called
+[2]: doSort([0, 0, 3, 0, 6], 3, 4) called
+[4]: doSort([0, 0, 3, 0, 6], 4, 4) called
+[4]: doSort([0, 0, 3, 0, 6], 4, 4) done
+[3]: doSort([0, 0, 3, 0, 6], 3, 3) called
+[3]: doSort([0, 0, 3, 0, 6], 3, 3) done
+[1]: doSort([0, 0, 3, 0, 6], 0, 2) called
+[5]: doSort([0, 0, 3, 0, 6], 0, 1) called
+[2]: Calling merge([0, 0, 3, 0, 6], 3, 3, 4)
+[2]: Trying to sync on MSLOCK
+[2]: Syncd on MSLOCK
+[2]: doSort([0, 0, 3, 0, 6], 3, 4) done
+[6]: doSort([0, 0, 3, 0, 6], 2, 2) called
+[6]: doSort([0, 0, 3, 0, 6], 2, 2) done
+[7]: doSort([0, 0, 3, 0, 6], 0, 0) called
+[7]: doSort([0, 0, 3, 0, 6], 0, 0) done
+[8]: doSort([0, 0, 3, 0, 6], 1, 1) called
+[8]: doSort([0, 0, 3, 0, 6], 1, 1) done
+[5]: Calling merge([0, 0, 3, 0, 6], 0, 0, 1)
+[5]: Trying to sync on MSLOCK
+[5]: Syncd on MSLOCK
+[5]: doSort([0, 0, 3, 0, 6], 0, 1) done
+[1]: Calling merge([0, 0, 3, 0, 6], 0, 1, 2)
+[1]: Trying to sync on MSLOCK
+[1]: Syncd on MSLOCK
+[1]: doSort([0, 0, 3, 0, 6], 0, 2) done
+[0]: Calling merge([0, 0, 3, 0, 6], 0, 2, 4)
+[0]: Trying to sync on MSLOCK
+[0]: Syncd on MSLOCK
+[0]: doSort([0, 0, 0, 3, 6], 0, 4) done

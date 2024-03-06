@@ -9,7 +9,7 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-//    implementation(project(":core"))
+    implementation(project(":core"))
 }
 
 tasks.test {
@@ -31,10 +31,7 @@ tasks.register<JavaExec>("run") {
     val jvmti = project(":jvmti")
     val jdk = project(":jdk")
     val instrumentation = project(":instrumentation")
-    val core = project(":core")
-    val cp = sourceSets["main"].runtimeClasspath.toMutableList()
-    cp.add(File("${core.layout.buildDirectory.get().asFile}/libs/${core.name}-${core.version}-all.jar"))
-    classpath(cp.toTypedArray())
+    classpath = sourceSets["main"].runtimeClasspath
     executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
     mainClass.set("cmu.pasta.sfuzz.core.MainKt")
     args = listOf("example.Main", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", "fifo")

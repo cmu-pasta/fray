@@ -1,0 +1,138 @@
+[1]: produce(1) called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[2]: consume() called. Trying to acquire lock.
+[3]: consume() called. Trying to acquire lock.
+[2]: Got lock.
+[2]: Waiting until queue size != 0.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(1) done.
+[1]: produce(2) called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[2]: Notifying all.
+[2]: consume() done.
+[2]: consume() called. Trying to acquire lock.
+[2]: Got lock.
+[2]: Waiting until queue size != 0.
+[3]: Got lock.
+[3]: Waiting until queue size != 0.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(2) done.
+[1]: produce(3) called. Trying to acquire lock.
+[3]: Notifying all.
+[3]: consume() done.
+[3]: consume() called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[3]: Got lock.
+[3]: Waiting until queue size != 0.
+[2]: Waiting until queue size != 0.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(3) done.
+[1]: produce(4) called. Trying to acquire lock.
+[3]: Notifying all.
+[3]: consume() done.
+[3]: consume() called. Trying to acquire lock.
+[3]: Got lock.
+[3]: Waiting until queue size != 0.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(4) done.
+[1]: produce(5) called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(5) done.
+[1]: produce(6) called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(6) done.
+[1]: produce(7) called. Trying to acquire lock.
+[3]: Notifying all.
+[3]: consume() done.
+[3]: consume() called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(7) done.
+[1]: produce(8) called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[2]: Notifying all.
+[2]: consume() done.
+[2]: consume() called. Trying to acquire lock.
+[2]: Got lock.
+[2]: Notifying all.
+[2]: consume() done.
+[2]: consume() called. Trying to acquire lock.
+[3]: Got lock.
+[3]: Notifying all.
+[3]: consume() done.
+[3]: consume() called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(8) done.
+[1]: produce(9) called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(9) done.
+[1]: produce(10) called. Trying to acquire lock.
+[3]: Got lock.
+[3]: Notifying all.
+[3]: consume() done.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(10) done.
+[1]: produce(11) called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(11) done.
+[1]: produce(12) called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[2]: Got lock.
+[2]: Notifying all.
+[2]: consume() done.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(12) done.
+[1]: produce(13) called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(13) done.
+[1]: produce(14) called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(14) done.
+[1]: produce(15) called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(15) done.
+[1]: produce(16) called. Trying to acquire lock.
+[1]: Got lock.
+[1]: Trying to acquire second lock.
+[1]: Got lock.
+[1]: Notifying all since queue is non-empty.
+[1]: produce(16) done.

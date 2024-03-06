@@ -1,0 +1,8 @@
+[2]: Trying to acquire lock.
+[2]: Acquired lock.
+[2]: Trying to unlock.
+[2]: Unlocked.
+[1]: Trying to acquire lock.
+[1]: Acquired lock.
+[1]: Trying to unlock.
+[1]: Unlocked.

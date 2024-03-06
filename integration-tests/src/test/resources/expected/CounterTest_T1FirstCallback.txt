@@ -1,0 +1,10 @@
+[1]: putOrIncrement(1) called
+[1]: containsKey(1) called, trying to acquire lock
+[2]: putOrDecrement(1) called
+[2]: containsKey(1) called, trying to acquire lock
+[1]: acquired lock, returning false
+[1]: map does not contain 1, trying to acquire lock
+[1]: acquired lock, adding to map
+[2]: acquired lock, returning true
+[2]: map contains 1, trying to acquire lock
+[2]: acquired lock, updating map

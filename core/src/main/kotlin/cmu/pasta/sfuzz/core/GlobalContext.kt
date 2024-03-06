@@ -13,25 +13,37 @@ import cmu.pasta.sfuzz.instrumentation.memory.MemoryManager
 import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.ThreadFactory
 
 object GlobalContext {
-
     val registeredThreads = mutableMapOf<Long, ThreadContext>()
     var currentThreadId: Long = -1;
     var scheduler: Scheduler = FifoScheduler()
     private val objectWatcher = mutableMapOf<Any, MutableList<Long>>()
     private val reentrantLockMonitor = ReentrantLockMonitor()
     private val memoryManager = MemoryManager()
-    private val loggers = mutableListOf<LoggerBase>()
+    val loggers = mutableListOf<LoggerBase>()
     val synchronizationPoints = mutableMapOf<Any, Sync>()
+    val executor = Executors.newSingleThreadExecutor { r ->
+        object : SFuzzThread() {
+            override fun run() {
+                r.run()
+            }
+        }
+    };
 
     fun start() {
         var t = Thread.currentThread();
+        // We need to submit a dummy task to trigger the executor
+        // thread creation
+        executor.submit {}
         currentThreadId = t.id
         registeredThreads[t.id] = ThreadContext(t)
         loggers.forEach {
             it.executionStart()
-         }
+        }
         scheduleNextOperation(true)
     }
 
@@ -40,6 +52,7 @@ object GlobalContext {
         loggers.forEach {
             it.executionDone(result)
         }
+        executor.shutdown()
     }
 
     fun registerLogger(l: LoggerBase) {
@@ -73,16 +86,22 @@ object GlobalContext {
         objectNotifyAll(t)
         reentrantLockUnlock(t)
         registeredThreads[t.id]?.state = ThreadState.Completed
-        var daemon = object: SFuzzThread() {
-            override fun run() {
-                while (t.isAlive()) {
-                    yield()
+        try {
+//
+//            var daemon = object : SFuzzThread() {
+//                override fun run() {
+//                }
+//            }
+//            daemon.isDaemon = true
+//            daemon.start()
+            executor.submit {
+                while (t.isAlive) {
                 }
                 scheduleNextOperation(false)
             }
+        } catch (e: Throwable) {
+            e.printStackTrace()
         }
-        daemon.isDaemon = true
-        daemon.start()
     }
 
     fun objectWait(o: Any) {
@@ -175,6 +194,14 @@ object GlobalContext {
         }
     }
 
+    fun log(format: String, vararg args: Any) {
+        val tid = Thread.currentThread().id
+        val data = "[$tid]: ${String.format(format, args)}"
+        for (logger in loggers) {
+            logger.applicationEvent(data)
+        }
+    }
+
     fun reentrantLockUnlock(lock: Any) {
         val t = Thread.currentThread().id
         reentrantLockMonitor.unlock(lock)
@@ -195,7 +222,7 @@ object GlobalContext {
     fun scheduleNextOperation(shouldBlockCurrentThread: Boolean) {
         // Our current design makes sure that reschedule is only called
         // by scheduled thread.
-        assert(currentThreadId == Thread.currentThread().id)
+        assert(Thread.currentThread() is SFuzzThread || currentThreadId == Thread.currentThread().id)
         val currentThread = registeredThreads[currentThreadId]
         val enabledOperations = registeredThreads.values.toList()
             .filter { it.state == ThreadState.Enabled }

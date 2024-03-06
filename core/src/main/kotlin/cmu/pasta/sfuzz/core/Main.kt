@@ -26,7 +26,7 @@ fun run(config: Configuration) {
     val m = clazz.getMethod("main", Array<String>::class.java)
     val logger = CsvLogger(config.report)
     GlobalContext.registerLogger(logger)
-    GlobalContext.scheduler = config.scheduler!!.getScheduler()
+    GlobalContext.scheduler = config.scheduler
     GlobalContext.start()
     Runtime.DELEGATE = RuntimeDelegate()
     try {
@@ -44,4 +44,7 @@ fun run(config: Configuration) {
 }
 
 
-fun main(args: Array<String>) = Configuration().main(args)
+fun main(args: Array<String>) {
+    val config = ConfigurationCommand().apply { main(args) }.toConfiguration()
+    run(config)
+}

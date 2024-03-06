@@ -33,7 +33,8 @@ class JsonLogger(val base: String, val saveAllSchedules: Boolean): LoggerBase {
             File("$base/schedule_${savedSchedule++}.json").writeText(json.encodeToString(choices))
         }
     }
-
+    override fun applicationEvent(event: String) {
+    }
     fun dump() {
         File("$base/timeline.json").writeText(json.encodeToString(executions))
     }

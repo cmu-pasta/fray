@@ -1,0 +1,10 @@
+[2]: putOrDecrement(3) called
+[2]: containsKey(3) called, trying to acquire lock
+[1]: putOrIncrement(3) called
+[1]: containsKey(3) called, trying to acquire lock
+[1]: acquired lock, returning false
+[1]: map does not contain 3, trying to acquire lock
+[2]: acquired lock, returning false
+[2]: map does not contain 3, trying to acquire lock
+[1]: acquired lock, adding to map
+[2]: acquired lock, adding to map

@@ -8,4 +8,5 @@ interface LoggerBase {
     fun executionStart()
     fun newOperationScheduled(op: Operation, choice: Choice)
     fun executionDone(result: AnalysisResult)
+    fun applicationEvent(event: String)
 }

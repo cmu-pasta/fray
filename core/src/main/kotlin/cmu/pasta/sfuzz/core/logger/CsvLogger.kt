@@ -20,4 +20,7 @@ class CsvLogger(val baseFolder: String): LoggerBase {
     override fun executionDone(result: AnalysisResult) {
         index += 1
     }
+
+    override fun applicationEvent(event: String) {
+    }
 }
