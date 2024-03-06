@@ -86,21 +86,10 @@ object GlobalContext {
         objectNotifyAll(t)
         reentrantLockUnlock(t)
         registeredThreads[t.id]?.state = ThreadState.Completed
-        try {
-//
-//            var daemon = object : SFuzzThread() {
-//                override fun run() {
-//                }
-//            }
-//            daemon.isDaemon = true
-//            daemon.start()
-            executor.submit {
-                while (t.isAlive) {
-                }
-                scheduleNextOperation(false)
+        executor.submit {
+            while (t.isAlive) {
             }
-        } catch (e: Throwable) {
-            e.printStackTrace()
+            scheduleNextOperation(false)
         }
     }
 
