@@ -1,0 +1,22 @@
+#!/bin/python3
+
+import os
+import sys
+import subprocess
+
+BASE = os.path.dirname(os.path.realpath('__file__'))
+JAVA_PATH = os.path.join(BASE, "jdk", "build", "java-inst", "bin", "java")
+JVMTI_PATH = os.path.join(BASE, "jvmti", "build", "cmake", "native_release", "linux-amd64", "cpp", "libjvmti.so")
+AGENT_PATH = os.path.join(BASE, "instrumentation", "build", "libs", "instrumentation-1.0-SNAPSHOT-all.jar")
+CORE_PATH = os.path.join(BASE, "core", "build", "libs", "core-1.0-SNAPSHOT-all.jar")
+
+command = [
+    JAVA_PATH, 
+    "-cp", CORE_PATH + ":" + sys.argv[1],
+    "-agentpath:" + JVMTI_PATH,
+    "-javaagent:" + AGENT_PATH,
+    "cmu.pasta.sfuzz.core.MainKt",
+    *sys.argv[2:]
+]
+
+subprocess.run(command)
