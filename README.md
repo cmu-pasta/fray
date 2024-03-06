@@ -8,8 +8,16 @@
 ./gradlew shadowJar
 ```
 
+- Next, you can run SFuzz!
+  - You may follow the `examples` folder to understand how to run sfuzz using gradle.
+  - You can also run sfuzz through command line. We created a wrapper `bin/sfuzz` for you 
+    to setup environment.
+    - Command: `bin/sfuzz CLASS_PATH ARGS_TO_SFUZZ` 
+    - For example, to run `bin/sfuzz` for `examples` program, you need 
+        - `./bin/sfuzz ./examples/build/classes/java/main example.Main -o ./examples/build/report --scheduler fifo`
+    - To understand SFuzz args you can:
+        - `./bin/sfuzz dummy --help`
 
-- Next, you 
 
 
 
