@@ -50,7 +50,7 @@ tasks.register<Exec>("jlink") {
     val jars = jarDir.listFiles { file -> file.extension == "jar" }
         ?.joinToString(separator = ":") { it.absolutePath }
         ?: "No JAR files found."
-    val command = listOf("/home/aoli/repos/corretto-21/build/linux-x86_64-server-fastdebug/images/jdk/bin/jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars",
+    val command = listOf("jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars",
         "-J--add-modules=cmu.pasta.sfuzz.jdk", "-J--class-path=$jars",
         "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH",  "--system-modules=batch-size=75", "--sfuzz-instrumentation")
     println(command.joinToString(" "))

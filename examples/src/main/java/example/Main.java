@@ -1,11 +1,5 @@
 package example;
 
-import java.sql.Time;
-
-import cmu.pasta.sfuzz.cmu.pasta.sfuzz.core.ThreadState;
-import cmu.pasta.sfuzz.core.GlobalContext;
-import cmu.pasta.sfuzz.core.concurrency.operations.ThreadStartOperation;
-
 public class Main {
     public static class T extends Thread {
         public boolean blocked = false;

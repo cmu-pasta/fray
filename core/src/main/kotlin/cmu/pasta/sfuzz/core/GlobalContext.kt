@@ -1,13 +1,12 @@
 package cmu.pasta.sfuzz.core
 
-import cmu.pasta.sfuzz.cmu.pasta.sfuzz.core.ThreadContext
-import cmu.pasta.sfuzz.cmu.pasta.sfuzz.core.ThreadState
 import cmu.pasta.sfuzz.core.concurrency.ReentrantLockMonitor
 import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.core.concurrency.Sync
 import cmu.pasta.sfuzz.core.logger.LoggerBase
 import cmu.pasta.sfuzz.core.concurrency.operations.*
 import cmu.pasta.sfuzz.core.runtime.AnalysisResult
+import cmu.pasta.sfuzz.core.scheduler.Choice
 import cmu.pasta.sfuzz.core.scheduler.FifoScheduler
 import cmu.pasta.sfuzz.core.scheduler.Scheduler
 import cmu.pasta.sfuzz.instrumentation.memory.MemoryManager
@@ -19,7 +18,7 @@ object GlobalContext {
 
     val registeredThreads = mutableMapOf<Long, ThreadContext>()
     var currentThreadId: Long = -1;
-    private val scheduler: Scheduler = FifoScheduler()
+    var scheduler: Scheduler = FifoScheduler()
     private val objectWatcher = mutableMapOf<Any, MutableList<Long>>()
     private val reentrantLockMonitor = ReentrantLockMonitor()
     private val memoryManager = MemoryManager()
@@ -42,7 +41,6 @@ object GlobalContext {
             it.executionDone(result)
         }
     }
-
 
     fun registerLogger(l: LoggerBase) {
         loggers.add(l)
@@ -213,9 +211,14 @@ object GlobalContext {
             }
         val index = enabledOperations.indexOf(nextThread)
         currentThreadId = nextThread.thread.id
-        loggers.forEach {
-            it.newOperationScheduled(registeredThreads[currentThreadId]!!.pendingOperation!!, Pair(index, enabledOperations.size))
+
+        if (enabledOperations.size > 1) {
+            loggers.forEach {
+                it.newOperationScheduled(registeredThreads[currentThreadId]!!.pendingOperation!!,
+                    Choice(index, currentThreadId, enabledOperations.size))
+            }
         }
+
         registeredThreads[currentThreadId]!!.pendingOperation = null
         if (currentThread != nextThread) {
             nextThread.unblock()

@@ -1,9 +1,8 @@
-package cmu.pasta.sfuzz.cmu.pasta.sfuzz.core
+package cmu.pasta.sfuzz.core
 
 import cmu.pasta.sfuzz.core.concurrency.Sync
 import cmu.pasta.sfuzz.core.concurrency.operations.Operation
 import cmu.pasta.sfuzz.core.concurrency.operations.ThreadStartOperation
-import java.util.concurrent.Semaphore
 
 enum class ThreadState {
     Enabled,

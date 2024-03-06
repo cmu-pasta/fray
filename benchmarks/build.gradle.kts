@@ -7,8 +7,7 @@ plugins {
 val buildPath = layout.buildDirectory.get().asFile
 
 dependencies {
-//    implementation(fileTree(mapOf("dir" to "${buildPath}/libs/unzipped", "include" to listOf("*.jar"))))
-    implementation(fileTree(mapOf("dir" to "/home/aoli/repos/dacapobench/benchmarks", "include" to listOf("*.jar"))))
+    implementation(fileTree(mapOf("dir" to "${buildPath}/libs/unzipped", "include" to listOf("*.jar"))))
     implementation(project(":core"))
 }
 
@@ -30,28 +29,37 @@ tasks.register<Copy>("unzipDacapo") {
     into("${buildPath}/libs/unzipped")
 }
 
-tasks.register<JavaExec>("runWith") {
-    var jvmti = project(":jvmti")
-    var jdk = project(":jdk")
-    var instrumentation = project(":instrumentation")
+tasks.withType<JavaExec> {
+    val jvmti = project(":jvmti")
+    val jdk = project(":jdk")
+    val instrumentation = project(":instrumentation")
     classpath = sourceSets["main"].runtimeClasspath
     executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
-    mainClass.set("cmu.pasta.sfuzz.core.MainKt")
-    args = listOf("Harness", "-o", "${layout.buildDirectory.get().asFile}/report", "-a", "luindex")
+    mainClass = "cmu.pasta.sfuzz.core.MainKt"
     jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so")
     jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
-//    jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005")
+
+//    var appName = project.hasProperty('appName') ? project.property('appName') : "luindex"
+
+    doFirst {
+        // Printing the full command
+        println("Executing command: ${executable} ${jvmArgs!!.joinToString(" ")} -cp ${classpath.asPath} ${mainClass.get()} ${args!!.joinToString(" ")}")
+    }
 }
 
-tasks.register<JavaExec>("runDebug") {
-    var jvmti = project(":jvmti")
-    var jdk = project(":jdk")
-    var instrumentation = project(":instrumentation")
-    classpath = sourceSets["main"].runtimeClasspath
-    executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
-    mainClass.set("cmu.pasta.sfuzz.core.MainKt")
-    args = listOf("Harness", "-o", "${layout.buildDirectory.get().asFile}/report", "-a", "luindex")
-    jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so")
-    jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
+
+tasks.register<JavaExec>("run") {
+    val appName = properties["appName"] as String? ?: "avrora"
+    args = listOf("Harness", "-o", "${layout.buildDirectory.get().asFile}/report", "-a", appName, "--scheduler", "fifo", "-s", "true")
+}
+
+tasks.register<JavaExec>("replay") {
+    val appName = properties["appName"] as String? ?: "avrora"
+    args = listOf("Harness", "-o", "/tmp/report", "-a", appName, "--scheduler", "replay", "--path", "${layout.buildDirectory.get().asFile}/report/schedule_0.json", "-s", "true")
+}
+
+tasks.register<JavaExec>("debug") {
+    val appName = properties["appName"] as String? ?: "avrora"
+    args = listOf("Harness", "-o", "${layout.buildDirectory.get().asFile}/report", "-a", appName, "--scheduler", "fifo", "-s", "true")
     jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005")
 }

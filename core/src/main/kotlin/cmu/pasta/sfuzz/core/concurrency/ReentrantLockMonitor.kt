@@ -1,6 +1,6 @@
 package cmu.pasta.sfuzz.core.concurrency
 
-import cmu.pasta.sfuzz.cmu.pasta.sfuzz.core.ThreadState
+import cmu.pasta.sfuzz.core.ThreadState
 import cmu.pasta.sfuzz.core.GlobalContext
 import cmu.pasta.sfuzz.core.concurrency.operations.ThreadResumeOperation
 
