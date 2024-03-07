@@ -156,7 +156,7 @@ object GlobalContext {
         scheduleNextOperation(true)
 
         /**
-        *  We need a while loop here because even another thread unlock
+        *  We need a while loop here because even a thread unlock
         *  this thread and makes this thread Enabled. It is still possible
         *  for a third thread to lock it again.
         *  t1 = {
