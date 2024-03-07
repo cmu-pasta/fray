@@ -9,12 +9,18 @@ import cmu.pasta.sfuzz.runtime.TargetTerminateException
 class RuntimeDelegate: Delegate() {
 
     var entered = ThreadLocal.withInitial { false }
+    var skipFunctionEntered = ThreadLocal.withInitial { 0 }
 
     private fun checkEntered(): Boolean {
         if (entered.get()) {
             return true
         }
         entered.set(true)
+
+        if (skipFunctionEntered.get() > 0) {
+            entered.set(false)
+            return true
+        }
         if (Thread.currentThread() is SFuzzThread) {
             entered.set(false)
             return true
@@ -142,5 +148,13 @@ class RuntimeDelegate: Delegate() {
         if (checkEntered()) return
         GlobalContext.scheduleNextOperation(true)
         entered.set(false)
+    }
+
+    override fun onLoadClass() {
+        skipFunctionEntered.set(1 + skipFunctionEntered.get())
+    }
+
+    override fun onLoadClassDone() {
+        skipFunctionEntered.set(skipFunctionEntered.get() - 1)
     }
 }

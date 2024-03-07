@@ -75,7 +75,13 @@ public class Runtime {
     }
 
     public static void onYield() {
-
     }
 
+    public static void onLoadClass() {
+        DELEGATE.onLoadClass();
+    }
+
+    public static void onLoadClassDone() {
+        DELEGATE.onLoadClassDone();
+    }
 }

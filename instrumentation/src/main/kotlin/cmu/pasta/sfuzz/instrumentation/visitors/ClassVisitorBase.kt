@@ -29,8 +29,8 @@ open class ClassVisitorBase(cv:ClassVisitor, className: String): ClassVisitor(AS
 
     final override fun visitMethod(
         access: Int,
-        name: String?,
-        descriptor: String?,
+        name: String,
+        descriptor: String,
         signature: String?,
         exceptions: Array<out String>?
     ): MethodVisitor {
@@ -42,8 +42,8 @@ open class ClassVisitorBase(cv:ClassVisitor, className: String): ClassVisitor(AS
     open fun instrumentMethod(
         mv: MethodVisitor,
         access: Int,
-        name: String?,
-        descriptor: String?,
+        name: String,
+        descriptor: String,
         signature: String?,
         exceptions: Array<out String>?
     ): MethodVisitor {

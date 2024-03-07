@@ -70,5 +70,11 @@ public class Delegate {
     public void onYield() {
     }
 
+    public void onLoadClass() {
+    }
+
+    public void onLoadClassDone() {
+    }
+
 }
 

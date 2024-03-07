@@ -25,10 +25,11 @@ fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
     cv = ObjectInstrumenter(cv)
     cv = VolatileFieldsInstrumenter(cv)
     cv = UnsafeInstrumenter(cv)
+    cv = ClassloaderInstrumenter(cv)
     // MonitorInstrumenter should come first because ObjectInstrumenter will insert more
     // monitors.
     cv = MonitorInstrumenter(cv, true)
-    classReader.accept(cv, 0)
+    classReader.accept(cv, ClassReader.EXPAND_FRAMES)
     var out = classWriter.toByteArray()
     File("/tmp/out/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)
     return out

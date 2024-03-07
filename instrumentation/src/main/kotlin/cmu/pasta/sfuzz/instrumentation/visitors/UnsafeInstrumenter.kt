@@ -8,8 +8,8 @@ class UnsafeInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv, "sun.misc.Unsaf
     override fun instrumentMethod(
         mv: MethodVisitor,
         access: Int,
-        name: String?,
-        descriptor: String?,
+        name: String,
+        descriptor: String,
         signature: String?,
         exceptions: Array<out String>?
     ): MethodVisitor {
