@@ -74,4 +74,8 @@ public class Runtime {
         DELEGATE.onExit(code);
     }
 
+    public static void onYield() {
+
+    }
+
 }

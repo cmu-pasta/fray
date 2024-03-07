@@ -5,16 +5,20 @@ import org.objectweb.asm.MethodVisitor
 import cmu.pasta.sfuzz.runtime.Runtime
 
 class ThreadInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv, Thread::class.java.name) {
-    override fun visitMethod(
+
+    override fun instrumentMethod(
+        mv: MethodVisitor,
         access: Int,
-        name: String,
-        descriptor: String,
+        name: String?,
+        descriptor: String?,
         signature: String?,
         exceptions: Array<out String>?
     ): MethodVisitor {
-        var mv = super.visitMethod(access, name, descriptor, signature, exceptions)
-        if (shouldInstrument && name == "start") {
+        if (name == "start") {
             return MethodEnterVisitor(MethodExitVisitor(mv, Runtime::onThreadStartDone), Runtime::onThreadStart)
+        }
+        if (name == "yield") {
+            return MethodEnterVisitor(mv, Runtime::onYield)
         }
         return mv
     }

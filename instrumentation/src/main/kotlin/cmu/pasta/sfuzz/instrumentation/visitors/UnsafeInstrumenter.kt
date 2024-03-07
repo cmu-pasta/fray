@@ -5,7 +5,8 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 
 class UnsafeInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv, "sun.misc.Unsafe") {
-    override fun visitMethod(
+    override fun instrumentMethod(
+        mv: MethodVisitor,
         access: Int,
         name: String?,
         descriptor: String?,
@@ -13,7 +14,6 @@ class UnsafeInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv, "sun.misc.Unsaf
         exceptions: Array<out String>?
     ): MethodVisitor {
         // TODO(aoli): consider passing more information (memory location, ect)
-        val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
         if (unsafeMethodNames.contains(name)) {
             return MethodEnterVisitor(mv, Runtime::onUnsafeOperation, false)
         }

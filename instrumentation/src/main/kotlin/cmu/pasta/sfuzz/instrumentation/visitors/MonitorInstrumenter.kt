@@ -27,6 +27,7 @@ class MonitorInstrumenter(cv: ClassVisitor, private val instrumentingJDK: Boolea
     ): MethodVisitor {
         if (className.startsWith("jdk/internal/loader/") || className.startsWith("java/util/zip/") ||
             className.startsWith("java/net/URL") || className.startsWith("jdk/internal/ref") ||
+            (className.startsWith("java/lang") && className != "java/lang/Thread") ||
             access and Opcodes.ACC_NATIVE != 0) {
             return super.visitMethod(access, name, descriptor, signature, exceptions)
         }

@@ -12,6 +12,7 @@ enum class ThreadState {
 }
 class ThreadContext(val thread: Thread) {
     var state = ThreadState.Enabled
+    val index = numThread++
 
     // Pending operation is null if a thread is just resumed/blocked.
     var pendingOperation: Operation? = ThreadStartOperation()
@@ -22,4 +23,9 @@ class ThreadContext(val thread: Thread) {
     fun unblock() {
         sync.unblock()
     }
+
+    companion object {
+        var numThread = 0
+    }
+
 }

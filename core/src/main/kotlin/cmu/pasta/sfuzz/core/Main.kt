@@ -24,10 +24,10 @@ fun run(config: Configuration) {
     prepareReportPath(config.report)
     val clazz = Class.forName(config.clazz)
     val m = clazz.getMethod("main", Array<String>::class.java)
-    val logger = CsvLogger(config.report)
+    val logger = JsonLogger(config.report, config.fullSchedule)
     GlobalContext.registerLogger(logger)
     GlobalContext.scheduler = config.scheduler
-    GlobalContext.start()
+    GlobalContext.start(config)
     Runtime.DELEGATE = RuntimeDelegate()
     try {
         m.invoke(null, config.targetArgs.split(" ").toTypedArray())
@@ -40,6 +40,7 @@ fun run(config: Configuration) {
         }
     }
     GlobalContext.done(AnalysisResult.COMPLETE)
+    logger.dump()
     println("Analysis done!")
 }
 

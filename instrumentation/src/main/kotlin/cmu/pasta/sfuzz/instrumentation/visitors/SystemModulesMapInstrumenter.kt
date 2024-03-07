@@ -34,14 +34,15 @@ class SystemModulesMapInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, "jdk
         }
     }
 
-    override fun visitMethod(
+
+    override fun instrumentMethod(
+        mv: MethodVisitor,
         access: Int,
         name: String?,
         descriptor: String?,
         signature: String?,
         exceptions: Array<out String>?
     ): MethodVisitor {
-        var mv = super.visitMethod(access, name, descriptor, signature, exceptions)
         if (name == "allSystemModules" || name == "defaultSystemModules") {
             return ReturnNullMV(mv)
         }

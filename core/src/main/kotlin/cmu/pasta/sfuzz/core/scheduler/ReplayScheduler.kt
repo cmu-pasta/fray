@@ -2,18 +2,20 @@ package cmu.pasta.sfuzz.core.scheduler
 
 import cmu.pasta.sfuzz.core.ThreadContext
 import cmu.pasta.sfuzz.core.exception.SchedulerInternalException
+import kotlinx.serialization.json.Json
 
-class ReplayScheduler(val choices: List<Choice>) : Scheduler {
+class ReplayScheduler(val schedule: Schedule) : Scheduler {
+    constructor(scheduleJson: String) : this(Json.decodeFromString<Schedule>(scheduleJson))
+
     var index = 0;
     override fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext? {
-        if (threads.size == 1) {
+        if (threads.size == 1 && !schedule.fullSchedule) {
             return threads[0]
         }
-        if (index > choices.size) {
-            print("Require more scheduling choices for replay scheduler !!!!!")
+        if (index >= schedule.choices.size) {
             throw SchedulerInternalException("Require more scheduling choices for replay scheduler")
         }
-        val choice = choices[index];
+        val choice = schedule.choices[index];
 //        assert(choice.enabled == threads.size)
         val selected = threads[choice.selected]
 //        assert(choice.threadId == selected.thread.id)

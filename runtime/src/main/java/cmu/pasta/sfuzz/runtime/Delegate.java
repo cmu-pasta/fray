@@ -2,9 +2,6 @@ package cmu.pasta.sfuzz.runtime;
 
 public class Delegate {
 
-    public void start() {
-    }
-
     public void onThreadStart(Thread t) {
     }
 
@@ -68,6 +65,9 @@ public class Delegate {
 
     public void onExit(int status) {
         java.lang.Runtime.getRuntime().exit(0);
+    }
+
+    public void onYield() {
     }
 
 }

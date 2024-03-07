@@ -5,11 +5,12 @@ import cmu.pasta.sfuzz.core.runtime.AnalysisResult
 import cmu.pasta.sfuzz.core.scheduler.Choice
 import java.io.File
 
-class CsvLogger(val baseFolder: String): LoggerBase {
+class CsvLogger(private val baseFolder: String, private val fullSchedule: Boolean): LoggerBase {
     var index = 0
     var scheduleFile: File? = null
     override fun executionStart() {
-        scheduleFile = File("$baseFolder/schedule_$index.csv")
+        val type = if (fullSchedule) "full" else "simplified"
+        scheduleFile = File("$baseFolder/schedule_${type}_$index.csv")
         scheduleFile?.appendText("selected,threadId,enabled,operation\n")
     }
 

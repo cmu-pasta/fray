@@ -13,14 +13,14 @@ import cmu.pasta.sfuzz.instrumentation.memory.MemoryManager
 import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.ThreadFactory
 
+// TODO(aoli): make this a class maybe?
 object GlobalContext {
     val registeredThreads = mutableMapOf<Long, ThreadContext>()
     var currentThreadId: Long = -1;
     var scheduler: Scheduler = FifoScheduler()
+    var config: Configuration? = null
     private val objectWatcher = mutableMapOf<Any, MutableList<Long>>()
     private val reentrantLockMonitor = ReentrantLockMonitor()
     private val memoryManager = MemoryManager()
@@ -34,7 +34,8 @@ object GlobalContext {
         }
     };
 
-    fun start() {
+    fun start(config: Configuration) {
+        this.config = config
         var t = Thread.currentThread();
         // We need to submit a dummy task to trigger the executor
         // thread creation
@@ -185,7 +186,8 @@ object GlobalContext {
 
     fun log(format: String, vararg args: Any) {
         val tid = Thread.currentThread().id
-        val data = "[$tid]: ${String.format(format, args)}"
+        val context = registeredThreads[tid]!!
+        val data = "[${context.index}]: ${String.format(format, args)}"
         for (logger in loggers) {
             logger.applicationEvent(data)
         }
@@ -227,11 +229,12 @@ object GlobalContext {
             }
         val index = enabledOperations.indexOf(nextThread)
         currentThreadId = nextThread.thread.id
+        val context = registeredThreads[currentThreadId]!!
 
-        if (enabledOperations.size > 1) {
+        if (enabledOperations.size > 1 || config!!.fullSchedule) {
             loggers.forEach {
-                it.newOperationScheduled(registeredThreads[currentThreadId]!!.pendingOperation!!,
-                    Choice(index, currentThreadId, enabledOperations.size))
+                it.newOperationScheduled(context.pendingOperation!!,
+                    Choice(index, context.index, enabledOperations.size))
             }
         }
 

@@ -27,11 +27,6 @@ class RuntimeDelegate: Delegate() {
         return false
     }
 
-    override fun start() {
-        if (checkEntered()) return
-        GlobalContext.start()
-        entered.set(false)
-    }
     override fun onThreadStart(t: Thread) {
         if (checkEntered()) return
         if (t is SFuzzThread) return
@@ -141,5 +136,11 @@ class RuntimeDelegate: Delegate() {
 
     override fun onExit(status: Int) {
         throw TargetTerminateException(status)
+    }
+
+    override fun onYield() {
+        if (checkEntered()) return
+        GlobalContext.scheduleNextOperation(true)
+        entered.set(false)
     }
 }
