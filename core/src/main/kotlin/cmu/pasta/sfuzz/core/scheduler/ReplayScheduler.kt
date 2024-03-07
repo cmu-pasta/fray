@@ -16,11 +16,10 @@ class ReplayScheduler(val schedule: Schedule) : Scheduler {
             throw SchedulerInternalException("Require more scheduling choices for replay scheduler")
         }
         val choice = schedule.choices[index];
-//        assert(choice.enabled == threads.size)
+        assert(choice.enabled == threads.size)
         val selected = threads[choice.selected]
-//        assert(choice.threadId == selected.thread.id)
+        assert(choice.threadId == selected.index)
         index += 1
         return selected
-
     }
 }

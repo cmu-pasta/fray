@@ -30,14 +30,14 @@ class JsonLogger(val base: String, val fullSchedule: Boolean): LoggerBase {
     }
     override fun executionDone(result: AnalysisResult) {
         executions.add(Record(currentTimeline, schedule, result))
-        if (result != AnalysisResult.COMPLETE) {
-            File("$base/schedule_${savedSchedule++}.json").writeText(json.encodeToString(schedule))
-        }
+//        if (result != AnalysisResult.COMPLETE) {
+//            File("$base/schedule_${savedSchedule++}.json").writeText(json.encodeToString(schedule))
+//        }
         File("$base/schedule_${savedSchedule++}.json").writeText(json.encodeToString(schedule))
     }
     override fun applicationEvent(event: String) {
     }
     fun dump() {
-        File("$base/timeline.json").writeText(json.encodeToString(executions))
+//        File("$base/timeline.json").writeText(json.encodeToString(executions))
     }
 }
