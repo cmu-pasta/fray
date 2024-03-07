@@ -15,6 +15,8 @@ import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
 import java.util.concurrent.Executors
+import java.util.concurrent.locks.Condition
+import java.util.concurrent.locks.Lock
 
 // TODO(aoli): make this a class maybe?
 object GlobalContext {
@@ -22,6 +24,15 @@ object GlobalContext {
     var currentThreadId: Long = -1;
     var scheduler: Scheduler = FifoScheduler()
     var config: Configuration? = null
+<<<<<<< HEAD
+=======
+    private val objectWatcher = mutableMapOf<Any, MutableList<Long>>()
+<<<<<<< HEAD
+    private val conditionWatcher = mutableMapOf<Any, Any>();
+>>>>>>> e82681c... NewConditionVisitor
+=======
+    private val conditionWatcher = mutableMapOf<Any, Lock>();
+>>>>>>> df6c68b... fix logic for await and signal
     private val reentrantLockMonitor = ReentrantLockMonitor()
     private val volatileManager = VolatileManager()
     val loggers = mutableListOf<LoggerBase>()
@@ -173,6 +184,7 @@ object GlobalContext {
         registeredThreads[t]?.pendingOperation = PausedOperation()
         registeredThreads[t]?.state = ThreadState.Paused
 
+<<<<<<< HEAD
         reentrantLockMonitor.addWaitingThread(o, Thread.currentThread())
         reentrantLockUnlock(o, t, true, true)
 
@@ -186,9 +198,24 @@ object GlobalContext {
             }
             reentrantLockUnlockDone(o)
             scheduleNextOperation(false)
+=======
+        // We need to unlock the reentrant lock as well.
+        // Unlock and wait is an atomic operation, we should not
+        // reschedule here.
+        if (o is Condition) {
+            val l:Lock? = conditionWatcher[o as Condition]
+            l?.let { reentrantLockUnlock(l) }
+            l?.unlock()
+        } else {
+            reentrantLockUnlock(o)
+        }
+        if (o !in objectWatcher) {
+            objectWatcher[o] = mutableListOf()
+>>>>>>> df6c68b... fix logic for await and signal
         }
     }
 
+<<<<<<< HEAD
     @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
     fun objectWaitDone(o: Any) {
         val t = Thread.currentThread()
@@ -201,6 +228,16 @@ object GlobalContext {
         }
         // If a thread is enabled, the lock must be available.
         assert(reentrantLockMonitor.lock(o, t.id, false, true))
+=======
+        // We are back! We should block until reentrant monitor is released.
+        if (o is Condition) {
+            val l:Lock? = conditionWatcher[o as Condition]
+            l?.let { reentrantLockLock(l) }
+            l?.lock()
+        } else {
+            reentrantLockLock(o)
+        }
+>>>>>>> df6c68b... fix logic for await and signal
     }
 
     @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
@@ -317,6 +354,10 @@ object GlobalContext {
 
     fun reentrantLockUnlockDone(lock: Any) {
         syncManager.wait(lock)
+    }
+
+    fun reentrantLockNewCondition(condition: Condition, lock: Lock) {
+        conditionWatcher[condition] = lock
     }
 
     fun fieldOperation(obj: Any?, owner: String, name: String, type: MemoryOpType) {

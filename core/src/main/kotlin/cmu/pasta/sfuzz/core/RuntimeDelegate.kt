@@ -4,6 +4,10 @@ import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
+import java.util.concurrent.locks.AbstractQueuedSynchronizer.ConditionObject
+import java.util.concurrent.locks.Condition
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantLock
 
 class RuntimeDelegate: Delegate() {
 
@@ -88,18 +92,6 @@ class RuntimeDelegate: Delegate() {
 
     override fun onReentrantLockLock(l: Any) {
         if (checkEntered()) return
-        GlobalContext.reentrantLockLock(l)
-        entered.set(false)
-    }
-
-    override fun onReentrantLockTryLock(l: Any) {
-        if (checkEntered()) return
-        GlobalContext.reentrantLockTrylock(l)
-        entered.set(false)
-    }
-
-    override fun onReentrantLockUnlock(l: Any) {
-        if (checkEntered()) return
         GlobalContext.reentrantLockUnlock(l, Thread.currentThread().id, true, false)
         entered.set(false)
     }
@@ -107,6 +99,40 @@ class RuntimeDelegate: Delegate() {
     override fun onAtomicOperation(o: Any, type: MemoryOpType) {
         if (checkEntered()) return
         GlobalContext.atomicOperation(o, type)
+        entered.set(false)
+    }
+
+    override fun onReentrantLockUnlock(l: Any) {
+        if (checkEntered()) return
+        GlobalContext.reentrantLockUnlock(l)
+        entered.set(false)
+    }
+
+    override fun onReentrantLockNewCondition(c: Condition, l: ReentrantLock):Condition {
+        GlobalContext.reentrantLockNewCondition(c, l);
+        return c;
+    }
+    override fun onConditionAwait(o: Any) {
+        if (checkEntered()) return
+        GlobalContext.objectWait(o)
+        entered.set(false)
+    }
+
+    override fun onConditionSignal(o: Any) {
+        if (checkEntered()) return
+        GlobalContext.objectNotify(o)
+        entered.set(false)
+    }
+
+    override fun onConditionSignalAll(o: Any) {
+        if (checkEntered()) return
+        GlobalContext.objectNotifyAll(o)
+        entered.set(false)
+    }
+
+    override fun onAtomicOperation(o: Any) {
+        if (checkEntered()) return
+        GlobalContext.memoryOperation(null, MemoryOperation.Type.ATOMIC)
         entered.set(false)
     }
 

@@ -1,5 +1,9 @@
 package cmu.pasta.sfuzz.runtime;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+
 // No recursion is allowed in Runtime
 public class Runtime {
     public static Delegate DELEGATE = new Delegate();
@@ -38,6 +42,22 @@ public class Runtime {
         DELEGATE.onReentrantLockUnlockDone(l);
     }
 
+    public static Condition onReentrantLockNewCondition(Condition c, ReentrantLock l) {
+        return DELEGATE.onReentrantLockNewCondition(c, l);
+    }
+
+    public static void onConditionAwait(Object c) {
+        DELEGATE.onConditionAwait(c);
+    }
+
+    public static void onConditionSignal(Object c) {
+        DELEGATE.onConditionSignal(c);
+    }
+
+    public static void onConditionSignalAll(Object c) {
+        DELEGATE.onConditionSignalAll(c);
+    }
+
     public static void onObjectWait(Object o) {
         DELEGATE.onObjectWait(o);
     }
@@ -52,6 +72,18 @@ public class Runtime {
 
     public static void onObjectNotifyAll(Object o) {
         DELEGATE.onObjectNotifyAll(o);
+    }
+
+    public static void onConditionAwait(Object o) {
+        DELEGATE.onConditionAwait(o);
+    }
+
+    public static void onConditionSignal(Object o) {
+        DELEGATE.onConditionSignal(o);
+    }
+
+    public static void onConditionSignalAll(Object o) {
+        DELEGATE.onConditionSignalAll(o);
     }
 
     public static void onAtomicOperation(Object o, MemoryOpType type) {

@@ -22,8 +22,6 @@ fun run(config: Configuration) {
     println("Start analysing ${config.clazz}:main")
     println("Report is available at: ${config.report}")
     prepareReportPath(config.report)
-    val clazz = Class.forName(config.clazz)
-    val m = clazz.getMethod("main", Array<String>::class.java)
     val logger = JsonLogger(config.report, config.fullSchedule)
     GlobalContext.registerLogger(logger)
     GlobalContext.scheduler = config.scheduler
@@ -33,6 +31,8 @@ fun run(config: Configuration) {
     for (i in 0..<config.iter) {
         Runtime.start()
         try {
+            val clazz = Class.forName(config.clazz)
+            val m = clazz.getMethod("main", Array<String>::class.java)
             m.invoke(null, config.targetArgs.split(" ").toTypedArray())
         } catch (e: InvocationTargetException) {
             if (e.cause is TargetTerminateException) {
