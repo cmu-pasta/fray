@@ -1,10 +1,11 @@
 package cmu.pasta.sfuzz.instrumentation.visitors
 
+import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.Runtime
-import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes.ACC_PUBLIC
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.Opcodes.*
 import java.util.*
 import java.util.concurrent.atomic.*
 
@@ -25,17 +26,39 @@ class AtomicOperationInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
 
     override fun visitMethod(
         access: Int,
-        name: String?,
+        name: String,
         descriptor: String?,
         signature: String?,
         exceptions: Array<out String>?
     ): MethodVisitor {
-        var mv = super.visitMethod(access, name, descriptor, signature, exceptions)
+        val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
+        val memoryType = memoryTypeFromMethodName(name)
         if (atomicClasses.contains(className) && !atomicNonVolatileMethodNames.contains(name)
             && access and ACC_PUBLIC != 0) {
-            return MethodEnterVisitor(mv, Runtime::onAtomicOperation)
+            return object: MethodVisitor(ASM9, mv) {
+                override fun visitCode() {
+                    super.visitCode()
+                    val type = MemoryOpType::class.java.name.replace(".", "/")
+                    visitVarInsn(ALOAD, 0)
+                    visitFieldInsn(GETSTATIC, type, memoryType.name, "L$type;")
+                    visitMethodInsn(
+                        INVOKESTATIC,
+                        cmu.pasta.sfuzz.runtime.Runtime::class.java.name.replace(".", "/"), Runtime::onAtomicOperation.name,
+                        Utils.kFunctionToJvmMethodDescriptor(Runtime::onAtomicOperation), false)
+                }
+            }
         }
         return mv
+    }
+
+    fun memoryTypeFromMethodName(name: String): MemoryOpType {
+        val lname = name.lowercase()
+        return if (lname.contains("set") ||
+            lname.contains("exchange")) {
+            MemoryOpType.MEMORY_WRITE
+        } else {
+            MemoryOpType.MEMORY_READ
+        }
     }
 
     companion object {

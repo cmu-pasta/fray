@@ -10,9 +10,11 @@ enum class ThreadState {
     Paused,
     Completed
 }
+
 class ThreadContext(val thread: Thread) {
     var state = ThreadState.Enabled
     val index = numThread++
+    val racingResources = mutableSetOf<Long>()
 
     // Pending operation is null if a thread is just resumed/blocked.
     var pendingOperation: Operation? = ThreadStartOperation()

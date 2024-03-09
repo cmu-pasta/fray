@@ -1,6 +1,6 @@
 package cmu.pasta.sfuzz.instrumentation.visitors
 
-import cmu.pasta.sfuzz.instrumentation.memory.MemoryManager
+import cmu.pasta.sfuzz.instrumentation.memory.VolatileManager
 import cmu.pasta.sfuzz.runtime.Runtime
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
@@ -19,7 +19,7 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
         var mv = super.visitMethod(access, name, descriptor, signature, exceptions)
         return object: MethodVisitor(ASM9, mv) {
             override fun visitFieldInsn(opcode: Int, owner: String, name: String, descriptor: String) {
-                if (memoryManager.isVolatile(owner, name)) {
+                if (volatileManager.isVolatile(owner, name)) {
                     if (opcode == Opcodes.GETFIELD || opcode == Opcodes.PUTFIELD) {
                         visitVarInsn(Opcodes.ALOAD, 0)
                     }
@@ -55,7 +55,7 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
     }
 
     companion object {
-        val memoryManager = MemoryManager()
+        val volatileManager = VolatileManager()
     }
 
 }

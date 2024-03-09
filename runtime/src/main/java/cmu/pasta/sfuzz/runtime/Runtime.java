@@ -46,8 +46,8 @@ public class Runtime {
         DELEGATE.onObjectNotifyAll(o);
     }
 
-    public static void onAtomicOperation(Object o) {
-        DELEGATE.onAtomicOperation(o);
+    public static void onAtomicOperation(Object o, MemoryOpType type) {
+        DELEGATE.onAtomicOperation(o, type);
     }
 
     public static void onUnsafeOperation() {

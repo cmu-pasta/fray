@@ -4,6 +4,7 @@ import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.core.concurrency.Sync
 import cmu.pasta.sfuzz.core.concurrency.operations.MemoryOperation
 import cmu.pasta.sfuzz.runtime.Delegate
+import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
 
 class RuntimeDelegate: Delegate() {
@@ -103,40 +104,40 @@ class RuntimeDelegate: Delegate() {
         entered.set(false)
     }
 
-    override fun onAtomicOperation(o: Any) {
+    override fun onAtomicOperation(o: Any, type: MemoryOpType) {
         if (checkEntered()) return
-        GlobalContext.memoryOperation(null, MemoryOperation.Type.ATOMIC)
+        GlobalContext.atomicOperation(o, type)
         entered.set(false)
     }
 
     override fun onUnsafeOperation() {
         if (checkEntered()) return
-        GlobalContext.memoryOperation(null, MemoryOperation.Type.UNSAFE)
+//        GlobalContext.memoryOperation(null, MemoryOperation.Type.UNSAFE)
         entered.set(false)
     }
 
     override fun onFieldRead(o: Any, owner: String, name: String, descriptor: String) {
         if (checkEntered()) return
-        GlobalContext.fieldOperation(owner, name, descriptor)
+        GlobalContext.fieldOperation(o, owner, name, MemoryOpType.MEMORY_READ)
         entered.set(false)
     }
 
     override fun onFieldWrite(o: Any, owner: String, name: String, descriptor: String) {
         if (checkEntered()) return
-        GlobalContext.fieldOperation(owner, name, descriptor)
+        GlobalContext.fieldOperation(o, owner, name, MemoryOpType.MEMORY_WRITE)
         entered.set(false)
     }
 
 
     override fun onStaticFieldRead(owner: String, name: String, descriptor: String) {
         if (checkEntered()) return
-        GlobalContext.fieldOperation(owner, name, descriptor)
+        GlobalContext.fieldOperation(null, owner, name, MemoryOpType.MEMORY_READ)
         entered.set(false)
     }
 
     override fun onStaticFieldWrite(owner: String, name: String, descriptor: String) {
         if (checkEntered()) return
-        GlobalContext.fieldOperation(owner, name, descriptor)
+        GlobalContext.fieldOperation(null, owner, name, MemoryOpType.MEMORY_WRITE)
         entered.set(false)
     }
 

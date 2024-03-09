@@ -3,7 +3,7 @@ package cmu.pasta.sfuzz.instrumentation.memory
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 
-class MemoryManager {
+class VolatileManager {
     private val volatileFields = HashMap<String, Boolean>()
 
     fun isVolatile(name: String, fieldName: String): Boolean {

@@ -45,7 +45,7 @@ public class Delegate {
     public void onReentrantLockUnlock(Object l) {
     }
 
-    public void onAtomicOperation(Object o) {
+    public void onAtomicOperation(Object o, MemoryOpType type) {
     }
 
     public void onFieldRead(Object o, String owner, String name, String descriptor) {

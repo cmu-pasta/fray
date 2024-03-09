@@ -9,10 +9,12 @@ import cmu.pasta.sfuzz.core.runtime.AnalysisResult
 import cmu.pasta.sfuzz.core.scheduler.Choice
 import cmu.pasta.sfuzz.core.scheduler.FifoScheduler
 import cmu.pasta.sfuzz.core.scheduler.Scheduler
-import cmu.pasta.sfuzz.instrumentation.memory.MemoryManager
+import cmu.pasta.sfuzz.instrumentation.memory.VolatileManager
 import cmu.pasta.sfuzz.runtime.Delegate
+import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
+import java.util.*
 import java.util.concurrent.Executors
 
 // TODO(aoli): make this a class maybe?
@@ -23,7 +25,7 @@ object GlobalContext {
     var config: Configuration? = null
     private val objectWatcher = mutableMapOf<Any, MutableList<Long>>()
     private val reentrantLockMonitor = ReentrantLockMonitor()
-    private val memoryManager = MemoryManager()
+    private val volatileManager = VolatileManager()
     val loggers = mutableListOf<LoggerBase>()
     val synchronizationPoints = mutableMapOf<Any, Sync>()
     val executor = Executors.newSingleThreadExecutor { r ->
@@ -96,7 +98,8 @@ object GlobalContext {
 
     fun objectWait(o: Any) {
         val t = Thread.currentThread().id
-        registeredThreads[t]?.pendingOperation = ObjectWaitOperation()
+        val objId = System.identityHashCode(o)
+        registeredThreads[t]?.pendingOperation = ObjectWaitOperation(objId)
         scheduleNextOperation(true)
         // If we resume executing, the Object.wait is executed. We should update the
         // state of current thread.
@@ -145,14 +148,16 @@ object GlobalContext {
 
     fun reentrantLockTrylock(lock: Any) {
         val t = Thread.currentThread().id
-        registeredThreads[t]?.pendingOperation = ReentrantLockLockOperation()
+        val objId = System.identityHashCode(lock)
+        registeredThreads[t]?.pendingOperation = ReentrantLockLockOperation(objId)
         scheduleNextOperation(true)
         reentrantLockMonitor.lock(lock, false)
     }
 
     fun reentrantLockLock(lock: Any) {
         val t = Thread.currentThread().id
-        registeredThreads[t]?.pendingOperation = ReentrantLockLockOperation()
+        val objId = System.identityHashCode(lock)
+        registeredThreads[t]?.pendingOperation = ReentrantLockLockOperation(objId)
         scheduleNextOperation(true)
 
         /**
@@ -198,17 +203,28 @@ object GlobalContext {
         reentrantLockMonitor.unlock(lock)
     }
 
-    fun fieldOperation(owner: String, name: String, descriptor: String) {
-        if (!memoryManager.isVolatile(owner, name)) return
-        memoryOperation(null, MemoryOperation.Type.FIELD)
+    fun fieldOperation(obj: Any?, owner: String, name: String, type: MemoryOpType) {
+        if (!volatileManager.isVolatile(owner, name)) return
+        val objIds = mutableListOf<Int>()
+        if (obj != null) {
+            objIds.add(System.identityHashCode(obj))
+        } else {
+            objIds.add(owner.hashCode())
+        }
+        objIds.add(name.hashCode())
+        memoryOperation(objIds.toIntArray().contentHashCode(), type)
     }
 
-    fun memoryOperation(op: Any?, type: MemoryOperation.Type) {
+    fun atomicOperation(obj: Any, type: MemoryOpType) {
+        val objId = System.identityHashCode(obj)
+        memoryOperation(objId, type)
+    }
+
+    fun memoryOperation(obj: Int, type: MemoryOpType) {
         val t = Thread.currentThread().id
-        registeredThreads[t]?.pendingOperation = MemoryOperation(type)
+        registeredThreads[t]?.pendingOperation = MemoryOperation(obj, type)
         scheduleNextOperation(true)
     }
-
 
     fun scheduleNextOperation(shouldBlockCurrentThread: Boolean) {
         // Our current design makes sure that reschedule is only called

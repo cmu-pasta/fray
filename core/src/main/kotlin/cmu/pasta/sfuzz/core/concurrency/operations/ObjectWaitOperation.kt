@@ -1,7 +1,6 @@
 package cmu.pasta.sfuzz.core.concurrency.operations
 
-import kotlinx.serialization.Serializable
+import cmu.pasta.sfuzz.runtime.MemoryOpType
 
-@Serializable
-class ObjectWaitOperation: Operation {
+class ObjectWaitOperation(obj: Int): ConflictingOperation(obj, MemoryOpType.MEMORY_WRITE) {
 }
