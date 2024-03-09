@@ -17,7 +17,6 @@ class RuntimeDelegate: Delegate() {
             return true
         }
         entered.set(true)
-
         if (skipFunctionEntered.get() > 0) {
             entered.set(false)
             return true
@@ -36,52 +35,42 @@ class RuntimeDelegate: Delegate() {
 
     override fun onThreadStart(t: Thread) {
         if (checkEntered()) return
-        if (t is SFuzzThread) return
         GlobalContext.threadStart(t)
         entered.set(false)
     }
 
     override fun onThreadStartDone(t: Thread) {
         if (checkEntered()) return
-        if (t is SFuzzThread) return
         GlobalContext.threadStartDone(t)
         entered.set(false)
     }
 
     override fun onThreadRun() {
         if (checkEntered()) return
-        if (Thread.currentThread() is SFuzzThread) return
         GlobalContext.threadRun()
         entered.set(false)
     }
 
     override fun onThreadEnd() {
         if (checkEntered()) return
-        if (Thread.currentThread() is SFuzzThread) return
         GlobalContext.threadCompleted(Thread.currentThread())
         entered.set(false)
     }
 
     override fun onObjectWait(o: Any) {
         if (checkEntered()) return
-        if (o is SFuzzThread) return
-        if (o is Sync) return  // Do not propagate if o is Sync
         GlobalContext.objectWait(o)
         entered.set(false)
     }
 
     override fun onObjectNotify(o: Any) {
         if (checkEntered()) return
-        if (o is SFuzzThread) return
-        if (o is Sync) return
         GlobalContext.objectNotify(o)
         entered.set(false)
     }
 
     override fun onObjectNotifyAll(o: Any) {
         if (checkEntered()) return
-        if (o is SFuzzThread) return
-        if (o is Sync) return
         GlobalContext.objectNotifyAll(o)
         entered.set(false)
     }
@@ -157,5 +146,18 @@ class RuntimeDelegate: Delegate() {
 
     override fun onLoadClassDone() {
         skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    }
+
+    override fun start() {
+        // For the first thread, it is not registered.
+        // Therefor we cannot call `checkEntered` here.
+        try {
+            entered.set(true)
+            GlobalContext.start()
+            entered.set(false)
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+
     }
 }

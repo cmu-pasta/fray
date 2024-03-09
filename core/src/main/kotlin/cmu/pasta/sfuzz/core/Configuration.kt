@@ -10,6 +10,7 @@ import com.github.ajalt.clikt.parameters.types.boolean
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
 import kotlinx.serialization.json.Json
+import java.util.*
 
 sealed class ScheduleAlgorithm(name: String): OptionGroup(name) {
     open fun getScheduler(): Scheduler {
@@ -31,6 +32,12 @@ class Fifo: ScheduleAlgorithm("fifo") {
     }
 }
 
+class POS: ScheduleAlgorithm("pos") {
+    override fun getScheduler(): Scheduler {
+        return POSScheduler(Random())
+    }
+}
+
 class PCT: ScheduleAlgorithm("pct") {
     val numSwitchPoints by option().int().default(3)
 }
@@ -39,9 +46,11 @@ class ConfigurationCommand: CliktCommand() {
     val clazz by argument()
     val report by option("-o").default("report")
     val targetArgs by option("-a", "--args", help = "Arguments passed to target application").default("")
+    val iter by option("-i", "--iter", help = "Number of iterations").int().default(100)
     val scheduler by option().groupChoice(
         "replay" to Replay(),
-        "fifo" to Fifo()
+        "fifo" to Fifo(),
+        "pos" to POS()
     )
     val fullSchedule by option("-f", "--full").boolean().default(false)
 
@@ -50,9 +59,14 @@ class ConfigurationCommand: CliktCommand() {
 
 
     fun toConfiguration(): Configuration {
-        return Configuration(clazz, report, targetArgs, scheduler!!.getScheduler(), fullSchedule)
+        return Configuration(clazz, report, targetArgs, iter, scheduler!!.getScheduler(), fullSchedule)
     }
 }
 
-data class Configuration(val clazz: String, val report: String, val targetArgs: String, val scheduler: Scheduler, val fullSchedule: Boolean) {
+data class Configuration(val clazz: String,
+                         val report: String,
+                         val targetArgs: String,
+                         val iter: Int,
+                         val scheduler: Scheduler,
+                         val fullSchedule: Boolean) {
 }

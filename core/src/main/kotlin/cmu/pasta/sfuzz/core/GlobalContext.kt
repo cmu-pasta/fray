@@ -28,22 +28,32 @@ object GlobalContext {
     private val volatileManager = VolatileManager()
     val loggers = mutableListOf<LoggerBase>()
     val synchronizationPoints = mutableMapOf<Any, Sync>()
-    val executor = Executors.newSingleThreadExecutor { r ->
+    var executor = Executors.newSingleThreadExecutor { r ->
         object : SFuzzThread() {
             override fun run() {
                 r.run()
             }
         }
-    };
+    }
 
-    fun start(config: Configuration) {
-        this.config = config
-        var t = Thread.currentThread();
+    fun bootStrap() {
+        executor = Executors.newSingleThreadExecutor { r ->
+            object : SFuzzThread() {
+                override fun run() {
+                    r.run()
+                }
+            }
+        }
+    }
+
+    fun start() {
+        val t = Thread.currentThread();
         // We need to submit a dummy task to trigger the executor
         // thread creation
         executor.submit {}
         currentThreadId = t.id
-        registeredThreads[t.id] = ThreadContext(t)
+        registeredThreads[t.id] = ThreadContext(t, registeredThreads.size)
+        registeredThreads[t.id]?.state = ThreadState.Enabled
         loggers.forEach {
             it.executionStart()
         }
@@ -51,10 +61,18 @@ object GlobalContext {
     }
 
     fun done(result: AnalysisResult) {
-        Runtime.DELEGATE = Delegate()
         loggers.forEach {
             it.executionDone(result)
         }
+
+        reentrantLockMonitor.done()
+        assert(objectWatcher.isEmpty())
+        assert(synchronizationPoints.isEmpty())
+        registeredThreads.clear()
+    }
+
+    fun shutDown() {
+        Runtime.DELEGATE = Delegate()
         executor.shutdown()
     }
 
@@ -63,7 +81,7 @@ object GlobalContext {
     }
 
     fun threadStart(t: Thread) {
-        registeredThreads[t.id] = ThreadContext(t)
+        registeredThreads[t.id] = ThreadContext(t, registeredThreads.size)
         synchronizationPoints[t] = Sync(1)
     }
 
@@ -91,6 +109,7 @@ object GlobalContext {
         registeredThreads[t.id]?.state = ThreadState.Completed
         executor.submit {
             while (t.isAlive) {
+                Thread.yield()
             }
             scheduleNextOperation(false)
         }
@@ -103,7 +122,7 @@ object GlobalContext {
         scheduleNextOperation(true)
         // If we resume executing, the Object.wait is executed. We should update the
         // state of current thread.
-        registeredThreads[t]?.pendingOperation = null
+        registeredThreads[t]?.pendingOperation = PausedOperation()
         registeredThreads[t]?.state = ThreadState.Paused
 
         // We need to unlock the reentrant lock as well.
@@ -235,14 +254,16 @@ object GlobalContext {
             .filter { it.state == ThreadState.Enabled }
             .sortedBy { it.thread.id }
 
-        val nextThread = scheduler.scheduleNextOperation(enabledOperations)
-            ?: if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
+        if (enabledOperations.isEmpty()) {
+            if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
                 // We are done here, we should go back to the
                 return
             } else {
+                // Deadlock detected
                 throw TargetTerminateException(-1)
-                return
             }
+        }
+        val nextThread = scheduler.scheduleNextOperation(enabledOperations)
         val index = enabledOperations.indexOf(nextThread)
         currentThreadId = nextThread.thread.id
         val context = registeredThreads[currentThreadId]!!
@@ -254,7 +275,7 @@ object GlobalContext {
             }
         }
 
-        registeredThreads[currentThreadId]!!.pendingOperation = null
+        registeredThreads[currentThreadId]!!.pendingOperation = RunningOperation()
         if (currentThread != nextThread) {
             nextThread.unblock()
             if (shouldBlockCurrentThread) {

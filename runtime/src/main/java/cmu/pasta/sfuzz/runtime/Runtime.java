@@ -84,4 +84,8 @@ public class Runtime {
     public static void onLoadClassDone() {
         DELEGATE.onLoadClassDone();
     }
+
+    public static void start() {
+        DELEGATE.start();
+    }
 }

@@ -76,5 +76,8 @@ public class Delegate {
     public void onLoadClassDone() {
     }
 
+    public void start() {
+    }
+
 }
 

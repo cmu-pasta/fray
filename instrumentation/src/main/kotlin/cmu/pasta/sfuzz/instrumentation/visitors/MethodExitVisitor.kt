@@ -21,16 +21,20 @@ class MethodExitVisitor(mv: MethodVisitor, val method: KFunction<*>, access: Int
         if (loadThis) {
             loadThis()
         }
-        visitMethodInsn(Opcodes.INVOKESTATIC,
-            Runtime::class.java.name.replace(".", "/"), method.name,
-            Utils.kFunctionToJvmMethodDescriptor(method), false)
+        if (opcode != ATHROW) {
+            visitMethodInsn(Opcodes.INVOKESTATIC,
+                Runtime::class.java.name.replace(".", "/"), method.name,
+                Utils.kFunctionToJvmMethodDescriptor(method), false)
+        }
         super.onMethodExit(opcode)
     }
 
     override fun visitMaxs(maxStack: Int, maxLocals: Int) {
         visitTryCatchBlock(methodEnterLabel, methodExitLabel, methodExitLabel, "java/lang/Throwable")
         visitLabel(methodExitLabel)
-        onMethodExit(ATHROW)
+        visitMethodInsn(Opcodes.INVOKESTATIC,
+            Runtime::class.java.name.replace(".", "/"), method.name,
+            Utils.kFunctionToJvmMethodDescriptor(method), false)
         visitInsn(ATHROW)
         super.visitMaxs(maxStack, maxLocals)
     }

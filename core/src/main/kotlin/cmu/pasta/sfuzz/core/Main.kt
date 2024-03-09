@@ -27,20 +27,25 @@ fun run(config: Configuration) {
     val logger = CsvLogger(config.report, config.fullSchedule)
     GlobalContext.registerLogger(logger)
     GlobalContext.scheduler = config.scheduler
-    GlobalContext.start(config)
+    GlobalContext.config = config
+    GlobalContext.bootStrap()
     Runtime.DELEGATE = RuntimeDelegate()
-    try {
-        m.invoke(null, config.targetArgs.split(" ").toTypedArray())
-    } catch (e: InvocationTargetException) {
-        if (e.cause is TargetTerminateException) {
+    for (i in 0..<config.iter) {
+        Runtime.start()
+        try {
+            m.invoke(null, config.targetArgs.split(" ").toTypedArray())
+        } catch (e: InvocationTargetException) {
+            if (e.cause is TargetTerminateException) {
 
-            println("target terminated: ${(e.cause as TargetTerminateException).status}")
-        } else {
-            e.cause?.printStackTrace()
+                println("target terminated: ${(e.cause as TargetTerminateException).status}")
+            } else {
+                println(e.toString())
+                e.cause?.printStackTrace()
+            }
         }
+        GlobalContext.done(AnalysisResult.COMPLETE)
     }
-    GlobalContext.done(AnalysisResult.COMPLETE)
-//    logger.dump()
+    GlobalContext.shutDown()
     println("Analysis done!")
 }
 

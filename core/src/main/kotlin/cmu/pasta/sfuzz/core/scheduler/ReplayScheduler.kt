@@ -8,7 +8,7 @@ class ReplayScheduler(val schedule: Schedule) : Scheduler {
     constructor(scheduleJson: String) : this(Json.decodeFromString<Schedule>(scheduleJson))
 
     var index = 0;
-    override fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext? {
+    override fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext {
         if (threads.size == 1 && !schedule.fullSchedule) {
             return threads[0]
         }

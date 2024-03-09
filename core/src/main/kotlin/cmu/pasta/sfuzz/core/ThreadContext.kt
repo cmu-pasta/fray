@@ -8,16 +8,18 @@ enum class ThreadState {
     Enabled,
     Running,
     Paused,
-    Completed
+    Completed,
+
+    // Thread is started but not yet available.
+    STARTED,
 }
 
-class ThreadContext(val thread: Thread) {
-    var state = ThreadState.Enabled
-    val index = numThread++
+class ThreadContext(val thread: Thread, val index: Int) {
+    var state = ThreadState.STARTED
     val racingResources = mutableSetOf<Long>()
 
     // Pending operation is null if a thread is just resumed/blocked.
-    var pendingOperation: Operation? = ThreadStartOperation()
+    var pendingOperation: Operation = ThreadStartOperation()
     val sync = Sync(1)
     fun block() {
         sync.block()
@@ -25,9 +27,4 @@ class ThreadContext(val thread: Thread) {
     fun unblock() {
         sync.unblock()
     }
-
-    companion object {
-        var numThread = 0
-    }
-
 }

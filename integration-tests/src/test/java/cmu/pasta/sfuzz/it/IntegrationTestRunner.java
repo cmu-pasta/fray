@@ -31,6 +31,7 @@ public class IntegrationTestRunner {
                 "example." + testName,
                 "/tmp/report",
                 "",
+                1,
                 scheduler,
 //                new FifoScheduler(),
                 true

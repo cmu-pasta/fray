@@ -52,4 +52,9 @@ class ReentrantLockMonitor {
             }
          }
     }
+
+    fun done() {
+        assert(lockHolders.isEmpty())
+        assert(lockWaiters.isEmpty())
+    }
 }
