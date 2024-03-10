@@ -8,13 +8,14 @@ public class Main {
             blocked = false;
             this.notify();
         }
-        public static synchronized void test2() {
-            System.out.println(T.class.getName());
+        private static synchronized void test2() {
+            System.out.println("???asdfasdfasdf");
         }
         @Override
         public void run() {
             try {
                 unblock();
+                test2();
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);

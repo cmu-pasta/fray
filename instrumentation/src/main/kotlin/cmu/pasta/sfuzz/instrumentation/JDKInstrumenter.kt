@@ -26,9 +26,12 @@ fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
     cv = VolatileFieldsInstrumenter(cv)
     cv = UnsafeInstrumenter(cv)
     cv = ClassloaderInstrumenter(cv)
-    // MonitorInstrumenter should come first because ObjectInstrumenter will insert more
+    // MonitorInstrumenter should come second because ObjectInstrumenter will insert more
     // monitors.
     cv = MonitorInstrumenter(cv, true)
+    // SynchronizedMethodEmbeddingInstrumenter should come before MonitorInstrumenter because
+    // it inlines monitors for synchronized methods.
+//    cv = SynchronizedMethodEmbeddingInstrumenter(cv)
     classReader.accept(cv, ClassReader.EXPAND_FRAMES)
     var out = classWriter.toByteArray()
     File("/tmp/out/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)

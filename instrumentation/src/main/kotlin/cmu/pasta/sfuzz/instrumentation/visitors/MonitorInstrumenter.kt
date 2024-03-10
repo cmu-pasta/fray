@@ -31,56 +31,7 @@ class MonitorInstrumenter(cv: ClassVisitor, private val instrumentingJDK: Boolea
             access and Opcodes.ACC_NATIVE != 0) {
             return super.visitMethod(access, name, descriptor, signature, exceptions)
         }
-        var mv = if (access and Opcodes.ACC_SYNCHRONIZED != 0 && !instrumentingJDK) {
-            val newMethod = "$name\$SFuzz"
-            var newAccess = access and Opcodes.ACC_SYNCHRONIZED.inv()
-
-            var copyMv = super.visitMethod(newAccess, name, descriptor, signature, exceptions)
-
-            copyMv.visitCode()
-            var (opcode, argIndex) = if (access and Opcodes.ACC_STATIC != 0) {
-                copyMv.visitLdcInsn(Type.getObjectType(className))
-                Pair(Opcodes.INVOKESTATIC, 0)
-            } else {
-                copyMv.visitVarInsn(Opcodes.ALOAD, 0) // Load this
-                copyMv.visitInsn(Opcodes.DUP)
-                Pair(Opcodes.INVOKEVIRTUAL, 1)
-            }
-            copyMv.visitMethodInsn(Opcodes.INVOKESTATIC,
-                Runtime::class.java.name.replace(".", "/"),
-                Runtime::onReentrantLockLock.name,
-                Utils.kFunctionToJvmMethodDescriptor(Runtime::onReentrantLockLock),
-                false)
-//            copyMv.visitInsn(Opcodes.MONITORENTER)
-            val args: Array<Type> = Type.getArgumentTypes(descriptor)
-            for (i in args.indices) {
-                val t = args[i]
-                copyMv.visitVarInsn(t.getOpcode(Opcodes.ILOAD), argIndex)
-                argIndex += t.size
-            }
-            copyMv.visitMethodInsn(opcode, className, newMethod, descriptor, false)
-            if (access and Opcodes.ACC_STATIC != 0) {
-                copyMv.visitLdcInsn(Type.getObjectType(className))
-            } else {
-                copyMv.visitVarInsn(Opcodes.ALOAD, 0) // Load this
-            }
-            copyMv.visitMethodInsn(Opcodes.INVOKESTATIC,
-                Runtime::class.java.name.replace(".", "/"),
-                Runtime::onReentrantLockUnlock.name,
-                Utils.kFunctionToJvmMethodDescriptor(Runtime::onReentrantLockUnlock),
-                false)
-//            copyMv.visitInsn(Opcodes.MONITOREXIT)
-
-            val returnType = Type.getReturnType(descriptor)
-            copyMv.visitInsn(returnType.getOpcode(Opcodes.IRETURN))
-            copyMv.visitMaxs(args.size, args.size);
-            copyMv.visitEnd()
-            SeparationMethodVisitor(
-                super.visitMethod(newAccess, "$name\$SFuzz", descriptor, signature, exceptions), copyMv)
-        } else {
-            super.visitMethod(access, name, descriptor, signature, exceptions)
-        }
-
+        val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
         return object: MethodVisitor(ASM9, mv) {
             override fun visitInsn(opcode: Int) {
                 if (opcode == Opcodes.MONITORENTER || opcode == Opcodes.MONITOREXIT) {

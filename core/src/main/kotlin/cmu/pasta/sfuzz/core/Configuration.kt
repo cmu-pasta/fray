@@ -46,7 +46,7 @@ class ConfigurationCommand: CliktCommand() {
     val clazz by argument()
     val report by option("-o").default("report")
     val targetArgs by option("-a", "--args", help = "Arguments passed to target application").default("")
-    val iter by option("-i", "--iter", help = "Number of iterations").int().default(100)
+    val iter by option("-i", "--iter", help = "Number of iterations").int().default(1)
     val scheduler by option().groupChoice(
         "replay" to Replay(),
         "fifo" to Fifo(),
