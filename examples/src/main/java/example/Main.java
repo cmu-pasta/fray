@@ -1,6 +1,8 @@
 package example;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Main {
     public static class T extends Thread {
@@ -42,15 +44,30 @@ public class Main {
 //        System.out.println(t.isAlive());
     }
 
-    public static void testConcurrentHashMap() {
-        ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>();
-        for (int i = 0; i < 100; i++) {
-            map.put(String.valueOf(i), String.valueOf(i));
+    public static void testConcurrentHashMap() throws InterruptedException {
+        final Object lock = new Object();
+        ExecutorService service = Executors.newFixedThreadPool(10);
+        service.submit(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Thread 1");
+            }
+        });
+
+        service.submit(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (lock) {
+                    lock.notify();
+                    System.out.println("Thread 1");
+                }
+            }
+        });
+
+        synchronized (lock) {
+            lock.wait();
         }
-        for (String key : map.keySet()) {
-            System.out.println(key);
-            System.out.println(map.get(key));
-        }
+        service.shutdown();
     }
 
     public static void testThread() {
