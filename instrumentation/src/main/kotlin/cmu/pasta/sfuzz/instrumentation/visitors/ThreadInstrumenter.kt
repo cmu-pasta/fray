@@ -15,10 +15,10 @@ class ThreadInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv, Thread::class.j
         exceptions: Array<out String>?
     ): MethodVisitor {
         if (name == "start") {
-            return MethodEnterVisitor(MethodExitVisitor(mv, Runtime::onThreadStartDone, access, name, descriptor), Runtime::onThreadStart)
+            return MethodEnterVisitor(MethodExitVisitor(mv, Runtime::onThreadStartDone, access, name, descriptor, true), Runtime::onThreadStart, true)
         }
         if (name == "yield") {
-            return MethodEnterVisitor(mv, Runtime::onYield)
+            return MethodEnterVisitor(mv, Runtime::onYield, false)
         }
         return mv
     }

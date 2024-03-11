@@ -1,5 +1,7 @@
 package example;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 public class Main {
     public static class T extends Thread {
         public boolean blocked = false;
@@ -24,20 +26,31 @@ public class Main {
         }
     }
     public static void main(String[] args) throws InterruptedException {
+        testConcurrentHashMap();
 //        testUninitializedThis();
-        T t = new T();
-        t.start();
+//        T t = new T();
+//        t.start();
+//
+//        synchronized (t) {
+//            t.blocked = true;
+//            while (t.blocked) {
+//                t.wait();
+//            }
+//        }
+////        t.t.unblockThread();
+//        t.join();
+//        System.out.println(t.isAlive());
+    }
 
-        synchronized (t) {
-            t.blocked = true;
-            while (t.blocked) {
-                t.wait();
-            }
+    public static void testConcurrentHashMap() {
+        ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>();
+        for (int i = 0; i < 100; i++) {
+            map.put(String.valueOf(i), String.valueOf(i));
         }
-//        t.t.unblockThread();
-        t.join();
-        System.out.println(t.isAlive());
-        System.exit(0);
+        for (String key : map.keySet()) {
+            System.out.println(key);
+            System.out.println(map.get(key));
+        }
     }
 
     public static void testThread() {

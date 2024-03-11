@@ -4,7 +4,7 @@ import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.commons.AdviceAdapter
 
-class SynchronizedMethodEmbeddingInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
+class SynchronizedMethodInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
     var className = ""
     override fun visit(
         version: Int,

@@ -39,7 +39,7 @@ class ApplicationCodeTransformer: ClassFileTransformer {
             cv = TargetExitInstrumenter(cv)
             cv = VolatileFieldsInstrumenter(cv)
             cv = MonitorInstrumenter(cv, false)
-            cv = SynchronizedMethodEmbeddingInstrumenter(cv)
+            cv = SynchronizedMethodInstrumenter(cv)
             cv = ClassVersionInstrumenter(cv)
             classReader.accept(cv, ClassReader.EXPAND_FRAMES)
             val out = classWriter.toByteArray()

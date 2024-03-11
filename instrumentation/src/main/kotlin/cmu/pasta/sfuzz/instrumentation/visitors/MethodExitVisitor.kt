@@ -9,7 +9,7 @@ import org.objectweb.asm.Opcodes.ATHROW
 import org.objectweb.asm.commons.AdviceAdapter
 import kotlin.reflect.KFunction
 
-class MethodExitVisitor(mv: MethodVisitor, val method: KFunction<*>, access: Int, name: String, descriptor: String, val loadThis: Boolean = true): AdviceAdapter(ASM9, mv, access, name, descriptor) {
+class MethodExitVisitor(mv: MethodVisitor, val method: KFunction<*>, access: Int, name: String, descriptor: String, val loadThis: Boolean): AdviceAdapter(ASM9, mv, access, name, descriptor) {
     val methodEnterLabel = Label()
     val methodExitLabel = Label()
     override fun onMethodEnter() {

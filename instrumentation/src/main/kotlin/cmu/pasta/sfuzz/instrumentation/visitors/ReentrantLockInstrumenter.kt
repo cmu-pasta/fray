@@ -16,13 +16,13 @@ class ReentrantLockInstrumenter(cv:ClassVisitor): ClassVisitorBase(cv, Reentrant
         exceptions: Array<out String>?
     ): MethodVisitor {
         if (name == "tryLock") {
-            return MethodEnterVisitor(mv, Runtime::onReentrantLockTryLock)
+            return MethodEnterVisitor(mv, Runtime::onReentrantLockTryLock, true)
         }
         if (name == "lock" || name == " lockInterruptibly") {
-            return MethodEnterVisitor(mv, Runtime::onReentrantLockLock)
+            return MethodEnterVisitor(mv, Runtime::onReentrantLockLock, true)
         }
         if (name == "unlock") {
-            return MethodEnterVisitor(mv, Runtime::onReentrantLockUnlock)
+            return MethodEnterVisitor(mv, Runtime::onReentrantLockUnlock, true)
         }
         return mv
     }
