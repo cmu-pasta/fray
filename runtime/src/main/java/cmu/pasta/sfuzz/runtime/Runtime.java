@@ -88,4 +88,13 @@ public class Runtime {
     public static void start() {
         DELEGATE.start();
     }
+
+    public static void onThreadPark() {
+    }
+
+    public static void onThreadParkDone() {
+    }
+
+    public static void onThreadUnpark(Thread t) {
+    }
 }
