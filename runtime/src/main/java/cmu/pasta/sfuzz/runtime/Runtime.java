@@ -75,6 +75,7 @@ public class Runtime {
     }
 
     public static void onYield() {
+        DELEGATE.onYield();
     }
 
     public static void onLoadClass() {
@@ -96,5 +97,8 @@ public class Runtime {
     }
 
     public static void onThreadUnpark(Thread t) {
+    }
+
+    public static void onThreadUnpakDone(Thread t) {
     }
 }

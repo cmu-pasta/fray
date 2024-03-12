@@ -3,8 +3,8 @@ package cmu.pasta.sfuzz.core
 import cmu.pasta.sfuzz.core.concurrency.ReentrantLockMonitor
 import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.core.concurrency.Sync
-import cmu.pasta.sfuzz.core.logger.LoggerBase
 import cmu.pasta.sfuzz.core.concurrency.operations.*
+import cmu.pasta.sfuzz.core.logger.LoggerBase
 import cmu.pasta.sfuzz.core.runtime.AnalysisResult
 import cmu.pasta.sfuzz.core.scheduler.Choice
 import cmu.pasta.sfuzz.core.scheduler.FifoScheduler
@@ -14,7 +14,6 @@ import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
-import java.util.*
 import java.util.concurrent.Executors
 
 // TODO(aoli): make this a class maybe?
@@ -89,6 +88,20 @@ object GlobalContext {
         // Wait for the new thread runs.
         synchronizationPoints[t]?.block()
         synchronizationPoints.remove(t)
+    }
+
+    fun threadPark() {
+        val t = Thread.currentThread()
+        if (!registeredThreads[t.id]!!.unparkSignaled) {
+            registeredThreads[t.id]?.pendingOperation = PausedOperation()
+            registeredThreads[t.id]?.state = ThreadState.Parked
+            scheduleNextOperation(false)
+        }
+        registeredThreads[t.id]!!.unparkSignaled = false
+    }
+
+    fun threadUnpark(t: Thread) {
+        if (re)
     }
 
     fun threadRun() {

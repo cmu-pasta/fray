@@ -8,6 +8,7 @@ enum class ThreadState {
     Enabled,
     Running,
     Paused,
+    Parked,
     Completed,
 
     // Thread is started but not yet available.
@@ -16,7 +17,7 @@ enum class ThreadState {
 
 class ThreadContext(val thread: Thread, val index: Int) {
     var state = ThreadState.STARTED
-    val racingResources = mutableSetOf<Long>()
+    var unparkSignaled = false
 
     // Pending operation is null if a thread is just resumed/blocked.
     var pendingOperation: Operation = ThreadStartOperation()

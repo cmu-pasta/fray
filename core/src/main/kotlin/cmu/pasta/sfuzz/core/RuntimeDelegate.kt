@@ -1,8 +1,6 @@
 package cmu.pasta.sfuzz.core
 
 import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
-import cmu.pasta.sfuzz.core.concurrency.Sync
-import cmu.pasta.sfuzz.core.concurrency.operations.MemoryOperation
 import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
@@ -146,6 +144,18 @@ class RuntimeDelegate: Delegate() {
 
     override fun onLoadClassDone() {
         skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    }
+
+    override fun onThreadPark() {
+    }
+
+    override fun onThreadParkDone() {
+    }
+
+    override fun onThreadUnpark(t: Thread?) {
+    }
+
+    override fun onThreadUnparkDone(t: Thread?) {
     }
 
     override fun start() {

@@ -3,6 +3,7 @@ package example;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.LockSupport;
 
 public class Main {
     public static class T extends Thread {
@@ -28,7 +29,13 @@ public class Main {
         }
     }
     public static void main(String[] args) throws InterruptedException {
-        testConcurrentHashMap();
+        Thread t = Thread.currentThread();
+        LockSupport.unpark(t);
+        LockSupport.unpark(t);
+        LockSupport.unpark(t);
+        LockSupport.park();
+        LockSupport.park();
+//        testConcurrentHashMap();
 //        testUninitializedThis();
 //        T t = new T();
 //        t.start();

@@ -79,5 +79,16 @@ public class Delegate {
     public void start() {
     }
 
+    public void onThreadPark() {
+    }
+
+    public void onThreadParkDone() {
+    }
+
+    public void onThreadUnpark(Thread t) {
+    }
+
+    public void onThreadUnparkDone(Thread t) {
+    }
 }
 
