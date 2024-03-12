@@ -96,12 +96,40 @@ object GlobalContext {
             registeredThreads[t.id]?.pendingOperation = PausedOperation()
             registeredThreads[t.id]?.state = ThreadState.Parked
             scheduleNextOperation(false)
+        } else {
+            registeredThreads[t.id]!!.unparkSignaled = false
         }
-        registeredThreads[t.id]!!.unparkSignaled = false
+    }
+
+    fun threadParkDone() {
+        val t = Thread.currentThread()
+        val context = registeredThreads[t.id]!!
+        if (context.state == ThreadState.Running) {
+            return
+        }
+        assert(context.state == ThreadState.Parked)
+        context.state = ThreadState.Enabled
+        registeredThreads[t.id]?.pendingOperation = ThreadResumeOperation()
+        synchronizationPoints[t]?.unblock()
+        context.block()
     }
 
     fun threadUnpark(t: Thread) {
-        if (re)
+        val context = registeredThreads[t.id]!!
+        if (context.state != ThreadState.Parked) {
+            context.unparkSignaled = true
+        } else {
+            synchronizationPoints[t] = Sync(1)
+        }
+    }
+
+    fun threadUnparkDone(t: Thread) {
+        if (registeredThreads[t.id]!!.state == ThreadState.Parked) {
+            // SFuzz only needs to wait if `t` is parked and then
+            // waken up by this `unpark` operation.
+            synchronizationPoints[t]?.block()
+            synchronizationPoints.remove(t)
+        }
     }
 
     fun threadRun() {
@@ -287,8 +315,8 @@ object GlobalContext {
                     Choice(index, context.index, enabledOperations.size))
             }
         }
-
-        registeredThreads[currentThreadId]!!.pendingOperation = RunningOperation()
+        context.pendingOperation = RunningOperation()
+        context.state = ThreadState.Running
         if (currentThread != nextThread) {
             nextThread.unblock()
             if (shouldBlockCurrentThread) {
