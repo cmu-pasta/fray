@@ -146,17 +146,16 @@ object GlobalContext {
     }
 
     fun threadCompleted(t: Thread) {
-        reentrantLockLock(t)
-        // Thread.notify is called from JNI, and we don't have
-        // instrumentation for it. Therefore, we need to handle
-        // object notify here.
         objectNotifyAll(t)
-        reentrantLockUnlock(t)
         registeredThreads[t.id]?.state = ThreadState.Completed
+        // We do not want to send notify all because
+        // we don't have monitor lock here.
+        reentrantLockUnlock(t, false)
         executor.submit {
             while (t.isAlive) {
                 Thread.yield()
             }
+            reentrantLockUnlockDone(t)
             scheduleNextOperation(false)
         }
     }
@@ -176,7 +175,7 @@ object GlobalContext {
             objectWatcher[o] = mutableListOf()
         }
         objectWatcher[o]!!.add(t)
-        reentrantLockUnlock(o)
+        reentrantLockUnlock(o, true)
 
         // We need a daemon thread here because
         // `object.wait` release the monitor lock implicitly.
@@ -287,14 +286,16 @@ object GlobalContext {
         }
     }
 
-    fun reentrantLockUnlock(lock: Any) {
+    fun reentrantLockUnlock(lock: Any, sendNotifyAll: Boolean) {
         val waitingThreads = reentrantLockMonitor.unlock(lock)
         if (waitingThreads > 0) {
-            synchronized(lock) {
-                // Make some noise to wake up all waiting threads.
-                // This also ensure that the previous `notify` `notifyAll`
-                // are treated as no-ops.
-                (lock as Object).notifyAll()
+            if (sendNotifyAll) {
+                synchronized(lock) {
+                    // Make some noise to wake up all waiting threads.
+                    // This also ensure that the previous `notify` `notifyAll`
+                    // are treated as no-ops.
+                    (lock as Object).notifyAll()
+                }
             }
             synchronizationPoints[lock] = Sync(waitingThreads)
         }
@@ -334,7 +335,7 @@ object GlobalContext {
         // by scheduled thread.
         assert(Thread.currentThread() is SFuzzThread || currentThreadId == Thread.currentThread().id)
         val currentThread = registeredThreads[currentThreadId]!!
-        assert(currentThread.state == ThreadState.Enabled)
+        assert(currentThread.state == ThreadState.Enabled || currentThread.state == ThreadState.Completed)
         val enabledOperations = registeredThreads.values.toList()
             .filter { it.state == ThreadState.Enabled }
             .sortedBy { it.thread.id }

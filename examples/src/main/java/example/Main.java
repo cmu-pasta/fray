@@ -35,18 +35,14 @@ public class Main {
         Thread t1 = new Thread() {
             @Override
             public void run() {
-                synchronized (j) {
-                    synchronized (o) {
-                        try {
-                            o.wait();
-                            o.notifyAll();
-                            System.out.println("t1 is unblocked!");
-                            j.wait();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+                synchronized (o) {
+                    try {
+                        o.wait();
+                        System.out.println("t1 is unblocked!");
+//                            j.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-
                 }
             }
         };
@@ -70,6 +66,9 @@ public class Main {
             public void run() {
                 synchronized (o) {
                     try {
+                        synchronized (j) {
+                            j.notify();
+                        }
                         o.wait();
                         System.out.println("t3 is unblocked!");
                     } catch (InterruptedException e) {
@@ -82,6 +81,9 @@ public class Main {
         t1.start();
         t2.start();
         t3.start();
+        synchronized (j) {
+            j.wait();
+        }
         synchronized (o) {
             o.notifyAll();
         }

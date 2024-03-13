@@ -58,7 +58,7 @@ class ObjectNotifyInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
                         Runtime::onObjectNotify.name,
                         Utils.kFunctionToJvmMethodDescriptor(Runtime::onObjectNotify),
                         false)
-                    super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
+                    super.visitMethodInsn(opcode, owner, callee, descriptor, isInterface)
                 } else if (callee == "notifyAll" && descriptor == "()V") {
                     super.visitInsn(DUP)
                     super.visitMethodInsn(Opcodes.INVOKESTATIC,
@@ -66,7 +66,7 @@ class ObjectNotifyInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
                         Runtime::onObjectNotifyAll.name,
                         Utils.kFunctionToJvmMethodDescriptor(Runtime::onObjectNotifyAll),
                         false)
-                    super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
+                    super.visitMethodInsn(opcode, owner, callee, descriptor, isInterface)
                 } else {
                     super.visitMethodInsn(opcode, owner, callee, descriptor, isInterface)
                 }
