@@ -34,8 +34,16 @@ public class Runtime {
         DELEGATE.onReentrantLockUnlock(l);
     }
 
+    public static void onReentrantLockUnlockDone(Object l) {
+        DELEGATE.onReentrantLockUnlockDone(l);
+    }
+
     public static void onObjectWait(Object o) {
         DELEGATE.onObjectWait(o);
+    }
+
+    public static void onObjectWaitDone(Object o) {
+        DELEGATE.onObjectWaitDone(o);
     }
 
     public static void onObjectNotify(Object o) {

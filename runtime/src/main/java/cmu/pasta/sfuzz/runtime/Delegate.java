@@ -15,25 +15,15 @@ public class Delegate {
     }
 
     public void onObjectWait(Object o) {
-        synchronized (o) {
-            try {
-                o.wait();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
+    }
+
+    public void onObjectWaitDone(Object o) {
     }
 
     public void onObjectNotify(Object o) {
-        synchronized (o) {
-            o.notify();
-        }
     }
 
     public void onObjectNotifyAll(Object o) {
-        synchronized (o) {
-            o.notifyAll();
-        }
     }
 
     public void onReentrantLockTryLock(Object l) {
@@ -43,6 +33,9 @@ public class Delegate {
     }
 
     public void onReentrantLockUnlock(Object l) {
+    }
+
+    public void onReentrantLockUnlockDone(Object l) {
     }
 
     public void onAtomicOperation(Object o, MemoryOpType type) {

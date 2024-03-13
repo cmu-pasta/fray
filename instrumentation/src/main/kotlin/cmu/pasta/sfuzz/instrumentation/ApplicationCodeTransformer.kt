@@ -35,10 +35,11 @@ class ApplicationCodeTransformer: ClassFileTransformer {
 
 
         try {
-            var cv: ClassVisitor = ObjectInstrumenter(classWriter)
+            var cv: ClassVisitor = ObjectNotifyInstrumenter(classWriter)
             cv = TargetExitInstrumenter(cv)
             cv = VolatileFieldsInstrumenter(cv)
-            cv = MonitorInstrumenter(cv, false)
+            cv = ObjectNotifyInstrumenter(cv)
+            cv = MonitorInstrumenter(cv)
             cv = SynchronizedMethodInstrumenter(cv)
             cv = ClassVersionInstrumenter(cv)
             classReader.accept(cv, ClassReader.EXPAND_FRAMES)

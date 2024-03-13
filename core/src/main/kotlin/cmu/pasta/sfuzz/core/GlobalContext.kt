@@ -14,7 +14,10 @@ import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
+import jdk.jfr.Enabled
 import java.util.concurrent.Executors
+import kotlin.coroutines.coroutineContext
+import kotlin.time.Duration.Companion.seconds
 
 // TODO(aoli): make this a class maybe?
 object GlobalContext {
@@ -104,12 +107,12 @@ object GlobalContext {
     fun threadParkDone() {
         val t = Thread.currentThread()
         val context = registeredThreads[t.id]!!
+        // If the thread is still running, it means
+        // that the thread is unparked before it is parked.
         if (context.state == ThreadState.Running) {
             return
         }
         assert(context.state == ThreadState.Parked)
-        context.state = ThreadState.Enabled
-        registeredThreads[t.id]?.pendingOperation = ThreadResumeOperation()
         synchronizationPoints[t]?.unblock()
         context.block()
     }
@@ -120,6 +123,8 @@ object GlobalContext {
             context.unparkSignaled = true
         } else {
             synchronizationPoints[t] = Sync(1)
+            context.state = ThreadState.Enabled
+            registeredThreads[t.id]?.pendingOperation = ThreadResumeOperation()
         }
     }
 
@@ -160,32 +165,51 @@ object GlobalContext {
         val t = Thread.currentThread().id
         val objId = System.identityHashCode(o)
         registeredThreads[t]?.pendingOperation = ObjectWaitOperation(objId)
+        registeredThreads[t]?.state = ThreadState.Enabled
         scheduleNextOperation(true)
         // If we resume executing, the Object.wait is executed. We should update the
         // state of current thread.
         registeredThreads[t]?.pendingOperation = PausedOperation()
         registeredThreads[t]?.state = ThreadState.Paused
 
-        // We need to unlock the reentrant lock as well.
-        // Unlock and wait is an atomic operation, we should not
-        // reschedule here.
-        reentrantLockUnlock(o)
         if (o !in objectWatcher) {
             objectWatcher[o] = mutableListOf()
         }
         objectWatcher[o]!!.add(t)
-        scheduleNextOperation(true)
+        reentrantLockUnlock(o)
 
-        // We are back! We should block until reentrant monitor is released.
-        reentrantLockLock(o)
+        // We need a daemon thread here because
+        // `object.wait` release the monitor lock implicitly.
+        // Therefore, we need to call `reentrantLockUnlockDone`
+        // manually.
+        executor.submit {
+            reentrantLockUnlockDone(o)
+            scheduleNextOperation(false)
+        }
     }
 
+    @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+    fun objectWaitDone(o: Any) {
+        val t = Thread.currentThread()
+        val context = registeredThreads[t.id]!!
+        // We will unblock here only if the scheduler
+        // decides to run it.
+        while (context.state != ThreadState.Running) {
+            synchronizationPoints[o]!!.unblock()
+            synchronized(o) {
+                (o as Object).wait()
+            }
+        }
+    }
+
+    @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
     fun objectNotify(o: Any) {
         objectWatcher[o]?.let {
             if (it.size > 0) {
                 val t = it.removeFirst()
-                registeredThreads[t]?.pendingOperation = ThreadResumeOperation()
-                registeredThreads[t]?.state = ThreadState.Enabled
+                val context = registeredThreads[t]!!
+                reentrantLockMonitor.addWaiter(o, context.thread)
+                context.waitsOn = o
                 it.remove(t)
                 if (it.size == 0) {
                     objectWatcher.remove(o)
@@ -198,8 +222,11 @@ object GlobalContext {
         objectWatcher[o]?.let {
             if (it.size > 0) {
                 for (t in it) {
-                    registeredThreads[t]?.pendingOperation = ThreadResumeOperation()
-                    registeredThreads[t]?.state = ThreadState.Enabled
+                    val context = registeredThreads[t]!!
+                    // We cannot enable the thread immediately because
+                    // the thread is still waiting for the monitor lock.
+                    context.waitsOn = o
+                    reentrantLockMonitor.addWaiter(o, context.thread)
                 }
                 objectWatcher.remove(o)
             }
@@ -210,14 +237,16 @@ object GlobalContext {
         val t = Thread.currentThread().id
         val objId = System.identityHashCode(lock)
         registeredThreads[t]?.pendingOperation = ReentrantLockLockOperation(objId)
+        registeredThreads[t]?.state = ThreadState.Enabled
         scheduleNextOperation(true)
-        reentrantLockMonitor.lock(lock, false)
+        reentrantLockMonitor.lock(lock, t, false)
     }
 
     fun reentrantLockLock(lock: Any) {
         val t = Thread.currentThread().id
         val objId = System.identityHashCode(lock)
         registeredThreads[t]?.pendingOperation = ReentrantLockLockOperation(objId)
+        registeredThreads[t]?.state = ThreadState.Enabled
         scheduleNextOperation(true)
 
         /**
@@ -238,7 +267,7 @@ object GlobalContext {
         *  }
         *  t1.1, t2.1, t1.2, t3.1 will make t2.1 lock again.
         */
-        while (!reentrantLockMonitor.lock(lock, true)) {
+        while (!reentrantLockMonitor.lock(lock, t, true)) {
             registeredThreads[t]?.state = ThreadState.Paused
 
             // We want to block current thread because we do
@@ -259,8 +288,21 @@ object GlobalContext {
     }
 
     fun reentrantLockUnlock(lock: Any) {
-        val t = Thread.currentThread().id
-        reentrantLockMonitor.unlock(lock)
+        val waitingThreads = reentrantLockMonitor.unlock(lock)
+        if (waitingThreads > 0) {
+            synchronized(lock) {
+                // Make some noise to wake up all waiting threads.
+                // This also ensure that the previous `notify` `notifyAll`
+                // are treated as no-ops.
+                (lock as Object).notifyAll()
+            }
+            synchronizationPoints[lock] = Sync(waitingThreads)
+        }
+    }
+
+    fun reentrantLockUnlockDone(lock: Any) {
+        synchronizationPoints[lock]?.block()
+        synchronizationPoints.remove(lock)
     }
 
     fun fieldOperation(obj: Any?, owner: String, name: String, type: MemoryOpType) {
@@ -283,6 +325,7 @@ object GlobalContext {
     fun memoryOperation(obj: Int, type: MemoryOpType) {
         val t = Thread.currentThread().id
         registeredThreads[t]?.pendingOperation = MemoryOperation(obj, type)
+        registeredThreads[t]?.state = ThreadState.Enabled
         scheduleNextOperation(true)
     }
 
@@ -290,7 +333,8 @@ object GlobalContext {
         // Our current design makes sure that reschedule is only called
         // by scheduled thread.
         assert(Thread.currentThread() is SFuzzThread || currentThreadId == Thread.currentThread().id)
-        val currentThread = registeredThreads[currentThreadId]
+        val currentThread = registeredThreads[currentThreadId]!!
+        assert(currentThread.state == ThreadState.Enabled)
         val enabledOperations = registeredThreads.values.toList()
             .filter { it.state == ThreadState.Enabled }
             .sortedBy { it.thread.id }
@@ -307,21 +351,36 @@ object GlobalContext {
         val nextThread = scheduler.scheduleNextOperation(enabledOperations)
         val index = enabledOperations.indexOf(nextThread)
         currentThreadId = nextThread.thread.id
-        val context = registeredThreads[currentThreadId]!!
 
         if (enabledOperations.size > 1 || config!!.fullSchedule) {
             loggers.forEach {
-                it.newOperationScheduled(context.pendingOperation!!,
-                    Choice(index, context.index, enabledOperations.size))
+                it.newOperationScheduled(currentThread.pendingOperation!!,
+                    Choice(index, currentThread.index, enabledOperations.size))
             }
         }
-        context.pendingOperation = RunningOperation()
-        context.state = ThreadState.Running
+        nextThread.state = ThreadState.Running
         if (currentThread != nextThread) {
-            nextThread.unblock()
+            unblockThread(nextThread)
             if (shouldBlockCurrentThread) {
-                currentThread?.block()
+                currentThread.block()
             }
+        }
+    }
+
+    fun unblockThread(t: ThreadContext) {
+        // If this object is blocked through JDK locks,
+        // the thread is waiting for monitor locks.
+        // We first need to give the thread lock
+        // and then wakes it up through `notifyAll`.
+        if (t.waitsOn != null) {
+            // If a thread is enabled, the lock must be available.
+            assert(reentrantLockMonitor.lock(t.waitsOn!!, t.thread.id, false))
+            synchronized(t.waitsOn!!) {
+                (t.waitsOn as Object).notifyAll()
+            }
+            t.waitsOn = null
+        } else {
+            t.unblock()
         }
     }
 }

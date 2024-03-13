@@ -22,16 +22,17 @@ fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
     cv = ReentrantLockInstrumenter(cv)
     cv = SystemModulesMapInstrumenter(cv)
     cv = AtomicOperationInstrumenter(cv)
-    cv = ObjectInstrumenter(cv)
+    cv = ObjectNotifyInstrumenter(cv)
     cv = VolatileFieldsInstrumenter(cv)
     cv = UnsafeInstrumenter(cv)
     cv = ClassloaderInstrumenter(cv)
+    cv = ObjectInstrumenter(cv)
     // MonitorInstrumenter should come second because ObjectInstrumenter will insert more
     // monitors.
-    cv = MonitorInstrumenter(cv, true)
+    cv = MonitorInstrumenter(cv)
     // SynchronizedMethodEmbeddingInstrumenter should come before MonitorInstrumenter because
     // it inlines monitors for synchronized methods.
-//    cv = SynchronizedMethodEmbeddingInstrumenter(cv)
+//    cv = SynchronizedMethodInstrumenter(cv)
     classReader.accept(cv, ClassReader.EXPAND_FRAMES)
     var out = classWriter.toByteArray()
     File("/tmp/out/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)

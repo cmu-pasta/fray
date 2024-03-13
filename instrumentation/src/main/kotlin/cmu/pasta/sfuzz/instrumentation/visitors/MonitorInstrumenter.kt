@@ -4,7 +4,7 @@ import cmu.pasta.sfuzz.runtime.Runtime
 import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.ASM9
 
-class MonitorInstrumenter(cv: ClassVisitor, private val instrumentingJDK: Boolean): ClassVisitor(ASM9, cv) {
+class MonitorInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
     var className = ""
     override fun visit(
         version: Int,
@@ -35,22 +35,29 @@ class MonitorInstrumenter(cv: ClassVisitor, private val instrumentingJDK: Boolea
         return object: MethodVisitor(ASM9, mv) {
             override fun visitInsn(opcode: Int) {
                 if (opcode == Opcodes.MONITORENTER || opcode == Opcodes.MONITOREXIT) {
-                    if (instrumentingJDK) super.visitInsn(Opcodes.DUP)
                     if (opcode == Opcodes.MONITORENTER) {
+                        super.visitInsn(Opcodes.DUP)
                         super.visitMethodInsn(Opcodes.INVOKESTATIC,
                             Runtime::class.java.name.replace(".", "/"),
                             Runtime::onReentrantLockLock.name,
                             Utils.kFunctionToJvmMethodDescriptor(Runtime::onReentrantLockLock),
                             false)
-
+                        super.visitInsn(opcode)
                     } else {
+                        super.visitInsn(Opcodes.DUP)
+                        super.visitInsn(Opcodes.DUP)
                         super.visitMethodInsn(Opcodes.INVOKESTATIC,
                             Runtime::class.java.name.replace(".", "/"),
                             Runtime::onReentrantLockUnlock.name,
                             Utils.kFunctionToJvmMethodDescriptor(Runtime::onReentrantLockUnlock),
                             false)
+                        super.visitInsn(opcode)
+                        super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                            Runtime::class.java.name.replace(".", "/"),
+                            Runtime::onReentrantLockUnlockDone.name,
+                            Utils.kFunctionToJvmMethodDescriptor(Runtime::onReentrantLockUnlockDone),
+                            false)
                     }
-                    if (instrumentingJDK) super.visitInsn(opcode)
                 } else {
                     super.visitInsn(opcode)
                 }

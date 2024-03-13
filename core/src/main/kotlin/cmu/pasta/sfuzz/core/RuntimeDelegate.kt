@@ -61,11 +61,24 @@ class RuntimeDelegate: Delegate() {
         entered.set(false)
     }
 
+    override fun onObjectWaitDone(o: Any) {
+        if (checkEntered()) return
+        GlobalContext.objectWaitDone(o)
+        entered.set(false)
+    }
+
     override fun onObjectNotify(o: Any) {
         if (checkEntered()) return
         GlobalContext.objectNotify(o)
         entered.set(false)
     }
+
+    override fun onReentrantLockUnlockDone(l: Any) {
+        if (checkEntered()) return
+        GlobalContext.reentrantLockUnlockDone(l)
+        entered.set(false)
+    }
+
 
     override fun onObjectNotifyAll(o: Any) {
         if (checkEntered()) return
@@ -147,15 +160,27 @@ class RuntimeDelegate: Delegate() {
     }
 
     override fun onThreadPark() {
+        if (checkEntered()) return
+        GlobalContext.threadPark()
+        entered.set(false)
     }
 
     override fun onThreadParkDone() {
+        if (checkEntered()) return
+        GlobalContext.threadParkDone()
+        entered.set(false)
     }
 
-    override fun onThreadUnpark(t: Thread?) {
+    override fun onThreadUnpark(t: Thread) {
+        if (checkEntered()) return
+        GlobalContext.threadUnpark(t)
+        entered.set(false)
     }
 
-    override fun onThreadUnparkDone(t: Thread?) {
+    override fun onThreadUnparkDone(t: Thread) {
+        if (checkEntered()) return
+        GlobalContext.threadUnparkDone(t)
+        entered.set(false)
     }
 
     override fun start() {

@@ -28,13 +28,77 @@ public class Main {
             System.out.println("I am unblocked!");
         }
     }
+
+    public static void testMultipleThreadWait() throws InterruptedException {
+        Object o = new Object();
+        Object j = new Object();
+        Thread t1 = new Thread() {
+            @Override
+            public void run() {
+                synchronized (j) {
+                    synchronized (o) {
+                        try {
+                            o.wait();
+                            o.notifyAll();
+                            System.out.println("t1 is unblocked!");
+                            j.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                }
+            }
+        };
+
+        Thread t2 = new Thread() {
+            @Override
+            public void run() {
+                synchronized (o) {
+                    try {
+                        o.wait();
+                        System.out.println("t2 is unblocked!");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+
+        Thread t3 = new Thread() {
+            @Override
+            public void run() {
+                synchronized (o) {
+                    try {
+                        o.wait();
+                        System.out.println("t3 is unblocked!");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+
+        t1.start();
+        t2.start();
+        t3.start();
+        synchronized (o) {
+            o.notifyAll();
+        }
+
+        t1.join();
+        t2.join();
+        t3.join();
+    }
+
     public static void main(String[] args) throws InterruptedException {
-        Thread t = Thread.currentThread();
-        LockSupport.unpark(t);
-        LockSupport.unpark(t);
-        LockSupport.unpark(t);
-        LockSupport.park();
-        LockSupport.park();
+        testMultipleThreadWait();
+//        Thread t = Thread.currentThread();
+//        LockSupport.unpark(t);
+//        LockSupport.unpark(t);
+//        LockSupport.unpark(t);
+//        LockSupport.park();
+//        LockSupport.park();
 //        testConcurrentHashMap();
 //        testUninitializedThis();
 //        T t = new T();
@@ -48,7 +112,7 @@ public class Main {
 //        }
 ////        t.t.unblockThread();
 //        t.join();
-//        System.out.println(t.isAlive());
+////        System.out.println(t.isAlive());
     }
 
     public static void testConcurrentHashMap() throws InterruptedException {

@@ -18,10 +18,10 @@ class MethodExitVisitor(mv: MethodVisitor, val method: KFunction<*>, access: Int
     }
 
     override fun onMethodExit(opcode: Int) {
-        if (loadThis) {
-            loadThis()
-        }
         if (opcode != ATHROW) {
+            if (loadThis) {
+                loadThis()
+            }
             visitMethodInsn(Opcodes.INVOKESTATIC,
                 Runtime::class.java.name.replace(".", "/"), method.name,
                 Utils.kFunctionToJvmMethodDescriptor(method), false)
@@ -32,6 +32,9 @@ class MethodExitVisitor(mv: MethodVisitor, val method: KFunction<*>, access: Int
     override fun visitMaxs(maxStack: Int, maxLocals: Int) {
         visitTryCatchBlock(methodEnterLabel, methodExitLabel, methodExitLabel, "java/lang/Throwable")
         visitLabel(methodExitLabel)
+        if (loadThis) {
+            loadThis()
+        }
         visitMethodInsn(Opcodes.INVOKESTATIC,
             Runtime::class.java.name.replace(".", "/"), method.name,
             Utils.kFunctionToJvmMethodDescriptor(method), false)
