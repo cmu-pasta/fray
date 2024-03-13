@@ -100,7 +100,7 @@ class RuntimeDelegate: Delegate() {
 
     override fun onReentrantLockUnlock(l: Any) {
         if (checkEntered()) return
-        GlobalContext.reentrantLockUnlock(l, true)
+        GlobalContext.reentrantLockUnlock(l, Thread.currentThread().id, true, false)
         entered.set(false)
     }
 

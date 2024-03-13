@@ -38,6 +38,7 @@ tasks.withType<JavaExec> {
     mainClass = "cmu.pasta.sfuzz.core.MainKt"
     jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so")
     jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
+    jvmArgs("-ea")
 
 //    var appName = project.hasProperty('appName') ? project.property('appName') : "luindex"
 
