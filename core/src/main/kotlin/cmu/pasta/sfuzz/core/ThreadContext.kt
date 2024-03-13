@@ -10,10 +10,6 @@ enum class ThreadState {
     Paused,
     Parked,
     Completed,
-
-    // Monitor state is used to indicate that a thread is waiting on a monitor.
-    Monitor,
-
     // Thread is started but not yet available.
     STARTED,
 }
