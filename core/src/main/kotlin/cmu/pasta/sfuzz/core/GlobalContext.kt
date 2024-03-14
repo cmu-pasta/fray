@@ -206,10 +206,10 @@ object GlobalContext {
         // decides to run it.
         while (context.state != ThreadState.Running) {
             syncManager.signal(o)
-            synchronized(o) {
-                (o as Object).wait()
-            }
+            (o as Object).wait()
         }
+        // If a thread is enabled, the lock must be available.
+        assert(reentrantLockMonitor.lock(o, t.id, false, true))
     }
 
     @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
@@ -399,8 +399,6 @@ object GlobalContext {
         // We first need to give the thread lock
         // and then wakes it up through `notifyAll`.
         if (t.waitsOn != null) {
-            // If a thread is enabled, the lock must be available.
-            assert(reentrantLockMonitor.lock(t.waitsOn!!, t.thread.id, false, true))
             synchronized(t.waitsOn!!) {
                 (t.waitsOn as Object).notifyAll()
                 t.waitsOn = null
