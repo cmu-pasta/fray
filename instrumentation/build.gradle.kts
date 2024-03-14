@@ -46,9 +46,3 @@ tasks.named<ShadowJar>("shadowJar") {
 tasks.test {
     useJUnitPlatform()
 }
-
-
-//javaexec {
-////    mainModule = "cmu.pasta.sfuzz.instrumentation"
-//    jvmArgs = listOf("--patch-module", "cmu.pasta.sfuzz.instrumentation=${sourceSets["main"].output.asPath}")
-//}

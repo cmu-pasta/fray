@@ -22,12 +22,3 @@ tasks.register("clean") {
 tasks.register("build") {
     dependsOn("cmakeBuild")
 }
-
-
-//val suffix = if (machines.host.name.contains("macos")) {
-//    ".dylib"
-//} else {
-//    ".so"
-//}
-//
-//"${layout.buildDirectory.get().asFile}/cmake/native_release/${machines.host.name}/cpp/lib$name$suffix"
