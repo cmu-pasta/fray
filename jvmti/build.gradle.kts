@@ -7,12 +7,10 @@ cmake {
         register("native_release") {
             cmakeLists.set(file("src/CMakeLists.txt"))
             cmakeArgs.add("-DCMAKE_BUILD_TYPE=Release")
-            targetMachines.add(machines.host)
         }
         register("native_debug") {
             cmakeLists.set(file("src/CMakeLists.txt"))
             cmakeArgs.add("-DCMAKE_BUILD_TYPE=Debug")
-            targetMachines.add(machines.host)
         }
     }
 }
@@ -24,3 +22,11 @@ tasks.register("clean") {
 tasks.register("build") {
     dependsOn("cmakeBuild")
 }
+
+//val suffix = if (machines.host.name.contains("macos")) {
+//    ".dylib"
+//} else {
+//    ".so"
+//}
+//
+//"${layout.buildDirectory.get().asFile}/cmake/native_release/${machines.host.name}/cpp/lib$name$suffix"
