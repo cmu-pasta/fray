@@ -35,7 +35,12 @@ tasks.register<JavaExec>("run") {
     executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
     mainClass.set("cmu.pasta.sfuzz.core.MainKt")
     args = listOf("example.Main", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", "fifo")
-    jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so")
+    val osName: String = System.getProperty("os.name").toLowerCase()
+    if (osName.contains("macos")) {
+        jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/mac-aarch64/cpp/lib${jvmti.name}.dylib")
+    } else {
+        jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so")
+    }
     jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
     doFirst {
         // Printing the full command
