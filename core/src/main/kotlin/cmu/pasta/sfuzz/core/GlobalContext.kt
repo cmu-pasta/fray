@@ -2,7 +2,6 @@ package cmu.pasta.sfuzz.core
 
 import cmu.pasta.sfuzz.core.concurrency.ReentrantLockMonitor
 import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
-import cmu.pasta.sfuzz.core.concurrency.Sync
 import cmu.pasta.sfuzz.core.concurrency.SynchronizationManager
 import cmu.pasta.sfuzz.core.concurrency.operations.*
 import cmu.pasta.sfuzz.core.logger.LoggerBase
@@ -15,10 +14,7 @@ import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
-import jdk.jfr.Enabled
 import java.util.concurrent.Executors
-import kotlin.coroutines.coroutineContext
-import kotlin.time.Duration.Companion.seconds
 
 // TODO(aoli): make this a class maybe?
 object GlobalContext {
@@ -26,7 +22,6 @@ object GlobalContext {
     var currentThreadId: Long = -1;
     var scheduler: Scheduler = FifoScheduler()
     var config: Configuration? = null
-    private val objectWatcher = mutableMapOf<Int, MutableList<Long>>()
     private val reentrantLockMonitor = ReentrantLockMonitor()
     private val volatileManager = VolatileManager()
     val loggers = mutableListOf<LoggerBase>()
@@ -69,7 +64,7 @@ object GlobalContext {
         }
 
         reentrantLockMonitor.done()
-        assert(objectWatcher.isEmpty())
+        assert(reentrantLockMonitor.waitingThreads.isEmpty())
         assert(syncManager.synchronizationPoints.isEmpty())
         registeredThreads.clear()
     }
@@ -150,7 +145,7 @@ object GlobalContext {
         // We do not want to send notify all because
         // we don't have monitor lock here.
         var size = 0
-        reentrantLockMonitor.threadWaiters[System.identityHashCode(t)]?.let {
+        reentrantLockMonitor.wakingThreads[System.identityHashCode(t)]?.let {
             for (thread in it) {
                 registeredThreads[thread]!!.state = ThreadState.Enabled
             }
@@ -178,11 +173,7 @@ object GlobalContext {
         registeredThreads[t]?.pendingOperation = PausedOperation()
         registeredThreads[t]?.state = ThreadState.Paused
 
-        val id = System.identityHashCode(o)
-        if (id !in objectWatcher) {
-            objectWatcher[id] = mutableListOf()
-        }
-        objectWatcher[id]!!.add(t)
+        reentrantLockMonitor.addWaitingThread(o, Thread.currentThread())
         reentrantLockUnlock(o, t, true, true)
 
         // We need a daemon thread here because
@@ -215,15 +206,15 @@ object GlobalContext {
     @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
     fun objectNotify(o: Any) {
         val id = System.identityHashCode(o)
-        objectWatcher[id]?.let {
+        reentrantLockMonitor.waitingThreads[id]?.let {
             if (it.size > 0) {
                 val t = it.removeFirst()
                 val context = registeredThreads[t]!!
-                reentrantLockMonitor.addWaiter(o, context.thread)
+                reentrantLockMonitor.addWakingThread(o, context.thread)
                 context.waitsOn = o
                 it.remove(t)
                 if (it.size == 0) {
-                    objectWatcher.remove(id)
+                    reentrantLockMonitor.waitingThreads.remove(id)
                 }
             }
         }
@@ -231,16 +222,16 @@ object GlobalContext {
 
     fun objectNotifyAll(o: Any) {
         val id = System.identityHashCode(o)
-        objectWatcher[id]?.let {
+        reentrantLockMonitor.waitingThreads[id]?.let {
             if (it.size > 0) {
                 for (t in it) {
                     val context = registeredThreads[t]!!
                     // We cannot enable the thread immediately because
                     // the thread is still waiting for the monitor lock.
                     context.waitsOn = o
-                    reentrantLockMonitor.addWaiter(o, context.thread)
+                    reentrantLockMonitor.addWakingThread(o, context.thread)
                 }
-                objectWatcher.remove(id)
+                reentrantLockMonitor.waitingThreads.remove(id)
             }
         }
     }
@@ -300,9 +291,8 @@ object GlobalContext {
     }
 
     fun reentrantLockUnlock(lock: Any, tid: Long, sendNotifyAll: Boolean, unlockBecauseOfWait: Boolean) {
-        val id = System.identityHashCode(lock)
         var waitingThreads = if (reentrantLockMonitor.unlock(lock, tid, unlockBecauseOfWait)) {
-            (reentrantLockMonitor.threadWaiters[id]?.size ?: 0) + (objectWatcher[id]?.size ?: 0)
+            reentrantLockMonitor.getNumThreadsBlockBy(lock)
         } else {
             0
         }

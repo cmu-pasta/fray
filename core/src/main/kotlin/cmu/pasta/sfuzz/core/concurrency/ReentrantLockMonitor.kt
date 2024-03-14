@@ -1,7 +1,7 @@
 package cmu.pasta.sfuzz.core.concurrency
 
-import cmu.pasta.sfuzz.core.ThreadState
 import cmu.pasta.sfuzz.core.GlobalContext
+import cmu.pasta.sfuzz.core.ThreadState
 import cmu.pasta.sfuzz.core.concurrency.operations.ThreadResumeOperation
 
 class ReentrantLockMonitor {
@@ -13,7 +13,8 @@ class ReentrantLockMonitor {
 
     // This map stores all threads that is woken by `object.Notify`
     // but not yet acquired the monitor lock.
-    val threadWaiters = mutableMapOf<Int, MutableSet<Long>>()
+    val wakingThreads = mutableMapOf<Int, MutableSet<Long>>()
+    val waitingThreads = mutableMapOf<Int, MutableList<Long>>()
 
     /**
     * Return true if [lock] is acquired by the current thread.
@@ -28,7 +29,7 @@ class ReentrantLockMonitor {
             if (!lockBecauseOfWait) {
                 lockReentrantMap[tid]!![id] = lockReentrantMap[tid]!!.getOrDefault(id, 0) + 1
             }
-            threadWaiters[id]?.let {
+            wakingThreads[id]?.let {
                 it.remove(tid)
                 for (thread in it) {
                     GlobalContext.registeredThreads[thread]!!.state = ThreadState.Paused
@@ -44,12 +45,25 @@ class ReentrantLockMonitor {
         return false
     }
 
-    fun addWaiter(lock: Any, t: Thread) {
+    fun addWakingThread(lock: Any, t: Thread) {
         val id = System.identityHashCode(lock)
-        if (!threadWaiters.contains(id)) {
-            threadWaiters[id] = mutableSetOf()
+        if (!wakingThreads.contains(id)) {
+            wakingThreads[id] = mutableSetOf()
         }
-        threadWaiters[id]!!.add(t.id)
+        wakingThreads[id]!!.add(t.id)
+    }
+
+    fun addWaitingThread(lock: Any, t: Thread) {
+        val id = System.identityHashCode(lock)
+        if (id !in waitingThreads) {
+            waitingThreads[id] = mutableListOf()
+        }
+        waitingThreads[id]!!.add(t.id)
+    }
+
+    fun getNumThreadsBlockBy(lock: Any): Int {
+        val id = System.identityHashCode(lock)
+        return (wakingThreads[id]?.size ?: 0) + (waitingThreads[id]?.size ?: 0)
     }
 
     fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean): Boolean {
@@ -77,7 +91,7 @@ class ReentrantLockMonitor {
                     lockWaiters.remove(id)
                 }
             }
-            threadWaiters[id]?.let {
+            wakingThreads[id]?.let {
                 for (thread in it) {
                     GlobalContext.registeredThreads[thread]!!.state = ThreadState.Enabled
                 }
