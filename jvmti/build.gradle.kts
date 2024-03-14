@@ -23,6 +23,7 @@ tasks.register("build") {
     dependsOn("cmakeBuild")
 }
 
+
 //val suffix = if (machines.host.name.contains("macos")) {
 //    ".dylib"
 //} else {

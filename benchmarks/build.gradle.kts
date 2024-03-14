@@ -30,19 +30,13 @@ tasks.register<Copy>("unzipDacapo") {
 }
 
 tasks.withType<JavaExec> {
-    val jvmti = project(":jvmti")
+    val agentPath: String by rootProject.extra
     val jdk = project(":jdk")
     val instrumentation = project(":instrumentation")
     classpath = sourceSets["main"].runtimeClasspath
     executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
     mainClass = "cmu.pasta.sfuzz.core.MainKt"
-
-    val osName: String = System.getProperty("os.name").toLowerCase()
-    if (osName.contains("macos")) {
-        jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/mac-aarch64/cpp/lib${jvmti.name}.dylib")
-    } else {
-        jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so")
-    }
+    jvmArgs("-agentpath:$agentPath")
     jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
     jvmArgs("-ea")
     doFirst {
