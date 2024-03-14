@@ -30,18 +30,15 @@ tasks.register<Copy>("unzipDacapo") {
 }
 
 tasks.withType<JavaExec> {
-    val jvmti = project(":jvmti")
+    val agentPath: String by rootProject.extra
     val jdk = project(":jdk")
     val instrumentation = project(":instrumentation")
     classpath = sourceSets["main"].runtimeClasspath
     executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
     mainClass = "cmu.pasta.sfuzz.core.MainKt"
-    jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so")
+    jvmArgs("-agentpath:$agentPath")
     jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
     jvmArgs("-ea")
-
-//    var appName = project.hasProperty('appName') ? project.property('appName') : "luindex"
-
     doFirst {
         // Printing the full command
         println("Executing command: ${executable} ${jvmArgs!!.joinToString(" ")} -cp ${classpath.asPath} ${mainClass.get()} ${args!!.joinToString(" ")}")
