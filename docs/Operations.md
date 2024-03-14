@@ -60,7 +60,11 @@ Instrumented t2:
 lockManager.lockMonitor(o)
 synchronized (o) {
     // T2 part 1
+    // Calling `o.wait()` will release the monitor lock
+    // and we should also unlock the monitor lock here
+    // so that other threads can acquire the lock.
     lockManager.unlockMonitor(o);
+
     objectWaiters[o].add(Thread.currentThread());
     do {
         // We want to signal that this thread goes
@@ -68,6 +72,12 @@ synchronized (o) {
         s?.signal();
         o.wait();
     } while (isRunning(Thread.currentThread()));
+
+    // If the thread is unblocked, it means that
+    // the thread receives the notify signal and
+    // successfully acquire the monitor lock.
+    // Thus, we should remove the thread from
+    // monitorWaiter and also lock the monitor lock.
     monitorWaiters[o].remove(Thread.currentThread());
     lockManager.lockMonitor(o);
     // T2 part 2
@@ -79,6 +89,12 @@ Schedule Algorithm:
 Thread t = pickRunnableThread();
 t.setRunning();
 if (t.isBlockedByObjectWait()) {
+    // If this thread is blocked by `o.wait()`
+    // we can only unblock it through `o.notifyAll()`
+    // Note that this will wake all threads that are
+    // blocked by `o.wait()`. This is fine because
+    // Those threads will be blocked again through while
+    // loop.
     Object o = t.getObject();
     o.notifyAll();
 } else {
@@ -98,11 +114,10 @@ for the monitor lock.
 Finally, when the running thread releases the monitor lock, it will set all threads in `monitorWaiters` to
 `Runnable` and allow it to reschedule again.
 
-
-
 Lock Manager Detail:
 
-Lock manager mimic the behaviour of Reentrant lock.
+Lock manager mimic the behaviour of Reentrant lock. It should also update the threads who are
+blocked by `o.wait()`.
 
 `monitorWaiters` tracks all threads that has received `o.notify()` but waiting for monitor lock.
 `objectWaiters` trackes all threads that waits for `o.notify()`.
