@@ -104,7 +104,7 @@ class RuntimeDelegate: Delegate() {
 
     override fun onReentrantLockUnlock(l: Any) {
         if (checkEntered()) return
-        GlobalContext.reentrantLockUnlock(l)
+        GlobalContext.reentrantLockUnlock(l, Thread.currentThread().id, true, false)
         entered.set(false)
     }
 
@@ -127,12 +127,6 @@ class RuntimeDelegate: Delegate() {
     override fun onConditionSignalAll(o: Any) {
         if (checkEntered()) return
         GlobalContext.objectNotifyAll(o)
-        entered.set(false)
-    }
-
-    override fun onAtomicOperation(o: Any) {
-        if (checkEntered()) return
-        GlobalContext.memoryOperation(null, MemoryOperation.Type.ATOMIC)
         entered.set(false)
     }
 

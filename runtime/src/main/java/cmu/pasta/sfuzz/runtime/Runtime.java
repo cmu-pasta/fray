@@ -46,18 +46,6 @@ public class Runtime {
         return DELEGATE.onReentrantLockNewCondition(c, l);
     }
 
-    public static void onConditionAwait(Object c) {
-        DELEGATE.onConditionAwait(c);
-    }
-
-    public static void onConditionSignal(Object c) {
-        DELEGATE.onConditionSignal(c);
-    }
-
-    public static void onConditionSignalAll(Object c) {
-        DELEGATE.onConditionSignalAll(c);
-    }
-
     public static void onObjectWait(Object o) {
         DELEGATE.onObjectWait(o);
     }
