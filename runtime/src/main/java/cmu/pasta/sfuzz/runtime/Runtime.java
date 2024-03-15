@@ -66,6 +66,10 @@ public class Runtime {
         DELEGATE.onConditionAwait(o);
     }
 
+    public static void onConditionAwaitDone(Object o) {
+        DELEGATE.onConditionAwaitDone(o);
+    }
+
     public static void onConditionSignal(Object o) {
         DELEGATE.onConditionSignal(o);
     }

@@ -112,7 +112,14 @@ class RuntimeDelegate: Delegate() {
         GlobalContext.reentrantLockNewCondition(c, l);
         return c;
     }
+
     override fun onConditionAwait(o: Any) {
+        if (checkEntered()) return
+        GlobalContext.conditionAwait(o)
+        entered.set(false)
+    }
+
+    override fun onConditionAwaitDone(o: Any) {
         if (checkEntered()) return
         GlobalContext.objectWait(o)
         entered.set(false)
@@ -120,13 +127,13 @@ class RuntimeDelegate: Delegate() {
 
     override fun onConditionSignal(o: Any) {
         if (checkEntered()) return
-        GlobalContext.objectNotify(o)
+        GlobalContext.conditionSignal(o)
         entered.set(false)
     }
 
     override fun onConditionSignalAll(o: Any) {
         if (checkEntered()) return
-        GlobalContext.objectNotifyAll(o)
+        GlobalContext.conditionSignalAll(o)
         entered.set(false)
     }
 

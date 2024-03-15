@@ -16,7 +16,8 @@ class ConditionInstrumenter(cv:ClassVisitor): ClassVisitorBase(cv, ConditionObje
         exceptions: Array<out String>?
     ): MethodVisitor {
         if (name == "await") {
-            return MethodEnterVisitor(mv, Runtime::onConditionAwait, true)
+            return MethodExitVisitor(MethodEnterVisitor(mv, Runtime::onConditionAwait, true),
+                Runtime::onConditionAwaitDone, access, name, descriptor, true)
         }
         if (name == "signal") {
             return MethodEnterVisitor(mv, Runtime::onConditionSignal, true)

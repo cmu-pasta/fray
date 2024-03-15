@@ -52,6 +52,9 @@ public class Delegate {
     public void onConditionAwait(Object l) {
     }
 
+    public void onConditionAwaitDone(Object l) {
+    }
+
     public void onConditionSignal(Object l) {
     }
 
