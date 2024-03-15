@@ -1,5 +1,6 @@
 @file:Suppress("JAVA_MODULE_DOES_NOT_EXPORT_PACKAGE")
 package cmu.pasta.sfuzz.jdk.jlink
+import cmu.pasta.sfuzz.instrumentation.Utils
 import cmu.pasta.sfuzz.instrumentation.instrumentClass
 import cmu.pasta.sfuzz.instrumentation.instrumentModuleInfo
 import cmu.pasta.sfuzz.runtime.Runtime
@@ -24,6 +25,7 @@ class JlinkPlugin: Plugin {
     }
     override fun transform(input: ResourcePool, output: ResourcePoolBuilder): ResourcePool {
         println("Start sfuzz plugin!")
+        Utils.prepareDebugFolder()
         input.transformAndCopy({entry ->
             var resourcePoolEntry = entry
             if (resourcePoolEntry.type() == ResourcePoolEntry.Type.CLASS_OR_RESOURCE && resourcePoolEntry.path().endsWith("" +
