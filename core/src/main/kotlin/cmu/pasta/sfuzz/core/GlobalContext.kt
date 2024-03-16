@@ -172,9 +172,9 @@ object GlobalContext {
         }
     }
 
-    private fun objectWaitImpl(signalObject: Any, lockObject: Any) {
+    private fun objectWaitImpl(waitingObject: Any, lockObject: Any) {
         val t = Thread.currentThread().id
-        val objId = System.identityHashCode(signalObject)
+        val objId = System.identityHashCode(waitingObject)
         registeredThreads[t]?.pendingOperation = ObjectWaitOperation(objId)
         registeredThreads[t]?.state = ThreadState.Enabled
         scheduleNextOperation(true)
@@ -183,8 +183,8 @@ object GlobalContext {
         registeredThreads[t]?.pendingOperation = PausedOperation()
         registeredThreads[t]?.state = ThreadState.Paused
 
-        reentrantLockMonitor.addWaitingThread(signalObject, Thread.currentThread())
-        reentrantLockUnlockImpl(lockObject, t, true, true, lockObject != signalObject)
+        reentrantLockMonitor.addWaitingThread(waitingObject, Thread.currentThread())
+        reentrantLockUnlockImpl(lockObject, t, true, true, lockObject != waitingObject)
 
         // We need a daemon thread here because
         // `object.wait` release the monitor lock implicitly.
@@ -208,17 +208,17 @@ object GlobalContext {
         objectWaitImpl(o, lock)
     }
 
-    fun objectWaitDoneImpl(signalObject: Any, lockObject: Any) {
+    fun objectWaitDoneImpl(waitingObject: Any, lockObject: Any) {
         val t = Thread.currentThread()
         val context = registeredThreads[t.id]!!
         // We will unblock here only if the scheduler
         // decides to run it.
         while (context.state != ThreadState.Running) {
             syncManager.signal(lockObject)
-            if (signalObject is Condition) {
-                signalObject.await()
+            if (waitingObject is Condition) {
+                waitingObject.await()
             } else {
-                (signalObject as Object).wait()
+                (waitingObject as Object).wait()
             }
         }
         // If a thread is enabled, the lock must be available.
@@ -233,14 +233,14 @@ object GlobalContext {
         objectWaitDoneImpl(o, conditionToLock[o]!!)
     }
 
-    fun objectNotifyImpl(signalObject: Any, lockObject: Any) {
-        val id = System.identityHashCode(signalObject)
+    fun objectNotifyImpl(waitingObject: Any, lockObject: Any) {
+        val id = System.identityHashCode(waitingObject)
         reentrantLockMonitor.waitingThreads[id]?.let {
             if (it.size > 0) {
                 val t = it.removeFirst()
                 val context = registeredThreads[t]!!
                 reentrantLockMonitor.addWakingThread(lockObject, context.thread)
-                context.blockedBy = signalObject
+                context.blockedBy = waitingObject
                 it.remove(t)
                 if (it.size == 0) {
                     reentrantLockMonitor.waitingThreads.remove(id)
@@ -259,15 +259,15 @@ object GlobalContext {
         objectNotifyImpl(o, lock)
     }
 
-    fun objectNotifyAllImpl(signalObject: Any, lockObject: Any) {
-        val id = System.identityHashCode(signalObject)
+    fun objectNotifyAllImpl(waitingObject: Any, lockObject: Any) {
+        val id = System.identityHashCode(waitingObject)
         reentrantLockMonitor.waitingThreads[id]?.let {
             if (it.size > 0) {
                 for (t in it) {
                     val context = registeredThreads[t]!!
                     // We cannot enable the thread immediately because
                     // the thread is still waiting for the monitor lock.
-                    context.blockedBy = signalObject
+                    context.blockedBy = waitingObject
                     reentrantLockMonitor.addWakingThread(lockObject, context.thread)
                 }
                 reentrantLockMonitor.waitingThreads.remove(id)
