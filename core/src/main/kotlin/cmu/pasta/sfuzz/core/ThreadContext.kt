@@ -21,7 +21,6 @@ class ThreadContext(val thread: Thread, val index: Int) {
     // This field is set when a thread is resumed by `o.notify()`
     // but hasn't acquire the monitor lock.
     var waitsOn: Any? = null
-    var awaitsOnCondition: Any? = null
 
     // Pending operation is null if a thread is just resumed/blocked.
     var pendingOperation: Operation = ThreadStartOperation()

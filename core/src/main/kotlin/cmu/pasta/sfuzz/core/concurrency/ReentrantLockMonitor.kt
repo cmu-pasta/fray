@@ -66,12 +66,6 @@ class ReentrantLockMonitor {
         return (wakingThreads[id]?.size ?: 0) + (waitingThreads[id]?.size ?: 0)
     }
 
-    fun getNumThreadsBlockBy(lock: Any, condition:Any): Int {
-        val id = System.identityHashCode(lock)
-        val conditionId = System.identityHashCode(condition)
-        return (wakingThreads[id]?.size ?: 0) + (waitingThreads[condition]?.size ?: 0)
-    }
-
     fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean): Boolean {
         val id = System.identityHashCode(lock)
         assert(lockHolders[id] == Thread.currentThread().id)
