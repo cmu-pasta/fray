@@ -1,5 +1,9 @@
 package cmu.pasta.sfuzz.runtime;
 
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 public class Delegate {
 
     public void onThreadStart(Thread t) {
@@ -39,6 +43,22 @@ public class Delegate {
     }
 
     public void onAtomicOperation(Object o, MemoryOpType type) {
+    }
+
+    public Condition onReentrantLockNewCondition(Condition c, ReentrantLock l) {
+        return c;
+    }
+
+    public void onConditionAwait(Object l) {
+    }
+
+    public void onConditionAwaitDone(Object l) {
+    }
+
+    public void onConditionSignal(Object l) {
+    }
+
+    public void onConditionSignalAll(Object l) {
     }
 
     public void onFieldRead(Object o, String owner, String name, String descriptor) {

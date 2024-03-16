@@ -43,3 +43,25 @@ tasks.register<JavaExec>("run") {
     }
 }
 
+tasks.register<JavaExec>("runArithmeticProgBad") {
+    var jdk = project(":jdk")
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("example.ArithmeticProgBad")
+    executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
+}
+
+tasks.register<JavaExec>("runArithmeticProgSfuzz") {
+    val jvmti = project(":jvmti")
+    val jdk = project(":jdk")
+    val instrumentation = project(":instrumentation")
+    classpath = sourceSets["main"].runtimeClasspath
+    executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
+    mainClass.set("cmu.pasta.sfuzz.core.MainKt")
+    args = listOf("example.ArithmeticProgBad", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", "fifo")
+    jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so")
+    jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
+    doFirst {
+        // Printing the full command
+        println("Executing command: ${executable} ${jvmArgs!!.joinToString(" ")} -cp ${classpath.asPath} ${mainClass.get()} ${args!!.joinToString(" ")}")
+    }
+}

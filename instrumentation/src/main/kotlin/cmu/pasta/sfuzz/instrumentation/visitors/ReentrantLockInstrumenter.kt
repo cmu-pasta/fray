@@ -4,6 +4,10 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import java.util.concurrent.locks.ReentrantLock
 import cmu.pasta.sfuzz.runtime.Runtime
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.Opcodes.ASM9
+import org.objectweb.asm.commons.AdviceAdapter
+import kotlin.reflect.KFunction
 
 class ReentrantLockInstrumenter(cv:ClassVisitor): ClassVisitorBase(cv, ReentrantLock::class.java.name) {
 
@@ -22,8 +26,27 @@ class ReentrantLockInstrumenter(cv:ClassVisitor): ClassVisitorBase(cv, Reentrant
             return MethodEnterVisitor(mv, Runtime::onReentrantLockLock, true)
         }
         if (name == "unlock") {
-            return MethodEnterVisitor(mv, Runtime::onReentrantLockUnlock, true)
+            return MethodExitVisitor(MethodEnterVisitor(mv, Runtime::onReentrantLockUnlock, true),
+                Runtime::onReentrantLockUnlockDone, access, name, descriptor, true)
+        }
+        if (name == "newCondition") {
+            return NewConditionVisitor(mv, Runtime::onReentrantLockNewCondition, access, name, descriptor, true)
         }
         return mv
+    }
+
+    class NewConditionVisitor(mv: MethodVisitor, val method: KFunction<*>, access: Int, name: String, descriptor: String, val loadThis: Boolean = true): AdviceAdapter(ASM9, mv, access, name, descriptor) {
+        override fun onMethodExit(opcode: Int) {
+            if (opcode == ARETURN) {
+                dup()
+                loadThis()
+                visitMethodInsn(
+                    Opcodes.INVOKESTATIC,
+                    Runtime::class.java.name.replace(".", "/"), method.name,
+                    Utils.kFunctionToJvmMethodDescriptor(method), false
+                )
+                super.onMethodExit(opcode)
+            }
+        }
     }
 }

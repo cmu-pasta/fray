@@ -40,6 +40,7 @@ class ApplicationCodeTransformer: ClassFileTransformer {
             cv = VolatileFieldsInstrumenter(cv)
             cv = ObjectNotifyInstrumenter(cv)
             cv = MonitorInstrumenter(cv)
+            cv = ConditionInstrumenter(cv)
             cv = SynchronizedMethodInstrumenter(cv)
             cv = ClassVersionInstrumenter(cv)
             classReader.accept(cv, ClassReader.EXPAND_FRAMES)
