@@ -26,19 +26,19 @@ public class Runtime {
         DELEGATE.onThreadRun();
     }
 
-    public static void onReentrantLockTryLock(Object l) {
+    public static void onReentrantLockTryLock(ReentrantLock l) {
         DELEGATE.onReentrantLockTryLock(l);
     }
 
-    public static void onReentrantLockLock(Object l) {
+    public static void onReentrantLockLock(ReentrantLock l) {
         DELEGATE.onReentrantLockLock(l);
     }
 
-    public static void onReentrantLockUnlock(Object l) {
+    public static void onReentrantLockUnlock(ReentrantLock l) {
         DELEGATE.onReentrantLockUnlock(l);
     }
 
-    public static void onReentrantLockUnlockDone(Object l) {
+    public static void onReentrantLockUnlockDone(ReentrantLock l) {
         DELEGATE.onReentrantLockUnlockDone(l);
     }
 
@@ -62,19 +62,19 @@ public class Runtime {
         DELEGATE.onObjectNotifyAll(o);
     }
 
-    public static void onConditionAwait(Object o) {
+    public static void onConditionAwait(Condition o) {
         DELEGATE.onConditionAwait(o);
     }
 
-    public static void onConditionAwaitDone(Object o) {
+    public static void onConditionAwaitDone(Condition o) {
         DELEGATE.onConditionAwaitDone(o);
     }
 
-    public static void onConditionSignal(Object o) {
+    public static void onConditionSignal(Condition o) {
         DELEGATE.onConditionSignal(o);
     }
 
-    public static void onConditionSignalAll(Object o) {
+    public static void onConditionSignalAll(Condition o) {
         DELEGATE.onConditionSignalAll(o);
     }
 
@@ -100,6 +100,18 @@ public class Runtime {
 
     public static void onStaticFieldWrite(String owner, String name, String descriptor) {
         DELEGATE.onStaticFieldWrite(owner, name, descriptor);
+    }
+
+    public static void onMonitorEnter(Object o) {
+        DELEGATE.onMonitorEnter(o);
+    }
+
+    public static void onMonitorExit(Object o) {
+        DELEGATE.onMonitorExit(o);
+    }
+
+    public static void onMonitorExitDone(Object o) {
+        DELEGATE.onMonitorExitDone(o);
     }
 
     public static void onExit(int code) {

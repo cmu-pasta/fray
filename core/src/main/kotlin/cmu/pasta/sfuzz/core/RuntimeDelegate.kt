@@ -77,7 +77,7 @@ class RuntimeDelegate: Delegate() {
         entered.set(false)
     }
 
-    override fun onReentrantLockUnlockDone(l: Any) {
+    override fun onReentrantLockUnlockDone(l: ReentrantLock) {
         if (checkEntered()) return
         GlobalContext.reentrantLockUnlockDone(l)
         entered.set(false)
@@ -90,7 +90,7 @@ class RuntimeDelegate: Delegate() {
         entered.set(false)
     }
 
-    override fun onReentrantLockLock(l: Any) {
+    override fun onReentrantLockLock(l: ReentrantLock) {
         if (checkEntered()) return
         GlobalContext.reentrantLockLock(l)
         entered.set(false)
@@ -102,9 +102,27 @@ class RuntimeDelegate: Delegate() {
         entered.set(false)
     }
 
-    override fun onReentrantLockUnlock(l: Any) {
+    override fun onReentrantLockUnlock(l: ReentrantLock) {
         if (checkEntered()) return
-        GlobalContext.reentrantLockUnlock(l, Thread.currentThread().id, true, false)
+        GlobalContext.reentrantLockUnlock(l)
+        entered.set(false)
+    }
+
+    override fun onMonitorEnter(o: Any) {
+        if (checkEntered()) return
+        GlobalContext.monitorEnter(o)
+        entered.set(false)
+    }
+
+    override fun onMonitorExit(o: Any) {
+        if (checkEntered()) return
+        GlobalContext.monitorExit(o)
+        entered.set(false)
+    }
+
+    override fun onMonitorExitDone(o: Any) {
+        if (checkEntered()) return
+        GlobalContext.monitorEnterDone(o)
         entered.set(false)
     }
 
@@ -113,25 +131,25 @@ class RuntimeDelegate: Delegate() {
         return c;
     }
 
-    override fun onConditionAwait(o: Any) {
+    override fun onConditionAwait(o: Condition) {
         if (checkEntered()) return
         GlobalContext.conditionAwait(o)
         entered.set(false)
     }
 
-    override fun onConditionAwaitDone(o: Any) {
+    override fun onConditionAwaitDone(o: Condition) {
         if (checkEntered()) return
         GlobalContext.conditionAwaitDone(o)
         entered.set(false)
     }
 
-    override fun onConditionSignal(o: Any) {
+    override fun onConditionSignal(o: Condition) {
         if (checkEntered()) return
         GlobalContext.conditionSignal(o)
         entered.set(false)
     }
 
-    override fun onConditionSignalAll(o: Any) {
+    override fun onConditionSignalAll(o: Condition) {
         if (checkEntered()) return
         GlobalContext.conditionSignalAll(o)
         entered.set(false)
