@@ -61,9 +61,6 @@ public class Delegate {
     public void onConditionSignalAll(Object l) {
     }
 
-    public void onAtomicOperation(Object o) {
-    }
-
     public void onFieldRead(Object o, String owner, String name, String descriptor) {
     }
 
