@@ -221,5 +221,5 @@
             "enabled": 2
         }
     ],
-    "fullSchedule": false
+    "fullSchedule": true
 }

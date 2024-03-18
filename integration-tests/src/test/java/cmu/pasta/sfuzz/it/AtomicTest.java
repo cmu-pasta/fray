@@ -4,11 +4,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-//public class AtomicTest extends IntegrationTestRunner {
-//    @Test
-//    public void testInterleaving1() {
-//        runTest("T1T2");
-//    }
+public class AtomicTest extends IntegrationTestRunner {
+    @Test
+    public void testInterleaving1() {
+        runTest("T1T2");
+    }
 //
 //    @Test
 //    public void testInterleaving2() {
@@ -19,4 +19,4 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 //    public void testInterleaving3() {
 //        runTest("alternateT2T1");
 //    }
-//}
+}
