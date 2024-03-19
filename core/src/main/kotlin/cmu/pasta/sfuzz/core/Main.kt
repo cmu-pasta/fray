@@ -1,5 +1,6 @@
 package cmu.pasta.sfuzz.core
 
+import cmu.pasta.sfuzz.core.logger.ConsoleLogger
 import cmu.pasta.sfuzz.core.logger.CsvLogger
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.core.logger.JsonLogger
@@ -24,6 +25,7 @@ fun run(config: Configuration) {
     prepareReportPath(config.report)
     val logger = JsonLogger(config.report, config.fullSchedule)
     GlobalContext.registerLogger(logger)
+//    GlobalContext.registerLogger(ConsoleLogger())
     GlobalContext.scheduler = config.scheduler
     GlobalContext.config = config
     GlobalContext.bootStrap()

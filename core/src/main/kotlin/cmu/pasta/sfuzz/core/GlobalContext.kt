@@ -182,6 +182,7 @@ object GlobalContext {
         // state of current thread.
         registeredThreads[t]?.pendingOperation = PausedOperation()
         registeredThreads[t]?.state = ThreadState.Paused
+        registeredThreads[t]?.blockedBy = waitingObject
 
         reentrantLockMonitor.addWaitingThread(waitingObject, Thread.currentThread())
         reentrantLockUnlockImpl(lockObject, t, true, true, lockObject != waitingObject)
@@ -377,11 +378,11 @@ object GlobalContext {
                     }
                 } else {
                     val reentrantLock = lock as Lock
-                    reentrantLock.lock();
+                    reentrantLock.lock()
                     for (condition in lockToConditions[lock]!!) {
                         condition.signalAll()
                     }
-                    reentrantLock.unlock();
+                    reentrantLock.unlock()
                 }
             }
             syncManager.createWait(lock, waitingThreads)
@@ -437,6 +438,9 @@ object GlobalContext {
         // Our current design makes sure that reschedule is only called
         // by scheduled thread.
         val currentThread = registeredThreads[currentThreadId]!!
+        loggers.forEach {
+            it.applicationEvent("Thread ${currentThread.index} finished running.")
+        }
         assert(Thread.currentThread() is SFuzzThread
                 || currentThreadId == Thread.currentThread().id
                 || currentThread.state == ThreadState.Enabled
@@ -461,9 +465,12 @@ object GlobalContext {
         if (enabledOperations.size > 1 || config!!.fullSchedule) {
             loggers.forEach {
                 it.newOperationScheduled(
-                    currentThread.pendingOperation,
-                    Choice(index, currentThread.index, enabledOperations.size))
+                    nextThread.pendingOperation,
+                    Choice(index, nextThread.index, enabledOperations.size))
             }
+        }
+        loggers.forEach {
+            it.applicationEvent("Thread ${nextThread.index} is scheduled to run ${nextThread.pendingOperation}.")
         }
         nextThread.state = ThreadState.Running
         if (currentThread != nextThread) {
@@ -492,7 +499,8 @@ object GlobalContext {
                 }
             }
             t.blockedBy = null
+        } else {
+            t.unblock()
         }
-        t.unblock()
     }
 }

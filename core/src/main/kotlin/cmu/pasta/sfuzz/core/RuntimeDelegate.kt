@@ -135,9 +135,11 @@ class RuntimeDelegate: Delegate() {
         if (checkEntered()) return
         GlobalContext.conditionAwait(o)
         entered.set(false)
+        skipFunctionEntered.set(1 + skipFunctionEntered.get())
     }
 
     override fun onConditionAwaitDone(o: Condition) {
+        skipFunctionEntered.set(skipFunctionEntered.get() - 1)
         if (checkEntered()) return
         GlobalContext.conditionAwaitDone(o)
         entered.set(false)
