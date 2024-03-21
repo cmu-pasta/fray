@@ -3,6 +3,8 @@ package cmu.pasta.sfuzz.core.concurrency
 import cmu.pasta.sfuzz.core.GlobalContext
 import cmu.pasta.sfuzz.core.ThreadState
 import cmu.pasta.sfuzz.core.concurrency.operations.ThreadResumeOperation
+import java.util.concurrent.locks.Condition
+import java.util.concurrent.locks.ReentrantLock
 
 class ReentrantLockMonitor {
     val lockHolders = mutableMapOf<Int, Long>()
@@ -16,6 +18,8 @@ class ReentrantLockMonitor {
     val wakingThreads = mutableMapOf<Int, MutableSet<Long>>()
     val waitingThreads = mutableMapOf<Int, MutableList<Long>>()
 
+    val conditionToLock = mutableMapOf<Condition, ReentrantLock>()
+    val lockToConditions = mutableMapOf<ReentrantLock, MutableList<Condition>>()
     /**
     * Return true if [lock] is acquired by the current thread.
     */
@@ -59,6 +63,23 @@ class ReentrantLockMonitor {
             waitingThreads[id] = mutableListOf()
         }
         waitingThreads[id]!!.add(t.id)
+    }
+
+    fun lockFromCondition(condition: Condition): ReentrantLock {
+        return conditionToLock[condition]!!
+    }
+
+    fun conditionFromLock(lock: ReentrantLock): MutableList<Condition> {
+        return lockToConditions[lock]!!
+    }
+
+
+    fun registerNewCondition(condition: Condition, lock: ReentrantLock) {
+        conditionToLock[condition] = lock
+        if (lock !in lockToConditions) {
+            lockToConditions[lock] = mutableListOf()
+        }
+        lockToConditions[lock]!!.add(condition)
     }
 
     fun getNumThreadsBlockBy(lock: Any): Int {

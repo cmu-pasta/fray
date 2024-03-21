@@ -36,6 +36,9 @@ public class Delegate {
     public void onReentrantLockLock(ReentrantLock l) {
     }
 
+    public void onReentrantLockLockDone(ReentrantLock l) {
+    }
+
     public void onReentrantLockUnlock(ReentrantLock l) {
     }
 
@@ -111,6 +114,9 @@ public class Delegate {
     }
 
     public void onThreadUnparkDone(Thread t) {
+    }
+
+    public void onMainExit() {
     }
 }
 

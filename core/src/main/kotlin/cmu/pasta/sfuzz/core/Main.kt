@@ -5,6 +5,7 @@ import cmu.pasta.sfuzz.core.logger.CsvLogger
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.core.logger.JsonLogger
 import cmu.pasta.sfuzz.core.runtime.AnalysisResult
+import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
 import java.lang.reflect.InvocationTargetException
 import java.nio.file.Paths
@@ -28,23 +29,25 @@ fun run(config: Configuration) {
 //    GlobalContext.registerLogger(ConsoleLogger())
     GlobalContext.scheduler = config.scheduler
     GlobalContext.config = config
-    GlobalContext.bootStrap()
-    Runtime.DELEGATE = RuntimeDelegate()
+    GlobalContext.bootstrap()
     for (i in 0..<config.iter) {
+        Runtime.DELEGATE = RuntimeDelegate()
         Runtime.start()
         try {
             val clazz = Class.forName(config.clazz)
             val m = clazz.getMethod("main", Array<String>::class.java)
             m.invoke(null, config.targetArgs.split(" ").toTypedArray())
+            Runtime.onMainExit()
         } catch (e: InvocationTargetException) {
             if (e.cause is TargetTerminateException) {
-
+                Runtime.onMainExit()
                 println("target terminated: ${(e.cause as TargetTerminateException).status}")
             } else {
                 println(e.toString())
                 e.cause?.printStackTrace()
             }
         }
+        Runtime.DELEGATE = Delegate()
         GlobalContext.done(AnalysisResult.COMPLETE)
     }
     GlobalContext.shutDown()

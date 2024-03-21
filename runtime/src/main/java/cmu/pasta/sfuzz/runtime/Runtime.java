@@ -1,6 +1,5 @@
 package cmu.pasta.sfuzz.runtime;
 
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -32,6 +31,10 @@ public class Runtime {
 
     public static void onReentrantLockLock(ReentrantLock l) {
         DELEGATE.onReentrantLockLock(l);
+    }
+
+    public static void onReentrantLockLockDone(ReentrantLock l) {
+        DELEGATE.onReentrantLockLockDone(l);
     }
 
     public static void onReentrantLockUnlock(ReentrantLock l) {
@@ -134,15 +137,23 @@ public class Runtime {
         DELEGATE.start();
     }
 
+    public static void onMainExit() {
+        DELEGATE.onMainExit();
+    }
+
     public static void onThreadPark() {
+        DELEGATE.onThreadPark();
     }
 
     public static void onThreadParkDone() {
+        DELEGATE.onThreadParkDone();
     }
 
     public static void onThreadUnpark(Thread t) {
+        DELEGATE.onThreadUnpark(t);
     }
 
-    public static void onThreadUnpakDone(Thread t) {
+    public static void onThreadUnparkDone(Thread t) {
+        DELEGATE.onThreadUnparkDone(t);
     }
 }

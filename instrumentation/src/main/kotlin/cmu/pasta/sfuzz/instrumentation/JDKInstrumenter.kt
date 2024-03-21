@@ -18,6 +18,7 @@ fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
 //    var classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_FRAMES or ClassWriter.COMPUTE_MAXS)
     var classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
     var cv:ClassVisitor = ThreadInstrumenter(classWriter)
+    cv = LockSupportInstrumenter(cv)
     cv = ReentrantLockInstrumenter(cv)
     cv = SystemModulesMapInstrumenter(cv)
     cv = ConditionInstrumenter(cv)

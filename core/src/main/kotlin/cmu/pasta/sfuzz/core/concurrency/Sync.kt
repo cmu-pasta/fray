@@ -13,7 +13,13 @@ class Sync(val goal: Int): Any() {
         }
         // We don't need synchronized here because
         // it is already inside a synchronized method
-        (this as Object).wait()
+        while (count < goal) {
+            try {
+                (this as Object).wait()
+            } catch (e: InterruptedException) {
+                println("Thread interrupted!")
+            }
+        }
         // At this point no concurrency.
         count = 0
     }

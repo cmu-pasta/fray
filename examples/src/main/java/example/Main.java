@@ -94,7 +94,8 @@ public class Main {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        testMultipleThreadWait();
+        testConcurrentHashMap();
+//        testMultipleThreadWait(/**/);
 //        Thread t = Thread.currentThread();
 //        LockSupport.unpark(t);
 //        LockSupport.unpark(t);
@@ -119,28 +120,30 @@ public class Main {
 
     public static void testConcurrentHashMap() throws InterruptedException {
         final Object lock = new Object();
-        ExecutorService service = Executors.newFixedThreadPool(10);
-        service.submit(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Thread 1");
-            }
-        });
-
-        service.submit(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (lock) {
-                    lock.notify();
+        try (ExecutorService service = Executors.newFixedThreadPool(1)) {
+            service.submit(new Runnable() {
+                @Override
+                public void run() {
                     System.out.println("Thread 1");
                 }
-            }
-        });
+            });
 
-        synchronized (lock) {
-            lock.wait();
+            service.submit(new Runnable() {
+                @Override
+                public void run() {
+                    synchronized (lock) {
+                        lock.notify();
+                        System.out.println("Thread 1");
+                    }
+                }
+            });
+
+            synchronized (lock) {
+                lock.wait();
+            }
+            service.shutdown();
         }
-        service.shutdown();
+        System.out.println("service shutdown.");
     }
 
     public static void testThread() {

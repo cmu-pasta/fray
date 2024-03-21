@@ -1,3 +1,15 @@
+# Supported Operations
+
+
+| Feature                   | Supported |
+|---------------------------|-----------|
+| Thread Wait/Notify        | Yes |
+| Thread Park/Unpark        | Yes |
+| Monitor Enter/Exit        | Yes |
+| ReentrantLock Lock/Unlock | Yes |
+| Executors                 | Yes |
+
+
 # Thread Wait/Notify
 
 For thread wait and notify, we rely on the original `wait` to block a thread

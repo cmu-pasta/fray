@@ -23,11 +23,10 @@ import java.util.concurrent.locks.ReentrantLock
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 object GlobalContext {
     val registeredThreads = mutableMapOf<Long, ThreadContext>()
-    var currentThreadId: Long = -1;
+    var currentThreadId: Long = -1
+    var mainThreadId: Long = -1
     var scheduler: Scheduler = FifoScheduler()
     var config: Configuration? = null
-    private val conditionToLock = mutableMapOf<Condition, ReentrantLock>();
-    private val lockToConditions = mutableMapOf<Any, MutableList<Condition>>();
     private val reentrantLockMonitor = ReentrantLockMonitor()
     private val volatileManager = VolatileManager()
     val syncManager = SynchronizationManager()
@@ -40,7 +39,7 @@ object GlobalContext {
         }
     }
 
-    fun bootStrap() {
+    fun bootstrap() {
         executor = Executors.newSingleThreadExecutor { r ->
             object : SFuzzThread() {
                 override fun run() {
@@ -50,12 +49,20 @@ object GlobalContext {
         }
     }
 
+    fun mainExit() {
+        val t = Thread.currentThread()
+        val context = registeredThreads[t.id]!!
+        context.state = ThreadState.Completed
+        scheduleNextOperation(true)
+    }
+
     fun start() {
         val t = Thread.currentThread();
         // We need to submit a dummy task to trigger the executor
         // thread creation
         executor.submit {}
         currentThreadId = t.id
+        mainThreadId = t.id
         registeredThreads[t.id] = ThreadContext(t, registeredThreads.size)
         registeredThreads[t.id]?.state = ThreadState.Enabled
         loggers.forEach {
@@ -205,7 +212,7 @@ object GlobalContext {
     }
 
     fun conditionAwait(o: Condition) {
-        val lock = conditionToLock[o]!!
+        val lock = reentrantLockMonitor.lockFromCondition(o)
         objectWaitImpl(o, lock)
     }
 
@@ -231,7 +238,7 @@ object GlobalContext {
     }
 
     fun conditionAwaitDone(o: Condition) {
-        objectWaitDoneImpl(o, conditionToLock[o]!!)
+        objectWaitDoneImpl(o, reentrantLockMonitor.lockFromCondition(o))
     }
 
     fun objectNotifyImpl(waitingObject: Any, lockObject: Any) {
@@ -256,8 +263,7 @@ object GlobalContext {
     }
 
     fun conditionSignal(o: Condition) {
-        val lock = conditionToLock[o]!!
-        objectNotifyImpl(o, lock)
+        objectNotifyImpl(o, reentrantLockMonitor.lockFromCondition(o))
     }
 
     fun objectNotifyAllImpl(waitingObject: Any, lockObject: Any) {
@@ -281,8 +287,7 @@ object GlobalContext {
     }
 
     fun conditionSignalAll(o: Condition) {
-        val lock = conditionToLock[o]!!
-        objectNotifyAllImpl(o, lock)
+        objectNotifyAllImpl(o, reentrantLockMonitor.lockFromCondition(o))
     }
 
     fun reentrantLockTrylock(lock: Any) {
@@ -377,9 +382,9 @@ object GlobalContext {
                         (lock as Object).notifyAll()
                     }
                 } else {
-                    val reentrantLock = lock as Lock
+                    val reentrantLock = lock as ReentrantLock
                     reentrantLock.lock()
-                    for (condition in lockToConditions[lock]!!) {
+                    for (condition in reentrantLockMonitor.conditionFromLock(reentrantLock)) {
                         condition.signalAll()
                     }
                     reentrantLock.unlock()
@@ -402,12 +407,7 @@ object GlobalContext {
     }
 
     fun reentrantLockNewCondition(condition: Condition, lock: ReentrantLock) {
-        conditionToLock[condition] = lock
-        if (!lockToConditions.containsKey(lock)) {
-            lockToConditions[lock] = mutableListOf()
-        }
-        conditionToLock[condition] = lock
-        lockToConditions[lock]!!.add(condition)
+        reentrantLockMonitor.registerNewCondition(condition, lock)
     }
 
     fun fieldOperation(obj: Any?, owner: String, name: String, type: MemoryOpType) {
@@ -451,7 +451,10 @@ object GlobalContext {
 
         if (enabledOperations.isEmpty()) {
             if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
-                // We are done here, we should go back to the
+                // We are done here, we should go back to the main thread.
+                if (currentThreadId != mainThreadId) {
+                    registeredThreads[mainThreadId]!!.unblock()
+                }
                 return
             } else {
                 // Deadlock detected
@@ -487,9 +490,11 @@ object GlobalContext {
         // We first need to give the thread lock
         // and then wakes it up through `notifyAll`.
         if (t.blockedBy != null) {
+            // FIXME(aoli): relying on type check is not 100% correct,
+            // because a thread can still be blocked by `condition.wait()`.
             if (t.blockedBy is Condition) {
                 val condition = t.blockedBy as Condition
-                val lock = conditionToLock[condition] as Lock
+                val lock = reentrantLockMonitor.lockFromCondition(condition)
                 lock.lock()
                 condition.signalAll()
                 lock.unlock()

@@ -21,12 +21,22 @@ class LockSupportInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv, LockSuppor
         }
         if (name.startsWith("unpark")) {
             return object: AdviceAdapter(ASM9, mv, access, name, descriptor) {
-                override fun onMethodExit(opcode: Int) {
+                override fun onMethodEnter() {
                     loadArg(0)
                     mv.visitMethodInsn(INVOKESTATIC,
                         Runtime::class.java.name.replace('.', '/'),
                         Runtime::onThreadUnpark.name,
                         Utils.kFunctionToJvmMethodDescriptor(Runtime::onThreadUnpark),
+                        false)
+                    super.onMethodEnter()
+                }
+
+                override fun onMethodExit(opcode: Int) {
+                    loadArg(0)
+                    mv.visitMethodInsn(INVOKESTATIC,
+                        Runtime::class.java.name.replace('.', '/'),
+                        Runtime::onThreadUnparkDone.name,
+                        Utils.kFunctionToJvmMethodDescriptor(Runtime::onThreadUnparkDone),
                         false)
                     super.onMethodExit(opcode)
                 }

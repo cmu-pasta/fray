@@ -35,6 +35,12 @@ class RuntimeDelegate: Delegate() {
         return false
     }
 
+    override fun onMainExit() {
+        if (checkEntered()) return
+        GlobalContext.mainExit()
+        entered.set(false)
+    }
+
     override fun onThreadStart(t: Thread) {
         if (checkEntered()) return
         GlobalContext.threadStart(t)
@@ -77,12 +83,6 @@ class RuntimeDelegate: Delegate() {
         entered.set(false)
     }
 
-    override fun onReentrantLockUnlockDone(l: ReentrantLock) {
-        if (checkEntered()) return
-        GlobalContext.reentrantLockUnlockDone(l)
-        entered.set(false)
-    }
-
 
     override fun onObjectNotifyAll(o: Any) {
         if (checkEntered()) return
@@ -91,9 +91,17 @@ class RuntimeDelegate: Delegate() {
     }
 
     override fun onReentrantLockLock(l: ReentrantLock) {
-        if (checkEntered()) return
+        if (checkEntered()) {
+            skipFunctionEntered.set(1 + skipFunctionEntered.get())
+            return
+        }
         GlobalContext.reentrantLockLock(l)
         entered.set(false)
+        skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    }
+
+    override fun onReentrantLockLockDone(l: ReentrantLock?) {
+        skipFunctionEntered.set(skipFunctionEntered.get() - 1)
     }
 
     override fun onAtomicOperation(o: Any, type: MemoryOpType) {
@@ -103,8 +111,19 @@ class RuntimeDelegate: Delegate() {
     }
 
     override fun onReentrantLockUnlock(l: ReentrantLock) {
-        if (checkEntered()) return
+        if (checkEntered()) {
+            skipFunctionEntered.set(1 + skipFunctionEntered.get())
+            return
+        }
         GlobalContext.reentrantLockUnlock(l)
+        entered.set(false)
+        skipFunctionEntered.set(1 + skipFunctionEntered.get())
+    }
+
+    override fun onReentrantLockUnlockDone(l: ReentrantLock) {
+        skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+        if (checkEntered()) return
+        GlobalContext.reentrantLockUnlockDone(l)
         entered.set(false)
     }
 
@@ -132,7 +151,10 @@ class RuntimeDelegate: Delegate() {
     }
 
     override fun onConditionAwait(o: Condition) {
-        if (checkEntered()) return
+        if (checkEntered()) {
+            skipFunctionEntered.set(1 + skipFunctionEntered.get())
+            return
+        }
         GlobalContext.conditionAwait(o)
         entered.set(false)
         skipFunctionEntered.set(1 + skipFunctionEntered.get())

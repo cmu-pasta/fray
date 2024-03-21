@@ -22,8 +22,9 @@ class ReentrantLockInstrumenter(cv:ClassVisitor): ClassVisitorBase(cv, Reentrant
         if (name == "tryLock") {
             return MethodEnterVisitor(mv, Runtime::onReentrantLockTryLock, true)
         }
-        if (name == "lock" || name == " lockInterruptibly") {
-            return MethodEnterVisitor(mv, Runtime::onReentrantLockLock, true)
+        if (name == "lock" || name == "lockInterruptibly") {
+            return MethodExitVisitor(MethodEnterVisitor(mv, Runtime::onReentrantLockLock, true),
+                Runtime::onReentrantLockLockDone, access, name, descriptor, true)
         }
         if (name == "unlock") {
             return MethodExitVisitor(MethodEnterVisitor(mv, Runtime::onReentrantLockUnlock, true),
