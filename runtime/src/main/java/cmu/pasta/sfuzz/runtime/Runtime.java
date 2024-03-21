@@ -156,4 +156,16 @@ public class Runtime {
     public static void onThreadUnparkDone(Thread t) {
         DELEGATE.onThreadUnparkDone(t);
     }
+
+    public static void onThreadInterrupt(Thread t) {
+        DELEGATE.onThreadInterrupt(t);
+    }
+
+    public static boolean onThreadGetAndClearInterrupt(boolean originValue, Thread t) {
+        return DELEGATE.onThreadClearInterrupt(originValue, t);
+    }
+
+    public static void onThreadClearInterrupt(Thread t) {
+        DELEGATE.onThreadClearInterrupt(false, t);
+    }
 }

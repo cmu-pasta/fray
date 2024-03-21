@@ -1,6 +1,7 @@
 package cmu.pasta.sfuzz.core.concurrency
 
 import cmu.pasta.sfuzz.core.GlobalContext
+import cmu.pasta.sfuzz.core.ThreadContext
 import cmu.pasta.sfuzz.core.ThreadState
 import cmu.pasta.sfuzz.core.concurrency.operations.ThreadResumeOperation
 import java.util.concurrent.locks.Condition
@@ -69,13 +70,17 @@ class ReentrantLockMonitor {
     }
 
     // TODO(aoli): can we merge this logic with `objectNotifyImply`?
-    fun threadInterruptDuringObjectWait(waitingObject: Any, lockObject: Any, t: Thread) {
+    fun threadInterruptDuringObjectWait(waitingObject: Any, lockObject: Any, context: ThreadContext) {
         val id = System.identityHashCode(waitingObject)
-        waitingThreads[id]?.remove(t.id)
+        waitingThreads[id]?.remove(context.thread.id)
         if (waitingThreads[id]?.isEmpty() == true) {
             waitingThreads.remove(id)
         }
-        addWakingThread(lockObject, t)
+        addWakingThread(lockObject, context.thread)
+        if (!lockHolders.containsKey(System.identityHashCode(lockObject))) {
+            context.pendingOperation = ThreadResumeOperation()
+            context.state = ThreadState.Enabled
+        }
     }
 
     fun lockFromCondition(condition: Condition): ReentrantLock {

@@ -4,6 +4,7 @@ import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
+import java.lang.Exception
 import java.util.concurrent.locks.AbstractQueuedSynchronizer.ConditionObject
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
@@ -149,8 +150,10 @@ class RuntimeDelegate: Delegate() {
     }
 
     override fun onReentrantLockNewCondition(c: Condition, l: ReentrantLock):Condition {
-        GlobalContext.reentrantLockNewCondition(c, l);
-        return c;
+        if (checkEntered()) return c
+        GlobalContext.reentrantLockNewCondition(c, l)
+        entered.set(false)
+        return c
     }
 
     override fun onConditionAwait(o: Condition) {
@@ -256,6 +259,19 @@ class RuntimeDelegate: Delegate() {
         if (checkEntered()) return
         GlobalContext.threadUnparkDone(t)
         entered.set(false)
+    }
+
+    override fun onThreadInterrupt(t: Thread) {
+        if (checkEntered()) return
+        GlobalContext.threadInterrupt(t)
+        entered.set(false)
+    }
+
+    override fun onThreadClearInterrupt(origin: Boolean, t: Thread): Boolean {
+        if (checkEntered()) return origin
+        val o = GlobalContext.threadClearInterrupt(t)
+        entered.set(false)
+        return o
     }
 
     override fun start() {

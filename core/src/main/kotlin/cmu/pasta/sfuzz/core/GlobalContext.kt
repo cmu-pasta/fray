@@ -240,12 +240,32 @@ object GlobalContext {
                     (waitingObject as Object).wait()
                 }
             } catch (e: InterruptedException) {
-                context.interruptSignaled = true
-                reentrantLockMonitor.threadInterruptDuringObjectWait(waitingObject, lockObject, t)
+                // We want to also catch interrupt exception here.
             }
         }
         // If a thread is enabled, the lock must be available.
         assert(reentrantLockMonitor.lock(lockObject, t.id, false, true))
+        context.checkInterrupt()
+    }
+
+    fun threadInterrupt(t: Thread) {
+        val context = registeredThreads[t.id]!!
+        context.interruptSignaled = true
+        if (context.blockedBy != null) {
+            val lock = if (context.blockedBy is Condition) {
+                reentrantLockMonitor.lockFromCondition(context.blockedBy as Condition)
+            } else {
+                context.blockedBy!!
+            }
+            reentrantLockMonitor.threadInterruptDuringObjectWait(context.blockedBy!!, lock, context)
+        }
+    }
+
+    fun threadClearInterrupt(t: Thread): Boolean {
+        val context = registeredThreads[t.id]!!
+        val origin = context.interruptSignaled
+        context.interruptSignaled = false
+        return origin
     }
 
     fun objectWaitDone(o: Any) {
@@ -453,9 +473,6 @@ object GlobalContext {
         // Our current design makes sure that reschedule is only called
         // by scheduled thread.
         val currentThread = registeredThreads[currentThreadId]!!
-        loggers.forEach {
-            it.applicationEvent("Thread ${currentThread.index} finished running.")
-        }
         assert(Thread.currentThread() is SFuzzThread
                 || currentThreadId == Thread.currentThread().id
                 || currentThread.state == ThreadState.Enabled
@@ -486,9 +503,6 @@ object GlobalContext {
                     nextThread.pendingOperation,
                     Choice(index, nextThread.index, enabledOperations.size))
             }
-        }
-        loggers.forEach {
-            it.applicationEvent("Thread ${nextThread.index} is scheduled to run ${nextThread.pendingOperation}.")
         }
         nextThread.state = ThreadState.Running
         if (currentThread != nextThread || currentThread.blockedBy != null) {

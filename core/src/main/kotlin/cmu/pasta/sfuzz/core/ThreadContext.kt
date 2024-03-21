@@ -27,7 +27,7 @@ class ThreadContext(val thread: Thread, val index: Int) {
     var pendingOperation: Operation = ThreadStartOperation()
     val sync = Sync(1)
     fun block() {
-        interruptSignaled = sync.block() or interruptSignaled
+        sync.block()
     }
     fun unblock() {
         sync.unblock()

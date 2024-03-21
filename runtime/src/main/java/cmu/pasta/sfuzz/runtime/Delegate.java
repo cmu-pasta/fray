@@ -118,5 +118,12 @@ public class Delegate {
 
     public void onMainExit() {
     }
+
+    public void onThreadInterrupt(Thread t) {
+    }
+
+    public boolean onThreadClearInterrupt(Boolean originValue, Thread t) {
+        return originValue;
+    }
 }
 
