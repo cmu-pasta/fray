@@ -35,6 +35,9 @@ class ReentrantLockMonitor {
             }
             wakingThreads[id]?.let {
                 it.remove(tid)
+                if (it.isEmpty()) {
+                    wakingThreads.remove(id)
+                }
                 for (thread in it) {
                     GlobalContext.registeredThreads[thread]!!.state = ThreadState.Paused
                 }
@@ -49,20 +52,30 @@ class ReentrantLockMonitor {
         return false
     }
 
-    fun addWakingThread(lock: Any, t: Thread) {
-        val id = System.identityHashCode(lock)
+    fun addWakingThread(lockObject: Any, t: Thread) {
+        val id = System.identityHashCode(lockObject)
         if (!wakingThreads.contains(id)) {
             wakingThreads[id] = mutableSetOf()
         }
         wakingThreads[id]!!.add(t.id)
     }
 
-    fun addWaitingThread(lock: Any, t: Thread) {
-        val id = System.identityHashCode(lock)
+    fun addWaitingThread(waitingObject: Any, t: Thread) {
+        val id = System.identityHashCode(waitingObject)
         if (id !in waitingThreads) {
             waitingThreads[id] = mutableListOf()
         }
         waitingThreads[id]!!.add(t.id)
+    }
+
+    // TODO(aoli): can we merge this logic with `objectNotifyImply`?
+    fun threadInterruptDuringObjectWait(waitingObject: Any, lockObject: Any, t: Thread) {
+        val id = System.identityHashCode(waitingObject)
+        waitingThreads[id]?.remove(t.id)
+        if (waitingThreads[id]?.isEmpty() == true) {
+            waitingThreads.remove(id)
+        }
+        addWakingThread(lockObject, t)
     }
 
     fun lockFromCondition(condition: Condition): ReentrantLock {
@@ -125,5 +138,10 @@ class ReentrantLockMonitor {
     fun done() {
         assert(lockHolders.isEmpty())
         assert(lockWaiters.isEmpty())
+        assert(waitingThreads.isEmpty())
+        assert(wakingThreads.isEmpty())
+        assert(lockReentrantMap.isEmpty())
+        conditionToLock.clear()
+        lockToConditions.clear()
     }
 }

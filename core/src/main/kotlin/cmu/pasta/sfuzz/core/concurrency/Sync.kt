@@ -6,22 +6,25 @@ class Sync(val goal: Int): Any() {
     private var count = 0
 
     @Synchronized
-    fun block() {
+    fun block(): Boolean {
         if (count == goal) {
             count = 0
-            return
+            return false
         }
+        var interruptSignaled = false
         // We don't need synchronized here because
         // it is already inside a synchronized method
         while (count < goal) {
             try {
                 (this as Object).wait()
             } catch (e: InterruptedException) {
+                interruptSignaled = true
                 println("Thread interrupted!")
             }
         }
         // At this point no concurrency.
         count = 0
+        return interruptSignaled
     }
 
     @Synchronized

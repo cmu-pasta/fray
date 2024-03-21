@@ -17,6 +17,7 @@ enum class ThreadState {
 class ThreadContext(val thread: Thread, val index: Int) {
     var state = ThreadState.STARTED
     var unparkSignaled = false
+    var interruptSignaled = false
 
     // This field is set when a thread is resumed by `o.notify()`
     // but hasn't acquire the monitor lock.
@@ -26,9 +27,16 @@ class ThreadContext(val thread: Thread, val index: Int) {
     var pendingOperation: Operation = ThreadStartOperation()
     val sync = Sync(1)
     fun block() {
-        sync.block()
+        interruptSignaled = sync.block() or interruptSignaled
     }
     fun unblock() {
         sync.unblock()
+    }
+
+    fun checkInterrupt() {
+        if (interruptSignaled) {
+            interruptSignaled = false
+            throw InterruptedException()
+        }
     }
 }

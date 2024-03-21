@@ -182,17 +182,27 @@ object GlobalContext {
     private fun objectWaitImpl(waitingObject: Any, lockObject: Any) {
         val t = Thread.currentThread().id
         val objId = System.identityHashCode(waitingObject)
-        registeredThreads[t]?.pendingOperation = ObjectWaitOperation(objId)
-        registeredThreads[t]?.state = ThreadState.Enabled
+        val context = registeredThreads[t]!!
+        context.pendingOperation = ObjectWaitOperation(objId)
+        context.state = ThreadState.Enabled
         scheduleNextOperation(true)
         // If we resume executing, the Object.wait is executed. We should update the
         // state of current thread.
-        registeredThreads[t]?.pendingOperation = PausedOperation()
-        registeredThreads[t]?.state = ThreadState.Paused
-        registeredThreads[t]?.blockedBy = waitingObject
 
-        reentrantLockMonitor.addWaitingThread(waitingObject, Thread.currentThread())
-        reentrantLockUnlockImpl(lockObject, t, true, true, lockObject != waitingObject)
+        reentrantLockUnlockImpl(lockObject, t, true, true, lockObject == waitingObject)
+
+        context.blockedBy = waitingObject
+        // No matter if an interrupt is signaled, we need to enter the `wait` method
+        // first which will unlock the reentrant lock and tries to reacquire it.
+        if (context.interruptSignaled) {
+            reentrantLockMonitor.addWakingThread(lockObject, context.thread)
+            context.pendingOperation = ThreadResumeOperation()
+            context.state = ThreadState.Enabled
+        } else {
+            reentrantLockMonitor.addWaitingThread(waitingObject, Thread.currentThread())
+            context.pendingOperation = PausedOperation()
+            context.state = ThreadState.Paused
+        }
 
         // We need a daemon thread here because
         // `object.wait` release the monitor lock implicitly.
@@ -223,10 +233,15 @@ object GlobalContext {
         // decides to run it.
         while (context.state != ThreadState.Running) {
             syncManager.signal(lockObject)
-            if (waitingObject is Condition) {
-                waitingObject.await()
-            } else {
-                (waitingObject as Object).wait()
+            try {
+                if (waitingObject is Condition) {
+                    waitingObject.await()
+                } else {
+                    (waitingObject as Object).wait()
+                }
+            } catch (e: InterruptedException) {
+                context.interruptSignaled = true
+                reentrantLockMonitor.threadInterruptDuringObjectWait(waitingObject, lockObject, t)
             }
         }
         // If a thread is enabled, the lock must be available.
@@ -476,11 +491,11 @@ object GlobalContext {
             it.applicationEvent("Thread ${nextThread.index} is scheduled to run ${nextThread.pendingOperation}.")
         }
         nextThread.state = ThreadState.Running
-        if (currentThread != nextThread) {
+        if (currentThread != nextThread || currentThread.blockedBy != null) {
             unblockThread(nextThread)
-            if (shouldBlockCurrentThread) {
-                currentThread.block()
-            }
+        }
+        if (currentThread != nextThread && shouldBlockCurrentThread) {
+            currentThread.block()
         }
     }
 

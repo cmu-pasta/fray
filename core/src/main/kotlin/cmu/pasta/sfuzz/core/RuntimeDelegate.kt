@@ -73,8 +73,11 @@ class RuntimeDelegate: Delegate() {
 
     override fun onObjectWaitDone(o: Any) {
         if (checkEntered()) return
-        GlobalContext.objectWaitDone(o)
-        entered.set(false)
+        try {
+            GlobalContext.objectWaitDone(o)
+        } finally {
+            entered.set(false)
+        }
     }
 
     override fun onObjectNotify(o: Any) {
@@ -163,8 +166,11 @@ class RuntimeDelegate: Delegate() {
     override fun onConditionAwaitDone(o: Condition) {
         skipFunctionEntered.set(skipFunctionEntered.get() - 1)
         if (checkEntered()) return
-        GlobalContext.conditionAwaitDone(o)
-        entered.set(false)
+        try {
+            GlobalContext.conditionAwaitDone(o)
+        } finally {
+            entered.set(false)
+        }
     }
 
     override fun onConditionSignal(o: Condition) {
