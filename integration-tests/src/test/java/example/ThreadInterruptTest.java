@@ -1,7 +1,7 @@
 package example;
 
 public class ThreadInterruptTest {
-    public static void main(String[] args) throws InterruptedException {
+    public static void testInterruptBeforeWait() throws InterruptedException {
         final Object lock = new Object();
         final Object lock2 = new Object();
         Thread t = new Thread() {

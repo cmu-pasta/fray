@@ -7,6 +7,6 @@ import org.junit.jupiter.api.Test;
 public class ThreadInterruptTest extends IntegrationTestRunner {
     @Test
     public void testInterrupt() {
-        String result = runTest();
+        String result = runTest("testInterruptBeforeWait");
     }
 }

@@ -31,12 +31,17 @@ fun run(config: Configuration) {
     GlobalContext.config = config
     GlobalContext.bootstrap()
     for (i in 0..<config.iter) {
-        Runtime.DELEGATE = RuntimeDelegate()
-        Runtime.start()
         try {
+            Runtime.DELEGATE = RuntimeDelegate()
+            Runtime.start()
             val clazz = Class.forName(config.clazz)
-            val m = clazz.getMethod("main", Array<String>::class.java)
-            m.invoke(null, config.targetArgs.split(" ").toTypedArray())
+            if (config.targetArgs.isEmpty() && config.method != "main") {
+                val m = clazz.getMethod(config.method)
+                m.invoke(null)
+            } else {
+                val m = clazz.getMethod(config.method, Array<String>::class.java)
+                m.invoke(null, config.targetArgs.split(" ").toTypedArray())
+            }
             Runtime.onMainExit()
         } catch (e: InvocationTargetException) {
             if (e.cause is TargetTerminateException) {

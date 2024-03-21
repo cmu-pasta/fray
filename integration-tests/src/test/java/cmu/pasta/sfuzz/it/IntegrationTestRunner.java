@@ -18,18 +18,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class IntegrationTestRunner {
 
-    public String runTest() {
-        return runTest(new FifoScheduler());
+    public String runTest(String method) {
+        return runTest(method, new FifoScheduler());
     }
 
-    public String runTest(Scheduler scheduler) {
+    public String runTest(String method, Scheduler scheduler) {
         String testName = this.getClass().getSimpleName();
         EventLogger logger = new EventLogger();
         GlobalContext.INSTANCE.getLoggers().add(logger);
         Configuration config = new Configuration(
                 "example." + testName,
-                "/tmp/report",
+                method,
                 "",
+                "/tmp/report",
                 1,
                 scheduler,
                 true
@@ -38,14 +39,13 @@ public class IntegrationTestRunner {
         return logger.sb.toString();
     }
 
-    public void runTest(String testCase) {
-
+    public void runTest(String methodName, String testCase) {
         String testName = this.getClass().getSimpleName();
         String expectedFile = "expected/" + testName + "_" + testCase + ".txt";
         String scheduleFile = "schedules/" + testName + "_" + testCase + ".json";
         String expected = getResourceAsString(expectedFile);
         ReplayScheduler scheduler = new ReplayScheduler(getResourceAsString(scheduleFile));
-        assertEquals(expected, runTest(scheduler));
+        assertEquals(expected, runTest(methodName, scheduler));
     }
 
     public String getResourceAsString(String path) {
