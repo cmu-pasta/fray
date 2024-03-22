@@ -189,7 +189,6 @@ object GlobalContext {
         // If we resume executing, the Object.wait is executed. We should update the
         // state of current thread.
 
-        reentrantLockUnlockImpl(lockObject, t, true, true, lockObject == waitingObject)
 
         context.blockedBy = waitingObject
         // No matter if an interrupt is signaled, we need to enter the `wait` method
@@ -203,6 +202,7 @@ object GlobalContext {
             context.pendingOperation = PausedOperation()
             context.state = ThreadState.Paused
         }
+        reentrantLockUnlockImpl(lockObject, t, true, true, lockObject == waitingObject)
 
         // We need a daemon thread here because
         // `object.wait` release the monitor lock implicitly.

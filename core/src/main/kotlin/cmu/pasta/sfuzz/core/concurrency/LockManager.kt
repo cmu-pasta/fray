@@ -1,15 +1,13 @@
 package cmu.pasta.sfuzz.core.concurrency
 
-import cmu.pasta.sfuzz.core.GlobalContext
 import cmu.pasta.sfuzz.core.ThreadContext
 import cmu.pasta.sfuzz.core.ThreadState
 import cmu.pasta.sfuzz.core.concurrency.operations.ThreadResumeOperation
-import java.util.WeakHashMap
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 
 class LockManager {
-    val lockMap = WeakHashMap<Any, ReentrantLockContext>()
+    val lockContextManager = LockContextManager()
 
     val waitingThreads = mutableMapOf<Int, MutableList<Long>>()
 
@@ -17,10 +15,7 @@ class LockManager {
     val lockToConditions = mutableMapOf<Lock, MutableList<Condition>>()
 
     fun getLockContext(lock: Any): ReentrantLockContext {
-        if (!lockMap.contains(lock)) {
-            lockMap[lock] = ReentrantLockContext()
-        }
-        return lockMap[lock]!!
+        return lockContextManager.getLockContext(lock)
     }
 
     /**
@@ -85,8 +80,8 @@ class LockManager {
 
     fun done() {
         assert(waitingThreads.isEmpty())
-        lockMap.clear()
         conditionToLock.clear()
         lockToConditions.clear()
+//        lockContextManager.done()
     }
 }

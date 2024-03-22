@@ -28,6 +28,9 @@ class Sync(val goal: Int): Any() {
     @Synchronized
     fun unblock() {
         count += 1
+        if (count > goal) {
+            println("??")
+        }
         assert(count <= goal)
         if (count == goal) {
             (this as Object).notify()

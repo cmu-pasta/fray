@@ -48,16 +48,16 @@ tasks.withType<JavaExec> {
 
 tasks.register<JavaExec>("run") {
     val appName = properties["appName"] as String? ?: "avrora"
-    args = listOf("Harness", "-o", "${layout.buildDirectory.get().asFile}/$appName-report", "-a", appName, "--scheduler", "fifo")
+    args = listOf("Harness", "main", "-o", "${layout.buildDirectory.get().asFile}/$appName-report", "-a", appName, "--scheduler", "fifo")
 }
 
 tasks.register<JavaExec>("replay") {
     val appName = properties["appName"] as String? ?: "avrora"
-    args = listOf("Harness", "-o", "/tmp/report", "-a", appName, "--scheduler", "replay", "--path", "${layout.buildDirectory.get().asFile}/$appName-report/schedule_0.json")
+    args = listOf("Harness", "main", "-o", "/tmp/report", "-a", appName, "--scheduler", "replay", "--path", "${layout.buildDirectory.get().asFile}/$appName-report/schedule_0.json")
 }
 
 tasks.register<JavaExec>("debug") {
     val appName = properties["appName"] as String? ?: "avrora"
-    args = listOf("Harness", "-o", "${layout.buildDirectory.get().asFile}/$appName-report", "-a", appName, "--scheduler", "fifo")
+    args = listOf("Harness", "main", "-o", "${layout.buildDirectory.get().asFile}/$appName-report", "-a", appName, "--scheduler", "fifo")
     jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005")
 }

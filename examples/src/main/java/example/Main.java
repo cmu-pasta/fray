@@ -1,5 +1,9 @@
 package example;
 
+import cmu.pasta.sfuzz.core.concurrency.IdentityPhantomReference;
+
+import java.lang.ref.PhantomReference;
+import java.lang.ref.ReferenceQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -94,7 +98,8 @@ public class Main {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        testThreadInterruption();
+        testPhantom();
+//        testThreadInterruption();
 //        testConcurrentHashMap();
 //        testMultipleThreadWait(/**/);
 //        Thread t = Thread.currentThread();
@@ -117,6 +122,33 @@ public class Main {
 ////        t.t.unblockThread();
 //        t.join();
 ////        System.out.println(t.isAlive());
+    }
+
+    public static void testPhantom() throws InterruptedException {
+        ReferenceQueue<Object> queue = new ReferenceQueue<>();
+        Object myObject = new Object();
+        IdentityPhantomReference<Object> phantomRef = new IdentityPhantomReference<>(myObject, queue);
+
+        System.out.println("The object has been GCed" + System.identityHashCode(myObject));
+        // Ensure the only reference to myObject is the PhantomReference
+        myObject = null;
+
+        Thread.sleep(1000);
+        System.gc();
+        System.gc();
+        System.gc();
+        System.gc();
+        System.gc();
+        System.gc();
+
+        IdentityPhantomReference<Object> ref = (IdentityPhantomReference<Object>) queue.poll();
+        // Sometime later in another thread or part of the code...
+        // Check if the referent has been garbage collected and the reference added to the queue
+        if (ref != null) {
+            System.out.println("The object has been GCed" + ref.getId());
+
+            // Perform your cleanup actions here
+        }
     }
     public static void testThreadInterruption() throws InterruptedException {
         final Object lock = new Object();

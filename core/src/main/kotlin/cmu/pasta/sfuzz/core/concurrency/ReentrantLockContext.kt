@@ -16,6 +16,14 @@ class ReentrantLockContext: LockContext {
     }
     fun canLock(tid: Long) = lockHolder == null || lockHolder == tid
 
+    fun isEmpty(): Boolean {
+        return lockHolder == null
+                && lockTimes == 0
+                && lockTimesCache.isEmpty()
+                && lockWaiters.isEmpty()
+                && wakingThreads.isEmpty()
+    }
+
     fun lock(lock: Any, tid: Long, shouldBlock: Boolean, lockBecauseOfWait: Boolean): Boolean {
         if (lockHolder == null || lockHolder == tid) {
             lockHolder = tid
@@ -39,12 +47,16 @@ class ReentrantLockContext: LockContext {
     }
 
     fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean): Boolean {
+        if (lockHolder != tid) {
+            println(lockHolder)
+            println(tid)
+        }
         assert(lockHolder == tid)
-        if (!unlockBecauseOfWait) {
-            lockTimes -= 1
-        } else {
+        if (unlockBecauseOfWait) {
             lockTimesCache[tid] = lockTimes
             lockTimes = 0
+        } else {
+            lockTimes -= 1
         }
 
         if (lockTimes == 0) {
