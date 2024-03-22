@@ -36,7 +36,7 @@ fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
 //    cv = SynchronizedMethodInstrumenter(cv)
     classReader.accept(cv, ClassReader.EXPAND_FRAMES)
     var out = classWriter.toByteArray()
-    File("/tmp/out/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)
+    File("/tmp/out/jdk/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)
     return out
 }
 
