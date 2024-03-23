@@ -2,6 +2,7 @@ package cmu.pasta.sfuzz.runtime;
 
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 // No recursion is allowed in Runtime
 public class Runtime {
@@ -25,28 +26,28 @@ public class Runtime {
         DELEGATE.onThreadRun();
     }
 
-    public static void onReentrantLockTryLock(ReentrantLock l) {
+    public static void onLockTryLock(ReentrantLock l) {
         DELEGATE.onReentrantLockTryLock(l);
     }
 
-    public static void onReentrantLockLock(ReentrantLock l) {
-        DELEGATE.onReentrantLockLock(l);
+    public static void onLockLock(ReentrantLock l) {
+        DELEGATE.onLockLock(l);
     }
 
-    public static void onReentrantLockLockDone(ReentrantLock l) {
-        DELEGATE.onReentrantLockLockDone(l);
+    public static void onLockLockDone(ReentrantLock l) {
+        DELEGATE.onLockLockDone(l);
     }
 
-    public static void onReentrantLockUnlock(ReentrantLock l) {
-        DELEGATE.onReentrantLockUnlock(l);
+    public static void onLockUnlock(ReentrantLock l) {
+        DELEGATE.onLockUnlock(l);
     }
 
-    public static void onReentrantLockUnlockDone(ReentrantLock l) {
-        DELEGATE.onReentrantLockUnlockDone(l);
+    public static void onLockUnlockDone(ReentrantLock l) {
+        DELEGATE.onLockUnlockDone(l);
     }
 
-    public static Condition onReentrantLockNewCondition(Condition c, ReentrantLock l) {
-        return DELEGATE.onReentrantLockNewCondition(c, l);
+    public static Condition onLockNewCondition(Condition c, ReentrantLock l) {
+        return DELEGATE.onLockNewCondition(c, l);
     }
 
     public static void onObjectWait(Object o) {
@@ -167,5 +168,9 @@ public class Runtime {
 
     public static void onThreadClearInterrupt(Thread t) {
         DELEGATE.onThreadClearInterrupt(false, t);
+    }
+
+    public static void onReentrantReadWriteLockInit(ReentrantReadWriteLock lock) {
+        DELEGATE.onReentrantReadWriteLockInit(lock);
     }
 }

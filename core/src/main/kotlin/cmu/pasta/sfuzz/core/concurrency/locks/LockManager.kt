@@ -1,10 +1,12 @@
-package cmu.pasta.sfuzz.core.concurrency
+package cmu.pasta.sfuzz.core.concurrency.locks
 
 import cmu.pasta.sfuzz.core.ThreadContext
 import cmu.pasta.sfuzz.core.ThreadState
 import cmu.pasta.sfuzz.core.concurrency.operations.ThreadResumeOperation
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 
 class LockManager {
     val lockContextManager = LockContextManager()
@@ -14,9 +16,17 @@ class LockManager {
     val conditionToLock = mutableMapOf<Condition, Lock>()
     val lockToConditions = mutableMapOf<Lock, MutableList<Condition>>()
 
-    fun getLockContext(lock: Any): ReentrantLockContext {
+    fun getLockContext(lock: Any): LockContext {
         return lockContextManager.getLockContext(lock)
     }
+
+    fun reentrantReadWriteLockInit(readLock: ReadLock, writeLock: WriteLock) {
+        val context = ReentrantReadWriteLockContext()
+        lockContextManager.addLockContext(readLock, context)
+        lockContextManager.addLockContext(writeLock, context)
+    }
+
+//    fun addLockContext(lock)
 
     /**
     * Return true if [lock] is acquired by the current thread.

@@ -1,13 +1,10 @@
 package example;
 
-import cmu.pasta.sfuzz.core.concurrency.IdentityPhantomReference;
+import cmu.pasta.sfuzz.core.concurrency.locks.IdentityPhantomReference;
 
-import java.lang.ref.PhantomReference;
 import java.lang.ref.ReferenceQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.LockSupport;
 
 public class Main {
     public static class T extends Thread {

@@ -1,7 +1,5 @@
 package cmu.pasta.sfuzz.core
 
-import cmu.pasta.sfuzz.core.logger.ConsoleLogger
-import cmu.pasta.sfuzz.core.logger.CsvLogger
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.core.logger.JsonLogger
 import cmu.pasta.sfuzz.core.runtime.AnalysisResult

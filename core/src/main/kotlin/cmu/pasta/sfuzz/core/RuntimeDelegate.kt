@@ -4,11 +4,9 @@ import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
-import java.lang.Exception
-import java.util.concurrent.locks.AbstractQueuedSynchronizer.ConditionObject
 import java.util.concurrent.locks.Condition
-import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class RuntimeDelegate: Delegate() {
 
@@ -86,25 +84,23 @@ class RuntimeDelegate: Delegate() {
         GlobalContext.objectNotify(o)
         entered.set(false)
     }
-
-
     override fun onObjectNotifyAll(o: Any) {
         if (checkEntered()) return
         GlobalContext.objectNotifyAll(o)
         entered.set(false)
     }
 
-    override fun onReentrantLockLock(l: ReentrantLock) {
+    override fun onLockLock(l: ReentrantLock) {
         if (checkEntered()) {
             skipFunctionEntered.set(1 + skipFunctionEntered.get())
             return
         }
-        GlobalContext.reentrantLockLock(l)
+        GlobalContext.lockLock(l)
         entered.set(false)
         skipFunctionEntered.set(skipFunctionEntered.get() + 1)
     }
 
-    override fun onReentrantLockLockDone(l: ReentrantLock?) {
+    override fun onLockLockDone(l: ReentrantLock?) {
         skipFunctionEntered.set(skipFunctionEntered.get() - 1)
     }
 
@@ -114,20 +110,20 @@ class RuntimeDelegate: Delegate() {
         entered.set(false)
     }
 
-    override fun onReentrantLockUnlock(l: ReentrantLock) {
+    override fun onLockUnlock(l: ReentrantLock) {
         if (checkEntered()) {
             skipFunctionEntered.set(1 + skipFunctionEntered.get())
             return
         }
-        GlobalContext.reentrantLockUnlock(l)
+        GlobalContext.lockUnlock(l)
         entered.set(false)
         skipFunctionEntered.set(1 + skipFunctionEntered.get())
     }
 
-    override fun onReentrantLockUnlockDone(l: ReentrantLock) {
+    override fun onLockUnlockDone(l: ReentrantLock) {
         skipFunctionEntered.set(skipFunctionEntered.get() - 1)
         if (checkEntered()) return
-        GlobalContext.reentrantLockUnlockDone(l)
+        GlobalContext.lockUnlockDone(l)
         entered.set(false)
     }
 
@@ -149,9 +145,9 @@ class RuntimeDelegate: Delegate() {
         entered.set(false)
     }
 
-    override fun onReentrantLockNewCondition(c: Condition, l: ReentrantLock):Condition {
+    override fun onLockNewCondition(c: Condition, l: ReentrantLock):Condition {
         if (checkEntered()) return c
-        GlobalContext.reentrantLockNewCondition(c, l)
+        GlobalContext.lockNewCondition(c, l)
         entered.set(false)
         return c
     }
@@ -274,6 +270,12 @@ class RuntimeDelegate: Delegate() {
         val o = GlobalContext.threadClearInterrupt(t)
         entered.set(false)
         return o
+    }
+
+    override fun onReentrantReadWriteLockInit(lock: ReentrantReadWriteLock) {
+        if (checkEntered()) return
+        GlobalContext.reentrantReadWriteLockInit(lock.readLock(), lock.writeLock())
+        entered.set(false)
     }
 
     override fun start() {

@@ -1,8 +1,8 @@
 package cmu.pasta.sfuzz.runtime;
 
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Delegate {
 
@@ -33,22 +33,22 @@ public class Delegate {
     public void onReentrantLockTryLock(ReentrantLock l) {
     }
 
-    public void onReentrantLockLock(ReentrantLock l) {
+    public void onLockLock(ReentrantLock l) {
     }
 
-    public void onReentrantLockLockDone(ReentrantLock l) {
+    public void onLockLockDone(ReentrantLock l) {
     }
 
-    public void onReentrantLockUnlock(ReentrantLock l) {
+    public void onLockUnlock(ReentrantLock l) {
     }
 
-    public void onReentrantLockUnlockDone(ReentrantLock l) {
+    public void onLockUnlockDone(ReentrantLock l) {
     }
 
     public void onAtomicOperation(Object o, MemoryOpType type) {
     }
 
-    public Condition onReentrantLockNewCondition(Condition c, ReentrantLock l) {
+    public Condition onLockNewCondition(Condition c, ReentrantLock l) {
         return c;
     }
 
@@ -120,6 +120,9 @@ public class Delegate {
     }
 
     public void onThreadInterrupt(Thread t) {
+    }
+
+    public void onReentrantReadWriteLockInit(ReentrantReadWriteLock lock) {
     }
 
     public boolean onThreadClearInterrupt(Boolean originValue, Thread t) {

@@ -1,4 +1,4 @@
-package cmu.pasta.sfuzz.core.concurrency
+package cmu.pasta.sfuzz.core.concurrency.locks
 
 import cmu.pasta.sfuzz.core.GlobalContext
 import cmu.pasta.sfuzz.core.ThreadState
@@ -6,32 +6,25 @@ import cmu.pasta.sfuzz.core.concurrency.operations.ThreadResumeOperation
 
 class ReentrantLockContext: LockContext {
     private var lockHolder: Long? = null
-    private var lockTimes = 0
-    private val lockTimesCache = mutableMapOf<Long, Int>()
+    private val lockTimes = mutableMapOf<Long, Int>()
     private val lockWaiters: MutableList<Long> = mutableListOf()
-    val wakingThreads: MutableSet<Long> = mutableSetOf()
+    override val wakingThreads: MutableSet<Long> = mutableSetOf()
 
-    fun addWakingThread(lockObject: Any, t: Thread) {
+    override fun addWakingThread(lockObject: Any, t: Thread) {
         wakingThreads.add(t.id)
     }
-    fun canLock(tid: Long) = lockHolder == null || lockHolder == tid
+    override fun canLock(tid: Long) = lockHolder == null || lockHolder == tid
 
-    fun isEmpty(): Boolean {
-        return lockHolder == null
-                && lockTimes == 0
-                && lockTimesCache.isEmpty()
-                && lockWaiters.isEmpty()
-                && wakingThreads.isEmpty()
-    }
+    override fun isEmpty(): Boolean = lockHolder == null
+            && lockTimes.isEmpty()
+            && lockWaiters.isEmpty()
+            && wakingThreads.isEmpty()
 
-    fun lock(lock: Any, tid: Long, shouldBlock: Boolean, lockBecauseOfWait: Boolean): Boolean {
+    override fun lock(lock: Any, tid: Long, shouldBlock: Boolean, lockBecauseOfWait: Boolean): Boolean {
         if (lockHolder == null || lockHolder == tid) {
             lockHolder = tid
-            if (lockBecauseOfWait) {
-                lockTimes = lockTimesCache[tid]!!
-                lockTimesCache.remove(tid)
-            } else {
-                lockTimes += 1
+            if (!lockBecauseOfWait) {
+                lockTimes[tid] = lockTimes.getOrDefault(tid, 0) + 1
             }
             wakingThreads.remove(tid)
 
@@ -46,20 +39,16 @@ class ReentrantLockContext: LockContext {
         return false
     }
 
-    fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean): Boolean {
-        if (lockHolder != tid) {
-            println(lockHolder)
-            println(tid)
-        }
+    override fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean): Boolean {
         assert(lockHolder == tid)
-        if (unlockBecauseOfWait) {
-            lockTimesCache[tid] = lockTimes
-            lockTimes = 0
-        } else {
-            lockTimes -= 1
+        if (!unlockBecauseOfWait) {
+            lockTimes[tid] = lockTimes[tid]!! - 1
         }
 
-        if (lockTimes == 0) {
+        if (lockTimes[tid] == 0 || unlockBecauseOfWait) {
+            if (lockTimes[tid] == 0) {
+                lockTimes.remove(tid)
+            }
             lockHolder = null
             for (thread in wakingThreads) {
                 GlobalContext.registeredThreads[thread]!!.pendingOperation = ThreadResumeOperation()
