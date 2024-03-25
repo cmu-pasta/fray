@@ -39,8 +39,8 @@ class MonitorInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
                         super.visitInsn(Opcodes.DUP)
                         super.visitMethodInsn(Opcodes.INVOKESTATIC,
                             Runtime::class.java.name.replace(".", "/"),
-                            Runtime::onReentrantLockLock.name,
-                            Utils.kFunctionToJvmMethodDescriptor(Runtime::onReentrantLockLock),
+                            Runtime::onMonitorEnter.name,
+                            Utils.kFunctionToJvmMethodDescriptor(Runtime::onMonitorEnter),
                             false)
                         super.visitInsn(opcode)
                     } else {
@@ -48,14 +48,14 @@ class MonitorInstrumenter(cv: ClassVisitor): ClassVisitor(ASM9, cv) {
                         super.visitInsn(Opcodes.DUP)
                         super.visitMethodInsn(Opcodes.INVOKESTATIC,
                             Runtime::class.java.name.replace(".", "/"),
-                            Runtime::onReentrantLockUnlock.name,
-                            Utils.kFunctionToJvmMethodDescriptor(Runtime::onReentrantLockUnlock),
+                            Runtime::onMonitorExit.name,
+                            Utils.kFunctionToJvmMethodDescriptor(Runtime::onMonitorExit),
                             false)
                         super.visitInsn(opcode)
                         super.visitMethodInsn(Opcodes.INVOKESTATIC,
                             Runtime::class.java.name.replace(".", "/"),
-                            Runtime::onReentrantLockUnlockDone.name,
-                            Utils.kFunctionToJvmMethodDescriptor(Runtime::onReentrantLockUnlockDone),
+                            Runtime::onMonitorExitDone.name,
+                            Utils.kFunctionToJvmMethodDescriptor(Runtime::onMonitorExitDone),
                             false)
                     }
                 } else {

@@ -5,12 +5,12 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.tree.MethodNode
 
-open class ClassVisitorBase(cv:ClassVisitor, className: String): ClassVisitor(ASM9, cv) {
+open class ClassVisitorBase(cv:ClassVisitor, vararg classNames: String): ClassVisitor(ASM9, cv) {
     var shouldInstrument = false
-    var className: String
+    var classNames = mutableSetOf<String>()
 
     init {
-        this.className = className.replace(".", "/")
+        classNames.forEach { this.classNames.add(it.replace(".", "/")) }
     }
 
     override fun visit(
@@ -21,7 +21,7 @@ open class ClassVisitorBase(cv:ClassVisitor, className: String): ClassVisitor(AS
         superName: String?,
         interfaces: Array<out String>?
     ) {
-        if (name == className) {
+        if (classNames.contains(name)) {
             shouldInstrument = true
         }
         super.visit(version, access, name, signature, superName, interfaces)

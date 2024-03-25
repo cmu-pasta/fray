@@ -25,7 +25,7 @@ class JlinkPlugin: Plugin {
     }
     override fun transform(input: ResourcePool, output: ResourcePoolBuilder): ResourcePool {
         println("Start sfuzz plugin!")
-        Utils.prepareDebugFolder()
+        Utils.prepareDebugFolder("jdk")
         input.transformAndCopy({entry ->
             var resourcePoolEntry = entry
             if (resourcePoolEntry.type() == ResourcePoolEntry.Type.CLASS_OR_RESOURCE && resourcePoolEntry.path().endsWith("" +

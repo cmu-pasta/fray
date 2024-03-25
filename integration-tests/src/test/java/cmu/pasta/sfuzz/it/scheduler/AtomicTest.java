@@ -1,4 +1,4 @@
-package cmu.pasta.sfuzz.it;
+package cmu.pasta.sfuzz.it.scheduler;
 
 import org.junit.jupiter.api.Test;
 

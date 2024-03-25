@@ -4,10 +4,9 @@ import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
-import java.util.concurrent.locks.AbstractQueuedSynchronizer.ConditionObject
 import java.util.concurrent.locks.Condition
-import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class RuntimeDelegate: Delegate() {
 
@@ -33,6 +32,12 @@ class RuntimeDelegate: Delegate() {
             return true
         }
         return false
+    }
+
+    override fun onMainExit() {
+        if (checkEntered()) return
+        GlobalContext.mainExit()
+        entered.set(false)
     }
 
     override fun onThreadStart(t: Thread) {
@@ -67,8 +72,11 @@ class RuntimeDelegate: Delegate() {
 
     override fun onObjectWaitDone(o: Any) {
         if (checkEntered()) return
-        GlobalContext.objectWaitDone(o)
-        entered.set(false)
+        try {
+            GlobalContext.objectWaitDone(o)
+        } finally {
+            entered.set(false)
+        }
     }
 
     override fun onObjectNotify(o: Any) {
@@ -76,24 +84,24 @@ class RuntimeDelegate: Delegate() {
         GlobalContext.objectNotify(o)
         entered.set(false)
     }
-
-    override fun onReentrantLockUnlockDone(l: Any) {
-        if (checkEntered()) return
-        GlobalContext.reentrantLockUnlockDone(l)
-        entered.set(false)
-    }
-
-
     override fun onObjectNotifyAll(o: Any) {
         if (checkEntered()) return
         GlobalContext.objectNotifyAll(o)
         entered.set(false)
     }
 
-    override fun onReentrantLockLock(l: Any) {
-        if (checkEntered()) return
-        GlobalContext.reentrantLockLock(l)
+    override fun onLockLock(l: ReentrantLock) {
+        if (checkEntered()) {
+            skipFunctionEntered.set(1 + skipFunctionEntered.get())
+            return
+        }
+        GlobalContext.lockLock(l)
         entered.set(false)
+        skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    }
+
+    override fun onLockLockDone(l: ReentrantLock?) {
+        skipFunctionEntered.set(skipFunctionEntered.get() - 1)
     }
 
     override fun onAtomicOperation(o: Any, type: MemoryOpType) {
@@ -102,36 +110,75 @@ class RuntimeDelegate: Delegate() {
         entered.set(false)
     }
 
-    override fun onReentrantLockUnlock(l: Any) {
+    override fun onLockUnlock(l: ReentrantLock) {
+        if (checkEntered()) {
+            skipFunctionEntered.set(1 + skipFunctionEntered.get())
+            return
+        }
+        GlobalContext.lockUnlock(l)
+        entered.set(false)
+        skipFunctionEntered.set(1 + skipFunctionEntered.get())
+    }
+
+    override fun onLockUnlockDone(l: ReentrantLock) {
+        skipFunctionEntered.set(skipFunctionEntered.get() - 1)
         if (checkEntered()) return
-        GlobalContext.reentrantLockUnlock(l, Thread.currentThread().id, true, false)
+        GlobalContext.lockUnlockDone(l)
         entered.set(false)
     }
 
-    override fun onReentrantLockNewCondition(c: Condition, l: ReentrantLock):Condition {
-        GlobalContext.reentrantLockNewCondition(c, l);
-        return c;
+    override fun onMonitorEnter(o: Any) {
+        if (checkEntered()) return
+        GlobalContext.monitorEnter(o)
+        entered.set(false)
     }
 
-    override fun onConditionAwait(o: Any) {
+    override fun onMonitorExit(o: Any) {
         if (checkEntered()) return
+        GlobalContext.monitorExit(o)
+        entered.set(false)
+    }
+
+    override fun onMonitorExitDone(o: Any) {
+        if (checkEntered()) return
+        GlobalContext.monitorEnterDone(o)
+        entered.set(false)
+    }
+
+    override fun onLockNewCondition(c: Condition, l: ReentrantLock):Condition {
+        if (checkEntered()) return c
+        GlobalContext.lockNewCondition(c, l)
+        entered.set(false)
+        return c
+    }
+
+    override fun onConditionAwait(o: Condition) {
+        if (checkEntered()) {
+            skipFunctionEntered.set(1 + skipFunctionEntered.get())
+            return
+        }
         GlobalContext.conditionAwait(o)
         entered.set(false)
+        skipFunctionEntered.set(1 + skipFunctionEntered.get())
     }
 
-    override fun onConditionAwaitDone(o: Any) {
+    override fun onConditionAwaitDone(o: Condition) {
+        skipFunctionEntered.set(skipFunctionEntered.get() - 1)
         if (checkEntered()) return
-        GlobalContext.conditionAwaitDone(o)
-        entered.set(false)
+        try {
+            GlobalContext.conditionAwaitDone(o)
+        } finally {
+            entered.set(false)
+        }
     }
 
-    override fun onConditionSignal(o: Any) {
+    override fun onConditionSignal(o: Condition) {
         if (checkEntered()) return
         GlobalContext.conditionSignal(o)
         entered.set(false)
     }
 
-    override fun onConditionSignalAll(o: Any) {
+    override fun onConditionSignalAll(o: Condition) {
         if (checkEntered()) return
         GlobalContext.conditionSignalAll(o)
         entered.set(false)
@@ -198,15 +245,36 @@ class RuntimeDelegate: Delegate() {
         entered.set(false)
     }
 
-    override fun onThreadUnpark(t: Thread) {
+    override fun onThreadUnpark(t: Thread?) {
+        if (t == null) return
         if (checkEntered()) return
         GlobalContext.threadUnpark(t)
         entered.set(false)
     }
 
-    override fun onThreadUnparkDone(t: Thread) {
+    override fun onThreadUnparkDone(t: Thread?) {
+        if (t == null) return
         if (checkEntered()) return
         GlobalContext.threadUnparkDone(t)
+        entered.set(false)
+    }
+
+    override fun onThreadInterrupt(t: Thread) {
+        if (checkEntered()) return
+        GlobalContext.threadInterrupt(t)
+        entered.set(false)
+    }
+
+    override fun onThreadClearInterrupt(origin: Boolean, t: Thread): Boolean {
+        if (checkEntered()) return origin
+        val o = GlobalContext.threadClearInterrupt(t)
+        entered.set(false)
+        return o
+    }
+
+    override fun onReentrantReadWriteLockInit(lock: ReentrantReadWriteLock) {
+        if (checkEntered()) return
+        GlobalContext.reentrantReadWriteLockInit(lock.readLock(), lock.writeLock())
         entered.set(false)
     }
 

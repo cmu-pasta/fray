@@ -1,9 +1,9 @@
 package cmu.pasta.sfuzz.core
 
-import cmu.pasta.sfuzz.core.logger.CsvLogger
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.core.logger.JsonLogger
 import cmu.pasta.sfuzz.core.runtime.AnalysisResult
+import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
 import java.lang.reflect.InvocationTargetException
 import java.nio.file.Paths
@@ -24,25 +24,33 @@ fun run(config: Configuration) {
     prepareReportPath(config.report)
     val logger = JsonLogger(config.report, config.fullSchedule)
     GlobalContext.registerLogger(logger)
+//    GlobalContext.registerLogger(ConsoleLogger())
     GlobalContext.scheduler = config.scheduler
     GlobalContext.config = config
-    GlobalContext.bootStrap()
-    Runtime.DELEGATE = RuntimeDelegate()
+    GlobalContext.bootstrap()
     for (i in 0..<config.iter) {
-        Runtime.start()
         try {
+            Runtime.DELEGATE = RuntimeDelegate()
+            Runtime.start()
             val clazz = Class.forName(config.clazz)
-            val m = clazz.getMethod("main", Array<String>::class.java)
-            m.invoke(null, config.targetArgs.split(" ").toTypedArray())
+            if (config.targetArgs.isEmpty() && config.method != "main") {
+                val m = clazz.getMethod(config.method)
+                m.invoke(null)
+            } else {
+                val m = clazz.getMethod(config.method, Array<String>::class.java)
+                m.invoke(null, config.targetArgs.split(" ").toTypedArray())
+            }
+            Runtime.onMainExit()
         } catch (e: InvocationTargetException) {
             if (e.cause is TargetTerminateException) {
-
+                Runtime.onMainExit()
                 println("target terminated: ${(e.cause as TargetTerminateException).status}")
             } else {
                 println(e.toString())
                 e.cause?.printStackTrace()
             }
         }
+        Runtime.DELEGATE = Delegate()
         GlobalContext.done(AnalysisResult.COMPLETE)
     }
     GlobalContext.shutDown()

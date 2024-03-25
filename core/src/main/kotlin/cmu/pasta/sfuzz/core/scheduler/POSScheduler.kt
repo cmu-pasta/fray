@@ -12,6 +12,10 @@ class POSScheduler(val rand: Random): Scheduler {
         val nonRacingOps = mutableListOf<ThreadContext>()
         for (thread in threads) {
             if (thread !in threadPriorityQueue) {
+                if (threadPriorityQueue.isEmpty()) {
+                    threadPriorityQueue.add(thread)
+                    continue
+                }
                 val index = rand.nextInt(threadPriorityQueue.size)
                 threadPriorityQueue.add(index, thread)
             }
