@@ -6,6 +6,6 @@ import org.junit.jupiter.api.Test;
 public class ConditionTest extends IntegrationTestRunner {
     @Test
     public void testInterleaving1() {
-        System.out.println(runTest("main"));
+        runTest("main");
     }
 }

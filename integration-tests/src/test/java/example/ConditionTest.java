@@ -31,23 +31,22 @@ public class ConditionTest {
             int i = 0;
             while (i < N) {
                 m.lock();
-                log("Acquired lock.");
+                log("Acquired lock.\n");
 
                 try {
                     while (num > 0) {
-                        log("Beginning await.");
+                        log("Beginning empty await.\n");
                         empty.await();
-                        log("Returned from await.");
+                        log("Returned from empty await.\n");
                     }
                     num++;
                     full.signal();
-                    log("Sent signal.");
+                    log("Sent full signal.\n");
 
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
                 } finally {
                     m.unlock();
-                    log("Released lock.");
+                    log("Released lock.\n");
                 }
 
 
@@ -59,21 +58,21 @@ public class ConditionTest {
             int j = 0;
             while (j < N) {
                 m.lock();
-                log("Acquired lock.");
+                log("Acquired lock.\n");
                 try {
                     while (num == 0) {
-                        log("Beginning await.");
+                        log("Beginning full await.\n");
                         full.await();
-                        log("Returned from await.");
+                        log("Returned from full await.\n");
                     }
                     total = total + j;
                     num--;
                     empty.signal();
-                    log("Sent signal.");
+                    log("Sent empty signal.\n");
                 } catch (InterruptedException e) {
                 } finally {
                     m.unlock();
-                    log("Released lock.");
+                    log("Released lock.\n");
                 }
 
                 j++;
