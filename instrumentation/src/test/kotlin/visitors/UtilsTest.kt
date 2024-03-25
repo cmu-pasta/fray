@@ -15,6 +15,6 @@ class UtilsTest {
 
     @Test
     fun kFunctionToJvmMethodDescriptorWithStaticMethod() {
-        assertEquals("(Ljava/util/concurrent/Semaphore;[I)V", Utils.kFunctionToJvmMethodDescriptor(Runtime::onSemaphoreAcquire))
+        assertEquals("(Ljava/util/concurrent/Semaphore;I)V", Utils.kFunctionToJvmMethodDescriptor(Runtime::onSemaphoreAcquirePermits))
     }
 }
