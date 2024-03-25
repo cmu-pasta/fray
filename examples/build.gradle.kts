@@ -58,7 +58,7 @@ tasks.register<JavaExec>("runArithmeticProgSfuzz") {
     classpath = sourceSets["main"].runtimeClasspath
     executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
     mainClass.set("cmu.pasta.sfuzz.core.MainKt")
-    args = listOf("example.ArithmeticProgBad", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", "fifo")
+    args = listOf("example.ArithmeticProgBad", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", "fifo")
     jvmArgs("-agentpath:${agentPath}")
     jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
     doFirst {
