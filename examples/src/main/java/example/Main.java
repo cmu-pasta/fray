@@ -1,9 +1,10 @@
 package example;
 
-import java.util.concurrent.ConcurrentHashMap;
+import cmu.pasta.sfuzz.core.concurrency.locks.IdentityPhantomReference;
+
+import java.lang.ref.ReferenceQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.LockSupport;
 
 public class Main {
     public static class T extends Thread {
@@ -94,7 +95,10 @@ public class Main {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        testMultipleThreadWait();
+        testPhantom();
+//        testThreadInterruption();
+//        testConcurrentHashMap();
+//        testMultipleThreadWait(/**/);
 //        Thread t = Thread.currentThread();
 //        LockSupport.unpark(t);
 //        LockSupport.unpark(t);
@@ -117,30 +121,94 @@ public class Main {
 ////        System.out.println(t.isAlive());
     }
 
-    public static void testConcurrentHashMap() throws InterruptedException {
-        final Object lock = new Object();
-        ExecutorService service = Executors.newFixedThreadPool(10);
-        service.submit(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Thread 1");
-            }
-        });
+    public static void testPhantom() throws InterruptedException {
+        ReferenceQueue<Object> queue = new ReferenceQueue<>();
+        Object myObject = new Object();
+        IdentityPhantomReference<Object> phantomRef = new IdentityPhantomReference<>(myObject, queue);
 
-        service.submit(new Runnable() {
+        System.out.println("The object has been GCed" + System.identityHashCode(myObject));
+        // Ensure the only reference to myObject is the PhantomReference
+        myObject = null;
+
+        Thread.sleep(1000);
+        System.gc();
+        System.gc();
+        System.gc();
+        System.gc();
+        System.gc();
+        System.gc();
+
+        IdentityPhantomReference<Object> ref = (IdentityPhantomReference<Object>) queue.poll();
+        // Sometime later in another thread or part of the code...
+        // Check if the referent has been garbage collected and the reference added to the queue
+        if (ref != null) {
+            System.out.println("The object has been GCed" + ref.getId());
+
+            // Perform your cleanup actions here
+        }
+    }
+    public static void testThreadInterruption() throws InterruptedException {
+        final Object lock = new Object();
+        final Object lock2 = new Object();
+        Thread t = new Thread() {
             @Override
             public void run() {
-                synchronized (lock) {
-                    lock.notify();
-                    System.out.println("Thread 1");
+                try {
+                    synchronized (lock) {
+                        lock.wait();
+                    }
+                } catch (InterruptedException e) {
+                    System.out.println("Wow! I am interrupted!");
                 }
             }
-        });
-
+        };
+        Thread t2 = new Thread() {
+            @Override
+            public void run() {
+                t.interrupt();
+                synchronized (lock2) {
+                    lock2.notify();
+                }
+            }
+        };
+        t.start();
+        t2.start();
         synchronized (lock) {
-            lock.wait();
+            synchronized (lock2) {
+                lock2.wait();
+            }
         }
-        service.shutdown();
+        t.join();
+        t2.join();
+    }
+
+
+    public static void testConcurrentHashMap() throws InterruptedException {
+        final Object lock = new Object();
+        try (ExecutorService service = Executors.newFixedThreadPool(1)) {
+            service.submit(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println("Thread 1");
+                }
+            });
+
+            service.submit(new Runnable() {
+                @Override
+                public void run() {
+                    synchronized (lock) {
+                        lock.notify();
+                        System.out.println("Thread 1");
+                    }
+                }
+            });
+
+            synchronized (lock) {
+                lock.wait();
+            }
+            service.shutdown();
+        }
+        System.out.println("service shutdown.");
     }
 
     public static void testThread() {

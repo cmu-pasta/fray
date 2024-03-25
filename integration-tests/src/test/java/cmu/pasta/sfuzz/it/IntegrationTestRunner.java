@@ -2,11 +2,12 @@ package cmu.pasta.sfuzz.it;
 
 
 import cmu.pasta.sfuzz.core.Configuration;
+import cmu.pasta.sfuzz.core.Fifo;
 import cmu.pasta.sfuzz.core.GlobalContext;
 import cmu.pasta.sfuzz.core.MainKt;
 import cmu.pasta.sfuzz.core.scheduler.FifoScheduler;
 import cmu.pasta.sfuzz.core.scheduler.ReplayScheduler;
-import cmu.pasta.sfuzz.core.scheduler.Schedule;
+import cmu.pasta.sfuzz.core.scheduler.Scheduler;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,29 +18,34 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class IntegrationTestRunner {
 
-    public void runTest(String testCase) {
+    public String runTest(String method) {
+        return runTest(method, new FifoScheduler());
+    }
 
+    public String runTest(String method, Scheduler scheduler) {
+        String testName = this.getClass().getSimpleName();
+        EventLogger logger = new EventLogger();
+        GlobalContext.INSTANCE.getLoggers().add(logger);
+        Configuration config = new Configuration(
+                "example." + testName,
+                method,
+                "",
+                "/tmp/report",
+                1,
+                scheduler,
+                true
+        );
+        MainKt.run(config);
+        return logger.sb.toString();
+    }
+
+    public void runTest(String methodName, String testCase) {
         String testName = this.getClass().getSimpleName();
         String expectedFile = "expected/" + testName + "_" + testCase + ".txt";
         String scheduleFile = "schedules/" + testName + "_" + testCase + ".json";
         String expected = getResourceAsString(expectedFile);
         ReplayScheduler scheduler = new ReplayScheduler(getResourceAsString(scheduleFile));
-
-        EventLogger logger = new EventLogger();
-        GlobalContext.INSTANCE.getLoggers().add(logger);
-        Configuration config = new Configuration(
-                "example." + testName,
-                "/tmp/report",
-                "",
-                1,
-                scheduler,
-//                new FifoScheduler(),
-                true
-        );
-
-        MainKt.run(config);
-
-        assertEquals(expected, logger.sb.toString());
+        assertEquals(expected, runTest(methodName, scheduler));
     }
 
     public String getResourceAsString(String path) {

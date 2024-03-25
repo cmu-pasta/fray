@@ -45,7 +45,7 @@ class ApplicationCodeTransformer: ClassFileTransformer {
             cv = ClassVersionInstrumenter(cv)
             classReader.accept(cv, ClassReader.EXPAND_FRAMES)
             val out = classWriter.toByteArray()
-            File("/tmp/out/${className.replace("/", ".").removePrefix(".")}.class").writeBytes(out)
+            File("/tmp/out/app/${className.replace("/", ".").removePrefix(".")}.class").writeBytes(out)
             return out
         } catch (e: Throwable) {
             println("Failed to instrument: $className")

@@ -1,4 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.jetbrains.kotlin.cli.jvm.main
+import org.jetbrains.kotlin.gradle.plugin.KotlinExecution
 
 plugins {
     java
@@ -20,6 +22,11 @@ dependencies {
     implementation("org.ow2.asm:asm-commons:9.6")
     implementation(project(":runtime"))
 }
+
+tasks.withType<JavaExec> {
+    jvmArgs("--patch-module", "cmu.pasta.sfuzz.instrumentation=${sourceSets["main"].output.asPath}")
+}
+
 
 tasks.compileJava {
     println(sourceSets["main"].output.asPath)

@@ -51,6 +51,7 @@ tasks.register<JavaExec>("runArithmeticProgBad") {
 }
 
 tasks.register<JavaExec>("runArithmeticProgSfuzz") {
+    val agentPath: String by rootProject.extra
     val jvmti = project(":jvmti")
     val jdk = project(":jdk")
     val instrumentation = project(":instrumentation")
@@ -58,7 +59,7 @@ tasks.register<JavaExec>("runArithmeticProgSfuzz") {
     executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
     mainClass.set("cmu.pasta.sfuzz.core.MainKt")
     args = listOf("example.ArithmeticProgBad", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", "fifo")
-    jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so")
+    jvmArgs("-agentpath:${agentPath}")
     jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
     doFirst {
         // Printing the full command

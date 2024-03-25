@@ -3,6 +3,7 @@ package cmu.pasta.sfuzz.core
 import cmu.pasta.sfuzz.core.scheduler.*
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.default
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.groups.groupChoice
 import com.github.ajalt.clikt.parameters.options.*
@@ -44,6 +45,7 @@ class PCT: ScheduleAlgorithm("pct") {
 
 class ConfigurationCommand: CliktCommand() {
     val clazz by argument()
+    val method by argument()
     val report by option("-o").default("report")
     val targetArgs by option("-a", "--args", help = "Arguments passed to target application").default("")
     val iter by option("-i", "--iter", help = "Number of iterations").int().default(1)
@@ -59,13 +61,14 @@ class ConfigurationCommand: CliktCommand() {
 
 
     fun toConfiguration(): Configuration {
-        return Configuration(clazz, report, targetArgs, iter, scheduler!!.getScheduler(), fullSchedule)
+        return Configuration(clazz, method, targetArgs, report, iter, scheduler!!.getScheduler(), fullSchedule)
     }
 }
 
 data class Configuration(val clazz: String,
-                         val report: String,
+                         val method: String,
                          val targetArgs: String,
+                         val report: String,
                          val iter: Int,
                          val scheduler: Scheduler,
                          val fullSchedule: Boolean) {

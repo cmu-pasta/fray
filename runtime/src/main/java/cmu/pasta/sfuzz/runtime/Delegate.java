@@ -1,8 +1,8 @@
 package cmu.pasta.sfuzz.runtime;
 
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Delegate {
 
@@ -30,35 +30,47 @@ public class Delegate {
     public void onObjectNotifyAll(Object o) {
     }
 
-    public void onReentrantLockTryLock(Object l) {
+    public void onReentrantLockTryLock(ReentrantLock l) {
     }
 
-    public void onReentrantLockLock(Object l) {
+    public void onLockLock(ReentrantLock l) {
     }
 
-    public void onReentrantLockUnlock(Object l) {
+    public void onLockLockDone(ReentrantLock l) {
     }
 
-    public void onReentrantLockUnlockDone(Object l) {
+    public void onLockUnlock(ReentrantLock l) {
+    }
+
+    public void onLockUnlockDone(ReentrantLock l) {
     }
 
     public void onAtomicOperation(Object o, MemoryOpType type) {
     }
 
-    public Condition onReentrantLockNewCondition(Condition c, ReentrantLock l) {
+    public Condition onLockNewCondition(Condition c, ReentrantLock l) {
         return c;
     }
 
-    public void onConditionAwait(Object l) {
+    public void onConditionAwait(Condition l) {
     }
 
-    public void onConditionAwaitDone(Object l) {
+    public void onConditionAwaitDone(Condition l) {
     }
 
-    public void onConditionSignal(Object l) {
+    public void onConditionSignal(Condition l) {
     }
 
-    public void onConditionSignalAll(Object l) {
+    public void onConditionSignalAll(Condition l) {
+    }
+
+    public void onMonitorEnter(Object o) {
+    }
+
+    public void onMonitorExit(Object o) {
+    }
+
+    public void onMonitorExitDone(Object o) {
     }
 
     public void onFieldRead(Object o, String owner, String name, String descriptor) {
@@ -102,6 +114,19 @@ public class Delegate {
     }
 
     public void onThreadUnparkDone(Thread t) {
+    }
+
+    public void onMainExit() {
+    }
+
+    public void onThreadInterrupt(Thread t) {
+    }
+
+    public void onReentrantReadWriteLockInit(ReentrantReadWriteLock lock) {
+    }
+
+    public boolean onThreadClearInterrupt(Boolean originValue, Thread t) {
+        return originValue;
     }
 }
 

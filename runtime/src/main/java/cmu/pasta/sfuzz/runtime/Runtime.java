@@ -1,8 +1,8 @@
 package cmu.pasta.sfuzz.runtime;
 
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 // No recursion is allowed in Runtime
 public class Runtime {
@@ -26,24 +26,28 @@ public class Runtime {
         DELEGATE.onThreadRun();
     }
 
-    public static void onReentrantLockTryLock(Object l) {
+    public static void onLockTryLock(ReentrantLock l) {
         DELEGATE.onReentrantLockTryLock(l);
     }
 
-    public static void onReentrantLockLock(Object l) {
-        DELEGATE.onReentrantLockLock(l);
+    public static void onLockLock(ReentrantLock l) {
+        DELEGATE.onLockLock(l);
     }
 
-    public static void onReentrantLockUnlock(Object l) {
-        DELEGATE.onReentrantLockUnlock(l);
+    public static void onLockLockDone(ReentrantLock l) {
+        DELEGATE.onLockLockDone(l);
     }
 
-    public static void onReentrantLockUnlockDone(Object l) {
-        DELEGATE.onReentrantLockUnlockDone(l);
+    public static void onLockUnlock(ReentrantLock l) {
+        DELEGATE.onLockUnlock(l);
     }
 
-    public static Condition onReentrantLockNewCondition(Condition c, ReentrantLock l) {
-        return DELEGATE.onReentrantLockNewCondition(c, l);
+    public static void onLockUnlockDone(ReentrantLock l) {
+        DELEGATE.onLockUnlockDone(l);
+    }
+
+    public static Condition onLockNewCondition(Condition c, ReentrantLock l) {
+        return DELEGATE.onLockNewCondition(c, l);
     }
 
     public static void onObjectWait(Object o) {
@@ -62,19 +66,19 @@ public class Runtime {
         DELEGATE.onObjectNotifyAll(o);
     }
 
-    public static void onConditionAwait(Object o) {
+    public static void onConditionAwait(Condition o) {
         DELEGATE.onConditionAwait(o);
     }
 
-    public static void onConditionAwaitDone(Object o) {
+    public static void onConditionAwaitDone(Condition o) {
         DELEGATE.onConditionAwaitDone(o);
     }
 
-    public static void onConditionSignal(Object o) {
+    public static void onConditionSignal(Condition o) {
         DELEGATE.onConditionSignal(o);
     }
 
-    public static void onConditionSignalAll(Object o) {
+    public static void onConditionSignalAll(Condition o) {
         DELEGATE.onConditionSignalAll(o);
     }
 
@@ -102,6 +106,18 @@ public class Runtime {
         DELEGATE.onStaticFieldWrite(owner, name, descriptor);
     }
 
+    public static void onMonitorEnter(Object o) {
+        DELEGATE.onMonitorEnter(o);
+    }
+
+    public static void onMonitorExit(Object o) {
+        DELEGATE.onMonitorExit(o);
+    }
+
+    public static void onMonitorExitDone(Object o) {
+        DELEGATE.onMonitorExitDone(o);
+    }
+
     public static void onExit(int code) {
         DELEGATE.onExit(code);
     }
@@ -122,15 +138,39 @@ public class Runtime {
         DELEGATE.start();
     }
 
+    public static void onMainExit() {
+        DELEGATE.onMainExit();
+    }
+
     public static void onThreadPark() {
+        DELEGATE.onThreadPark();
     }
 
     public static void onThreadParkDone() {
+        DELEGATE.onThreadParkDone();
     }
 
     public static void onThreadUnpark(Thread t) {
+        DELEGATE.onThreadUnpark(t);
     }
 
-    public static void onThreadUnpakDone(Thread t) {
+    public static void onThreadUnparkDone(Thread t) {
+        DELEGATE.onThreadUnparkDone(t);
+    }
+
+    public static void onThreadInterrupt(Thread t) {
+        DELEGATE.onThreadInterrupt(t);
+    }
+
+    public static boolean onThreadGetAndClearInterrupt(boolean originValue, Thread t) {
+        return DELEGATE.onThreadClearInterrupt(originValue, t);
+    }
+
+    public static void onThreadClearInterrupt(Thread t) {
+        DELEGATE.onThreadClearInterrupt(false, t);
+    }
+
+    public static void onReentrantReadWriteLockInit(ReentrantReadWriteLock lock) {
+        DELEGATE.onReentrantReadWriteLockInit(lock);
     }
 }

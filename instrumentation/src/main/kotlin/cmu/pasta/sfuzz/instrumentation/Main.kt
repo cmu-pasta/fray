@@ -2,10 +2,10 @@ package cmu.pasta.sfuzz.instrumentation
 
 import java.io.File
 
-fun main() {
-    var ba = File("/home/aoli/repos/sfuzz/benchmarks/build/libs/unzipped/dacapo-23.11-chopin/jar/lib/lucene/org/apache/lucene/index/IndexWriter.class")
-        .readBytes()
+fun main(args: Array<String>) {
+    var ba = File(args[0]).inputStream()
 
-    var t = ApplicationCodeTransformer()
-    t.transform(null, "", null, null, ba)
+    instrumentClass(args[0], ba)
+//    var t = ApplicationCodeTransformer()
+//    t.transform(null, "", null, null, ba)
 }

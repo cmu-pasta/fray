@@ -13,7 +13,14 @@ class Sync(val goal: Int): Any() {
         }
         // We don't need synchronized here because
         // it is already inside a synchronized method
-        (this as Object).wait()
+        while (count < goal) {
+            try {
+                (this as Object).wait()
+            } catch (e: InterruptedException) {
+                // We should not let Thread.interrupt
+                // to unblock this operation.
+            }
+        }
         // At this point no concurrency.
         count = 0
     }
@@ -22,7 +29,7 @@ class Sync(val goal: Int): Any() {
     fun unblock() {
         count += 1
         if (count > goal) {
-            println("???")
+            println("??")
         }
         assert(count <= goal)
         if (count == goal) {
