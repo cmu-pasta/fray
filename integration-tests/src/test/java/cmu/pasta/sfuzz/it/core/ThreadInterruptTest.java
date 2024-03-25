@@ -9,12 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ThreadInterruptTest extends IntegrationTestRunner {
     @Test
     public void testInterruptBeforeWait() {
-        assertEquals("[1]: Interrupted", runTest("testInterruptBeforeWait"));
+        assertEquals("[1]: Interrupted\n", runTest("testInterruptBeforeWait"));
     }
 
     @Test
     public void testInterruptDuringWait() {
-        assertEquals("[1]: Interrupted", runTest("testInterruptDuringWait"));
+        assertEquals("[1]: Interrupted\n", runTest("testInterruptDuringWait"));
     }
 
     @Test

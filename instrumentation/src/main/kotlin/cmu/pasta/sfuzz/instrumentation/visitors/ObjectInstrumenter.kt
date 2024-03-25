@@ -17,7 +17,10 @@ class ObjectInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv, Object::class.j
         exceptions: Array<out String>?
     ): MethodVisitor {
         if (name == "wait" && descriptor == "(J)V") {
-            return object: AdviceAdapter(ASM9, MethodEnterVisitor(mv, Runtime::onObjectWait, true), access, name, descriptor) {
+            val eMv = MethodEnterVisitor(mv, Runtime::onObjectWait, access, name, descriptor, true, false)
+            // We cannot use MethodExitVisitor here because `onObjectWaitDone` may throw an `InterruptedException`
+            // So we cannot catch that exception twice.
+            return object: AdviceAdapter(ASM9, eMv, access, name, descriptor) {
                 val methodEnterLabel = Label()
                 val methodExitLabel = Label()
                 override fun onMethodEnter() {

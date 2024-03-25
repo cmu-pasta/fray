@@ -4,6 +4,7 @@ import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
+import java.util.concurrent.Semaphore
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -276,6 +277,68 @@ class RuntimeDelegate: Delegate() {
         if (checkEntered()) return
         GlobalContext.reentrantReadWriteLockInit(lock.readLock(), lock.writeLock())
         entered.set(false)
+    }
+
+    override fun onSemaphoreInit(sem: Semaphore) {
+        if (checkEntered()) return
+        GlobalContext.semaphoreInit(sem)
+        entered.set(false)
+    }
+
+    override fun onSemaphoreAcquire(sem: Semaphore, permits: Int) {
+        if (checkEntered()) {
+            skipFunctionEntered.set(1 + skipFunctionEntered.get())
+            return
+        }
+        GlobalContext.semaphoreAcquire(sem, permits, true)
+        entered.set(false)
+        skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    }
+
+    override fun onSemaphoreAcquireDone() {
+        skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    }
+
+    override fun onSemaphoreRelease(sem: Semaphore, permits: Int) {
+        if (checkEntered()) {
+            skipFunctionEntered.set(1 + skipFunctionEntered.get())
+            return
+        }
+        GlobalContext.semaphoreRelease(sem, permits)
+        entered.set(false)
+        skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    }
+
+    override fun onSemaphoreReleaseDone() {
+        skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    }
+
+    override fun onSemaphoreDrainPermits(sem: Semaphore) {
+        if (checkEntered()) {
+            skipFunctionEntered.set(1 + skipFunctionEntered.get())
+            return
+        }
+        GlobalContext.semaphoreDrainPermits(sem)
+        entered.set(false)
+        skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    }
+
+    override fun onSemaphoreDrainPermitsDone() {
+        skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    }
+
+    override fun onSemaphoreReducePermits(sem: Semaphore, permits: Int) {
+        if (checkEntered()) {
+            skipFunctionEntered.set(1 + skipFunctionEntered.get())
+            return
+        }
+        GlobalContext.semaphoreReducePermits(sem, permits)
+        entered.set(false)
+        skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    }
+
+    override fun onSemaphoreReducePermitsDone() {
+        skipFunctionEntered.set(skipFunctionEntered.get() - 1)
     }
 
     override fun start() {

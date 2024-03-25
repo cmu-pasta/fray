@@ -4,12 +4,10 @@ import cmu.pasta.sfuzz.runtime.Runtime
 import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
-import org.objectweb.asm.Opcodes.ASM9
-import org.objectweb.asm.Opcodes.ATHROW
 import org.objectweb.asm.commons.AdviceAdapter
 import kotlin.reflect.KFunction
 
-class MethodExitVisitor(mv: MethodVisitor, val method: KFunction<*>, access: Int, name: String, descriptor: String, val loadThis: Boolean): AdviceAdapter(ASM9, mv, access, name, descriptor) {
+class MethodExitVisitor(mv: MethodVisitor, val method: KFunction<*>, access: Int, name: String, descriptor: String, val loadThis: Boolean, val loadArgs: Boolean): AdviceAdapter(ASM9, mv, access, name, descriptor) {
     val methodEnterLabel = Label()
     val methodExitLabel = Label()
     override fun onMethodEnter() {
@@ -21,6 +19,9 @@ class MethodExitVisitor(mv: MethodVisitor, val method: KFunction<*>, access: Int
         if (opcode != ATHROW) {
             if (loadThis) {
                 loadThis()
+            }
+            if (loadArgs) {
+                loadArgs()
             }
             visitMethodInsn(Opcodes.INVOKESTATIC,
                 Runtime::class.java.name.replace(".", "/"), method.name,
@@ -34,6 +35,9 @@ class MethodExitVisitor(mv: MethodVisitor, val method: KFunction<*>, access: Int
         visitTryCatchBlock(methodEnterLabel, methodExitLabel, methodExitLabel, "java/lang/Throwable")
         if (loadThis) {
             loadThis()
+        }
+        if (loadArgs) {
+            loadArgs()
         }
         visitMethodInsn(Opcodes.INVOKESTATIC,
             Runtime::class.java.name.replace(".", "/"), method.name,

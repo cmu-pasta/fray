@@ -1,5 +1,6 @@
 package cmu.pasta.sfuzz.runtime;
 
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -172,5 +173,49 @@ public class Runtime {
 
     public static void onReentrantReadWriteLockInit(ReentrantReadWriteLock lock) {
         DELEGATE.onReentrantReadWriteLockInit(lock);
+    }
+
+    public static void onSemaphoreInit(Semaphore sem) {
+        DELEGATE.onSemaphoreInit(sem);
+    }
+
+    public static void onSemaphoreAcquirePermits(Semaphore sem, int permits) {
+        DELEGATE.onSemaphoreAcquire(sem, permits);
+    }
+
+    public static void onSemaphoreAcquire(Semaphore sem) {
+        DELEGATE.onSemaphoreAcquire(sem, 1);
+    }
+
+    public static void onSemaphoreAcquireDone() {
+        DELEGATE.onSemaphoreAcquireDone();
+    }
+
+    public static void onSemaphoreReleasePermits(Semaphore sem, int permits) {
+        DELEGATE.onSemaphoreRelease(sem, permits);
+    }
+
+    public static void onSemaphoreRelease(Semaphore sem) {
+        DELEGATE.onSemaphoreRelease(sem, 1);
+    }
+
+    public static void onSemaphoreReleaseDone() {
+        DELEGATE.onSemaphoreReleaseDone();
+    }
+
+    public static void onSemaphoreDrainPermitsDone() {
+        DELEGATE.onSemaphoreDrainPermitsDone();
+    }
+
+    public static void onSemaphoreReducePermits(Semaphore sem, int permits) {
+        DELEGATE.onSemaphoreReducePermits(sem, permits);
+    }
+
+    public static void onSemaphoreReducePermitsDone() {
+        DELEGATE.onSemaphoreReducePermitsDone();
+    }
+
+    public static void onSemaphoreDrainPermits(Semaphore sem) {
+        DELEGATE.onSemaphoreDrainPermits(sem);
     }
 }

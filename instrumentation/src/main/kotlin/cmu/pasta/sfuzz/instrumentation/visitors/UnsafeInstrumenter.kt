@@ -15,7 +15,7 @@ class UnsafeInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv, "sun.misc.Unsaf
     ): MethodVisitor {
         // TODO(aoli): consider passing more information (memory location, ect)
         if (unsafeMethodNames.contains(name)) {
-            return MethodEnterVisitor(mv, Runtime::onUnsafeOperation, false)
+            return MethodEnterVisitor(mv, Runtime::onUnsafeOperation, access, name, descriptor, false, false)
         }
         return mv
     }

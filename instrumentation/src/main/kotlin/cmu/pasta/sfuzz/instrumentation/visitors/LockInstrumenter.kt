@@ -22,15 +22,15 @@ class LockInstrumenter(cv:ClassVisitor): ClassVisitorBase(cv, ReentrantLock::cla
         exceptions: Array<out String>?
     ): MethodVisitor {
         if (name == "tryLock") {
-            return MethodEnterVisitor(mv, Runtime::onLockTryLock, true)
+            return MethodEnterVisitor(mv, Runtime::onLockTryLock, access, name, descriptor, true, false)
         }
         if (name == "lock" || name == "lockInterruptibly") {
-            return MethodExitVisitor(MethodEnterVisitor(mv, Runtime::onLockLock, true),
-                Runtime::onLockLockDone, access, name, descriptor, true)
+            val eMv = MethodEnterVisitor(mv, Runtime::onLockLock, access, name, descriptor, true, false)
+            return MethodExitVisitor(eMv, Runtime::onLockLockDone, access, name, descriptor, true, false)
         }
         if (name == "unlock") {
-            return MethodExitVisitor(MethodEnterVisitor(mv, Runtime::onLockUnlock, true),
-                Runtime::onLockUnlockDone, access, name, descriptor, true)
+            val eMv = MethodEnterVisitor(mv, Runtime::onLockUnlock, access, name, descriptor, true, false)
+            return MethodExitVisitor(eMv, Runtime::onLockUnlockDone, access, name, descriptor, true, false)
         }
         if (name == "newCondition") {
             return NewConditionVisitor(mv, Runtime::onLockNewCondition, access, name, descriptor)

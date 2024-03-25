@@ -31,6 +31,7 @@ fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
         cv = UnsafeInstrumenter(cv)
         cv = ClassloaderInstrumenter(cv)
         cv = ObjectInstrumenter(cv)
+        cv = SemaphoreInstrumenter(cv)
         // MonitorInstrumenter should come second because ObjectInstrumenter will insert more
         // monitors.
         cv = MonitorInstrumenter(cv)
@@ -38,7 +39,7 @@ fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
         // it inlines monitors for synchronized methods.
 //    cv = SynchronizedMethodInstrumenter(cv)
         classReader.accept(cv, ClassReader.EXPAND_FRAMES)
-        var out = classWriter.toByteArray()
+        val out = classWriter.toByteArray()
         File("/tmp/out/jdk/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)
 //        File("/tmp/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)
         return out

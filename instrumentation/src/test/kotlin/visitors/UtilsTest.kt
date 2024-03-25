@@ -1,6 +1,7 @@
 package visitors
 
 import cmu.pasta.sfuzz.instrumentation.visitors.Utils
+import cmu.pasta.sfuzz.runtime.Runtime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -12,8 +13,8 @@ class UtilsTest {
         assertEquals("(Ljava/lang/String;I)J", Utils.kFunctionToJvmMethodDescriptor(::exampleMethod))
     }
 
-//    @Test
-//    fun kFunctionToJvmMethodDescriptorWithStaticMethod() {
-//        assertEquals("()V", Utils.kFunctionToJvmMethodDescriptor(Runtime::onThreadRun))
-//    }
+    @Test
+    fun kFunctionToJvmMethodDescriptorWithStaticMethod() {
+        assertEquals("(Ljava/util/concurrent/Semaphore;[I)V", Utils.kFunctionToJvmMethodDescriptor(Runtime::onSemaphoreAcquire))
+    }
 }

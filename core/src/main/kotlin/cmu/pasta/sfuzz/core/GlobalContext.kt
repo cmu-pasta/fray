@@ -3,6 +3,7 @@ package cmu.pasta.sfuzz.core
 import cmu.pasta.sfuzz.core.concurrency.locks.LockManager
 import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.core.concurrency.SynchronizationManager
+import cmu.pasta.sfuzz.core.concurrency.locks.SemaphoreManager
 import cmu.pasta.sfuzz.core.concurrency.operations.*
 import cmu.pasta.sfuzz.core.logger.LoggerBase
 import cmu.pasta.sfuzz.core.runtime.AnalysisResult
@@ -15,6 +16,7 @@ import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
 import java.util.concurrent.Executors
+import java.util.concurrent.Semaphore
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
@@ -29,6 +31,7 @@ object GlobalContext {
     var scheduler: Scheduler = FifoScheduler()
     var config: Configuration? = null
     private val lockManager = LockManager()
+    private val semaphoreManager = SemaphoreManager()
     private val volatileManager = VolatileManager()
     val syncManager = SynchronizationManager()
     val loggers = mutableListOf<LoggerBase>()
@@ -393,7 +396,7 @@ object GlobalContext {
     fun log(format: String, vararg args: Any) {
         val tid = Thread.currentThread().id
         val context = registeredThreads[tid]!!
-        val data = "[${context.index}]: ${String.format(format, args)}"
+        val data = "[${context.index}]: ${String.format(format, args)}\n"
         for (logger in loggers) {
             logger.applicationEvent(data)
         }
@@ -447,6 +450,26 @@ object GlobalContext {
 
     fun lockNewCondition(condition: Condition, lock: ReentrantLock) {
         lockManager.registerNewCondition(condition, lock)
+    }
+
+    fun semaphoreInit(sem: Semaphore) {
+        semaphoreManager.init(sem)
+    }
+
+    fun semaphoreAcquire(sem: Semaphore, permits: Int, shouldBlock: Boolean): Boolean {
+        return semaphoreManager.acquire(sem, permits, shouldBlock)
+    }
+
+    fun semaphoreRelease(sem: Semaphore, permits: Int) {
+        semaphoreManager.release(sem, permits)
+    }
+
+    fun semaphoreDrainPermits(sem: Semaphore): Int {
+        return semaphoreManager.drainPermits(sem)
+    }
+
+    fun semaphoreReducePermits(sem: Semaphore, permits: Int) {
+        semaphoreManager.reducePermits(sem, permits)
     }
 
     fun fieldOperation(obj: Any?, owner: String, name: String, type: MemoryOpType) {

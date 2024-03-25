@@ -9,10 +9,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 
 class LockManager {
-    val lockContextManager = LockContextManager()
-
+    val lockContextManager = ReferencedContextManager<LockContext> { ReentrantLockContext() }
     val waitingThreads = mutableMapOf<Int, MutableList<Long>>()
-
     val conditionToLock = mutableMapOf<Condition, Lock>()
     val lockToConditions = mutableMapOf<Lock, MutableList<Condition>>()
 
@@ -22,11 +20,9 @@ class LockManager {
 
     fun reentrantReadWriteLockInit(readLock: ReadLock, writeLock: WriteLock) {
         val context = ReentrantReadWriteLockContext()
-        lockContextManager.addLockContext(readLock, context)
-        lockContextManager.addLockContext(writeLock, context)
+        lockContextManager.addContext(readLock, context)
+        lockContextManager.addContext(writeLock, context)
     }
-
-//    fun addLockContext(lock)
 
     /**
     * Return true if [lock] is acquired by the current thread.
@@ -92,6 +88,6 @@ class LockManager {
         assert(waitingThreads.isEmpty())
         conditionToLock.clear()
         lockToConditions.clear()
-//        lockContextManager.done()
+        lockContextManager.done()
     }
 }

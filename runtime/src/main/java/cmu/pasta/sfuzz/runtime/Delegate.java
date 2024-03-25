@@ -1,5 +1,6 @@
 package cmu.pasta.sfuzz.runtime;
 
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -123,6 +124,33 @@ public class Delegate {
     }
 
     public void onReentrantReadWriteLockInit(ReentrantReadWriteLock lock) {
+    }
+
+    public void onSemaphoreInit(Semaphore sem) {
+    }
+
+    public void onSemaphoreAcquire(Semaphore sem, int permits) {
+    }
+
+    public void onSemaphoreAcquireDone() {
+    }
+
+    public void onSemaphoreDrainPermits(Semaphore sem) {
+    }
+
+    public void onSemaphoreDrainPermitsDone() {
+    }
+
+    public void onSemaphoreRelease(Semaphore sem, int permits) {
+    }
+
+    public void onSemaphoreReleaseDone() {
+    }
+
+    public void onSemaphoreReducePermits(Semaphore sem, int permits) {
+    }
+
+    public void onSemaphoreReducePermitsDone() {
     }
 
     public boolean onThreadClearInterrupt(Boolean originValue, Thread t) {

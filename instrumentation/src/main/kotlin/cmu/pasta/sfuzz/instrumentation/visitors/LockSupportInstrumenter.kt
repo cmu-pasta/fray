@@ -17,30 +17,12 @@ class LockSupportInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv, LockSuppor
     ): MethodVisitor {
         var mv = super.instrumentMethod(mv, access, name, descriptor, signature, exceptions)
         if (name.startsWith("park")) {
-            return MethodExitVisitor(MethodEnterVisitor(mv, Runtime::onThreadPark, false), Runtime::onThreadParkDone, access, name, descriptor, false)
+            val eMv = MethodEnterVisitor(mv, Runtime::onThreadPark, access, name, descriptor, false, false)
+            return MethodExitVisitor(eMv, Runtime::onThreadParkDone, access, name, descriptor, false, false)
         }
         if (name.startsWith("unpark")) {
-            return object: AdviceAdapter(ASM9, mv, access, name, descriptor) {
-                override fun onMethodEnter() {
-                    loadArg(0)
-                    mv.visitMethodInsn(INVOKESTATIC,
-                        Runtime::class.java.name.replace('.', '/'),
-                        Runtime::onThreadUnpark.name,
-                        Utils.kFunctionToJvmMethodDescriptor(Runtime::onThreadUnpark),
-                        false)
-                    super.onMethodEnter()
-                }
-
-                override fun onMethodExit(opcode: Int) {
-                    loadArg(0)
-                    mv.visitMethodInsn(INVOKESTATIC,
-                        Runtime::class.java.name.replace('.', '/'),
-                        Runtime::onThreadUnparkDone.name,
-                        Utils.kFunctionToJvmMethodDescriptor(Runtime::onThreadUnparkDone),
-                        false)
-                    super.onMethodExit(opcode)
-                }
-            }
+            val eMv = MethodEnterVisitor(mv, Runtime::onThreadUnpark, access, name, descriptor, false, true)
+            return MethodExitVisitor(eMv, Runtime::onThreadUnparkDone, access, name, descriptor, false, true)
         }
         return mv
     }

@@ -18,8 +18,16 @@ object Utils {
             Double::class -> "D"
             Void::class -> "V"
             Unit::class -> "V"
+            IntArray::class -> "[I"
+            LongArray::class -> "[J"
+            BooleanArray::class -> "[Z"
+            ByteArray::class -> "[B"
+            CharArray::class -> "[C"
+            ShortArray::class -> "[S"
+            FloatArray::class -> "[F"
+            DoubleArray::class -> "[D"
             else -> {
-                var className = kType.javaType.typeName;
+                val className = kType.javaType.typeName;
                 "L${className.replace('.', '/')};"
             }
         }
