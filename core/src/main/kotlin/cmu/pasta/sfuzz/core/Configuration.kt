@@ -39,6 +39,12 @@ class POS: ScheduleAlgorithm("pos") {
     }
 }
 
+class Rand: ScheduleAlgorithm("random") {
+    override fun getScheduler(): Scheduler {
+        return RandomScheduler()
+    }
+}
+
 class PCT: ScheduleAlgorithm("pct") {
     val numSwitchPoints by option().int().default(3)
 }
@@ -52,7 +58,8 @@ class ConfigurationCommand: CliktCommand() {
     val scheduler by option().groupChoice(
         "replay" to Replay(),
         "fifo" to Fifo(),
-        "pos" to POS()
+        "pos" to POS(),
+        "random" to Rand()
     )
     val fullSchedule by option("-f", "--full").boolean().default(false)
 
