@@ -16,81 +16,82 @@ public class ConditionTest {
     private static Condition empty = m.newCondition();
     private static Condition full = m.newCondition();
 
-    private static void log(String format, Object... args) {
+    private void log (String format, Object... args) {
         GlobalContext.INSTANCE.log(format, args);
     }
 
-    private static class Thread1 implements Runnable {
-        public void run() {
+    public static void main(String[] args) {
+        ConditionTest t = new ConditionTest();
+        t.testConditionAwait();
+    }
+
+    public void testConditionAwait() {
+
+        Thread producer = new Thread (() -> {
             int i = 0;
             while (i < N) {
                 m.lock();
+                log("Acquired lock.");
+
                 try {
                     while (num > 0) {
+                        log("Beginning await.");
                         empty.await();
+                        log("Returned from await.");
                     }
                     num++;
                     full.signal();
+                    log("Sent signal.");
 
-                    log("produce ...." + i);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } finally {
                     m.unlock();
+                    log("Released lock.");
                 }
 
 
                 i++;
-            }
-        }
-    }
+          }
+        });
 
-    private static class Thread2 implements Runnable {
-        public void run() {
+        Thread consumer = new Thread (() -> {
             int j = 0;
             while (j < N) {
                 m.lock();
+                log("Acquired lock.");
                 try {
                     while (num == 0) {
+                        log("Beginning await.");
                         full.await();
+                        log("Returned from await.");
                     }
                     total = total + j;
-                    log("total ...." + total);
                     num--;
                     empty.signal();
-                    log("consume ...." + j);
+                    log("Sent signal.");
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
                 } finally {
                     m.unlock();
+                    log("Released lock.");
                 }
 
                 j++;
             }
             total = total + j;
-            log("total ...." + total);
             flag = true;
-        }
-    }
+        });
 
-    public static void main(String[] args) {
-        num = 0;
-        total = 0;
-
-        Thread t1 = new Thread(new Thread1());
-        Thread t2 = new Thread(new Thread2());
-
-        t1.start();
-        t2.start();
+        producer.start();
+        consumer.start();
 
         try {
-            t1.join();
-            t2.join();
+            producer.join();
+            consumer.join();
         } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
 
-        if (flag)
-            assert total == ((N * (N + 1)) / 2);
+        assert total == ((N * (N + 1)) / 2);
     }
-
 }
