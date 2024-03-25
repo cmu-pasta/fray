@@ -30,8 +30,8 @@ class MethodExitVisitor(mv: MethodVisitor, val method: KFunction<*>, access: Int
     }
 
     override fun visitMaxs(maxStack: Int, maxLocals: Int) {
-        visitTryCatchBlock(methodEnterLabel, methodExitLabel, methodExitLabel, "java/lang/Throwable")
         visitLabel(methodExitLabel)
+        visitTryCatchBlock(methodEnterLabel, methodExitLabel, methodExitLabel, "java/lang/Throwable")
         if (loadThis) {
             loadThis()
         }

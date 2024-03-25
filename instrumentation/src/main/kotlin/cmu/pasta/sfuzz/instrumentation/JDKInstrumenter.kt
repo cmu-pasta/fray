@@ -14,31 +14,40 @@ import java.io.InputStream
 
 
 fun instrumentClass(path:String, inputStream: InputStream): ByteArray {
-    var classReader = ClassReader(inputStream)
+    val byteArray = inputStream.readBytes()
+    try {
+        val classReader = ClassReader(byteArray)
 //    var classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_FRAMES or ClassWriter.COMPUTE_MAXS)
-    var classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
-    var cv:ClassVisitor = ThreadInstrumenter(classWriter)
-    cv = ReentrantReadWriteLockInstrumenter(cv)
-    cv = LockSupportInstrumenter(cv)
-    cv = LockInstrumenter(cv)
-    cv = SystemModulesMapInstrumenter(cv)
-    cv = ConditionInstrumenter(cv)
-    cv = AtomicOperationInstrumenter(cv)
-    cv = ObjectNotifyInstrumenter(cv)
-    cv = VolatileFieldsInstrumenter(cv)
-    cv = UnsafeInstrumenter(cv)
-    cv = ClassloaderInstrumenter(cv)
-    cv = ObjectInstrumenter(cv)
-    // MonitorInstrumenter should come second because ObjectInstrumenter will insert more
-    // monitors.
-    cv = MonitorInstrumenter(cv)
-    // SynchronizedMethodEmbeddingInstrumenter should come before MonitorInstrumenter because
-    // it inlines monitors for synchronized methods.
+        val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
+        var cv: ClassVisitor = ThreadInstrumenter(classWriter)
+        cv = ReentrantReadWriteLockInstrumenter(cv)
+        cv = LockSupportInstrumenter(cv)
+        cv = LockInstrumenter(cv)
+        cv = SystemModulesMapInstrumenter(cv)
+        cv = ConditionInstrumenter(cv)
+        cv = AtomicOperationInstrumenter(cv)
+        cv = ObjectNotifyInstrumenter(cv)
+        cv = VolatileFieldsInstrumenter(cv)
+        cv = UnsafeInstrumenter(cv)
+        cv = ClassloaderInstrumenter(cv)
+        cv = ObjectInstrumenter(cv)
+        // MonitorInstrumenter should come second because ObjectInstrumenter will insert more
+        // monitors.
+        cv = MonitorInstrumenter(cv)
+        // SynchronizedMethodEmbeddingInstrumenter should come before MonitorInstrumenter because
+        // it inlines monitors for synchronized methods.
 //    cv = SynchronizedMethodInstrumenter(cv)
-    classReader.accept(cv, ClassReader.EXPAND_FRAMES)
-    var out = classWriter.toByteArray()
-    File("/tmp/out/jdk/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)
-    return out
+        classReader.accept(cv, ClassReader.EXPAND_FRAMES)
+        var out = classWriter.toByteArray()
+        File("/tmp/out/jdk/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)
+//        File("/tmp/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)
+        return out
+    } catch (e: Throwable) {
+        println("Exception during instrumentation: $e")
+        e.printStackTrace()
+    }
+    File("/tmp/out/jdk/${path.replace("/", ".").removePrefix(".")}").writeBytes(byteArray)
+    return byteArray
 }
 
 fun instrumentModuleInfo(inputStream: InputStream, packages: List<String>):ByteArray {
