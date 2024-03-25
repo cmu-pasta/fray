@@ -1,0 +1,29 @@
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    permissions: 
+      contents: read
+      packages: read 
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+      - name: Build sfuzz (no tests)
+        run: ./gradlew build -x test
+      - name: Instrument JDK
+        run: ./gradlew jlink
+      - name: Build shadow JAR
+        run: ./gradlew shadowJar
+      - name: Test sfuzz
+        run: ./gradlew test
+
