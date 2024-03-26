@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.9.22"
+    id("com.ncorti.ktfmt.gradle") version "0.17.0"
 }
 
 
@@ -28,4 +29,9 @@ extra["agentPath"] = if (System.getProperty("os.name").toLowerCase().contains("m
     "${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/mac-aarch64/cpp/lib${jvmti.name}.dylib"
 } else {
     "${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so"
+}
+
+
+configure(allprojects - project(":jvmti")) {
+  plugins.apply("com.ncorti.ktfmt.gradle")
 }

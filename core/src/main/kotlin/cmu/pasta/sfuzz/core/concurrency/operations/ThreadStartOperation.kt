@@ -1,4 +1,3 @@
 package cmu.pasta.sfuzz.core.concurrency.operations
 
-class ThreadStartOperation : NonRacingOperation() {
-}
+class ThreadStartOperation : NonRacingOperation() {}

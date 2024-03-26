@@ -5,8 +5,11 @@ import cmu.pasta.sfuzz.core.runtime.AnalysisResult
 import cmu.pasta.sfuzz.core.scheduler.Choice
 
 interface LoggerBase {
-    fun executionStart()
-    fun newOperationScheduled(op: Operation, choice: Choice)
-    fun executionDone(result: AnalysisResult)
-    fun applicationEvent(event: String)
+  fun executionStart()
+
+  fun newOperationScheduled(op: Operation, choice: Choice)
+
+  fun executionDone(result: AnalysisResult)
+
+  fun applicationEvent(event: String)
 }
