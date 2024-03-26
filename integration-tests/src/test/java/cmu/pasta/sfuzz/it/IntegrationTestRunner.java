@@ -1,10 +1,8 @@
 package cmu.pasta.sfuzz.it;
 
 
-import cmu.pasta.sfuzz.core.Configuration;
-import cmu.pasta.sfuzz.core.Fifo;
-import cmu.pasta.sfuzz.core.GlobalContext;
-import cmu.pasta.sfuzz.core.MainKt;
+import cmu.pasta.sfuzz.core.*;
+import cmu.pasta.sfuzz.core.logger.JsonLogger;
 import cmu.pasta.sfuzz.core.scheduler.FifoScheduler;
 import cmu.pasta.sfuzz.core.scheduler.ReplayScheduler;
 import cmu.pasta.sfuzz.core.scheduler.Scheduler;
@@ -33,7 +31,8 @@ public class IntegrationTestRunner {
                 "/tmp/report",
                 1,
                 scheduler,
-                true
+                true,
+                new JsonLogger("/tmp/report", true)
         );
         MainKt.run(config);
         return logger.sb.toString();

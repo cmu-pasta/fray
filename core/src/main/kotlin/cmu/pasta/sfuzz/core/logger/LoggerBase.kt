@@ -11,5 +11,7 @@ interface LoggerBase {
 
   fun executionDone(result: AnalysisResult)
 
+  //  fun logError(error: String)
+
   fun applicationEvent(event: String)
 }
