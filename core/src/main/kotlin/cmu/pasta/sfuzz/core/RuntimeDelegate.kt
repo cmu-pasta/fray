@@ -4,6 +4,7 @@ import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Semaphore
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.ReentrantLock
@@ -338,6 +339,37 @@ class RuntimeDelegate: Delegate() {
     }
 
     override fun onSemaphoreReducePermitsDone() {
+        skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    }
+
+    override fun onLatchAwait(latch: CountDownLatch) {
+        if (checkEntered()) {
+            skipFunctionEntered.set(1 + skipFunctionEntered.get())
+            return
+        }
+        GlobalContext.latchAwait(latch)
+        entered.set(false)
+        skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    }
+
+    override fun onLatchAwaitDone(latch: CountDownLatch) {
+        skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+        if (checkEntered()) return
+        GlobalContext.latchAwaitDone(latch)
+        entered.set(false)
+    }
+
+    override fun onLatchCountDown(latch: CountDownLatch) {
+        if (checkEntered()) {
+            skipFunctionEntered.set(1 + skipFunctionEntered.get())
+            return
+        }
+        GlobalContext.latchCountDown(latch)
+        entered.set(false)
+        skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    }
+
+    override fun onLatchCountDownDone(latch: CountDownLatch?) {
         skipFunctionEntered.set(skipFunctionEntered.get() - 1)
     }
 

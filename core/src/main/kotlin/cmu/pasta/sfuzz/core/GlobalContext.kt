@@ -3,6 +3,7 @@ package cmu.pasta.sfuzz.core
 import cmu.pasta.sfuzz.core.concurrency.locks.LockManager
 import cmu.pasta.sfuzz.core.concurrency.SFuzzThread
 import cmu.pasta.sfuzz.core.concurrency.SynchronizationManager
+import cmu.pasta.sfuzz.core.concurrency.locks.CountDownLatchManager
 import cmu.pasta.sfuzz.core.concurrency.locks.SemaphoreManager
 import cmu.pasta.sfuzz.core.concurrency.operations.*
 import cmu.pasta.sfuzz.core.logger.LoggerBase
@@ -15,6 +16,7 @@ import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 import java.util.concurrent.locks.Condition
@@ -33,6 +35,7 @@ object GlobalContext {
     private val lockManager = LockManager()
     private val semaphoreManager = SemaphoreManager()
     private val volatileManager = VolatileManager()
+    private val latchManager = CountDownLatchManager()
     val syncManager = SynchronizationManager()
     val loggers = mutableListOf<LoggerBase>()
     var executor = Executors.newSingleThreadExecutor { r ->
@@ -494,6 +497,33 @@ object GlobalContext {
         registeredThreads[t]?.pendingOperation = MemoryOperation(obj, type)
         registeredThreads[t]?.state = ThreadState.Enabled
         scheduleNextOperation(true)
+    }
+
+    fun latchAwait(latch: CountDownLatch) {
+        val t = Thread.currentThread().id
+        if (latchManager.await(latch)) {
+            val t = Thread.currentThread().id
+            registeredThreads[t]?.pendingOperation = PausedOperation()
+            registeredThreads[t]?.state = ThreadState.Paused
+        }
+        executor.submit {
+            while (registeredThreads[t]!!.thread.state == Thread.State.RUNNABLE) {
+                Thread.yield()
+            }
+            scheduleNextOperation(false)
+        }
+    }
+
+    fun latchAwaitDone(latch: CountDownLatch) {
+        val t = Thread.currentThread().id
+        val context = registeredThreads[t]!!
+        if (context.state != ThreadState.Running) {
+            context.block()
+        }
+    }
+
+    fun latchCountDown(latch: CountDownLatch) {
+        latchManager.countDown(latch)
     }
 
     fun scheduleNextOperation(shouldBlockCurrentThread: Boolean) {

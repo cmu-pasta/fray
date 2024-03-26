@@ -1,5 +1,6 @@
 package cmu.pasta.sfuzz.runtime;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -217,5 +218,21 @@ public class Runtime {
 
     public static void onSemaphoreDrainPermits(Semaphore sem) {
         DELEGATE.onSemaphoreDrainPermits(sem);
+    }
+
+    public static void onLatchAwait(CountDownLatch latch) {
+        DELEGATE.onLatchAwait(latch);
+    }
+
+    public static void onLatchAwaitDone(CountDownLatch latch) {
+        DELEGATE.onLatchAwaitDone(latch);
+    }
+
+    public static void onLatchCountDown(CountDownLatch latch) {
+        DELEGATE.onLatchCountDown(latch);
+    }
+
+    public static void onLatchCountDownDone(CountDownLatch latch) {
+        DELEGATE.onLatchCountDownDone(latch);
     }
 }
