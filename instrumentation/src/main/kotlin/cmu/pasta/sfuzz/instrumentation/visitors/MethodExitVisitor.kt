@@ -14,7 +14,8 @@ class MethodExitVisitor(
     name: String,
     descriptor: String,
     val loadThis: Boolean,
-    val loadArgs: Boolean
+    val loadArgs: Boolean,
+    val addFinalBlock: Boolean,
 ) : AdviceAdapter(ASM9, mv, access, name, descriptor) {
   val methodEnterLabel = Label()
   val methodExitLabel = Label()
@@ -43,21 +44,23 @@ class MethodExitVisitor(
   }
 
   override fun visitMaxs(maxStack: Int, maxLocals: Int) {
-    visitLabel(methodExitLabel)
-    visitTryCatchBlock(methodEnterLabel, methodExitLabel, methodExitLabel, "java/lang/Throwable")
-    if (loadThis) {
-      loadThis()
+    if (addFinalBlock) {
+      visitLabel(methodExitLabel)
+      visitTryCatchBlock(methodEnterLabel, methodExitLabel, methodExitLabel, "java/lang/Throwable")
+      if (loadThis) {
+        loadThis()
+      }
+      if (loadArgs) {
+        loadArgs()
+      }
+      visitMethodInsn(
+          Opcodes.INVOKESTATIC,
+          Runtime::class.java.name.replace(".", "/"),
+          method.name,
+          Utils.kFunctionToJvmMethodDescriptor(method),
+          false)
+      visitInsn(ATHROW)
     }
-    if (loadArgs) {
-      loadArgs()
-    }
-    visitMethodInsn(
-        Opcodes.INVOKESTATIC,
-        Runtime::class.java.name.replace(".", "/"),
-        method.name,
-        Utils.kFunctionToJvmMethodDescriptor(method),
-        false)
-    visitInsn(ATHROW)
     super.visitMaxs(maxStack, maxLocals)
   }
 }

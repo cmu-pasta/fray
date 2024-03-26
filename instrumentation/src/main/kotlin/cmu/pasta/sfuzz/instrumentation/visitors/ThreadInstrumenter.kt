@@ -16,7 +16,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
   ): MethodVisitor {
     if (name == "start") {
       val eMv =
-          MethodExitVisitor(mv, Runtime::onThreadStartDone, access, name, descriptor, true, false)
+          MethodExitVisitor(
+              mv, Runtime::onThreadStartDone, access, name, descriptor, true, false, true)
       return MethodEnterVisitor(eMv, Runtime::onThreadStart, access, name, descriptor, true, false)
     }
     if (name == "yield") {
@@ -24,11 +25,11 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
     }
     if (name == "getAndClearInterrupt") {
       return MethodExitVisitor(
-          mv, Runtime::onThreadGetAndClearInterrupt, access, name, descriptor, true, false)
+          mv, Runtime::onThreadGetAndClearInterrupt, access, name, descriptor, true, false, false)
     }
     if (name == "clearInterrupt") {
       return MethodExitVisitor(
-          mv, Runtime::onThreadClearInterrupt, access, name, descriptor, true, false)
+          mv, Runtime::onThreadClearInterrupt, access, name, descriptor, true, false, false)
     }
     if (name == "setInterrupt" || name == "interrupt") {
       return MethodEnterVisitor(

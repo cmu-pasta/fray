@@ -18,13 +18,13 @@ class CountDownLatchInstrumenter(cv: ClassVisitor) :
     if (name == "await") {
       val eMv = MethodEnterVisitor(mv, Runtime::onLatchAwait, access, name, descriptor, true, false)
       return MethodExitVisitor(
-          eMv, Runtime::onLatchAwaitDone, access, name, descriptor, true, false)
+          eMv, Runtime::onLatchAwaitDone, access, name, descriptor, true, false, true)
     }
     if (name == "countDown") {
       val eMv =
           MethodEnterVisitor(mv, Runtime::onLatchCountDown, access, name, descriptor, true, false)
       return MethodExitVisitor(
-          eMv, Runtime::onLatchCountDownDone, access, name, descriptor, true, false)
+          eMv, Runtime::onLatchCountDownDone, access, name, descriptor, true, false, true)
     }
     return super.instrumentMethod(mv, access, name, descriptor, signature, exceptions)
   }

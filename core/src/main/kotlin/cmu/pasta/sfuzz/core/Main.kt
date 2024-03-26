@@ -1,6 +1,5 @@
 package cmu.pasta.sfuzz.core
 
-import cmu.pasta.sfuzz.core.logger.JsonLogger
 import cmu.pasta.sfuzz.core.runtime.AnalysisResult
 import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.Runtime
@@ -22,9 +21,7 @@ fun run(config: Configuration) {
   println("Start analysing ${config.clazz}:main")
   println("Report is available at: ${config.report}")
   prepareReportPath(config.report)
-  val logger = JsonLogger(config.report, config.fullSchedule)
-  GlobalContext.registerLogger(logger)
-  //    GlobalContext.registerLogger(ConsoleLogger())
+  GlobalContext.registerLogger(config.logger)
   GlobalContext.scheduler = config.scheduler
   GlobalContext.config = config
   GlobalContext.bootstrap()
@@ -54,7 +51,6 @@ fun run(config: Configuration) {
     GlobalContext.done(AnalysisResult.COMPLETE)
   }
   GlobalContext.shutDown()
-  logger.dump()
   println("Analysis done!")
 }
 

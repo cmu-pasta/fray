@@ -14,4 +14,6 @@ interface LoggerBase {
   //  fun logError(error: String)
 
   fun applicationEvent(event: String)
+
+  fun shutdown()
 }

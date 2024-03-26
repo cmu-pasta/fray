@@ -44,7 +44,7 @@ class JsonLogger(val base: String, val fullSchedule: Boolean) : LoggerBase {
 
   override fun applicationEvent(event: String) {}
 
-  fun dump() {
-    //        File("$base/timeline.json").writeText(json.encodeToString(executions))
+  override fun shutdown() {
+    //    File("$base/timeline.json").writeText(json.encodeToString(executions))
   }
 }

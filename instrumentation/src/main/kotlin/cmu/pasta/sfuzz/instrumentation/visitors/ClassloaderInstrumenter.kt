@@ -34,7 +34,7 @@ class ClassloaderInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
         (name == "makeImpl" && className == "java/lang/invoke/MethodType")) {
       val eMv = MethodEnterVisitor(mv, Runtime::onLoadClass, access, name, descriptor, false, false)
       return MethodExitVisitor(
-          eMv, Runtime::onLoadClassDone, access, name, descriptor, false, false)
+          eMv, Runtime::onLoadClassDone, access, name, descriptor, false, false, true)
     }
     return mv
   }

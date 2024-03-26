@@ -27,12 +27,13 @@ class LockInstrumenter(cv: ClassVisitor) :
     }
     if (name == "lock" || name == "lockInterruptibly") {
       val eMv = MethodEnterVisitor(mv, Runtime::onLockLock, access, name, descriptor, true, false)
-      return MethodExitVisitor(eMv, Runtime::onLockLockDone, access, name, descriptor, true, false)
+      return MethodExitVisitor(
+          eMv, Runtime::onLockLockDone, access, name, descriptor, true, false, true)
     }
     if (name == "unlock") {
       val eMv = MethodEnterVisitor(mv, Runtime::onLockUnlock, access, name, descriptor, true, false)
       return MethodExitVisitor(
-          eMv, Runtime::onLockUnlockDone, access, name, descriptor, true, false)
+          eMv, Runtime::onLockUnlockDone, access, name, descriptor, true, false, true)
     }
     if (name == "newCondition") {
       return NewConditionVisitor(mv, Runtime::onLockNewCondition, access, name, descriptor)

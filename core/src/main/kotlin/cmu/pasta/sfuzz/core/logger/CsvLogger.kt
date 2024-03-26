@@ -25,4 +25,6 @@ class CsvLogger(private val baseFolder: String, private val fullSchedule: Boolea
   }
 
   override fun applicationEvent(event: String) {}
+
+  override fun shutdown() {}
 }

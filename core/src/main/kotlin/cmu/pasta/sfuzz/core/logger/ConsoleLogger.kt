@@ -16,4 +16,6 @@ class ConsoleLogger : LoggerBase {
   override fun applicationEvent(event: String) {
     println("event: $event")
   }
+
+  override fun shutdown() {}
 }

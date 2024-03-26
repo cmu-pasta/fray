@@ -20,7 +20,7 @@ class ConditionInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(mv, Runtime::onConditionAwait, access, name, descriptor, true, false)
       return MethodExitVisitor(
-          eMv, Runtime::onConditionAwaitDone, access, name, descriptor, true, false)
+          eMv, Runtime::onConditionAwaitDone, access, name, descriptor, true, false, true)
     }
     if (name == "signal") {
       return MethodEnterVisitor(

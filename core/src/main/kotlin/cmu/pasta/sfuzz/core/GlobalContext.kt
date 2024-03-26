@@ -90,6 +90,10 @@ object GlobalContext {
   fun shutDown() {
     Runtime.DELEGATE = Delegate()
     executor.shutdown()
+
+    for (logger in loggers) {
+      logger.shutdown()
+    }
   }
 
   fun registerLogger(l: LoggerBase) {

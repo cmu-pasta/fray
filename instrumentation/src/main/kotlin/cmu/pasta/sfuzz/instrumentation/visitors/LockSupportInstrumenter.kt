@@ -20,13 +20,13 @@ class LockSupportInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(mv, Runtime::onThreadPark, access, name, descriptor, false, false)
       return MethodExitVisitor(
-          eMv, Runtime::onThreadParkDone, access, name, descriptor, false, false)
+          eMv, Runtime::onThreadParkDone, access, name, descriptor, false, false, true)
     }
     if (name.startsWith("unpark")) {
       val eMv =
           MethodEnterVisitor(mv, Runtime::onThreadUnpark, access, name, descriptor, false, true)
       return MethodExitVisitor(
-          eMv, Runtime::onThreadUnparkDone, access, name, descriptor, false, true)
+          eMv, Runtime::onThreadUnparkDone, access, name, descriptor, false, true, true)
     }
     return mv
   }

@@ -25,4 +25,8 @@ public class EventLogger implements LoggerBase {
     public void applicationEvent(String event) {
         sb.append(event);
     }
+
+    @Override
+    public void shutdown() {
+    }
 }
