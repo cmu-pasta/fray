@@ -1,9 +1,20 @@
 package cmu.pasta.sfuzz.core.scheduler
 
 import cmu.pasta.sfuzz.core.ThreadContext
+import kotlin.random.Random
 
 class RandomScheduler : Scheduler {
+  var rand = ControlledRandom()
   override fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext {
-    return threads.random()
+
+    if (threads.size == 1) {
+      return threads[0]
+    }
+    val index = rand.nextInt() % threads.size
+    return threads[index]
+  }
+
+  override fun done() {
+    rand = ControlledRandom()
   }
 }

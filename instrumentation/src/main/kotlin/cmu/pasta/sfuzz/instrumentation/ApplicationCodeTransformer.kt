@@ -26,7 +26,9 @@ class ApplicationCodeTransformer : ClassFileTransformer {
         dotClassName.startsWith("com.sun.") ||
         dotClassName.startsWith("kotlin.") ||
         dotClassName.startsWith("kotlinx.") ||
-        dotClassName.startsWith("cmu.pasta.sfuzz")) {
+        dotClassName.startsWith("com.github.ajalt.clikt") ||
+        (dotClassName.startsWith("cmu.pasta.sfuzz") &&
+            !dotClassName.startsWith("cmu.pasta.sfuzz.benchmark"))) {
       // This is likely a JDK class, so skip transformation
       return classfileBuffer
     }
@@ -36,7 +38,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
     try {
       var cv: ClassVisitor = ObjectNotifyInstrumenter(classWriter)
       cv = TargetExitInstrumenter(cv)
-      cv = VolatileFieldsInstrumenter(cv)
+      cv = VolatileFieldsInstrumenter(cv, false)
       cv = ObjectNotifyInstrumenter(cv)
       cv = MonitorInstrumenter(cv)
       cv = ConditionInstrumenter(cv)

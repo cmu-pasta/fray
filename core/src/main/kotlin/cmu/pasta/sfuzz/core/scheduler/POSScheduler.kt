@@ -38,4 +38,8 @@ class POSScheduler(val rand: Random) : Scheduler {
     }
     return next
   }
+
+  override fun done() {
+    threadPriorityQueue.clear()
+  }
 }

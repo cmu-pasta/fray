@@ -43,6 +43,25 @@ tasks.register<JavaExec>("run") {
     }
 }
 
+tasks.register<JavaExec>("replay") {
+  val agentPath: String by rootProject.extra
+  val jdk = project(":jdk")
+  val cp = properties["classpath"] as String
+  val main = properties["mainClass"] as String
+  val instrumentation = project(":instrumentation")
+  classpath = sourceSets["main"].runtimeClasspath + files(cp)
+  executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
+  mainClass.set("cmu.pasta.sfuzz.core.MainKt")
+  args = listOf(main, "main", "--path", "${layout.buildDirectory.get().asFile}/report/schedule_simplified_8.csv", "--scheduler", "replay", "--logger", "csv")
+  jvmArgs("-agentpath:$agentPath")
+  jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
+  jvmArgs("-ea")
+  doFirst {
+    // Printing the full command
+    println("Executing command: ${executable} ${jvmArgs!!.joinToString(" ")} -cp ${classpath.asPath} ${mainClass.get()} ${args!!.joinToString(" ")}")
+  }
+}
+
 tasks.register<JavaExec>("runBench") {
   val agentPath: String by rootProject.extra
   val jdk = project(":jdk")
@@ -52,7 +71,7 @@ tasks.register<JavaExec>("runBench") {
   classpath = sourceSets["main"].runtimeClasspath + files(cp)
   executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
   mainClass.set("cmu.pasta.sfuzz.core.MainKt")
-  args = listOf(main, "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", "pos", "--logger", "json", "--iter", "1000")
+  args = listOf(main, "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", "random", "--logger", "csv", "--iter", "1000")
   jvmArgs("-agentpath:$agentPath")
   jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
   jvmArgs("-ea")

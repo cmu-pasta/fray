@@ -3,11 +3,40 @@ package cmu.pasta.sfuzz.instrumentation.visitors
 import cmu.pasta.sfuzz.instrumentation.memory.VolatileManager
 import cmu.pasta.sfuzz.runtime.Runtime
 import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.FieldVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ASM9
 
-class VolatileFieldsInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
+class VolatileFieldsInstrumenter(cv: ClassVisitor, val instrumentJDK: Boolean) : ClassVisitor(ASM9, cv) {
+  var className = ""
+  var shouldInstrument = !instrumentJDK
+  override fun visit(
+    version: Int,
+    access: Int,
+    name: String,
+    signature: String?,
+    superName: String?,
+    interfaces: Array<out String>?
+  ) {
+    super.visit(version, access, name, signature, superName, interfaces)
+    className = name
+    if (className.startsWith("java/util/concurrent")) {
+      shouldInstrument = true
+    }
+  }
+
+  override fun visitField(
+    access: Int,
+    name: String,
+    descriptor: String?,
+    signature: String?,
+    value: Any?
+  ): FieldVisitor {
+    volatileManager.setVolatile(className, name, access)
+    return super.visitField(access, name, descriptor, signature, value)
+  }
+
 
   override fun visitMethod(
       access: Int,
@@ -17,6 +46,9 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       exceptions: Array<out String>?
   ): MethodVisitor {
     var mv = super.visitMethod(access, name, descriptor, signature, exceptions)
+    if (name == "<init>" || name == "<clinit>" || !shouldInstrument) {
+      return mv
+    }
     return object : MethodVisitor(ASM9, mv) {
       override fun visitFieldInsn(opcode: Int, owner: String, name: String, descriptor: String) {
         if (volatileManager.isVolatile(owner, name)) {
@@ -63,6 +95,6 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   }
 
   companion object {
-    val volatileManager = VolatileManager()
+    val volatileManager = VolatileManager(true)
   }
 }

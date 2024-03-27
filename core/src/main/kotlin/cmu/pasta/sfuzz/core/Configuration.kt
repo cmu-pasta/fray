@@ -43,7 +43,7 @@ class Replay : ScheduleAlgorithm("replay") {
   val path by option().file().required()
 
   override fun getScheduler(): Scheduler {
-    return ReplayScheduler(path.readText())
+    return ReplayScheduler(Schedule.fromString(path.readText(), path.extension == "json"))
   }
 }
 
@@ -72,7 +72,7 @@ class PCT : ScheduleAlgorithm("pct") {
 class ConfigurationCommand : CliktCommand() {
   val clazz by argument()
   val method by argument()
-  val report by option("-o").default("report")
+  val report by option("-o").default("/tmp/report")
   val targetArgs by
       option("-a", "--args", help = "Arguments passed to target application").default("")
   val iter by option("-i", "--iter", help = "Number of iterations").int().default(1)

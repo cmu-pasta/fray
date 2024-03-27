@@ -27,7 +27,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = ConditionInstrumenter(cv)
     cv = AtomicOperationInstrumenter(cv)
     cv = ObjectNotifyInstrumenter(cv)
-    cv = VolatileFieldsInstrumenter(cv)
+    cv = VolatileFieldsInstrumenter(cv, true)
     cv = UnsafeInstrumenter(cv)
     cv = ClassloaderInstrumenter(cv)
     cv = ObjectInstrumenter(cv)

@@ -34,7 +34,7 @@ object GlobalContext {
   var config: Configuration? = null
   private val lockManager = LockManager()
   private val semaphoreManager = SemaphoreManager()
-  private val volatileManager = VolatileManager()
+  private val volatileManager = VolatileManager(false)
   private val latchManager = CountDownLatchManager()
   val syncManager = SynchronizationManager()
   val loggers = mutableListOf<LoggerBase>()
@@ -85,6 +85,7 @@ object GlobalContext {
     assert(lockManager.waitingThreads.isEmpty())
     assert(syncManager.synchronizationPoints.isEmpty())
     registeredThreads.clear()
+    scheduler.done()
   }
 
   fun shutDown() {
@@ -166,6 +167,7 @@ object GlobalContext {
   }
 
   fun threadCompleted(t: Thread) {
+    monitorEnter(t)
     objectNotifyAll(t)
     registeredThreads[t.id]?.state = ThreadState.Completed
     // We do not want to send notify all because
@@ -184,6 +186,8 @@ object GlobalContext {
         Thread.yield()
       }
       lockUnlockDone(t)
+      unlockImpl(t, t.id, false, false, true)
+      syncManager.synchronizationPoints.remove(System.identityHashCode(t))
       scheduleNextOperation(false)
     }
   }

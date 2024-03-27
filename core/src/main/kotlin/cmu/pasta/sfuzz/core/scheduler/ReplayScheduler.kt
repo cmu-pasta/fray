@@ -5,7 +5,6 @@ import cmu.pasta.sfuzz.core.exception.SchedulerInternalException
 import kotlinx.serialization.json.Json
 
 class ReplayScheduler(val schedule: Schedule) : Scheduler {
-  constructor(scheduleJson: String) : this(Json.decodeFromString<Schedule>(scheduleJson))
 
   var index = 0
 
@@ -22,5 +21,8 @@ class ReplayScheduler(val schedule: Schedule) : Scheduler {
     assert(choice.threadId == selected.index)
     index += 1
     return selected
+  }
+
+  override fun done() {
   }
 }

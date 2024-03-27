@@ -39,12 +39,18 @@ fun run(config: Configuration) {
       }
       Runtime.onMainExit()
     } catch (e: InvocationTargetException) {
-      if (e.cause is TargetTerminateException) {
+      val cause = e.cause
+      if (cause is TargetTerminateException) {
         Runtime.onMainExit()
-        println("target terminated: ${(e.cause as TargetTerminateException).status}")
+        if (cause.status != 0) {
+          println("target terminated: ${cause.status}")
+          println("iter: $i")
+          break
+        }
       } else {
-        println(e.toString())
-        e.cause?.printStackTrace()
+        println("target terminated: ${cause}")
+        println("iter: $i")
+        break
       }
     }
     Runtime.DELEGATE = Delegate()

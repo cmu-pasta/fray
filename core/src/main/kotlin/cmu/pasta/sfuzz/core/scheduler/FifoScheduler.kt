@@ -6,4 +6,7 @@ class FifoScheduler : Scheduler {
   override fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext {
     return threads.first()
   }
+
+  override fun done() {
+  }
 }
