@@ -45,16 +45,20 @@ fun run(config: Configuration) {
         if (cause.status != 0) {
           println("target terminated: ${cause.status}")
           println("iter: $i")
-          break
         }
       } else {
         println("target terminated: ${cause}")
         println("iter: $i")
-        break
       }
+      GlobalContext.errorFound = true
+      //      GlobalContext.checkErrorAndExit()
     }
     Runtime.DELEGATE = Delegate()
     GlobalContext.done(AnalysisResult.COMPLETE)
+    if (GlobalContext.errorFound) {
+      println("error found at iter: $i")
+      break
+    }
   }
   GlobalContext.shutDown()
   println("Analysis done!")

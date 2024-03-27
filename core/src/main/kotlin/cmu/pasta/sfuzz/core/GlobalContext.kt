@@ -32,6 +32,7 @@ object GlobalContext {
   var mainThreadId: Long = -1
   var scheduler: Scheduler = FifoScheduler()
   var config: Configuration? = null
+  var errorFound = false
   private val lockManager = LockManager()
   private val semaphoreManager = SemaphoreManager()
   private val volatileManager = VolatileManager(false)
@@ -102,6 +103,10 @@ object GlobalContext {
   }
 
   fun threadStart(t: Thread) {
+    t.setUncaughtExceptionHandler { t, e ->
+      errorFound = true
+      println("Err: $e")
+    }
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size)
     syncManager.createWait(t, 1)
   }
@@ -530,6 +535,22 @@ object GlobalContext {
     latchManager.countDown(latch)
   }
 
+  fun checkErrorAndExit() {
+    if (errorFound) {
+      val blockedThreads = mutableListOf<ThreadContext>()
+      for (thread in registeredThreads.values) {
+        if (thread.state != ThreadState.Running && thread.state != ThreadState.Completed) {
+          thread.state = ThreadState.Running
+          blockedThreads.add(thread)
+        }
+      }
+      for (blockedThread in blockedThreads) {
+        blockedThread.unblock()
+      }
+      throw TargetTerminateException(-2)
+    }
+  }
+
   fun scheduleNextOperation(shouldBlockCurrentThread: Boolean) {
     // Our current design makes sure that reschedule is only called
     // by scheduled thread.
@@ -554,6 +575,7 @@ object GlobalContext {
         return
       } else {
         // Deadlock detected
+        errorFound = true
         throw TargetTerminateException(-1)
       }
     }

@@ -26,6 +26,9 @@ class ApplicationCodeTransformer : ClassFileTransformer {
         dotClassName.startsWith("com.sun.") ||
         dotClassName.startsWith("kotlin.") ||
         dotClassName.startsWith("kotlinx.") ||
+        dotClassName.startsWith("org.junit.") ||
+        dotClassName.startsWith("org.gradle.") ||
+        dotClassName.startsWith("worker.org.gradle.") ||
         dotClassName.startsWith("com.github.ajalt.clikt") ||
         (dotClassName.startsWith("cmu.pasta.sfuzz") &&
             !dotClassName.startsWith("cmu.pasta.sfuzz.benchmark"))) {

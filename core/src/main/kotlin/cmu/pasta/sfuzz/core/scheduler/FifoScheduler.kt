@@ -7,6 +7,5 @@ class FifoScheduler : Scheduler {
     return threads.first()
   }
 
-  override fun done() {
-  }
+  override fun done() {}
 }

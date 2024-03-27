@@ -5,6 +5,7 @@ import cmu.pasta.sfuzz.core.*;
 import cmu.pasta.sfuzz.core.logger.JsonLogger;
 import cmu.pasta.sfuzz.core.scheduler.FifoScheduler;
 import cmu.pasta.sfuzz.core.scheduler.ReplayScheduler;
+import cmu.pasta.sfuzz.core.scheduler.Schedule;
 import cmu.pasta.sfuzz.core.scheduler.Scheduler;
 
 import java.io.BufferedReader;
@@ -43,7 +44,7 @@ public class IntegrationTestRunner {
         String expectedFile = "expected/" + testName + "_" + testCase + ".txt";
         String scheduleFile = "schedules/" + testName + "_" + testCase + ".json";
         String expected = getResourceAsString(expectedFile);
-        ReplayScheduler scheduler = new ReplayScheduler(getResourceAsString(scheduleFile));
+        ReplayScheduler scheduler = new ReplayScheduler(Schedule.Companion.fromString(getResourceAsString(scheduleFile), true));
         assertEquals(expected, runTest(methodName, scheduler));
     }
 

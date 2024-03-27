@@ -48,11 +48,12 @@ tasks.register<JavaExec>("replay") {
   val jdk = project(":jdk")
   val cp = properties["classpath"] as String
   val main = properties["mainClass"] as String
+  val mainName = main.split(".").last()
   val instrumentation = project(":instrumentation")
   classpath = sourceSets["main"].runtimeClasspath + files(cp)
   executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
   mainClass.set("cmu.pasta.sfuzz.core.MainKt")
-  args = listOf(main, "main", "--path", "${layout.buildDirectory.get().asFile}/report/schedule_simplified_8.csv", "--scheduler", "replay", "--logger", "csv")
+  args = listOf(main, "main", "--path", "//Users/aoli/repos/sfuzz-benchmark/schedules/$mainName.csv", "--scheduler", "replay", "--logger", "csv")
   jvmArgs("-agentpath:$agentPath")
   jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
   jvmArgs("-ea")

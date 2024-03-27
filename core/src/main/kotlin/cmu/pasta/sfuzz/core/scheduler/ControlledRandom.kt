@@ -2,10 +2,9 @@ package cmu.pasta.sfuzz.core.scheduler
 
 import java.util.*
 
-
 class ControlledRandom(
-  private val integers: MutableList<Int> = mutableListOf<Int>(),
-  private val doubles: MutableList<Double> = mutableListOf<Double>()
+    private val integers: MutableList<Int> = mutableListOf<Int>(),
+    private val doubles: MutableList<Double> = mutableListOf<Double>()
 ) {
 
   private val random = Random()

@@ -2,7 +2,6 @@ package cmu.pasta.sfuzz.core.scheduler
 
 import cmu.pasta.sfuzz.core.ThreadContext
 import cmu.pasta.sfuzz.core.exception.SchedulerInternalException
-import kotlinx.serialization.json.Json
 
 class ReplayScheduler(val schedule: Schedule) : Scheduler {
 
@@ -23,6 +22,5 @@ class ReplayScheduler(val schedule: Schedule) : Scheduler {
     return selected
   }
 
-  override fun done() {
-  }
+  override fun done() {}
 }

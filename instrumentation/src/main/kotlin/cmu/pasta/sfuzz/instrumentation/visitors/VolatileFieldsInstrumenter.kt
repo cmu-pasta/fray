@@ -8,16 +8,18 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ASM9
 
-class VolatileFieldsInstrumenter(cv: ClassVisitor, val instrumentJDK: Boolean) : ClassVisitor(ASM9, cv) {
+class VolatileFieldsInstrumenter(cv: ClassVisitor, val instrumentJDK: Boolean) :
+    ClassVisitor(ASM9, cv) {
   var className = ""
   var shouldInstrument = !instrumentJDK
+
   override fun visit(
-    version: Int,
-    access: Int,
-    name: String,
-    signature: String?,
-    superName: String?,
-    interfaces: Array<out String>?
+      version: Int,
+      access: Int,
+      name: String,
+      signature: String?,
+      superName: String?,
+      interfaces: Array<out String>?
   ) {
     super.visit(version, access, name, signature, superName, interfaces)
     className = name
@@ -27,16 +29,15 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor, val instrumentJDK: Boolean) :
   }
 
   override fun visitField(
-    access: Int,
-    name: String,
-    descriptor: String?,
-    signature: String?,
-    value: Any?
+      access: Int,
+      name: String,
+      descriptor: String?,
+      signature: String?,
+      value: Any?
   ): FieldVisitor {
     volatileManager.setVolatile(className, name, access)
     return super.visitField(access, name, descriptor, signature, value)
   }
-
 
   override fun visitMethod(
       access: Int,

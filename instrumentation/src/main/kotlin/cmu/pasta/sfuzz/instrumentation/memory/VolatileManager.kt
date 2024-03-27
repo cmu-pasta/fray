@@ -20,7 +20,8 @@ class VolatileManager(val default: Boolean) {
       return default
     }
     try {
-      var clazz: Class<*>? = Class.forName(name.replace("/", "."))
+      val cl = Thread.currentThread().getContextClassLoader()
+      var clazz = cl.loadClass(name.replace("/", "."))
       var field: Field? = null
       while (clazz != null) {
         try {

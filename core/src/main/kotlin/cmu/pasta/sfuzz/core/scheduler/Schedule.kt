@@ -3,7 +3,8 @@ package cmu.pasta.sfuzz.core.scheduler
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-@Serializable data class Schedule(val choices: MutableList<Choice>, val fullSchedule: Boolean) {
+@Serializable
+data class Schedule(val choices: MutableList<Choice>, val fullSchedule: Boolean) {
   companion object {
     fun fromString(schedule: String, isJson: Boolean): Schedule {
       if (isJson) {
