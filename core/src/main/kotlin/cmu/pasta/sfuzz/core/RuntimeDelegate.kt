@@ -43,12 +43,17 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onThreadStart(t: Thread) {
-    if (checkEntered()) return
+    if (checkEntered()) {
+      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      return
+    }
     GlobalContext.threadStart(t)
+    skipFunctionEntered.set(1 + skipFunctionEntered.get())
     entered.set(false)
   }
 
   override fun onThreadStartDone(t: Thread) {
+    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
     if (checkEntered()) return
     GlobalContext.threadStartDone(t)
     entered.set(false)
@@ -68,8 +73,11 @@ class RuntimeDelegate : Delegate() {
 
   override fun onObjectWait(o: Any) {
     if (checkEntered()) return
-    GlobalContext.objectWait(o)
-    entered.set(false)
+    try {
+      GlobalContext.objectWait(o)
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onObjectWaitDone(o: Any) {
@@ -166,9 +174,12 @@ class RuntimeDelegate : Delegate() {
       skipFunctionEntered.set(1 + skipFunctionEntered.get())
       return
     }
-    GlobalContext.conditionAwait(o)
-    entered.set(false)
-    skipFunctionEntered.set(1 + skipFunctionEntered.get())
+    try {
+      GlobalContext.conditionAwait(o)
+    } finally {
+      entered.set(false)
+      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+    }
   }
 
   override fun onConditionAwaitDone(o: Condition) {
@@ -353,9 +364,12 @@ class RuntimeDelegate : Delegate() {
       skipFunctionEntered.set(1 + skipFunctionEntered.get())
       return
     }
-    GlobalContext.latchAwait(latch)
-    entered.set(false)
-    skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    try {
+      GlobalContext.latchAwait(latch)
+    } finally {
+      entered.set(false)
+      skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    }
   }
 
   override fun onLatchAwaitDone(latch: CountDownLatch) {

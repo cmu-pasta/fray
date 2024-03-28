@@ -11,8 +11,18 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 class LockManager {
   val lockContextManager = ReferencedContextManager<LockContext> { ReentrantLockContext() }
   val waitingThreads = mutableMapOf<Int, MutableList<Long>>()
+  val threadWaitsFor = mutableMapOf<Long, Int>()
   val conditionToLock = mutableMapOf<Condition, Lock>()
   val lockToConditions = mutableMapOf<Lock, MutableList<Condition>>()
+
+  fun threadUnblockedDueToDeadlock(t: Thread) {
+    val id = threadWaitsFor[t.id] ?: return
+    waitingThreads[id]?.remove(t.id)
+    if (waitingThreads[id]?.isEmpty() == true) {
+      waitingThreads.remove(id)
+    }
+    threadWaitsFor.remove(t.id)
+  }
 
   fun getLockContext(lock: Any): LockContext {
     return lockContextManager.getLockContext(lock)
@@ -38,13 +48,16 @@ class LockManager {
     if (id !in waitingThreads) {
       waitingThreads[id] = mutableListOf()
     }
+    assert(t.id !in waitingThreads[id]!!)
     waitingThreads[id]!!.add(t.id)
+    threadWaitsFor[t.id] = id
   }
 
   // TODO(aoli): can we merge this logic with `objectNotifyImply`?
   fun threadInterruptDuringObjectWait(waitingObject: Any, lockObject: Any, context: ThreadContext) {
     val id = System.identityHashCode(waitingObject)
     val lockContext = getLockContext(lockObject)
+    threadWaitsFor.remove(context.thread.id)
     waitingThreads[id]?.remove(context.thread.id)
     if (waitingThreads[id]?.isEmpty() == true) {
       waitingThreads.remove(id)
@@ -83,6 +96,7 @@ class LockManager {
 
   fun done() {
     assert(waitingThreads.isEmpty())
+    assert(threadWaitsFor.isEmpty())
     conditionToLock.clear()
     lockToConditions.clear()
     lockContextManager.done()

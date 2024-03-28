@@ -8,14 +8,11 @@ enum class ThreadState {
   Enabled,
   Running,
   Paused,
-  Parked,
   Completed,
-  // Thread is started but not yet available.
-  STARTED,
 }
 
 class ThreadContext(val thread: Thread, val index: Int) {
-  var state = ThreadState.STARTED
+  var state = ThreadState.Paused
   var unparkSignaled = false
   var interruptSignaled = false
 
@@ -30,6 +27,8 @@ class ThreadContext(val thread: Thread, val index: Int) {
   fun block() {
     sync.block()
   }
+
+  fun schedulable() = state == ThreadState.Enabled || state == ThreadState.Running
 
   fun unblock() {
     if (sync.isBlocked) {

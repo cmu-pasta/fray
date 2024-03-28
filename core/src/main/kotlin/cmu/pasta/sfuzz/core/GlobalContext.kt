@@ -72,6 +72,7 @@ object GlobalContext {
           for (thread in registeredThreads.values) {
             if (thread.state == ThreadState.Paused) {
               thread.state = ThreadState.Enabled
+              lockManager.threadUnblockedDueToDeadlock(thread.thread)
               break
             }
           }
@@ -96,9 +97,9 @@ object GlobalContext {
   fun done(result: AnalysisResult) {
     loggers.forEach { it.executionDone(result) }
 
-    lockManager.done()
     assert(lockManager.waitingThreads.isEmpty())
     assert(syncManager.synchronizationPoints.isEmpty())
+    lockManager.done()
     registeredThreads.clear()
     scheduler.done()
   }
@@ -138,7 +139,7 @@ object GlobalContext {
     val t = Thread.currentThread()
     if (!registeredThreads[t.id]!!.unparkSignaled) {
       registeredThreads[t.id]?.pendingOperation = PausedOperation()
-      registeredThreads[t.id]?.state = ThreadState.Parked
+      registeredThreads[t.id]?.state = ThreadState.Paused
       scheduleNextOperation(false)
     } else {
       registeredThreads[t.id]!!.unparkSignaled = false
@@ -153,14 +154,14 @@ object GlobalContext {
     if (context.state == ThreadState.Running) {
       return
     }
-    assert(context.state == ThreadState.Parked)
+    assert(context.state == ThreadState.Paused)
     syncManager.signal(t)
     context.block()
   }
 
   fun threadUnpark(t: Thread) {
     val context = registeredThreads[t.id]!!
-    if (context.state != ThreadState.Parked) {
+    if (context.state != ThreadState.Paused) {
       context.unparkSignaled = true
     } else {
       syncManager.createWait(t, 1)
@@ -170,7 +171,7 @@ object GlobalContext {
   }
 
   fun threadUnparkDone(t: Thread) {
-    if (registeredThreads[t.id]!!.state == ThreadState.Parked) {
+    if (registeredThreads[t.id]!!.state == ThreadState.Paused) {
       // SFuzz only needs to wait if `t` is parked and then
       // waken up by this `unpark` operation.
       syncManager.wait(t)
@@ -193,6 +194,7 @@ object GlobalContext {
       }
       objectNotifyAll(t)
       registeredThreads[t.id]?.state = ThreadState.Completed
+      lockManager.threadUnblockedDueToDeadlock(t)
       // We do not want to send notify all because
       // we don't have monitor lock here.
       var size = 0
@@ -216,20 +218,7 @@ object GlobalContext {
         unlockImpl(t, t.id, false, false, true)
         syncManager.synchronizationPoints.remove(System.identityHashCode(t))
       }
-      try {
-        scheduleNextOperation(false)
-      } catch (e: TargetTerminateException) {
-        // If deadlock detected let's try to unblock one thread and continue.
-        if (e.status == -1) {
-          for (thread in registeredThreads.values) {
-            if (thread.state == ThreadState.Paused) {
-              thread.state = ThreadState.Running
-              thread.unblock()
-              break
-            }
-          }
-        }
-      }
+      scheduleNextOperationAndCheckDeadlock(false)
     }
   }
 
@@ -251,9 +240,10 @@ object GlobalContext {
       context.pendingOperation = ThreadResumeOperation()
       context.state = ThreadState.Enabled
     } else {
-      lockManager.addWaitingThread(waitingObject, Thread.currentThread())
       context.pendingOperation = PausedOperation()
       context.state = ThreadState.Paused
+      checkDeadLock()
+      lockManager.addWaitingThread(waitingObject, Thread.currentThread())
     }
     unlockImpl(lockObject, t, true, true, lockObject == waitingObject)
 
@@ -266,7 +256,7 @@ object GlobalContext {
         Thread.yield()
       }
       lockUnlockDone(lockObject)
-      scheduleNextOperation(false)
+      scheduleNextOperationAndCheckDeadlock(false)
     }
   }
 
@@ -296,6 +286,7 @@ object GlobalContext {
         // We want to also catch interrupt exception here.
       }
     }
+    lockManager.threadWaitsFor.remove(t.id)
     // If a thread is enabled, the lock must be available.
     assert(lockManager.lock(lockObject, t.id, false, true))
     context.checkInterrupt()
@@ -551,11 +542,12 @@ object GlobalContext {
       registeredThreads[t]?.pendingOperation = PausedOperation()
       registeredThreads[t]?.state = ThreadState.Paused
     }
+    checkDeadLock()
     executor.submit {
       while (registeredThreads[t]!!.thread.state == Thread.State.RUNNABLE) {
         Thread.yield()
       }
-      scheduleNextOperation(false)
+      scheduleNextOperationAndCheckDeadlock(false)
     }
   }
 
@@ -584,6 +576,30 @@ object GlobalContext {
         blockedThread.unblock()
       }
       throw TargetTerminateException(-2)
+    }
+  }
+
+  fun scheduleNextOperationAndCheckDeadlock(shouldBlockCurrentThread: Boolean) {
+    try {
+      scheduleNextOperation(shouldBlockCurrentThread)
+    } catch (e: TargetTerminateException) {
+      for (thread in registeredThreads.values) {
+        if (thread.state == ThreadState.Paused) {
+          thread.state = ThreadState.Enabled
+          lockManager.threadUnblockedDueToDeadlock(thread.thread)
+          scheduleNextOperation(shouldBlockCurrentThread)
+          break
+        }
+      }
+    }
+  }
+
+  fun checkDeadLock() {
+    val deadLock = registeredThreads.values.toList().none { it.schedulable() }
+    if (deadLock) {
+      registeredThreads[Thread.currentThread().id]!!.state = ThreadState.Enabled
+      lockManager.threadUnblockedDueToDeadlock(Thread.currentThread())
+      throw TargetTerminateException(-1)
     }
   }
 
