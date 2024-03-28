@@ -186,21 +186,26 @@ object GlobalContext {
   }
 
   fun threadCompleted(t: Thread) {
-    if (!errorFound) {
-      monitorEnter(t)
-    }
-    objectNotifyAll(t)
-    registeredThreads[t.id]?.state = ThreadState.Completed
-    // We do not want to send notify all because
-    // we don't have monitor lock here.
-    var size = 0
-    lockManager.getLockContext(t).wakingThreads.let {
-      for (thread in it) {
-        registeredThreads[thread]!!.state = ThreadState.Enabled
+    try {
+
+      if (!errorFound) {
+        monitorEnter(t)
       }
-      size = it.size
+      objectNotifyAll(t)
+      registeredThreads[t.id]?.state = ThreadState.Completed
+      // We do not want to send notify all because
+      // we don't have monitor lock here.
+      var size = 0
+      lockManager.getLockContext(t).wakingThreads.let {
+        for (thread in it) {
+          registeredThreads[thread]!!.state = ThreadState.Enabled
+        }
+        size = it.size
+      }
+      syncManager.createWait(t, size)
+    } catch (e: Throwable) {
+      e.printStackTrace()
     }
-    syncManager.createWait(t, size)
 
     executor.submit {
       while (t.isAlive) {
@@ -406,7 +411,7 @@ object GlobalContext {
     // synchronized(lock) {
     //   lock.unlock();
     // }
-    while (!lockManager.lock(lock, t, true, false) && !errorFound) {
+    while (!lockManager.lock(lock, t, true, false)) {
       registeredThreads[t]?.state = ThreadState.Paused
 
       // We want to block current thread because we do
@@ -414,10 +419,6 @@ object GlobalContext {
       // us to pick which Thread to run next if multiple
       // threads hold the same lock.
       scheduleNextOperation(true)
-    }
-
-    if (errorFound) {
-      throw TargetTerminateException(-2)
     }
   }
 

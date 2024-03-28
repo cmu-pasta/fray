@@ -128,12 +128,12 @@ public class Runtime {
         DELEGATE.onYield();
     }
 
-    public static void onLoadClass() {
-        DELEGATE.onLoadClass();
+    public static void onSkipMethod() {
+        DELEGATE.onSkipMethod();
     }
 
-    public static void onLoadClassDone() {
-        DELEGATE.onLoadClassDone();
+    public static void onSkipMethodDone() {
+        DELEGATE.onSkipMethodDone();
     }
 
     public static void start() {

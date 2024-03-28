@@ -30,6 +30,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = VolatileFieldsInstrumenter(cv, true)
     cv = UnsafeInstrumenter(cv)
     cv = ClassloaderInstrumenter(cv)
+    cv = PrintStreamInstrumenter(cv)
     cv = ObjectInstrumenter(cv)
     cv = SemaphoreInstrumenter(cv)
     cv = CountDownLatchInstrumenter(cv)

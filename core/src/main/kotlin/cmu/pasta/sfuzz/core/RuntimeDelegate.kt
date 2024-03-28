@@ -233,11 +233,11 @@ class RuntimeDelegate : Delegate() {
     entered.set(false)
   }
 
-  override fun onLoadClass() {
+  override fun onSkipMethod() {
     skipFunctionEntered.set(1 + skipFunctionEntered.get())
   }
 
-  override fun onLoadClassDone() {
+  override fun onSkipMethodDone() {
     skipFunctionEntered.set(skipFunctionEntered.get() - 1)
   }
 
