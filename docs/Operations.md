@@ -8,6 +8,10 @@
 | Monitor Enter/Exit        | Yes |
 | ReentrantLock Lock/Unlock | Yes |
 | Executors                 | Yes |
+| Thread Interruption       | Yes |
+| ReentrantReadWriteLock    | Yes |
+| Semaphore                 | Yes |
+| CountDownLatch            | Yes |
 
 
 # Thread Wait/Notify
