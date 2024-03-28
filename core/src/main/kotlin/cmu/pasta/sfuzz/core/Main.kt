@@ -3,7 +3,6 @@ package cmu.pasta.sfuzz.core
 import cmu.pasta.sfuzz.core.runtime.AnalysisResult
 import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.Runtime
-import cmu.pasta.sfuzz.runtime.TargetTerminateException
 import java.lang.reflect.InvocationTargetException
 import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
@@ -39,19 +38,8 @@ fun run(config: Configuration) {
       }
       Runtime.onMainExit()
     } catch (e: InvocationTargetException) {
-      val cause = e.cause
-      if (cause is TargetTerminateException) {
-        Runtime.onMainExit()
-        if (cause.status != 0) {
-          println("target terminated: ${cause.status}")
-          println("iter: $i")
-        }
-      } else {
-        println("target terminated: ${cause}")
-        println("iter: $i")
-      }
       GlobalContext.errorFound = true
-      //      GlobalContext.checkErrorAndExit()
+      Runtime.onMainExit()
     }
     Runtime.DELEGATE = Delegate()
     GlobalContext.done(AnalysisResult.COMPLETE)

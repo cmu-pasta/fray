@@ -98,9 +98,12 @@ class RuntimeDelegate : Delegate() {
       skipFunctionEntered.set(1 + skipFunctionEntered.get())
       return
     }
-    GlobalContext.lockLock(l)
-    entered.set(false)
-    skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    try {
+      GlobalContext.lockLock(l)
+    } finally {
+      entered.set(false)
+      skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    }
   }
 
   override fun onLockLockDone(l: ReentrantLock?) {
@@ -132,8 +135,11 @@ class RuntimeDelegate : Delegate() {
 
   override fun onMonitorEnter(o: Any) {
     if (checkEntered()) return
-    GlobalContext.monitorEnter(o)
-    entered.set(false)
+    try {
+      GlobalContext.monitorEnter(o)
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onMonitorExit(o: Any) {

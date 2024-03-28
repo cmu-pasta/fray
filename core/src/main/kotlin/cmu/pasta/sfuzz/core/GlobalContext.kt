@@ -63,7 +63,21 @@ object GlobalContext {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
     context.state = ThreadState.Completed
-    scheduleNextOperation(true)
+    while (registeredThreads.any { it.value.state != ThreadState.Completed }) {
+      try {
+        scheduleNextOperation(true)
+      } catch (e: TargetTerminateException) {
+        // If deadlock detected let's try to unblock one thread and continue.
+        if (e.status == -1) {
+          for (thread in registeredThreads.values) {
+            if (thread.state == ThreadState.Paused) {
+              thread.state = ThreadState.Enabled
+              break
+            }
+          }
+        }
+      }
+    }
   }
 
   fun start() {
@@ -172,7 +186,9 @@ object GlobalContext {
   }
 
   fun threadCompleted(t: Thread) {
-    monitorEnter(t)
+    if (!errorFound) {
+      monitorEnter(t)
+    }
     objectNotifyAll(t)
     registeredThreads[t.id]?.state = ThreadState.Completed
     // We do not want to send notify all because
@@ -191,9 +207,24 @@ object GlobalContext {
         Thread.yield()
       }
       lockUnlockDone(t)
-      unlockImpl(t, t.id, false, false, true)
-      syncManager.synchronizationPoints.remove(System.identityHashCode(t))
-      scheduleNextOperation(false)
+      if (!errorFound) {
+        unlockImpl(t, t.id, false, false, true)
+        syncManager.synchronizationPoints.remove(System.identityHashCode(t))
+      }
+      try {
+        scheduleNextOperation(false)
+      } catch (e: TargetTerminateException) {
+        // If deadlock detected let's try to unblock one thread and continue.
+        if (e.status == -1) {
+          for (thread in registeredThreads.values) {
+            if (thread.state == ThreadState.Paused) {
+              thread.state = ThreadState.Running
+              thread.unblock()
+              break
+            }
+          }
+        }
+      }
     }
   }
 
@@ -375,7 +406,7 @@ object GlobalContext {
     // synchronized(lock) {
     //   lock.unlock();
     // }
-    while (!lockManager.lock(lock, t, true, false)) {
+    while (!lockManager.lock(lock, t, true, false) && !errorFound) {
       registeredThreads[t]?.state = ThreadState.Paused
 
       // We want to block current thread because we do
@@ -383,6 +414,10 @@ object GlobalContext {
       // us to pick which Thread to run next if multiple
       // threads hold the same lock.
       scheduleNextOperation(true)
+    }
+
+    if (errorFound) {
+      throw TargetTerminateException(-2)
     }
   }
 

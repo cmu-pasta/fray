@@ -32,7 +32,9 @@ class ThreadContext(val thread: Thread, val index: Int) {
   }
 
   fun unblock() {
-    sync.unblock()
+    if (sync.isBlocked) {
+      sync.unblock()
+    }
   }
 
   fun checkInterrupt() {

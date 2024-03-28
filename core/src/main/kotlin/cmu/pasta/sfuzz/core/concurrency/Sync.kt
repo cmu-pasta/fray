@@ -4,6 +4,7 @@ package cmu.pasta.sfuzz.core.concurrency
 // for signals.
 class Sync(val goal: Int) : Any() {
   private var count = 0
+  var isBlocked = false
 
   @Synchronized
   fun block() {
@@ -11,6 +12,7 @@ class Sync(val goal: Int) : Any() {
       count = 0
       return
     }
+    isBlocked = true
     // We don't need synchronized here because
     // it is already inside a synchronized method
     while (count < goal) {
@@ -21,6 +23,7 @@ class Sync(val goal: Int) : Any() {
         // to unblock this operation.
       }
     }
+    isBlocked = false
     // At this point no concurrency.
     count = 0
   }
@@ -28,9 +31,6 @@ class Sync(val goal: Int) : Any() {
   @Synchronized
   fun unblock() {
     count += 1
-    if (count > goal) {
-      println("??")
-    }
     assert(count <= goal)
     if (count == goal) {
       (this as Object).notify()
