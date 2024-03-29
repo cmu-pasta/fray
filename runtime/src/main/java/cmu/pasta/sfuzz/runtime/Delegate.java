@@ -169,5 +169,8 @@ public class Delegate {
     public boolean onThreadClearInterrupt(Boolean originValue, Thread t) {
         return originValue;
     }
+
+    public void onReportError(Throwable e) {
+    }
 }
 

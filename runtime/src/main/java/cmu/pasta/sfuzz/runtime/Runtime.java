@@ -235,4 +235,8 @@ public class Runtime {
     public static void onLatchCountDownDone(CountDownLatch latch) {
         DELEGATE.onLatchCountDownDone(latch);
     }
+
+    public static void onReportError(Throwable e) {
+        DELEGATE.onReportError(e);
+    }
 }

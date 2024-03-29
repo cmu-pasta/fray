@@ -7,14 +7,12 @@ import cmu.pasta.sfuzz.core.scheduler.Choice
 class ConsoleLogger : LoggerBase {
   override fun executionStart() {}
 
-  override fun newOperationScheduled(op: Operation, choice: Choice) {
-    println("choice: $choice")
-  }
+  override fun newOperationScheduled(op: Operation, choice: Choice) {}
 
   override fun executionDone(result: AnalysisResult) {}
 
   override fun applicationEvent(event: String) {
-    println("event: $event")
+    println(event)
   }
 
   override fun shutdown() {}

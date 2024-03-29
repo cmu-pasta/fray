@@ -31,9 +31,7 @@ class ThreadContext(val thread: Thread, val index: Int) {
   fun schedulable() = state == ThreadState.Enabled || state == ThreadState.Running
 
   fun unblock() {
-    if (sync.isBlocked) {
-      sync.unblock()
-    }
+    sync.unblock()
   }
 
   fun checkInterrupt() {

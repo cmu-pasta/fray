@@ -52,7 +52,7 @@ tasks.register<JavaExec>("runSCT") {
   val cp = properties["classpath"] as String? ?: ""
   val main = properties["mainClass"] as String? ?: ""
   classpath = classpath + files(cp)
-  args = listOf("cmu.pasta.sfuzz.benchmark.sctbench.cs.$main", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", "random", "--logger", "csv", "--iter", "1000")
+  args = listOf("cmu.pasta.sfuzz.benchmark.sctbench.cs.$main", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", "pos", "--logger", "csv", "--iter", "10000")
 }
 
 tasks.register<JavaExec>("runArithmeticProgBad") {

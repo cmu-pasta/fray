@@ -16,6 +16,8 @@ import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
@@ -57,6 +59,18 @@ object GlobalContext {
             }
           }
         }
+  }
+
+  fun reportError(e: Throwable) {
+    if (!errorFound) {
+      errorFound = true
+      val sw = StringWriter()
+      sw.append("Exception found: ${e}\n")
+      e.printStackTrace(PrintWriter(sw))
+      for (logger in loggers) {
+        logger.applicationEvent(sw.toString())
+      }
+    }
   }
 
   fun mainExit() {
@@ -118,10 +132,7 @@ object GlobalContext {
   }
 
   fun threadStart(t: Thread) {
-    t.setUncaughtExceptionHandler { t, e ->
-      errorFound = true
-      println("Err: $e")
-    }
+    t.setUncaughtExceptionHandler { t, e -> Runtime.onReportError(e) }
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size)
     syncManager.createWait(t, 1)
   }
@@ -187,27 +198,22 @@ object GlobalContext {
   }
 
   fun threadCompleted(t: Thread) {
-    try {
-
-      if (!errorFound) {
-        monitorEnter(t)
-      }
-      objectNotifyAll(t)
-      registeredThreads[t.id]?.state = ThreadState.Completed
-      lockManager.threadUnblockedDueToDeadlock(t)
-      // We do not want to send notify all because
-      // we don't have monitor lock here.
-      var size = 0
-      lockManager.getLockContext(t).wakingThreads.let {
-        for (thread in it) {
-          registeredThreads[thread]!!.state = ThreadState.Enabled
-        }
-        size = it.size
-      }
-      syncManager.createWait(t, size)
-    } catch (e: Throwable) {
-      e.printStackTrace()
+    if (!errorFound) {
+      monitorEnter(t)
     }
+    objectNotifyAll(t)
+    registeredThreads[t.id]?.state = ThreadState.Completed
+    lockManager.threadUnblockedDueToDeadlock(t)
+    // We do not want to send notify all because
+    // we don't have monitor lock here.
+    var size = 0
+    lockManager.getLockContext(t).wakingThreads.let {
+      for (thread in it) {
+        registeredThreads[thread]!!.state = ThreadState.Enabled
+      }
+      size = it.size
+    }
+    syncManager.createWait(t, size)
 
     executor.submit {
       while (t.isAlive) {
@@ -242,10 +248,13 @@ object GlobalContext {
     } else {
       context.pendingOperation = PausedOperation()
       context.state = ThreadState.Paused
-      checkDeadLock()
       lockManager.addWaitingThread(waitingObject, Thread.currentThread())
     }
     unlockImpl(lockObject, t, true, true, lockObject == waitingObject)
+    checkDeadlock {
+      assert(lockManager.lock(lockObject, t, false, true))
+      syncManager.removeWait(lockObject)
+    }
 
     // We need a daemon thread here because
     // `object.wait` release the monitor lock implicitly.
@@ -542,7 +551,7 @@ object GlobalContext {
       registeredThreads[t]?.pendingOperation = PausedOperation()
       registeredThreads[t]?.state = ThreadState.Paused
     }
-    checkDeadLock()
+    checkDeadlock {}
     executor.submit {
       while (registeredThreads[t]!!.thread.state == Thread.State.RUNNABLE) {
         Thread.yield()
@@ -594,12 +603,15 @@ object GlobalContext {
     }
   }
 
-  fun checkDeadLock() {
+  fun checkDeadlock(cleanUp: () -> Unit) {
     val deadLock = registeredThreads.values.toList().none { it.schedulable() }
     if (deadLock) {
       registeredThreads[Thread.currentThread().id]!!.state = ThreadState.Enabled
       lockManager.threadUnblockedDueToDeadlock(Thread.currentThread())
-      throw TargetTerminateException(-1)
+      cleanUp()
+      val e = TargetTerminateException(-1)
+      reportError(e)
+      throw e
     }
   }
 
@@ -627,8 +639,9 @@ object GlobalContext {
         return
       } else {
         // Deadlock detected
-        errorFound = true
-        throw TargetTerminateException(-1)
+        val e = TargetTerminateException(-1)
+        reportError(e)
+        throw e
       }
     }
     val nextThread = scheduler.scheduleNextOperation(enabledOperations)

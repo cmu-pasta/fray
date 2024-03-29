@@ -393,6 +393,12 @@ class RuntimeDelegate : Delegate() {
     skipFunctionEntered.set(skipFunctionEntered.get() - 1)
   }
 
+  override fun onReportError(e: Throwable) {
+    if (checkEntered()) return
+    GlobalContext.reportError(e)
+    entered.set(false)
+  }
+
   override fun start() {
     // For the first thread, it is not registered.
     // Therefor we cannot call `checkEntered` here.

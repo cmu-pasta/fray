@@ -1,5 +1,6 @@
 package cmu.pasta.sfuzz.core
 
+import cmu.pasta.sfuzz.core.logger.ConsoleLogger
 import cmu.pasta.sfuzz.core.runtime.AnalysisResult
 import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.Runtime
@@ -21,10 +22,12 @@ fun run(config: Configuration) {
   println("Report is available at: ${config.report}")
   prepareReportPath(config.report)
   GlobalContext.registerLogger(config.logger)
+  GlobalContext.registerLogger(ConsoleLogger())
   GlobalContext.scheduler = config.scheduler
   GlobalContext.config = config
   GlobalContext.bootstrap()
   for (i in 0 ..< config.iter) {
+    println("Starting iteration $i")
     try {
       Runtime.DELEGATE = RuntimeDelegate()
       Runtime.start()
@@ -40,6 +43,7 @@ fun run(config: Configuration) {
     } catch (e: InvocationTargetException) {
       GlobalContext.errorFound = true
       Runtime.onMainExit()
+      println(e.cause)
     }
     Runtime.DELEGATE = Delegate()
     GlobalContext.done(AnalysisResult.COMPLETE)

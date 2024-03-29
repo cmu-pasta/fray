@@ -14,6 +14,10 @@
 | CountDownLatch            | Yes |
 
 
+# Assumptions
+# Guarantees 
+# Advantages 
+
 # Thread Wait/Notify
 
 For thread wait and notify, we rely on the original `wait` to block a thread
