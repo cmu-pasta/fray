@@ -31,7 +31,9 @@ class POSScheduler(val rand: Random) : Scheduler {
     threadPriority.keys.removeIf {
       val pendingOp = it.pendingOperation
       val res =
-          if (it != next && pendingOp is RacingOperation && it in threads) {
+          if (it == next) {
+            true
+          } else if (pendingOp is RacingOperation && it in threads) {
             pendingOp.isRacing(next.pendingOperation)
           } else {
             false
