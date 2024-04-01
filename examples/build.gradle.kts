@@ -51,8 +51,9 @@ tasks.register<JavaExec>("replay") {
 tasks.register<JavaExec>("runSCT") {
   val cp = properties["classpath"] as String? ?: ""
   val main = properties["mainClass"] as String? ?: ""
+  val scheduler = properties["scheduler"] as String? ?: "pos"
   classpath = classpath + files(cp)
-  args = listOf("cmu.pasta.sfuzz.benchmark.sctbench.cs.$main", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", "pos", "--logger", "csv", "--iter", "10000")
+  args = listOf("cmu.pasta.sfuzz.benchmark.sctbench.cs.$main", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", scheduler, "--logger", "csv", "--iter", "10000")
 }
 
 tasks.register<JavaExec>("runArithmeticProgBad") {
