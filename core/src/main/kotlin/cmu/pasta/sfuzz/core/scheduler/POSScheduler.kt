@@ -30,11 +30,12 @@ class POSScheduler(val rand: Random) : Scheduler {
     val next = threads.minBy { threadPriority[it]!! }
     threadPriority.keys.removeIf {
       val pendingOp = it.pendingOperation
-      val res = if (it != next && pendingOp is RacingOperation && it in threads) {
-        pendingOp.isRacing(next.pendingOperation)
-      } else {
-        false
-      }
+      val res =
+          if (it != next && pendingOp is RacingOperation && it in threads) {
+            pendingOp.isRacing(next.pendingOperation)
+          } else {
+            false
+          }
       res
     }
     return next
