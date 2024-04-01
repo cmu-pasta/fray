@@ -34,6 +34,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = ObjectInstrumenter(cv)
     cv = SemaphoreInstrumenter(cv)
     cv = CountDownLatchInstrumenter(cv)
+    cv = MethodHandleNativesInstrumenter(cv)
     // MonitorInstrumenter should come second because ObjectInstrumenter will insert more
     // monitors.
     cv = MonitorInstrumenter(cv)

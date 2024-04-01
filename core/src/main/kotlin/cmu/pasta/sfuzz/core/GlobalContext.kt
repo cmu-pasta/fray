@@ -198,9 +198,7 @@ object GlobalContext {
   }
 
   fun threadCompleted(t: Thread) {
-    if (!errorFound) {
-      monitorEnter(t)
-    }
+    monitorEnter(t)
     objectNotifyAll(t)
     registeredThreads[t.id]?.state = ThreadState.Completed
     lockManager.threadUnblockedDueToDeadlock(t)
@@ -220,10 +218,8 @@ object GlobalContext {
         Thread.yield()
       }
       lockUnlockDone(t)
-      if (!errorFound) {
-        unlockImpl(t, t.id, false, false, true)
-        syncManager.synchronizationPoints.remove(System.identityHashCode(t))
-      }
+      unlockImpl(t, t.id, false, false, true)
+      syncManager.synchronizationPoints.remove(System.identityHashCode(t))
       scheduleNextOperationAndCheckDeadlock(false)
     }
   }
