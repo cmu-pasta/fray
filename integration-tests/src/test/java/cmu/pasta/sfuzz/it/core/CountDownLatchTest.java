@@ -22,4 +22,11 @@ public class CountDownLatchTest extends IntegrationTestRunner {
         String expected = "[0]: Test worker has finished\n";
         assertEquals(expected, runTest("testAwaitAfterCountDown"));
     }
+
+    @Test
+    public void testCountDownAwaitInterrupt() {
+        String expected = "[1]: Thread has interrupted\n" +
+                "[1]: Thread has finished\n";
+        assertEquals(expected, runTest("testCountDownAwaitInterrupt"));
+    }
 }

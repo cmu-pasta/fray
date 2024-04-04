@@ -564,18 +564,17 @@ object GlobalContext {
   }
 
   fun latchAwait(latch: CountDownLatch) {
-    val t = Thread.currentThread().id
     if (latchManager.await(latch, true)) {
       val t = Thread.currentThread().id
       registeredThreads[t]?.pendingOperation = PausedOperation()
       registeredThreads[t]?.state = ThreadState.Paused
-    }
-    checkDeadlock {}
-    executor.submit {
-      while (registeredThreads[t]!!.thread.state == Thread.State.RUNNABLE) {
-        Thread.yield()
+      checkDeadlock {}
+      executor.submit {
+        while (registeredThreads[t]!!.thread.state == Thread.State.RUNNABLE) {
+          Thread.yield()
+        }
+        scheduleNextOperationAndCheckDeadlock(false)
       }
-      scheduleNextOperationAndCheckDeadlock(false)
     }
   }
 
@@ -643,6 +642,7 @@ object GlobalContext {
             currentThreadId == Thread.currentThread().id ||
             currentThread.state == ThreadState.Enabled ||
             currentThread.state == ThreadState.Completed)
+    assert(registeredThreads.none { it.value.state == ThreadState.Running })
     val enabledOperations =
         registeredThreads.values
             .toList()
