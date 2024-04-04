@@ -20,14 +20,37 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
     }
     if ((name == "acquire" || name == "acquireUninterruptibly") && descriptor == "()V") {
       val eMv =
-          MethodEnterVisitor(mv, Runtime::onSemaphoreAcquire, access, name, descriptor, true, true)
+          if (name == "acquire") {
+            MethodEnterVisitor(
+                mv, Runtime::onSemaphoreAcquire, access, name, descriptor, true, true)
+          } else {
+            MethodEnterVisitor(
+                mv,
+                Runtime::onSemaphoreAcquireUninterruptibly,
+                access,
+                name,
+                descriptor,
+                true,
+                true)
+          }
       return MethodExitVisitor(
           eMv, Runtime::onSemaphoreAcquireDone, access, name, descriptor, false, false, true)
     }
     if ((name == "acquire" || name == "acquireUninterruptibly") && descriptor == "(I)V") {
       val eMv =
-          MethodEnterVisitor(
-              mv, Runtime::onSemaphoreAcquirePermits, access, name, descriptor, true, true)
+          if (name == "acquire") {
+            MethodEnterVisitor(
+                mv, Runtime::onSemaphoreAcquirePermits, access, name, descriptor, true, true)
+          } else {
+            MethodEnterVisitor(
+                mv,
+                Runtime::onSemaphoreAcquirePermitsUninterruptibly,
+                access,
+                name,
+                descriptor,
+                true,
+                true)
+          }
       return MethodExitVisitor(
           eMv, Runtime::onSemaphoreAcquireDone, access, name, descriptor, false, false, true)
     }

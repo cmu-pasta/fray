@@ -188,6 +188,10 @@ public class Runtime {
         DELEGATE.onSemaphoreAcquire(sem, 1);
     }
 
+    public static void onSemaphoreAcquireUninterruptibly(Semaphore sem) {
+        DELEGATE.onSemaphoreAcquireUninterruptibly(sem, 1);
+    }
+
     public static void onSemaphoreAcquireDone() {
         DELEGATE.onSemaphoreAcquireDone();
     }
@@ -238,5 +242,13 @@ public class Runtime {
 
     public static void onReportError(Throwable e) {
         DELEGATE.onReportError(e);
+    }
+
+    public static void onSemaphoreAcquirePermitsUninterruptibly(Semaphore sem, int permits) {
+        DELEGATE.onSemaphoreAcquireUninterruptibly(sem, permits);
+    }
+
+    public static void onLockLockInterruptibly(ReentrantLock l) {
+        DELEGATE.onLockLockInterruptibly(l);
     }
 }

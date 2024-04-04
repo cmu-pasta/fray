@@ -7,7 +7,8 @@ import cmu.pasta.sfuzz.core.concurrency.operations.ThreadResumeOperation
 class ReentrantLockContext : LockContext {
   private var lockHolder: Long? = null
   private val lockTimes = mutableMapOf<Long, Int>()
-  private val lockWaiters: MutableList<Long> = mutableListOf()
+  // Mapping from thread id to whether the thread is interruptible.
+  private val lockWaiters = mutableMapOf<Long, Boolean>()
   override val wakingThreads: MutableSet<Long> = mutableSetOf()
 
   override fun addWakingThread(lockObject: Any, t: Thread) {
@@ -23,7 +24,8 @@ class ReentrantLockContext : LockContext {
       lock: Any,
       tid: Long,
       shouldBlock: Boolean,
-      lockBecauseOfWait: Boolean
+      lockBecauseOfWait: Boolean,
+      canInterrupt: Boolean,
   ): Boolean {
     if (lockHolder == null || lockHolder == tid) {
       lockHolder = tid
@@ -37,8 +39,13 @@ class ReentrantLockContext : LockContext {
         GlobalContext.registeredThreads[thread]!!.state = ThreadState.Paused
       }
       return true
-    } else if (shouldBlock) {
-      lockWaiters.add(tid)
+    } else {
+      if (canInterrupt) {
+        GlobalContext.registeredThreads[tid]?.checkInterrupt()
+      }
+      if (shouldBlock) {
+        lockWaiters[tid] = canInterrupt
+      }
     }
     return false
   }
@@ -58,7 +65,7 @@ class ReentrantLockContext : LockContext {
         GlobalContext.registeredThreads[thread]!!.pendingOperation = ThreadResumeOperation()
         GlobalContext.registeredThreads[thread]!!.state = ThreadState.Enabled
       }
-      for (thread in lockWaiters) {
+      for (thread in lockWaiters.keys) {
         GlobalContext.registeredThreads[thread]!!.pendingOperation = ThreadResumeOperation()
         GlobalContext.registeredThreads[thread]!!.state = ThreadState.Enabled
       }
@@ -66,5 +73,13 @@ class ReentrantLockContext : LockContext {
       return true
     }
     return false
+  }
+
+  override fun interrupt(tid: Long) {
+    if (lockWaiters[tid] == true) {
+      GlobalContext.registeredThreads[tid]!!.pendingOperation = ThreadResumeOperation()
+      GlobalContext.registeredThreads[tid]!!.state = ThreadState.Enabled
+      lockWaiters.remove(tid)
+    }
   }
 }

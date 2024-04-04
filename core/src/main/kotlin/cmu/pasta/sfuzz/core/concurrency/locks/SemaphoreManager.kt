@@ -16,8 +16,8 @@ class SemaphoreManager {
     lockContextManager.addContext(sem, context)
   }
 
-  fun acquire(sem: Semaphore, permits: Int, shouldBlock: Boolean): Boolean {
-    return lockContextManager.getLockContext(sem).acquire(permits, shouldBlock)
+  fun acquire(sem: Semaphore, permits: Int, shouldBlock: Boolean, canInterrupt: Boolean): Boolean {
+    return lockContextManager.getLockContext(sem).acquire(permits, shouldBlock, canInterrupt)
   }
 
   fun release(sem: Semaphore, permits: Int) {

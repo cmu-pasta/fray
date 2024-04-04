@@ -15,10 +15,13 @@ class StampedLockContext : LockContext {
       lock: Any,
       tid: Long,
       shouldBlock: Boolean,
-      lockBecauseOfWait: Boolean
+      lockBecauseOfWait: Boolean,
+      canInterrupt: Boolean
   ): Boolean {
     TODO("Not yet implemented")
   }
+
+  override fun interrupt(tid: Long) {}
 
   override fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean): Boolean {
     TODO("Not yet implemented")

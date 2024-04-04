@@ -101,13 +101,26 @@ class RuntimeDelegate : Delegate() {
     entered.set(false)
   }
 
+  override fun onLockLockInterruptibly(l: ReentrantLock) {
+    if (checkEntered()) {
+      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      return
+    }
+    try {
+      GlobalContext.lockLock(l, true)
+    } finally {
+      entered.set(false)
+      skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    }
+  }
+
   override fun onLockLock(l: ReentrantLock) {
     if (checkEntered()) {
       skipFunctionEntered.set(1 + skipFunctionEntered.get())
       return
     }
     try {
-      GlobalContext.lockLock(l)
+      GlobalContext.lockLock(l, false)
     } finally {
       entered.set(false)
       skipFunctionEntered.set(skipFunctionEntered.get() + 1)
@@ -308,7 +321,17 @@ class RuntimeDelegate : Delegate() {
       skipFunctionEntered.set(1 + skipFunctionEntered.get())
       return
     }
-    GlobalContext.semaphoreAcquire(sem, permits, true)
+    GlobalContext.semaphoreAcquire(sem, permits, true, true)
+    entered.set(false)
+    skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+  }
+
+  override fun onSemaphoreAcquireUninterruptibly(sem: Semaphore, permits: Int) {
+    if (checkEntered()) {
+      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      return
+    }
+    GlobalContext.semaphoreAcquire(sem, permits, true, false)
     entered.set(false)
     skipFunctionEntered.set(skipFunctionEntered.get() + 1)
   }

@@ -35,8 +35,14 @@ class LockManager {
   }
 
   /** Return true if [lock] is acquired by the current thread. */
-  fun lock(lock: Any, tid: Long, shouldBlock: Boolean, lockBecauseOfWait: Boolean): Boolean {
-    return getLockContext(lock).lock(lock, tid, shouldBlock, lockBecauseOfWait)
+  fun lock(
+      lock: Any,
+      tid: Long,
+      shouldBlock: Boolean,
+      lockBecauseOfWait: Boolean,
+      canInterrupt: Boolean
+  ): Boolean {
+    return getLockContext(lock).lock(lock, tid, shouldBlock, lockBecauseOfWait, canInterrupt)
   }
 
   fun addWakingThread(lockObject: Any, t: Thread) {

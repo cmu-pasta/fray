@@ -10,9 +10,10 @@ class ReentrantReadWriteLockContext : LockContext {
   private var writeLockHolder: Long? = null
   private val readLockTimes = mutableMapOf<Long, Int>()
   private val writeLockTimes = mutableMapOf<Long, Int>()
-  private val readLockWaiters = mutableSetOf<Long>()
-  private val writeLockWaiters = mutableSetOf<Long>()
   override val wakingThreads: MutableSet<Long> = mutableSetOf()
+
+  private val readLockWaiters = mutableMapOf<Long, Boolean>()
+  private val writeLockWaiters = mutableMapOf<Long, Boolean>()
 
   override fun addWakingThread(lockObject: Any, t: Thread) {
     wakingThreads.add(t.id)
@@ -34,12 +35,26 @@ class ReentrantReadWriteLockContext : LockContext {
       lock: Any,
       tid: Long,
       shouldBlock: Boolean,
-      lockBecauseOfWait: Boolean
+      lockBecauseOfWait: Boolean,
+      canInterrupt: Boolean,
   ): Boolean {
     return if (lock is ReadLock) {
-      readLockLock(tid, shouldBlock, lockBecauseOfWait)
+      readLockLock(tid, shouldBlock, lockBecauseOfWait, canInterrupt)
     } else {
-      writeLockLock(tid, shouldBlock, lockBecauseOfWait)
+      writeLockLock(tid, shouldBlock, lockBecauseOfWait, canInterrupt)
+    }
+  }
+
+  override fun interrupt(tid: Long) {
+    if (writeLockWaiters[tid] == true) {
+      GlobalContext.registeredThreads[tid]!!.pendingOperation = ThreadResumeOperation()
+      GlobalContext.registeredThreads[tid]!!.state = ThreadState.Enabled
+      writeLockWaiters.remove(tid)
+    }
+    if (readLockWaiters[tid] == true) {
+      GlobalContext.registeredThreads[tid]!!.pendingOperation = ThreadResumeOperation()
+      GlobalContext.registeredThreads[tid]!!.state = ThreadState.Enabled
+      readLockWaiters.remove(tid)
     }
   }
 
@@ -51,11 +66,19 @@ class ReentrantReadWriteLockContext : LockContext {
     }
   }
 
-  fun readLockLock(tid: Long, shouldBlock: Boolean, lockBecauseOfWait: Boolean): Boolean {
+  fun readLockLock(
+      tid: Long,
+      shouldBlock: Boolean,
+      lockBecauseOfWait: Boolean,
+      canInterrupt: Boolean
+  ): Boolean {
     assert(!lockBecauseOfWait) // Read lock does not have `Condition`
     if (writeLockHolder != null && writeLockHolder != tid) {
+      if (canInterrupt) {
+        GlobalContext.registeredThreads[tid]?.checkInterrupt()
+      }
       if (shouldBlock) {
-        readLockWaiters.add(tid)
+        readLockWaiters[tid] = canInterrupt
       }
       return false
     }
@@ -64,10 +87,18 @@ class ReentrantReadWriteLockContext : LockContext {
     return true
   }
 
-  fun writeLockLock(tid: Long, shouldBlock: Boolean, lockBecauseOfWait: Boolean): Boolean {
+  fun writeLockLock(
+      tid: Long,
+      shouldBlock: Boolean,
+      lockBecauseOfWait: Boolean,
+      canInterrupt: Boolean
+  ): Boolean {
     if ((writeLockHolder != null && writeLockHolder != tid) || readLockHolder.isNotEmpty()) {
+      if (canInterrupt) {
+        GlobalContext.registeredThreads[tid]?.checkInterrupt()
+      }
       if (shouldBlock) {
-        writeLockWaiters.add(tid)
+        writeLockWaiters[tid] = canInterrupt
       }
       return false
     }
@@ -113,7 +144,7 @@ class ReentrantReadWriteLockContext : LockContext {
   }
 
   fun unlockWriteWaiters() {
-    for (writeLockWaiter in writeLockWaiters) {
+    for (writeLockWaiter in writeLockWaiters.keys) {
       GlobalContext.registeredThreads[writeLockWaiter]!!.pendingOperation = ThreadResumeOperation()
       GlobalContext.registeredThreads[writeLockWaiter]!!.state = ThreadState.Enabled
     }
@@ -125,7 +156,7 @@ class ReentrantReadWriteLockContext : LockContext {
   }
 
   fun unlockReadWaiters() {
-    for (readLockWaiter in readLockWaiters) {
+    for (readLockWaiter in readLockWaiters.keys) {
       GlobalContext.registeredThreads[readLockWaiter]!!.pendingOperation = ThreadResumeOperation()
       GlobalContext.registeredThreads[readLockWaiter]!!.state = ThreadState.Enabled
     }

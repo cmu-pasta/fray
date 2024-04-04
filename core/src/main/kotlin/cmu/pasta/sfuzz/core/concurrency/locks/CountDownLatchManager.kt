@@ -11,8 +11,8 @@ class CountDownLatchManager {
     }
   }
 
-  fun await(latch: CountDownLatch): Boolean {
-    return latchStore.getLockContext(latch).await()
+  fun await(latch: CountDownLatch, canInterrupt: Boolean): Boolean {
+    return latchStore.getLockContext(latch).await(canInterrupt)
   }
 
   fun countDown(latch: CountDownLatch) {

@@ -248,7 +248,7 @@ object GlobalContext {
     }
     unlockImpl(lockObject, t, true, true, lockObject == waitingObject)
     checkDeadlock {
-      assert(lockManager.lock(lockObject, t, false, true))
+      assert(lockManager.lock(lockObject, t, false, true, false))
       syncManager.removeWait(lockObject)
     }
 
@@ -293,13 +293,15 @@ object GlobalContext {
     }
     lockManager.threadWaitsFor.remove(t.id)
     // If a thread is enabled, the lock must be available.
-    assert(lockManager.lock(lockObject, t.id, false, true))
+    assert(lockManager.lock(lockObject, t.id, false, true, false))
     context.checkInterrupt()
   }
 
   fun threadInterrupt(t: Thread) {
     val context = registeredThreads[t.id]!!
     context.interruptSignaled = true
+
+    // A thread is interrupted during wait/await.
     if (context.blockedBy != null) {
       val lock =
           if (context.blockedBy is Condition) {
@@ -309,6 +311,8 @@ object GlobalContext {
           }
       lockManager.threadInterruptDuringObjectWait(context.blockedBy!!, lock, context)
     }
+
+    // A thread is interrupted during lockInterruptibly.
   }
 
   fun threadClearInterrupt(t: Thread): Boolean {
@@ -377,17 +381,18 @@ object GlobalContext {
   fun reentrantLockTrylock(lock: Any) {
     val t = Thread.currentThread().id
     val objId = System.identityHashCode(lock)
-    registeredThreads[t]?.pendingOperation = ReentrantLockLockOperation(objId)
+    registeredThreads[t]?.pendingOperation = LockLockOperation(objId)
     registeredThreads[t]?.state = ThreadState.Enabled
     scheduleNextOperation(true)
-    lockManager.lock(lock, t, false, false)
+    lockManager.lock(lock, t, false, false, false)
   }
 
-  fun lockImpl(lock: Any, isMonitorLock: Boolean) {
+  fun lockImpl(lock: Any, isMonitorLock: Boolean, canInterrupt: Boolean) {
     val t = Thread.currentThread().id
     val objId = System.identityHashCode(lock)
-    registeredThreads[t]?.pendingOperation = ReentrantLockLockOperation(objId)
-    registeredThreads[t]?.state = ThreadState.Enabled
+    val context = registeredThreads[t]!!
+    context.pendingOperation = LockLockOperation(objId)
+    context.state = ThreadState.Enabled
     scheduleNextOperation(true)
 
     /**
@@ -407,23 +412,26 @@ object GlobalContext {
     // synchronized(lock) {
     //   lock.unlock();
     // }
-    while (!lockManager.lock(lock, t, true, false)) {
-      registeredThreads[t]?.state = ThreadState.Paused
+    while (!lockManager.lock(lock, t, true, false, canInterrupt)) {
+      context.state = ThreadState.Paused
 
       // We want to block current thread because we do
       // not want to rely on ReentrantLock. This allows
       // us to pick which Thread to run next if multiple
       // threads hold the same lock.
       scheduleNextOperation(true)
+      if (canInterrupt) {
+        context.checkInterrupt()
+      }
     }
   }
 
   fun monitorEnter(lock: Any) {
-    lockImpl(lock, true)
+    lockImpl(lock, true, false)
   }
 
-  fun lockLock(lock: Any) {
-    lockImpl(lock, false)
+  fun lockLock(lock: Any, canInterrupt: Boolean) {
+    lockImpl(lock, false, canInterrupt)
   }
 
   fun reentrantReadWriteLockInit(readLock: ReadLock, writeLock: WriteLock) {
@@ -500,8 +508,23 @@ object GlobalContext {
     semaphoreManager.init(sem)
   }
 
-  fun semaphoreAcquire(sem: Semaphore, permits: Int, shouldBlock: Boolean): Boolean {
-    return semaphoreManager.acquire(sem, permits, shouldBlock)
+  fun semaphoreAcquire(sem: Semaphore, permits: Int, shouldBlock: Boolean, canInterrupt: Boolean) {
+    val t = Thread.currentThread().id
+    val context = registeredThreads[t]!!
+    val objId = System.identityHashCode(sem)
+    context.pendingOperation = LockLockOperation(objId)
+    context.state = ThreadState.Enabled
+    scheduleNextOperation(true)
+
+    while (!semaphoreManager.acquire(sem, permits, true, canInterrupt)) {
+      context.state = ThreadState.Paused
+
+      scheduleNextOperation(true)
+      if (canInterrupt) {
+        context.checkInterrupt()
+      }
+    }
+    semaphoreManager.acquire(sem, permits, shouldBlock, canInterrupt)
   }
 
   fun semaphoreRelease(sem: Semaphore, permits: Int) {
@@ -542,7 +565,7 @@ object GlobalContext {
 
   fun latchAwait(latch: CountDownLatch) {
     val t = Thread.currentThread().id
-    if (latchManager.await(latch)) {
+    if (latchManager.await(latch, true)) {
       val t = Thread.currentThread().id
       registeredThreads[t]?.pendingOperation = PausedOperation()
       registeredThreads[t]?.state = ThreadState.Paused

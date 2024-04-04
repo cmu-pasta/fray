@@ -37,6 +37,8 @@ public class Delegate {
 
     public void onLockLock(ReentrantLock l) {
     }
+    public void onLockLockInterruptibly(ReentrantLock l) {
+    }
 
     public void onLockLockDone(ReentrantLock l) {
     }
@@ -131,6 +133,9 @@ public class Delegate {
     }
 
     public void onSemaphoreAcquire(Semaphore sem, int permits) {
+    }
+
+    public void onSemaphoreAcquireUninterruptibly(Semaphore sem, int permits) {
     }
 
     public void onSemaphoreAcquireDone() {

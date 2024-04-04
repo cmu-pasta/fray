@@ -28,4 +28,25 @@ public class SemaphoreTest extends IntegrationTestRunner {
                 "[0]: count: 0\n";
         assertEquals(event, runTest("testSemaphore"));
     }
+
+    @Test
+    public void testInterruptBeforeAcquire() {
+        String event = "[1]: Starting A\n" +
+                "[1]: A is waiting for a permit.\n" +
+                "[1]: java.lang.InterruptedException\n" +
+                "[1]: A releases the permit.\n" +
+                "[0]: count: 0\n";
+        String s = runTest("testInterruptBeforeAcquire");
+        assertEquals(event, s);
+    }
+
+    @Test
+    public void testInterruptAfterAcquire() {
+        String event = "[1]: Thread is waiting for a permit.\n" +
+                "[0]: Interrupting the thread.\n" +
+                "[1]: java.lang.InterruptedException\n" +
+                "[1]: Thread exits.\n";
+        String s = runTest("testInterruptAfterAcquire");
+        assertEquals(event, s);
+    }
 }
