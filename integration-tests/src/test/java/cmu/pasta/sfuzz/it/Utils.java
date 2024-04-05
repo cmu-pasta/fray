@@ -1,4 +1,4 @@
-package example;
+package cmu.pasta.sfuzz.it;
 
 import cmu.pasta.sfuzz.core.GlobalContext;
 

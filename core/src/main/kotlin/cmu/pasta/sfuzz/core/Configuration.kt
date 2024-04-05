@@ -85,10 +85,19 @@ class ConfigurationCommand : CliktCommand() {
   override fun run() {}
 
   fun toConfiguration(): Configuration {
+    val exec = {
+      val clazz = Class.forName(clazz)
+      if (targetArgs.isEmpty() && method != "main") {
+        val m = clazz.getMethod(method)
+        m.invoke(null)
+      } else {
+        val m = clazz.getMethod(method, Array<String>::class.java)
+        m.invoke(null, targetArgs.split(" ").toTypedArray())
+      }
+      Unit
+    }
     return Configuration(
-        clazz,
-        method,
-        targetArgs,
+        exec,
         report,
         iter,
         scheduler!!.getScheduler(),
@@ -99,9 +108,7 @@ class ConfigurationCommand : CliktCommand() {
 }
 
 data class Configuration(
-    val clazz: String,
-    val method: String,
-    val targetArgs: String,
+    val exec: () -> Unit,
     val report: String,
     val iter: Int,
     val scheduler: Scheduler,

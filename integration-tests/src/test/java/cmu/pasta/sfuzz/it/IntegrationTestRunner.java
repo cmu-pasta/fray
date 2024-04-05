@@ -7,6 +7,8 @@ import cmu.pasta.sfuzz.core.scheduler.FifoScheduler;
 import cmu.pasta.sfuzz.core.scheduler.ReplayScheduler;
 import cmu.pasta.sfuzz.core.scheduler.Schedule;
 import cmu.pasta.sfuzz.core.scheduler.Scheduler;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,37 +18,35 @@ import java.io.InputStreamReader;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class IntegrationTestRunner {
-
-    public String runTest(String method) {
-        return runTest(method, new FifoScheduler());
+    public String runTest(Function0<Unit> exec) {
+        return runTest(exec, new FifoScheduler());
     }
 
-    public String runTest(String method, Scheduler scheduler) {
+    public String runTest(Function0<Unit> exec, Scheduler scheduler) {
         String testName = this.getClass().getSimpleName();
         EventLogger logger = new EventLogger();
         GlobalContext.INSTANCE.getLoggers().add(logger);
         Configuration config = new Configuration(
-                "example." + testName,
-                method,
-                "",
+                exec,
                 "/tmp/report",
                 1,
                 scheduler,
                 true,
                 new JsonLogger("/tmp/report", true)
         );
-        MainKt.run(config);
+        TestRunner runner = new TestRunner(config);
+        runner.run();
         return logger.sb.toString();
     }
 
-    public void runTest(String methodName, String testCase) {
-        String testName = this.getClass().getSimpleName();
-        String expectedFile = "expected/" + testName + "_" + testCase + ".txt";
-        String scheduleFile = "schedules/" + testName + "_" + testCase + ".json";
-        String expected = getResourceAsString(expectedFile);
-        ReplayScheduler scheduler = new ReplayScheduler(Schedule.Companion.fromString(getResourceAsString(scheduleFile), true));
-        assertEquals(expected, runTest(methodName, scheduler));
-    }
+//    public void runTest(String methodName, String testCase) {
+//        String testName = this.getClass().getSimpleName();
+//        String expectedFile = "expected/" + testName + "_" + testCase + ".txt";
+//        String scheduleFile = "schedules/" + testName + "_" + testCase + ".json";
+//        String expected = getResourceAsString(expectedFile);
+//        ReplayScheduler scheduler = new ReplayScheduler(Schedule.Companion.fromString(getResourceAsString(scheduleFile), true));
+//        assertEquals(expected, runTest(methodName, scheduler));
+//    }
 
     public String getResourceAsString(String path) {
         try(InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path)) {

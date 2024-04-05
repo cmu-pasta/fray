@@ -31,7 +31,8 @@ class ApplicationCodeTransformer : ClassFileTransformer {
         dotClassName.startsWith("worker.org.gradle.") ||
         dotClassName.startsWith("com.github.ajalt.clikt") ||
         (dotClassName.startsWith("cmu.pasta.sfuzz") &&
-            !dotClassName.startsWith("cmu.pasta.sfuzz.benchmark"))) {
+            !dotClassName.startsWith("cmu.pasta.sfuzz.benchmark") &&
+            !dotClassName.startsWith("cmu.pasta.sfuzz.it"))) {
       // This is likely a JDK class, so skip transformation
       return classfileBuffer
     }
