@@ -412,8 +412,11 @@ class RuntimeDelegate : Delegate() {
     skipFunctionEntered.set(skipFunctionEntered.get() + 1)
   }
 
-  override fun onLatchCountDownDone(latch: CountDownLatch?) {
+  override fun onLatchCountDownDone(latch: CountDownLatch) {
     skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    if (checkEntered()) return
+    GlobalContext.latchCountDownDone(latch)
+    entered.set(false)
   }
 
   override fun onReportError(e: Throwable) {

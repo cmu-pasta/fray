@@ -582,12 +582,20 @@ object GlobalContext {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
     if (context.state != ThreadState.Running) {
+      syncManager.signal(latch)
       context.block()
     }
   }
 
   fun latchCountDown(latch: CountDownLatch) {
-    latchManager.countDown(latch)
+    val unblockedThreads = latchManager.countDown(latch)
+    if (unblockedThreads > 0) {
+      syncManager.createWait(latch, unblockedThreads)
+    }
+  }
+
+  fun latchCountDownDone(latch: CountDownLatch) {
+    syncManager.wait(latch)
   }
 
   fun checkErrorAndExit() {
