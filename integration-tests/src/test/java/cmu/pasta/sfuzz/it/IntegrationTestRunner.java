@@ -2,6 +2,7 @@ package cmu.pasta.sfuzz.it;
 
 
 import cmu.pasta.sfuzz.core.*;
+import cmu.pasta.sfuzz.core.logger.CsvLogger;
 import cmu.pasta.sfuzz.core.logger.JsonLogger;
 import cmu.pasta.sfuzz.core.scheduler.FifoScheduler;
 import cmu.pasta.sfuzz.core.scheduler.ReplayScheduler;
@@ -32,7 +33,7 @@ public class IntegrationTestRunner {
                 iter,
                 scheduler,
                 true,
-                new JsonLogger("/tmp/report", true)
+                new CsvLogger("/tmp/report", false)
         );
         TestRunner runner = new TestRunner(config);
         runner.run();

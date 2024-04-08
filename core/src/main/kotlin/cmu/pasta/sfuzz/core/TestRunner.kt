@@ -37,10 +37,10 @@ class TestRunner(val config: Configuration) {
         Runtime.start()
         config.exec()
         Runtime.onMainExit()
-      } catch (e: InvocationTargetException) {
+      } catch (e: Throwable) {
         GlobalContext.errorFound = true
         Runtime.onMainExit()
-        println(e.cause)
+        GlobalContext.log("Error found: $e")
       }
       Runtime.DELEGATE = Delegate()
       GlobalContext.done(AnalysisResult.COMPLETE)

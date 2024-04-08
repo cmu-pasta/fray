@@ -1,5 +1,6 @@
 package cmu.pasta.sfuzz.runtime;
 
+import java.lang.invoke.VarHandle;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
@@ -255,4 +256,5 @@ public class Runtime {
     public static void onUnsafeWriteVolatile(Object o, long offset) {
         DELEGATE.onUnsafeWriteVolatile(o, offset);
     }
+
 }

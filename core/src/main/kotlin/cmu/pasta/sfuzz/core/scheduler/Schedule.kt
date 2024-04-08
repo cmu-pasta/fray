@@ -6,7 +6,7 @@ import kotlinx.serialization.json.Json
 @Serializable
 data class Schedule(val choices: MutableList<Choice>, val fullSchedule: Boolean) {
   companion object {
-    fun fromString(schedule: String, isJson: Boolean): Schedule {
+    fun fromString(schedule: String, isJson: Boolean, fullSchedule: Boolean): Schedule {
       if (isJson) {
         return Json.decodeFromString<Schedule>(schedule)
       }
@@ -21,7 +21,7 @@ data class Schedule(val choices: MutableList<Choice>, val fullSchedule: Boolean)
         val parts = line.split(",")
         choices.add(Choice(parts[0].toInt(), parts[1].toInt(), parts[2].toInt()))
       }
-      return Schedule(choices, false)
+      return Schedule(choices, fullSchedule)
     }
   }
 }

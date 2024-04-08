@@ -43,7 +43,7 @@ class Replay : ScheduleAlgorithm("replay") {
   val path by option().file().required()
 
   override fun getScheduler(): Scheduler {
-    return ReplayScheduler(Schedule.fromString(path.readText(), path.extension == "json"))
+    return ReplayScheduler(Schedule.fromString(path.readText(), path.extension == "json", false))
   }
 }
 

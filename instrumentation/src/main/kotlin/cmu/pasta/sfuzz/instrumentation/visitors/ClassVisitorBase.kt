@@ -7,6 +7,7 @@ import org.objectweb.asm.Opcodes.ASM9
 open class ClassVisitorBase(cv: ClassVisitor, vararg classNames: String) : ClassVisitor(ASM9, cv) {
   var shouldInstrument = false
   var classNames = mutableSetOf<String>()
+  var className = ""
 
   init {
     classNames.forEach { this.classNames.add(it.replace(".", "/")) }
@@ -15,7 +16,7 @@ open class ClassVisitorBase(cv: ClassVisitor, vararg classNames: String) : Class
   override fun visit(
       version: Int,
       access: Int,
-      name: String?,
+      name: String,
       signature: String?,
       superName: String?,
       interfaces: Array<out String>?
@@ -23,6 +24,7 @@ open class ClassVisitorBase(cv: ClassVisitor, vararg classNames: String) : Class
     if (classNames.contains(name)) {
       shouldInstrument = true
     }
+    className = name
     super.visit(version, access, name, signature, superName, interfaces)
   }
 

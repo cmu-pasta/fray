@@ -4,18 +4,20 @@ import cmu.pasta.sfuzz.core.scheduler.POSScheduler;
 import cmu.pasta.sfuzz.it.IntegrationTestRunner;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ConcurrentLinkedDequeTest extends IntegrationTestRunner {
     public static int t1Value = 0;
     public static int t2Value = 0;
 
-//    @Test
-    void testLinearizedExecution() {
-        runTest(() -> {
+    @Test
+    void testLinearizedExecution() throws IOException {
+        String res = runTest(() -> {
             try {
                 testLinearizedExecutionImpl();
             } catch (InterruptedException e) {
@@ -23,6 +25,7 @@ public class ConcurrentLinkedDequeTest extends IntegrationTestRunner {
             }
             return null;
         }, new POSScheduler(new Random()), 10000);
+        assertTrue(res.contains("Error found"));
     }
 
     void testLinearizedExecutionImpl() throws InterruptedException {

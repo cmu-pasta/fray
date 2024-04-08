@@ -16,8 +16,10 @@ import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
+import java.io.ObjectStreamField
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.lang.invoke.VarHandle
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
@@ -647,51 +649,55 @@ object GlobalContext {
   }
 
   fun scheduleNextOperation(shouldBlockCurrentThread: Boolean) {
-    // Our current design makes sure that reschedule is only called
-    // by scheduled thread.
-    val currentThread = registeredThreads[currentThreadId]!!
-    assert(
-        Thread.currentThread() is SFuzzThread ||
-            currentThreadId == Thread.currentThread().id ||
-            currentThread.state == ThreadState.Enabled ||
-            currentThread.state == ThreadState.Completed)
-    assert(registeredThreads.none { it.value.state == ThreadState.Running })
-    val enabledOperations =
-        registeredThreads.values
-            .toList()
-            .filter { it.state == ThreadState.Enabled }
-            .sortedBy { it.thread.id }
+    try {
+      // Our current design makes sure that reschedule is only called
+      // by scheduled thread.
+      val currentThread = registeredThreads[currentThreadId]!!
+      assert(
+          Thread.currentThread() is SFuzzThread ||
+              currentThreadId == Thread.currentThread().id ||
+              currentThread.state == ThreadState.Enabled ||
+              currentThread.state == ThreadState.Completed)
+      assert(registeredThreads.none { it.value.state == ThreadState.Running })
+      val enabledOperations =
+          registeredThreads.values
+              .toList()
+              .filter { it.state == ThreadState.Enabled }
+              .sortedBy { it.thread.id }
 
-    if (enabledOperations.isEmpty()) {
-      if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
-        // We are done here, we should go back to the main thread.
-        if (currentThreadId != mainThreadId) {
-          registeredThreads[mainThreadId]!!.unblock()
+      if (enabledOperations.isEmpty()) {
+        if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
+          // We are done here, we should go back to the main thread.
+          if (currentThreadId != mainThreadId) {
+            registeredThreads[mainThreadId]!!.unblock()
+          }
+          return
+        } else {
+          // Deadlock detected
+          val e = TargetTerminateException(-1)
+          reportError(e)
+          throw e
         }
-        return
-      } else {
-        // Deadlock detected
-        val e = TargetTerminateException(-1)
-        reportError(e)
-        throw e
       }
-    }
-    val nextThread = scheduler.scheduleNextOperation(enabledOperations)
-    val index = enabledOperations.indexOf(nextThread)
-    currentThreadId = nextThread.thread.id
+      val nextThread = scheduler.scheduleNextOperation(enabledOperations)
+      val index = enabledOperations.indexOf(nextThread)
+      currentThreadId = nextThread.thread.id
 
-    if (enabledOperations.size > 1 || config!!.fullSchedule) {
-      loggers.forEach {
-        it.newOperationScheduled(
-            nextThread.pendingOperation, Choice(index, nextThread.index, enabledOperations.size))
+      if (enabledOperations.size > 1 || config!!.fullSchedule) {
+        loggers.forEach {
+          it.newOperationScheduled(
+              nextThread.pendingOperation, Choice(index, nextThread.index, enabledOperations.size))
+        }
       }
-    }
-    nextThread.state = ThreadState.Running
-    if (currentThread != nextThread || currentThread.blockedBy != null) {
-      unblockThread(nextThread)
-    }
-    if (currentThread != nextThread && shouldBlockCurrentThread) {
-      currentThread.block()
+      nextThread.state = ThreadState.Running
+      if (currentThread != nextThread || currentThread.blockedBy != null) {
+        unblockThread(nextThread)
+      }
+      if (currentThread != nextThread && shouldBlockCurrentThread) {
+        currentThread.block()
+      }
+    }  catch (e: Throwable) {
+      throw e
     }
   }
 

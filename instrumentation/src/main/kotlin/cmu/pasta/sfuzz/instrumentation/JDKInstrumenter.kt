@@ -20,6 +20,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     // ClassWriter.COMPUTE_MAXS)
     val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
     var cv: ClassVisitor = ThreadInstrumenter(classWriter)
+    cv = FieldInstanceReadWriteInstrumenter(cv)
     cv = ReentrantReadWriteLockInstrumenter(cv)
     cv = LockSupportInstrumenter(cv)
     cv = LockInstrumenter(cv)
