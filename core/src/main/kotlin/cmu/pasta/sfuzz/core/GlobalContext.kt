@@ -16,10 +16,8 @@ import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
-import java.io.ObjectStreamField
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.lang.invoke.VarHandle
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
@@ -696,7 +694,7 @@ object GlobalContext {
       if (currentThread != nextThread && shouldBlockCurrentThread) {
         currentThread.block()
       }
-    }  catch (e: Throwable) {
+    } catch (e: Throwable) {
       throw e
     }
   }

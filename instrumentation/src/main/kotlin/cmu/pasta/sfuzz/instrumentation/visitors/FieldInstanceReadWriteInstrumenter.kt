@@ -8,34 +8,36 @@ import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
 
-class FieldInstanceReadWriteInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv,
-    "java.lang.invoke.VarHandleInts\$FieldInstanceReadWrite",
-    "java.lang.invoke.VarHandleLongs\$FieldInstanceReadWrite",
-    "java.lang.invoke.VarHandleFloats\$FieldInstanceReadWrite",
-    "java.lang.invoke.VarHandleDoubles\$FieldInstanceReadWrite",
-    "java.lang.invoke.VarHandleBooleans\$FieldInstanceReadWrite",
-    "java.lang.invoke.VarHandleBytes\$FieldInstanceReadWrite",
-    "java.lang.invoke.VarHandleShorts\$FieldInstanceReadWrite",
-    "java.lang.invoke.VarHandleChars\$FieldInstanceReadWrite",
-    "java.lang.invoke.VarHandleReferences\$FieldInstanceReadWrite") {
+class FieldInstanceReadWriteInstrumenter(cv: ClassVisitor) :
+    ClassVisitorBase(
+        cv,
+        "java.lang.invoke.VarHandleInts\$FieldInstanceReadWrite",
+        "java.lang.invoke.VarHandleLongs\$FieldInstanceReadWrite",
+        "java.lang.invoke.VarHandleFloats\$FieldInstanceReadWrite",
+        "java.lang.invoke.VarHandleDoubles\$FieldInstanceReadWrite",
+        "java.lang.invoke.VarHandleBooleans\$FieldInstanceReadWrite",
+        "java.lang.invoke.VarHandleBytes\$FieldInstanceReadWrite",
+        "java.lang.invoke.VarHandleShorts\$FieldInstanceReadWrite",
+        "java.lang.invoke.VarHandleChars\$FieldInstanceReadWrite",
+        "java.lang.invoke.VarHandleReferences\$FieldInstanceReadWrite") {
 
   override fun instrumentMethod(
-    mv: MethodVisitor,
-    access: Int,
-    name: String,
-    descriptor: String,
-    signature: String?,
-    exceptions: Array<out String>?
+      mv: MethodVisitor,
+      access: Int,
+      name: String,
+      descriptor: String,
+      signature: String?,
+      exceptions: Array<out String>?
   ): MethodVisitor {
     if (name == "compareAndSet") {
       val type = Type.getArgumentTypes(descriptor)[2]!!
-      return object: AdviceAdapter(ASM9, mv, access, name, descriptor) {
+      return object : AdviceAdapter(ASM9, mv, access, name, descriptor) {
         override fun visitMethodInsn(
-          opcodeAndSource: Int,
-          owner: String,
-          name: String,
-          descriptor: String,
-          isInterface: Boolean
+            opcodeAndSource: Int,
+            owner: String,
+            name: String,
+            descriptor: String,
+            isInterface: Boolean
         ) {
           if (owner == "jdk/internal/misc/Unsafe" && name.contains("compareAndSet")) {
             // Unsafe compareAndSet methods are called with the following arguments:
@@ -54,7 +56,8 @@ class FieldInstanceReadWriteInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv,
 
             loadLocal(offset)
 
-            visitMethodInsn(Opcodes.INVOKESTATIC,
+            visitMethodInsn(
+                Opcodes.INVOKESTATIC,
                 Runtime::class.java.name.replace(".", "/"),
                 Runtime::onUnsafeWriteVolatile.name,
                 Utils.kFunctionToJvmMethodDescriptor(Runtime::onUnsafeWriteVolatile),
@@ -70,5 +73,4 @@ class FieldInstanceReadWriteInstrumenter(cv: ClassVisitor): ClassVisitorBase(cv,
     }
     return mv
   }
-
 }

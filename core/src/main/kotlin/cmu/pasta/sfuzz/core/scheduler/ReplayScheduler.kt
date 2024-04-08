@@ -1,7 +1,6 @@
 package cmu.pasta.sfuzz.core.scheduler
 
 import cmu.pasta.sfuzz.core.ThreadContext
-import cmu.pasta.sfuzz.core.exception.SchedulerInternalException
 
 class ReplayScheduler(val schedule: Schedule) : Scheduler {
 
@@ -13,7 +12,8 @@ class ReplayScheduler(val schedule: Schedule) : Scheduler {
     }
     if (index >= schedule.choices.size) {
       return threads[0]
-//      throw SchedulerInternalException("Require more scheduling choices for replay scheduler")
+      //      throw SchedulerInternalException("Require more scheduling choices for replay
+      // scheduler")
     }
     val choice = schedule.choices[index]
     assert(choice.enabled == threads.size)

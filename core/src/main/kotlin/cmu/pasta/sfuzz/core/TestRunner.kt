@@ -4,7 +4,6 @@ import cmu.pasta.sfuzz.core.logger.ConsoleLogger
 import cmu.pasta.sfuzz.core.runtime.AnalysisResult
 import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.Runtime
-import java.lang.reflect.InvocationTargetException
 import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
