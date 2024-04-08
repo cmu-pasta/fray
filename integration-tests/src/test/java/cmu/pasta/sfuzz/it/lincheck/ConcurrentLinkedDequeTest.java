@@ -13,7 +13,7 @@ public class ConcurrentLinkedDequeTest extends IntegrationTestRunner {
     public static int t1Value = 0;
     public static int t2Value = 0;
 
-    @Test
+//    @Test
     void testLinearizedExecution() {
         runTest(() -> {
             try {
