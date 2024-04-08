@@ -13,43 +13,56 @@ class UnsafeInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, "sun.misc.Unsa
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
-    // TODO(aoli): consider passing more information (memory location, ect)
-    if (unsafeMethodNames.contains(name)) {
+    if (name == "compareAndSwapObject" ||
+        name == "compareAndSwapInt" ||
+        name == "compareAndSwapLong" ||
+        name == "compareAndSetReference") {
       return MethodEnterVisitor(
-          mv, Runtime::onUnsafeOperation, access, name, descriptor, false, false)
+          mv, Runtime::onUnsafeWriteVolatile, access, name, descriptor, false, true) {
+            if (name == "compareAndSwapLong") {
+              pop2()
+              pop2()
+            } else {
+              pop()
+              pop()
+            }
+          }
+    }
+    if (name == "getObjectVolatile" ||
+        name == "getIntVolatile" ||
+        name == "getLongVolatile" ||
+        name == "getBooleanVolatile" ||
+        name == "getByteVolatile" ||
+        name == "getShortVolatile" ||
+        name == "getCharVolatile" ||
+        name == "getFloatVolatile" ||
+        name == "getDoubleVolatile") {
+      return MethodEnterVisitor(
+          mv, Runtime::onUnsafeReadVolatile, access, name, descriptor, false, true)
+    }
+    if (name == "putObjectVolatile" ||
+        name == "putIntVolatile" ||
+        name == "putLongVolatile" ||
+        name == "putBooleanVolatile" ||
+        name == "putByteVolatile" ||
+        name == "putShortVolatile" ||
+        name == "putCharVolatile" ||
+        name == "putFloatVolatile" ||
+        name == "putDoubleVolatile" ||
+        name == "getAndAddLong" ||
+        name == "getAndAddInt" ||
+        name == "getAndSetLong" ||
+        name == "getAndSetInt" ||
+        name == "getAndSetObject") {
+      return MethodEnterVisitor(
+          mv, Runtime::onUnsafeWriteVolatile, access, name, descriptor, false, true) {
+            if (name == "putLongVolatile" || name == "putDoubleVolatile") {
+              pop2()
+            } else {
+              pop()
+            }
+          }
     }
     return mv
-  }
-
-  companion object {
-    private val unsafeMethodNames: List<String> =
-        mutableListOf(
-            "compareAndSwapInt",
-            "compareAndSwapObject",
-            "compareAndSwapLong",
-            "getObjectVolatile",
-            "putObjectVolatile",
-            "getIntVolatile",
-            "putIntVolatile",
-            "getBooleanVolatile",
-            "putBooleanVolatile",
-            "getByteVolatile",
-            "putByteVolatile",
-            "getShortVolatile",
-            "putShortVolatile",
-            "getCharVolatile",
-            "putCharVolatile",
-            "getLongVolatile",
-            "putLongVolatile",
-            "getFloatVolatile",
-            "putFloatVolatile",
-            "getDoubleVolatile",
-            "putDoubleVolatile",
-            "getAndAddInt", // (atomic but not volatile semantics)
-            "getAndAddLong", // (atomic but not volatile semantics)
-            "getAndSetInt", // (atomic but not volatile semantics)
-            "getAndSetLong", // (atomic but not volatile semantics)
-            "getAndSetObject" // (atomic but not volatile semantics)
-            )
   }
 }

@@ -556,6 +556,11 @@ object GlobalContext {
     memoryOperation(objId, type)
   }
 
+  fun unsafeOperation(obj: Any, offset: Long, type: MemoryOpType) {
+    val objId = System.identityHashCode(obj)
+    memoryOperation((31 * objId) + offset.toInt(), type)
+  }
+
   fun memoryOperation(obj: Int, type: MemoryOpType) {
     val t = Thread.currentThread().id
     registeredThreads[t]?.pendingOperation = MemoryOperation(obj, type)

@@ -14,7 +14,8 @@ class MethodEnterVisitor(
     name: String,
     descriptor: String,
     val loadThis: Boolean,
-    val loadArgs: Boolean
+    val loadArgs: Boolean,
+    val customizer: MethodEnterVisitor.(v: MethodEnterVisitor) -> Unit = {}
 ) : AdviceAdapter(ASM9, mv, access, name, descriptor) {
   override fun visitCode() {
     super.visitCode()
@@ -24,6 +25,7 @@ class MethodEnterVisitor(
     if (loadArgs) {
       loadArgs()
     }
+    customizer(this)
     visitMethodInsn(
         Opcodes.INVOKESTATIC,
         Runtime::class.java.name.replace(".", "/"),

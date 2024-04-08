@@ -89,9 +89,6 @@ public class Delegate {
     public void onStaticFieldWrite(String owner, String name, String descriptor) {
     }
 
-    public void onUnsafeOperation() {
-    }
-
     public void onExit(int status) {
         java.lang.Runtime.getRuntime().exit(0);
     }
@@ -176,6 +173,12 @@ public class Delegate {
     }
 
     public void onReportError(Throwable e) {
+    }
+
+    public void onUnsafeReadVolatile(Object o, long offset) {
+    }
+
+    public void onUnsafeWriteVolatile(Object o, long offset) {
     }
 }
 

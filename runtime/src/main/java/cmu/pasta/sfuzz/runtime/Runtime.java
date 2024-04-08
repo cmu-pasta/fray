@@ -88,10 +88,6 @@ public class Runtime {
         DELEGATE.onAtomicOperation(o, type);
     }
 
-    public static void onUnsafeOperation() {
-        DELEGATE.onUnsafeOperation();
-    }
-
     public static void onFieldRead(Object o, String owner, String name, String descriptor) {
         DELEGATE.onFieldRead(o, owner, name, descriptor);
     }
@@ -250,5 +246,13 @@ public class Runtime {
 
     public static void onLockLockInterruptibly(ReentrantLock l) {
         DELEGATE.onLockLockInterruptibly(l);
+    }
+
+    public static void onUnsafeReadVolatile(Object o, long offset) {
+        DELEGATE.onUnsafeReadVolatile(o, offset);
+    }
+
+    public static void onUnsafeWriteVolatile(Object o, long offset) {
+        DELEGATE.onUnsafeWriteVolatile(o, offset);
     }
 }

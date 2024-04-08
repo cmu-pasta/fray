@@ -217,9 +217,17 @@ class RuntimeDelegate : Delegate() {
     entered.set(false)
   }
 
-  override fun onUnsafeOperation() {
+  override fun onUnsafeReadVolatile(o: Any?, offset: Long) {
+    if (o == null) return
     if (checkEntered()) return
-    //        GlobalContext.memoryOperation(null, MemoryOperation.Type.UNSAFE)
+    GlobalContext.unsafeOperation(o, offset, MemoryOpType.MEMORY_READ)
+    entered.set(false)
+  }
+
+  override fun onUnsafeWriteVolatile(o: Any?, offset: Long) {
+    if (o == null) return
+    if (checkEntered()) return
+    GlobalContext.unsafeOperation(o, offset, MemoryOpType.MEMORY_WRITE)
     entered.set(false)
   }
 

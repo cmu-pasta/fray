@@ -19,17 +19,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class IntegrationTestRunner {
     public String runTest(Function0<Unit> exec) {
-        return runTest(exec, new FifoScheduler());
+        return runTest(exec, new FifoScheduler(), 1);
     }
 
-    public String runTest(Function0<Unit> exec, Scheduler scheduler) {
+    public String runTest(Function0<Unit> exec, Scheduler scheduler, int iter) {
         String testName = this.getClass().getSimpleName();
         EventLogger logger = new EventLogger();
         GlobalContext.INSTANCE.getLoggers().add(logger);
         Configuration config = new Configuration(
                 exec,
                 "/tmp/report",
-                1,
+                iter,
                 scheduler,
                 true,
                 new JsonLogger("/tmp/report", true)
