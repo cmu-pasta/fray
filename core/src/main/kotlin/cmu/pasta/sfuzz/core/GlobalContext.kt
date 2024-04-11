@@ -39,6 +39,8 @@ object GlobalContext {
   private val semaphoreManager = SemaphoreManager()
   private val volatileManager = VolatileManager(false)
   private val latchManager = CountDownLatchManager()
+  private var step = 0
+  private val maxScheduledStep = 10000
   val syncManager = SynchronizationManager()
   val loggers = mutableListOf<LoggerBase>()
   var executor =
@@ -65,7 +67,7 @@ object GlobalContext {
     if (!errorFound) {
       errorFound = true
       val sw = StringWriter()
-      sw.append("Exception found: ${e}\n")
+      sw.append("Error found: ${e}\n")
       e.printStackTrace(PrintWriter(sw))
       for (logger in loggers) {
         logger.applicationEvent(sw.toString())
@@ -100,6 +102,8 @@ object GlobalContext {
     // We need to submit a dummy task to trigger the executor
     // thread creation
     executor.submit {}
+    step = 0
+    errorFound = false
     currentThreadId = t.id
     mainThreadId = t.id
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size)
@@ -670,13 +674,23 @@ object GlobalContext {
             registeredThreads[mainThreadId]!!.unblock()
           }
           return
-        } else {
+        } else if (!currentThread.isExiting) {
           // Deadlock detected
           val e = TargetTerminateException(-1)
+          currentThread.isExiting
           reportError(e)
           throw e
         }
       }
+
+      step += 1
+      if (step > maxScheduledStep && !currentThread.isExiting) {
+        currentThread.isExiting = true
+        val e = TargetTerminateException(-2)
+        reportError(e)
+        throw e
+      }
+
       val nextThread = scheduler.scheduleNextOperation(enabledOperations)
       val index = enabledOperations.indexOf(nextThread)
       currentThreadId = nextThread.thread.id

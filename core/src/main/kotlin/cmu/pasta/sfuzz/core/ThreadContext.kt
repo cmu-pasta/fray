@@ -15,6 +15,7 @@ class ThreadContext(val thread: Thread, val index: Int) {
   var state = ThreadState.Paused
   var unparkSignaled = false
   var interruptSignaled = false
+  var isExiting = false
 
   // This field is set when a thread is resumed by `o.notify()`
   // but hasn't acquire the monitor lock.

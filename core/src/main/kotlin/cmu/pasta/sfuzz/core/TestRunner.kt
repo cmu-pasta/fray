@@ -44,7 +44,7 @@ class TestRunner(val config: Configuration) {
       Runtime.DELEGATE = Delegate()
       GlobalContext.done(AnalysisResult.COMPLETE)
       if (GlobalContext.errorFound) {
-        println("error found at iter: $i")
+        println("Error found at iter: $i")
         break
       }
     }
