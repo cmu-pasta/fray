@@ -41,15 +41,17 @@ tasks.register<Copy>("copyDependencies") {
 
 
 tasks.register<Exec>("jlink") {
-    var path = "${layout.buildDirectory.get().asFile}/libs"
-    var jdkPath = "${layout.buildDirectory.get().asFile}/java-inst"
-    /* delete(file(jdkPath)) */
+  var path = "${layout.buildDirectory.get().asFile}/libs"
+  var jdkPath = "${layout.buildDirectory.get().asFile}/java-inst"
+  /* delete(file(jdkPath)) */
+
+  if (!File(jdkPath).exists()) {
     var runtimeJar = "$path/${project.name}-$version.jar"
     val jarDir = file(path)
 
     val jars = jarDir.listFiles { file -> file.extension == "jar" }
         ?.joinToString(separator = ":") { it.absolutePath }
-        ?: "No JAR files found."
+      ?: "No JAR files found."
     val command = listOf("jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars",
         "-J--add-modules=cmu.pasta.sfuzz.jdk", "-J--class-path=$jars",
         "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH",  "--sfuzz-instrumentation")
@@ -57,4 +59,5 @@ tasks.register<Exec>("jlink") {
     commandLine(command)
     /* commandLine(listOf("java", "--version")) */
     dependsOn(tasks.jar)
+  }
 }
