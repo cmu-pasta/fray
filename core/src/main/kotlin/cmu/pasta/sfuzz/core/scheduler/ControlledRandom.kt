@@ -30,4 +30,11 @@ class ControlledRandom(
     }
     return doubles[doubleIndex++]
   }
+
+  fun done() {
+    integers.clear()
+    doubles.clear()
+    integerIndex = 0
+    doubleIndex = 0
+  }
 }

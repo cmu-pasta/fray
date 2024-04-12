@@ -67,6 +67,10 @@ class Rand : ScheduleAlgorithm("random") {
 
 class PCT : ScheduleAlgorithm("pct") {
   val numSwitchPoints by option().int().default(3)
+
+  override fun getScheduler(): Scheduler {
+    return PCTScheduler(ControlledRandom(), numSwitchPoints)
+  }
 }
 
 class ConfigurationCommand : CliktCommand() {
@@ -78,7 +82,12 @@ class ConfigurationCommand : CliktCommand() {
   val iter by option("-i", "--iter", help = "Number of iterations").int().default(1)
   val scheduler by
       option()
-          .groupChoice("replay" to Replay(), "fifo" to Fifo(), "pos" to POS(), "random" to Rand())
+          .groupChoice(
+              "replay" to Replay(),
+              "fifo" to Fifo(),
+              "pos" to POS(),
+              "random" to Rand(),
+              "pct" to PCT())
   val fullSchedule by option("-f", "--full").boolean().default(false)
   val logger by option("-l", "--logger").groupChoice("json" to Json(), "csv" to Csv())
 

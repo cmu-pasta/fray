@@ -3,7 +3,7 @@ package cmu.pasta.sfuzz.core.scheduler
 import cmu.pasta.sfuzz.core.ThreadContext
 
 class RandomScheduler : Scheduler {
-  var rand = ControlledRandom(arrayListOf(1, 2, 3, 2, 3, 3, 3, 3))
+  var rand = ControlledRandom()
 
   override fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext {
 
@@ -15,6 +15,6 @@ class RandomScheduler : Scheduler {
   }
 
   override fun done() {
-    rand = ControlledRandom()
+    rand.done()
   }
 }
