@@ -1,7 +1,7 @@
 import org.gradle.internal.impldep.org.apache.commons.io.output.ByteArrayOutputStream
 
 plugins {
-    kotlin("jvm") version "1.9.22"
+    kotlin("jvm")
     java
 }
 

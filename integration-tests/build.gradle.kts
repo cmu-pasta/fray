@@ -1,5 +1,6 @@
 plugins {
   id("java")
+  kotlin("jvm")
 }
 
 repositories {
@@ -12,6 +13,7 @@ dependencies {
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
   testImplementation("org.jctools:jctools-core:3.1.0")
   testImplementation("com.googlecode.concurrent-trees:concurrent-trees:2.6.1")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
   implementation(project(":core"))
 }
 
