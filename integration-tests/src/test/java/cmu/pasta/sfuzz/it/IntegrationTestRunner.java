@@ -33,7 +33,8 @@ public class IntegrationTestRunner {
                 iter,
                 scheduler,
                 true,
-                new CsvLogger("/tmp/report", false)
+                new CsvLogger("/tmp/report", false),
+                false
         );
         TestRunner runner = new TestRunner(config);
         runner.run();

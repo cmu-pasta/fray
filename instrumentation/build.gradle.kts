@@ -1,6 +1,4 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.jetbrains.kotlin.cli.jvm.main
-import org.jetbrains.kotlin.gradle.plugin.KotlinExecution
 
 plugins {
     java
@@ -16,7 +14,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     add("shadow", localGroovy())
     add("shadow", gradleApi())
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.22")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.ow2.asm:asm:9.6")
     implementation("org.ow2.asm:asm-tree:9.6")
     implementation("org.ow2.asm:asm-commons:9.6")

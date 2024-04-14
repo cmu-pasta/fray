@@ -544,7 +544,7 @@ object GlobalContext {
   }
 
   fun fieldOperation(obj: Any?, owner: String, name: String, type: MemoryOpType) {
-    if (!volatileManager.isVolatile(owner, name)) return
+    if (!config!!.interleaveMemoryOps && !volatileManager.isVolatile(owner, name)) return
     val objIds = mutableListOf<Int>()
     if (obj != null) {
       objIds.add(System.identityHashCode(obj))

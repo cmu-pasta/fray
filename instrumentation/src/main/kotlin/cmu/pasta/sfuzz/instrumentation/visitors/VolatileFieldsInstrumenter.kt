@@ -56,7 +56,7 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor, val instrumentJDK: Boolean) :
     }
     return object : MethodVisitor(ASM9, mv) {
       override fun visitFieldInsn(opcode: Int, owner: String, name: String, descriptor: String) {
-        if (recursiveVisitClass(owner) || volatileManager.isVolatile(owner, name)) {
+        if (recursiveVisitClass(owner) || !instrumentJDK || volatileManager.isVolatile(owner, name)) {
           if (opcode == Opcodes.GETFIELD || opcode == Opcodes.PUTFIELD) {
             visitVarInsn(Opcodes.ALOAD, 0)
           }
