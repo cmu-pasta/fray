@@ -16,6 +16,7 @@ import cmu.pasta.sfuzz.runtime.Delegate
 import cmu.pasta.sfuzz.runtime.MemoryOpType
 import cmu.pasta.sfuzz.runtime.Runtime
 import cmu.pasta.sfuzz.runtime.TargetTerminateException
+import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.util.concurrent.CountDownLatch
@@ -717,6 +718,7 @@ object GlobalContext {
       }
       nextThread.state = ThreadState.Running
       if (currentThread != nextThread || currentThread.blockedBy != null) {
+        println(currentThread.blockedBy)
         unblockThread(nextThread)
       }
       if (currentThread != nextThread && shouldBlockCurrentThread) {
