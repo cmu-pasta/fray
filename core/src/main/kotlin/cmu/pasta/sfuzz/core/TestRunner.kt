@@ -8,6 +8,8 @@ import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
+import kotlin.system.measureTimeMillis
+import kotlin.time.measureTime
 
 class TestRunner(val config: Configuration) {
 
@@ -29,26 +31,28 @@ class TestRunner(val config: Configuration) {
 
   fun run() {
     setup()
-    for (i in 0 ..< config.iter) {
-      println("Starting iteration $i")
-      try {
-        Runtime.DELEGATE = RuntimeDelegate()
-        Runtime.start()
-        config.exec()
-        Runtime.onMainExit()
-      } catch (e: Throwable) {
-        GlobalContext.errorFound = true
-        Runtime.onMainExit()
-        GlobalContext.log("Error found: $e")
+    val time = measureTimeMillis {
+      for (i in 0 ..< config.iter) {
+        println("Starting iteration $i")
+        try {
+          Runtime.DELEGATE = RuntimeDelegate()
+          Runtime.start()
+          config.exec()
+          Runtime.onMainExit()
+        } catch (e: Throwable) {
+          GlobalContext.errorFound = true
+          Runtime.onMainExit()
+          GlobalContext.log("Error found: $e")
+        }
+        Runtime.DELEGATE = Delegate()
+        GlobalContext.done(AnalysisResult.COMPLETE)
+        if (GlobalContext.errorFound) {
+          println("Error found at iter: $i")
+          break
+        }
       }
-      Runtime.DELEGATE = Delegate()
-      GlobalContext.done(AnalysisResult.COMPLETE)
-      if (GlobalContext.errorFound) {
-        println("Error found at iter: $i")
-        break
-      }
+      GlobalContext.shutDown()
     }
-    GlobalContext.shutDown()
-    println("Analysis done!")
+    println("Analysis done in: $time ms")
   }
 }
