@@ -64,7 +64,6 @@ class Rand : ScheduleAlgorithm("random") {
     return RandomScheduler()
   }
 }
-
 class PCT : ScheduleAlgorithm("pct") {
   val numSwitchPoints by option().int().default(3)
 

@@ -44,20 +44,23 @@ tasks.register<JavaExec>("runExample") {
 tasks.register<JavaExec>("replay") {
   val cp = properties["classpath"] as String? ?: ""
   val main = properties["mainClass"] as String? ?: ""
-  classpath = classpath + files(cp)
-  args = listOf("cmu.pasta.sfuzz.benchmark.sctbench.cs.$main", "main", "--path", "//Users/aoli/repos/sfuzz-benchmark/schedules/$main.csv", "--scheduler", "replay", "--logger", "csv")
-}
-
-tasks.register<JavaExec>("runSCT") {
-  val cp = properties["classpath"] as String? ?: ""
-  val main = properties["mainClass"] as String? ?: ""
-  val scheduler = properties["scheduler"] as String? ?: "pos"
   val extraArgs = when (val extraArgs = properties["extraArgs"]) {
     is String -> extraArgs.split(" ")
     else -> emptyList()
   }
   classpath += files(cp)
-  args = listOf("cmu.pasta.sfuzz.benchmark.sctbench.cs.$main", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", scheduler, "--logger", "csv", "--iter", "10000") + extraArgs
+  args = listOf("cmu.pasta.sfuzz.benchmark.$main", "main", "-o", "/tmp/report", "--logger", "csv", "--iter", "10000") + extraArgs
+}
+
+tasks.register<JavaExec>("runSCT") {
+  val cp = properties["classpath"] as String? ?: ""
+  val main = properties["mainClass"] as String? ?: ""
+  val extraArgs = when (val extraArgs = properties["extraArgs"]) {
+    is String -> extraArgs.split(" ")
+    else -> emptyList()
+  }
+  classpath += files(cp)
+  args = listOf("cmu.pasta.sfuzz.benchmark.$main", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "csv", "--iter", "10000") + extraArgs
 }
 
 tasks.register<JavaExec>("runArithmeticProgBad") {

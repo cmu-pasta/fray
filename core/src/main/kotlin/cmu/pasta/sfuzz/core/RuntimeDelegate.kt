@@ -133,8 +133,11 @@ class RuntimeDelegate : Delegate() {
 
   override fun onAtomicOperation(o: Any, type: MemoryOpType) {
     if (checkEntered()) return
-    GlobalContext.atomicOperation(o, type)
-    entered.set(false)
+    try {
+      GlobalContext.atomicOperation(o, type)
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onLockUnlock(l: ReentrantLock) {
@@ -220,39 +223,57 @@ class RuntimeDelegate : Delegate() {
   override fun onUnsafeReadVolatile(o: Any?, offset: Long) {
     if (o == null) return
     if (checkEntered()) return
-    GlobalContext.unsafeOperation(o, offset, MemoryOpType.MEMORY_READ)
-    entered.set(false)
+    try {
+      GlobalContext.unsafeOperation(o, offset, MemoryOpType.MEMORY_READ)
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onUnsafeWriteVolatile(o: Any?, offset: Long) {
     if (o == null) return
     if (checkEntered()) return
-    GlobalContext.unsafeOperation(o, offset, MemoryOpType.MEMORY_WRITE)
-    entered.set(false)
+    try {
+      GlobalContext.unsafeOperation(o, offset, MemoryOpType.MEMORY_WRITE)
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onFieldRead(o: Any, owner: String, name: String, descriptor: String) {
     if (checkEntered()) return
-    GlobalContext.fieldOperation(o, owner, name, MemoryOpType.MEMORY_READ)
-    entered.set(false)
+    try {
+      GlobalContext.fieldOperation(o, owner, name, MemoryOpType.MEMORY_READ)
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onFieldWrite(o: Any, owner: String, name: String, descriptor: String) {
     if (checkEntered()) return
-    GlobalContext.fieldOperation(o, owner, name, MemoryOpType.MEMORY_WRITE)
-    entered.set(false)
+    try {
+      GlobalContext.fieldOperation(o, owner, name, MemoryOpType.MEMORY_WRITE)
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onStaticFieldRead(owner: String, name: String, descriptor: String) {
     if (checkEntered()) return
-    GlobalContext.fieldOperation(null, owner, name, MemoryOpType.MEMORY_READ)
-    entered.set(false)
+    try {
+      GlobalContext.fieldOperation(null, owner, name, MemoryOpType.MEMORY_READ)
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onStaticFieldWrite(owner: String, name: String, descriptor: String) {
     if (checkEntered()) return
-    GlobalContext.fieldOperation(null, owner, name, MemoryOpType.MEMORY_WRITE)
-    entered.set(false)
+    try {
+      GlobalContext.fieldOperation(null, owner, name, MemoryOpType.MEMORY_WRITE)
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onExit(status: Int) {
@@ -261,8 +282,11 @@ class RuntimeDelegate : Delegate() {
 
   override fun onYield() {
     if (checkEntered()) return
-    GlobalContext.scheduleNextOperation(true)
-    entered.set(false)
+    try {
+      GlobalContext.scheduleNextOperation(true)
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onSkipMethod() {
@@ -275,8 +299,11 @@ class RuntimeDelegate : Delegate() {
 
   override fun onThreadPark() {
     if (checkEntered()) return
-    GlobalContext.threadPark()
-    entered.set(false)
+    try {
+      GlobalContext.threadPark()
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onThreadParkDone() {
@@ -329,9 +356,12 @@ class RuntimeDelegate : Delegate() {
       skipFunctionEntered.set(1 + skipFunctionEntered.get())
       return
     }
-    GlobalContext.semaphoreAcquire(sem, permits, true, true)
-    entered.set(false)
-    skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    try {
+      GlobalContext.semaphoreAcquire(sem, permits, true, true)
+    } finally {
+      entered.set(false)
+      skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    }
   }
 
   override fun onSemaphoreAcquireUninterruptibly(sem: Semaphore, permits: Int) {
@@ -339,9 +369,12 @@ class RuntimeDelegate : Delegate() {
       skipFunctionEntered.set(1 + skipFunctionEntered.get())
       return
     }
-    GlobalContext.semaphoreAcquire(sem, permits, true, false)
-    entered.set(false)
-    skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    try {
+      GlobalContext.semaphoreAcquire(sem, permits, true, false)
+    } finally {
+      entered.set(false)
+      skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    }
   }
 
   override fun onSemaphoreAcquireDone() {

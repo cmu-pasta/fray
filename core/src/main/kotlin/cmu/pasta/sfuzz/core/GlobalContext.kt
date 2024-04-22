@@ -35,6 +35,7 @@ object GlobalContext {
   var scheduler: Scheduler = FifoScheduler()
   var config: Configuration? = null
   var errorFound = false
+  var mainExiting = false
   private val lockManager = LockManager()
   private val semaphoreManager = SemaphoreManager()
   private val volatileManager = VolatileManager(false)
@@ -78,9 +79,10 @@ object GlobalContext {
   fun mainExit() {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
-    context.state = ThreadState.Completed
-    while (registeredThreads.any { it.value.state != ThreadState.Completed }) {
+    mainExiting = true
+    while (registeredThreads.any { it.value.state != ThreadState.Completed && it.value != context }) {
       try {
+        context.state = ThreadState.Enabled
         scheduleNextOperation(true)
       } catch (e: TargetTerminateException) {
         // If deadlock detected let's try to unblock one thread and continue.
@@ -95,6 +97,7 @@ object GlobalContext {
         }
       }
     }
+    context.state = ThreadState.Completed
   }
 
   fun start() {
@@ -104,6 +107,7 @@ object GlobalContext {
     executor.submit {}
     step = 0
     errorFound = false
+    mainExiting = false
     currentThreadId = t.id
     mainThreadId = t.id
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size)
@@ -202,9 +206,11 @@ object GlobalContext {
   }
 
   fun threadCompleted(t: Thread) {
+    val context = registeredThreads[t.id]!!
+    context.isExiting = true
     monitorEnter(t)
     objectNotifyAll(t)
-    registeredThreads[t.id]?.state = ThreadState.Completed
+    context.state = ThreadState.Completed
     lockManager.threadUnblockedDueToDeadlock(t)
     // We do not want to send notify all because
     // we don't have monitor lock here.
@@ -221,6 +227,7 @@ object GlobalContext {
       while (t.isAlive) {
         Thread.yield()
       }
+      context.isExiting = false
       lockUnlockDone(t)
       unlockImpl(t, t.id, false, false, true)
       syncManager.synchronizationPoints.remove(System.identityHashCode(t))
@@ -252,6 +259,7 @@ object GlobalContext {
     }
     unlockImpl(lockObject, t, true, true, lockObject == waitingObject)
     checkDeadlock {
+      context.blockedBy = null
       assert(lockManager.lock(lockObject, t, false, true, false))
       syncManager.removeWait(lockObject)
     }
@@ -661,11 +669,14 @@ object GlobalContext {
               currentThread.state == ThreadState.Enabled ||
               currentThread.state == ThreadState.Completed)
       assert(registeredThreads.none { it.value.state == ThreadState.Running })
-      val enabledOperations =
+      var enabledOperations =
           registeredThreads.values
               .toList()
               .filter { it.state == ThreadState.Enabled }
               .sortedBy { it.thread.id }
+      if (mainExiting && (currentThreadId == mainThreadId || enabledOperations.size > 1)) {
+        enabledOperations = enabledOperations.filter { it.thread.id != mainThreadId }
+      }
 
       if (enabledOperations.isEmpty()) {
         if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
@@ -674,18 +685,19 @@ object GlobalContext {
             registeredThreads[mainThreadId]!!.unblock()
           }
           return
-        } else if (!currentThread.isExiting) {
+        } else if (!currentThread.isExiting || Thread.currentThread() is SFuzzThread) {
           // Deadlock detected
           val e = TargetTerminateException(-1)
-          currentThread.isExiting
           reportError(e)
           throw e
         }
       }
 
       step += 1
-      if (step > maxScheduledStep && !currentThread.isExiting) {
-        currentThread.isExiting = true
+      if (step > maxScheduledStep &&
+        !currentThread.isExiting &&
+        Thread.currentThread() !is SFuzzThread &&
+        !(mainExiting && currentThreadId == mainThreadId)) {
         val e = TargetTerminateException(-2)
         reportError(e)
         throw e
