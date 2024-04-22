@@ -718,7 +718,6 @@ object GlobalContext {
       }
       nextThread.state = ThreadState.Running
       if (currentThread != nextThread || currentThread.blockedBy != null) {
-        println(currentThread.blockedBy)
         unblockThread(nextThread)
       }
       if (currentThread != nextThread && shouldBlockCurrentThread) {
