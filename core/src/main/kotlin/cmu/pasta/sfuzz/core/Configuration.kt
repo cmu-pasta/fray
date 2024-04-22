@@ -64,6 +64,7 @@ class Rand : ScheduleAlgorithm("random") {
     return RandomScheduler()
   }
 }
+
 class PCT : ScheduleAlgorithm("pct") {
   val numSwitchPoints by option().int().default(3)
 
@@ -112,8 +113,7 @@ class ConfigurationCommand : CliktCommand() {
         scheduler!!.getScheduler(),
         fullSchedule,
         logger!!.getLogger(report, fullSchedule),
-        interleaveMemoryOps
-    )
+        interleaveMemoryOps)
   }
 }
 

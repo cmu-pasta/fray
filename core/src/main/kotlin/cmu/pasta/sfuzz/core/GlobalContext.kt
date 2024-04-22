@@ -80,7 +80,9 @@ object GlobalContext {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
     mainExiting = true
-    while (registeredThreads.any { it.value.state != ThreadState.Completed && it.value != context }) {
+    while (registeredThreads.any {
+      it.value.state != ThreadState.Completed && it.value != context
+    }) {
       try {
         context.state = ThreadState.Enabled
         scheduleNextOperation(true)
@@ -695,9 +697,9 @@ object GlobalContext {
 
       step += 1
       if (step > maxScheduledStep &&
-        !currentThread.isExiting &&
-        Thread.currentThread() !is SFuzzThread &&
-        !(mainExiting && currentThreadId == mainThreadId)) {
+          !currentThread.isExiting &&
+          Thread.currentThread() !is SFuzzThread &&
+          !(mainExiting && currentThreadId == mainThreadId)) {
         val e = TargetTerminateException(-2)
         reportError(e)
         throw e
