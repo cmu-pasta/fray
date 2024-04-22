@@ -9,7 +9,6 @@ import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
 import kotlin.system.measureTimeMillis
-import kotlin.time.measureTime
 
 class TestRunner(val config: Configuration) {
 
