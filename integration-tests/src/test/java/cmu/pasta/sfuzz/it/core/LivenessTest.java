@@ -1,5 +1,7 @@
 package cmu.pasta.sfuzz.it.core;
 
+import cmu.pasta.sfuzz.core.scheduler.ControlledRandom;
+import cmu.pasta.sfuzz.core.scheduler.PCTScheduler;
 import cmu.pasta.sfuzz.core.scheduler.RandomScheduler;
 import cmu.pasta.sfuzz.it.IntegrationTestRunner;
 import org.junit.jupiter.api.Test;
@@ -19,7 +21,7 @@ public class LivenessTest extends IntegrationTestRunner {
                 throw new RuntimeException(e);
             }
             return null;
-        }, new RandomScheduler(), 10000);
+        }, new PCTScheduler(new ControlledRandom(), 3), 10000);
     }
 
 
