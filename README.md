@@ -1,6 +1,6 @@
-# Run SFuzz
+# Run Fray
 
-- To run SFuzz, you first need to build the project and create a instrumented JDK.
+- To run Fray, you first need to build the project and create a instrumented JDK.
 
 ```bash
 ./gradlew build
@@ -8,16 +8,20 @@
 ./gradlew shadowJar
 ```
 
-- Next, you can run SFuzz!
+- Next, you can run Fray!
   - You may follow the `examples` folder to understand how to run sfuzz using gradle.
-  - You can also run sfuzz through command line. We created a wrapper `bin/sfuzz` for you 
+  - You can also run sfuzz through command line. We created a wrapper `bin/sfuzz` for you
     to setup environment.
-    - Command: `bin/sfuzz CLASS_PATH ARGS_TO_SFUZZ` 
-    - For example, to run `bin/sfuzz` for `examples` program, you need 
+    - Command: `bin/sfuzz CLASS_PATH ARGS_TO_FRAY`
+    - For example, to run `bin/sfuzz` for `examples` program, you need
         - `./bin/sfuzz ./examples/build/classes/java/main example.Main -o ./examples/build/report --scheduler fifo`
-    - To understand SFuzz args you can:
+    - To understand Fray args you can:
         - `./bin/sfuzz dummy --help`
 
+
+# Architecture
+
+![image](./assets/fray-arch.png)
 
 
 
@@ -35,10 +39,10 @@ It is operations' responsibility to decide whether an operation triggers a resch
 
 Each thread should only try to block itself.
 
-We should reschedule a thread **before** a non-local operation. This gives us the opportunity to 
+We should reschedule a thread **before** a non-local operation. This gives us the opportunity to
 schedule operations based on the knowledge of their effects.
 
-SFuzz should proactively maintain the state of each thread instead of reactively.
+Fray should proactively maintain the state of each thread instead of reactively.
 
 
 
@@ -50,10 +54,10 @@ We should use `wati` and `notify` to block/unblock a thread because we will inst
 
 ```java
 synchronized (monitor) {
-    monitor.wait(); 
+    monitor.wait();
 }
 synchronized (monitor) {
-        monitor.notify(); 
+        monitor.notify();
 }
 ```
 
