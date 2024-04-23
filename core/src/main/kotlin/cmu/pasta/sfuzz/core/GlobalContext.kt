@@ -733,19 +733,19 @@ object GlobalContext {
     // the thread is waiting for monitor locks.
     // We first need to give the thread lock
     // and then wakes it up through `notifyAll`.
-    if (t.blockedBy != null) {
+    val blockedBy = t.blockedBy
+    t.blockedBy = null
+    if (blockedBy != null) {
       // FIXME(aoli): relying on type check is not 100% correct,
       // because a thread can still be blocked by `condition.wait()`.
-      if (t.blockedBy is Condition) {
-        val condition = t.blockedBy as Condition
-        val lock = lockManager.lockFromCondition(condition)
+      if (blockedBy is Condition) {
+        val lock = lockManager.lockFromCondition(blockedBy)
         lock.lock()
-        condition.signalAll()
+        blockedBy.signalAll()
         lock.unlock()
       } else {
-        synchronized(t.blockedBy!!) { (t.blockedBy as Object).notifyAll() }
+        synchronized(blockedBy) { (blockedBy as Object).notifyAll() }
       }
-      t.blockedBy = null
     } else {
       t.unblock()
     }
