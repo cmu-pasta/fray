@@ -25,6 +25,6 @@ tasks.test {
 
 tasks.named<ShadowJar>("shadowJar") {
     manifest {
-        attributes(mapOf("Main-Class" to "cmu.pasta.sfuzz.core.MainKt"))
+        attributes(mapOf("Main-Class" to "cmu.pasta.fray.core.MainKt"))
     }
 }

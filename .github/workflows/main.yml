@@ -18,12 +18,12 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           cache: 'gradle'
-      - name: Build sfuzz (no tests)
+      - name: Build fray (no tests)
         run: ./gradlew build -x test
       - name: Instrument JDK
         run: ./gradlew jlink
       - name: Build shadow JAR
         run: ./gradlew shadowJar
-      - name: Test sfuzz
+      - name: Test fray
         run: ./gradlew test
 

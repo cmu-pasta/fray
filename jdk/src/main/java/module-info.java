@@ -1,9 +1,9 @@
-module cmu.pasta.sfuzz.jdk {
+module cmu.pasta.fray.jdk {
     requires jdk.jlink;
     requires java.instrument;
     requires kotlin.stdlib;
-    requires cmu.pasta.sfuzz.instrumentation;
-    requires cmu.pasta.sfuzz.runtime;
-    exports cmu.pasta.sfuzz.jdk.agent;
-    exports cmu.pasta.sfuzz.jdk.jlink;
+    requires cmu.pasta.fray.instrumentation;
+    requires cmu.pasta.fray.runtime;
+    exports cmu.pasta.fray.jdk.agent;
+    exports cmu.pasta.fray.jdk.jlink;
 }

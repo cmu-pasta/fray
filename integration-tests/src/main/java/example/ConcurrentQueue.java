@@ -2,7 +2,7 @@ package example;
 
 import java.util.LinkedList;
 
-import cmu.pasta.sfuzz.core.GlobalContext;
+import cmu.pasta.fray.core.GlobalContext;
 
 /**
  * This is a thread-safe fixed-size queue data structure that blocks on:

@@ -1,3 +1,3 @@
-module cmu.pasta.sfuzz.runtime {
-    exports cmu.pasta.sfuzz.runtime;
+module cmu.pasta.fray.runtime {
+    exports cmu.pasta.fray.runtime;
 }

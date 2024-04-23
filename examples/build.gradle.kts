@@ -22,7 +22,7 @@ tasks.withType<JavaExec> {
   val instrumentation = project(":instrumentation")
   classpath = sourceSets["main"].runtimeClasspath
   executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
-  mainClass = "cmu.pasta.sfuzz.core.MainKt"
+  mainClass = "cmu.pasta.fray.core.MainKt"
   jvmArgs("-agentpath:$agentPath")
   jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
   jvmArgs("-ea")
@@ -49,7 +49,7 @@ tasks.register<JavaExec>("replay") {
     else -> emptyList()
   }
   classpath += files(cp)
-  args = listOf("cmu.pasta.sfuzz.benchmark.$main", "main", "-o", "/tmp/report", "--logger", "csv", "--iter", "10000") + extraArgs
+  args = listOf("cmu.pasta.fray.benchmark.$main", "main", "-o", "/tmp/report", "--logger", "csv", "--iter", "10000") + extraArgs
 }
 
 tasks.register<JavaExec>("runSCT") {
@@ -60,7 +60,7 @@ tasks.register<JavaExec>("runSCT") {
     else -> emptyList()
   }
   classpath += files(cp)
-  args = listOf("cmu.pasta.sfuzz.benchmark.$main", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "csv", "--iter", "10000") + extraArgs
+  args = listOf("cmu.pasta.fray.benchmark.$main", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "csv", "--iter", "10000") + extraArgs
 }
 
 tasks.register<JavaExec>("runArithmeticProgBad") {
@@ -77,7 +77,7 @@ tasks.register<JavaExec>("runArithmeticProgSfuzz") {
     val instrumentation = project(":instrumentation")
     classpath = sourceSets["main"].runtimeClasspath
     executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
-    mainClass.set("cmu.pasta.sfuzz.core.MainKt")
+    mainClass.set("cmu.pasta.fray.core.MainKt")
     args = listOf("example.ArithmeticProgBad", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", "fifo")
     jvmArgs("-agentpath:${agentPath}")
     jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")

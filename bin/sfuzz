@@ -15,7 +15,7 @@ command = [
     "-cp", CORE_PATH + ":" + sys.argv[1],
     "-agentpath:" + JVMTI_PATH,
     "-javaagent:" + AGENT_PATH,
-    "cmu.pasta.sfuzz.core.MainKt",
+    "cmu.pasta.fray.core.MainKt",
     *sys.argv[2:]
 ]
 

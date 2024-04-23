@@ -1,6 +1,6 @@
 package example;
 
-import cmu.pasta.sfuzz.core.concurrency.locks.IdentityPhantomReference;
+import cmu.pasta.fray.core.concurrency.locks.IdentityPhantomReference;
 
 import java.lang.ref.ReferenceQueue;
 import java.util.concurrent.ExecutorService;

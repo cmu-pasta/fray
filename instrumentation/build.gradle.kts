@@ -22,7 +22,7 @@ dependencies {
 }
 
 tasks.withType<JavaExec> {
-    jvmArgs("--patch-module", "cmu.pasta.sfuzz.instrumentation=${sourceSets["main"].output.asPath}")
+    jvmArgs("--patch-module", "cmu.pasta.fray.instrumentation=${sourceSets["main"].output.asPath}")
 }
 
 
@@ -30,13 +30,13 @@ tasks.compileJava {
     println(sourceSets["main"].output.asPath)
     options.compilerArgumentProviders.add(CommandLineArgumentProvider {
         // Provide compiled Kotlin classes to javac – needed for Java/Kotlin mixed sources to work
-        listOf("--patch-module", "cmu.pasta.sfuzz.instrumentation=${sourceSets["main"].output.asPath}")
+        listOf("--patch-module", "cmu.pasta.fray.instrumentation=${sourceSets["main"].output.asPath}")
     })
 }
 
 tasks.jar {
     manifest {
-        attributes(mapOf("Premain-Class" to "cmu.pasta.sfuzz.instrumentation.PreMainKt"))
+        attributes(mapOf("Premain-Class" to "cmu.pasta.fray.instrumentation.PreMainKt"))
     }
 }
 
@@ -44,7 +44,7 @@ tasks.named<ShadowJar>("shadowJar") {
     // In Kotlin DSL, setting properties is done through Kotlin property syntax.
 //    isEnableRelocation = true
     manifest {
-        attributes(mapOf("Premain-Class" to "cmu.pasta.sfuzz.instrumentation.PreMainKt"))
+        attributes(mapOf("Premain-Class" to "cmu.pasta.fray.instrumentation.PreMainKt"))
     }
 }
 

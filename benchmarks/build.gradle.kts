@@ -35,7 +35,7 @@ tasks.withType<JavaExec> {
     val instrumentation = project(":instrumentation")
     classpath = sourceSets["main"].runtimeClasspath
     executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
-    mainClass = "cmu.pasta.sfuzz.core.MainKt"
+    mainClass = "cmu.pasta.fray.core.MainKt"
     jvmArgs("-agentpath:$agentPath")
     jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
     jvmArgs("-ea")

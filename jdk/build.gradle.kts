@@ -22,13 +22,13 @@ tasks.test {
 tasks.compileJava {
     options.compilerArgumentProviders.add(CommandLineArgumentProvider {
         // Provide compiled Kotlin classes to javac – needed for Java/Kotlin mixed sources to work
-        listOf("--patch-module", "cmu.pasta.sfuzz.jdk=${sourceSets["main"].output.asPath}")
+        listOf("--patch-module", "cmu.pasta.fray.jdk=${sourceSets["main"].output.asPath}")
     })
 }
 
 tasks.jar {
     manifest {
-        attributes(mapOf("Premain-Class" to "cmu.pasta.sfuzz.jdk.agent.AgentKt"))
+        attributes(mapOf("Premain-Class" to "cmu.pasta.fray.jdk.agent.AgentKt"))
     }
 
     dependsOn("copyDependencies")
@@ -53,8 +53,8 @@ tasks.register<Exec>("jlink") {
         ?.joinToString(separator = ":") { it.absolutePath }
       ?: "No JAR files found."
     val command = listOf("jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars",
-        "-J--add-modules=cmu.pasta.sfuzz.jdk", "-J--class-path=$jars",
-        "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH",  "--sfuzz-instrumentation")
+        "-J--add-modules=cmu.pasta.fray.jdk", "-J--class-path=$jars",
+        "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH",  "--fray-instrumentation")
     println(command.joinToString(" "))
     commandLine(command)
     /* commandLine(listOf("java", "--version")) */

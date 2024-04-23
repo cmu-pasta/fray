@@ -1,7 +1,7 @@
 package visitors
 
-import cmu.pasta.sfuzz.instrumentation.visitors.Utils
-import cmu.pasta.sfuzz.runtime.Runtime
+import cmu.pasta.fray.instrumentation.visitors.Utils
+import cmu.pasta.fray.runtime.Runtime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

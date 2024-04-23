@@ -1,6 +1,6 @@
 package example;
 
-import cmu.pasta.sfuzz.core.GlobalContext;
+import cmu.pasta.fray.core.GlobalContext;
 
 import java.util.Arrays;
 

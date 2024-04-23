@@ -5,7 +5,7 @@ plugins {
 
 
 allprojects {
-    group = "cmu.pasta.sfuzz"
+    group = "cmu.pasta.fray"
     version = "1.0-SNAPSHOT"
 }
 
