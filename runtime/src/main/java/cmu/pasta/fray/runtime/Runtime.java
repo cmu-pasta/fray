@@ -3,6 +3,7 @@ package cmu.pasta.fray.runtime;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -28,27 +29,27 @@ public class Runtime {
         DELEGATE.onThreadRun();
     }
 
-    public static void onLockTryLock(ReentrantLock l) {
-        DELEGATE.onReentrantLockTryLock(l);
+    public static void onLockTryLock(Lock l) {
+        DELEGATE.onLockTryLock(l);
     }
 
-    public static void onLockLock(ReentrantLock l) {
+    public static void onLockLock(Lock l) {
         DELEGATE.onLockLock(l);
     }
 
-    public static void onLockLockDone(ReentrantLock l) {
+    public static void onLockLockDone(Lock l) {
         DELEGATE.onLockLockDone(l);
     }
 
-    public static void onLockUnlock(ReentrantLock l) {
+    public static void onLockUnlock(Lock l) {
         DELEGATE.onLockUnlock(l);
     }
 
-    public static void onLockUnlockDone(ReentrantLock l) {
+    public static void onLockUnlockDone(Lock l) {
         DELEGATE.onLockUnlockDone(l);
     }
 
-    public static Condition onLockNewCondition(Condition c, ReentrantLock l) {
+    public static Condition onLockNewCondition(Condition c, Lock l) {
         return DELEGATE.onLockNewCondition(c, l);
     }
 

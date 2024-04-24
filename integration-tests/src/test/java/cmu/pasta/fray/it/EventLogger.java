@@ -17,7 +17,7 @@ public class EventLogger implements LoggerBase {
     }
 
     @Override
-    public void executionDone(AnalysisResult result) {
+    public void executionDone() {
 
     }
 

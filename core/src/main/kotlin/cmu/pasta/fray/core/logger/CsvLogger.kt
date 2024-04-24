@@ -1,7 +1,6 @@
 package cmu.pasta.fray.core.logger
 
 import cmu.pasta.fray.core.concurrency.operations.Operation
-import cmu.pasta.fray.core.runtime.AnalysisResult
 import cmu.pasta.fray.core.scheduler.Choice
 import java.io.File
 
@@ -20,7 +19,7 @@ class CsvLogger(private val baseFolder: String, private val fullSchedule: Boolea
         "${choice.selected},${choice.threadId},${choice.enabled},${op.javaClass.name}\n")
   }
 
-  override fun executionDone(result: AnalysisResult) {
+  override fun executionDone() {
     index += 1
   }
 

@@ -1,7 +1,6 @@
 package cmu.pasta.fray.core.logger
 
 import cmu.pasta.fray.core.concurrency.operations.Operation
-import cmu.pasta.fray.core.runtime.AnalysisResult
 import cmu.pasta.fray.core.scheduler.Choice
 
 interface LoggerBase {
@@ -9,7 +8,7 @@ interface LoggerBase {
 
   fun newOperationScheduled(op: Operation, choice: Choice)
 
-  fun executionDone(result: AnalysisResult)
+  fun executionDone()
 
   //  fun logError(error: String)
 

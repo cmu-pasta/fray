@@ -7,7 +7,7 @@ import cmu.pasta.fray.runtime.TargetTerminateException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Semaphore
 import java.util.concurrent.locks.Condition
-import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class RuntimeDelegate : Delegate() {
@@ -101,7 +101,7 @@ class RuntimeDelegate : Delegate() {
     entered.set(false)
   }
 
-  override fun onLockLockInterruptibly(l: ReentrantLock) {
+  override fun onLockLockInterruptibly(l: Lock) {
     if (checkEntered()) {
       skipFunctionEntered.set(1 + skipFunctionEntered.get())
       return
@@ -114,7 +114,20 @@ class RuntimeDelegate : Delegate() {
     }
   }
 
-  override fun onLockLock(l: ReentrantLock) {
+  override fun onLockTryLock(l: Lock) {
+    if (checkEntered()) {
+      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      return
+    }
+    try {
+      GlobalContext.lockTryLock(l)
+    } finally {
+      entered.set(false)
+      skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    }
+  }
+
+  override fun onLockLock(l: Lock) {
     if (checkEntered()) {
       skipFunctionEntered.set(1 + skipFunctionEntered.get())
       return
@@ -127,7 +140,7 @@ class RuntimeDelegate : Delegate() {
     }
   }
 
-  override fun onLockLockDone(l: ReentrantLock?) {
+  override fun onLockLockDone(l: Lock?) {
     skipFunctionEntered.set(skipFunctionEntered.get() - 1)
   }
 
@@ -140,7 +153,7 @@ class RuntimeDelegate : Delegate() {
     }
   }
 
-  override fun onLockUnlock(l: ReentrantLock) {
+  override fun onLockUnlock(l: Lock) {
     if (checkEntered()) {
       skipFunctionEntered.set(1 + skipFunctionEntered.get())
       return
@@ -150,7 +163,7 @@ class RuntimeDelegate : Delegate() {
     skipFunctionEntered.set(1 + skipFunctionEntered.get())
   }
 
-  override fun onLockUnlockDone(l: ReentrantLock) {
+  override fun onLockUnlockDone(l: Lock) {
     skipFunctionEntered.set(skipFunctionEntered.get() - 1)
     if (checkEntered()) return
     GlobalContext.lockUnlockDone(l)
@@ -178,7 +191,7 @@ class RuntimeDelegate : Delegate() {
     entered.set(false)
   }
 
-  override fun onLockNewCondition(c: Condition, l: ReentrantLock): Condition {
+  override fun onLockNewCondition(c: Condition, l: Lock): Condition {
     if (checkEntered()) return c
     GlobalContext.lockNewCondition(c, l)
     entered.set(false)
@@ -283,7 +296,7 @@ class RuntimeDelegate : Delegate() {
   override fun onYield() {
     if (checkEntered()) return
     try {
-      GlobalContext.scheduleNextOperation(true)
+      GlobalContext.yield()
     } finally {
       entered.set(false)
     }

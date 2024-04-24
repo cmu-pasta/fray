@@ -3,6 +3,7 @@ package cmu.pasta.fray.runtime;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -32,27 +33,27 @@ public class Delegate {
     public void onObjectNotifyAll(Object o) {
     }
 
-    public void onReentrantLockTryLock(ReentrantLock l) {
+    public void onLockTryLock(Lock l) {
     }
 
-    public void onLockLock(ReentrantLock l) {
+    public void onLockLock(Lock l) {
     }
-    public void onLockLockInterruptibly(ReentrantLock l) {
-    }
-
-    public void onLockLockDone(ReentrantLock l) {
+    public void onLockLockInterruptibly(Lock l) {
     }
 
-    public void onLockUnlock(ReentrantLock l) {
+    public void onLockLockDone(Lock l) {
     }
 
-    public void onLockUnlockDone(ReentrantLock l) {
+    public void onLockUnlock(Lock l) {
+    }
+
+    public void onLockUnlockDone(Lock l) {
     }
 
     public void onAtomicOperation(Object o, MemoryOpType type) {
     }
 
-    public Condition onLockNewCondition(Condition c, ReentrantLock l) {
+    public Condition onLockNewCondition(Condition c, Lock l) {
         return c;
     }
 

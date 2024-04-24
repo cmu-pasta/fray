@@ -1,7 +1,6 @@
 package cmu.pasta.fray.core.logger
 
 import cmu.pasta.fray.core.concurrency.operations.Operation
-import cmu.pasta.fray.core.runtime.AnalysisResult
 import cmu.pasta.fray.core.scheduler.Choice
 import cmu.pasta.fray.core.scheduler.Schedule
 import java.io.File
@@ -13,7 +12,6 @@ import kotlinx.serialization.json.Json
 data class Record(
     val timeline: MutableList<Operation>,
     val schedule: Schedule,
-    val result: AnalysisResult
 )
 
 class JsonLogger(val base: String, val fullSchedule: Boolean) : LoggerBase {
@@ -33,8 +31,8 @@ class JsonLogger(val base: String, val fullSchedule: Boolean) : LoggerBase {
     schedule.choices.add(choice)
   }
 
-  override fun executionDone(result: AnalysisResult) {
-    executions.add(Record(currentTimeline, schedule, result))
+  override fun executionDone() {
+    executions.add(Record(currentTimeline, schedule))
     //        if (result != AnalysisResult.COMPLETE) {
     //
     // File("$base/schedule_${savedSchedule++}.json").writeText(json.encodeToString(schedule))

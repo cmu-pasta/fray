@@ -7,7 +7,6 @@ import cmu.pasta.fray.core.concurrency.locks.LockManager
 import cmu.pasta.fray.core.concurrency.locks.SemaphoreManager
 import cmu.pasta.fray.core.concurrency.operations.*
 import cmu.pasta.fray.core.logger.LoggerBase
-import cmu.pasta.fray.core.runtime.AnalysisResult
 import cmu.pasta.fray.core.scheduler.Choice
 import cmu.pasta.fray.core.scheduler.FifoScheduler
 import cmu.pasta.fray.core.scheduler.Scheduler
@@ -22,6 +21,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 import java.util.concurrent.locks.Condition
+import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
@@ -100,6 +100,8 @@ object GlobalContext {
       }
     }
     context.state = ThreadState.Completed
+    Runtime.DELEGATE = Delegate()
+    done()
   }
 
   fun start() {
@@ -118,8 +120,8 @@ object GlobalContext {
     scheduleNextOperation(true)
   }
 
-  fun done(result: AnalysisResult) {
-    loggers.forEach { it.executionDone(result) }
+  fun done() {
+    loggers.forEach { it.executionDone() }
 
     assert(lockManager.waitingThreads.isEmpty())
     assert(syncManager.synchronizationPoints.isEmpty())
@@ -175,7 +177,7 @@ object GlobalContext {
     if (context.state == ThreadState.Running) {
       return
     }
-    assert(context.state == ThreadState.Paused)
+    assert(context.state == ThreadState.Enabled)
     syncManager.signal(t)
     context.block()
   }
@@ -192,7 +194,7 @@ object GlobalContext {
   }
 
   fun threadUnparkDone(t: Thread) {
-    if (registeredThreads[t.id]!!.state == ThreadState.Paused) {
+    if (registeredThreads[t.id]!!.state != ThreadState.Paused) {
       // SFuzz only needs to wait if `t` is parked and then
       // waken up by this `unpark` operation.
       syncManager.wait(t)
@@ -224,7 +226,6 @@ object GlobalContext {
       size = it.size
     }
     syncManager.createWait(t, size)
-
     executor.submit {
       while (t.isAlive) {
         Thread.yield()
@@ -392,7 +393,7 @@ object GlobalContext {
     objectNotifyAllImpl(o, lockManager.lockFromCondition(o))
   }
 
-  fun reentrantLockTrylock(lock: Any) {
+  fun lockTryLock(lock: Any) {
     val t = Thread.currentThread().id
     val objId = System.identityHashCode(lock)
     registeredThreads[t]?.pendingOperation = LockLockOperation(objId)
@@ -514,7 +515,7 @@ object GlobalContext {
     syncManager.wait(lock)
   }
 
-  fun lockNewCondition(condition: Condition, lock: ReentrantLock) {
+  fun lockNewCondition(condition: Condition, lock: Lock) {
     lockManager.registerNewCondition(condition, lock)
   }
 
@@ -658,6 +659,11 @@ object GlobalContext {
       reportError(e)
       throw e
     }
+  }
+
+  fun yield() {
+    registeredThreads[Thread.currentThread().id]!!.state = ThreadState.Enabled
+    scheduleNextOperation(true)
   }
 
   fun scheduleNextOperation(shouldBlockCurrentThread: Boolean) {

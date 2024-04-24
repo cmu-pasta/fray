@@ -1,8 +1,6 @@
 package cmu.pasta.fray.core
 
 import cmu.pasta.fray.core.logger.ConsoleLogger
-import cmu.pasta.fray.core.runtime.AnalysisResult
-import cmu.pasta.fray.runtime.Delegate
 import cmu.pasta.fray.runtime.Runtime
 import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
@@ -39,12 +37,9 @@ class TestRunner(val config: Configuration) {
           config.exec()
           Runtime.onMainExit()
         } catch (e: Throwable) {
-          GlobalContext.errorFound = true
+          Runtime.onReportError(e)
           Runtime.onMainExit()
-          GlobalContext.log("Error found: $e")
         }
-        Runtime.DELEGATE = Delegate()
-        GlobalContext.done(AnalysisResult.COMPLETE)
         if (GlobalContext.errorFound) {
           println("Error found at iter: $i")
           break
