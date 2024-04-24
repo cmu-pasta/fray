@@ -33,6 +33,10 @@ public class Runtime {
         DELEGATE.onLockTryLock(l);
     }
 
+    public static void onLockTryLockDone(Lock l) {
+        DELEGATE.onLockTryLockDone(l);
+    }
+
     public static void onLockLock(Lock l) {
         DELEGATE.onLockLock(l);
     }
@@ -245,7 +249,7 @@ public class Runtime {
         DELEGATE.onSemaphoreAcquireUninterruptibly(sem, permits);
     }
 
-    public static void onLockLockInterruptibly(ReentrantLock l) {
+    public static void onLockLockInterruptibly(Lock l) {
         DELEGATE.onLockLockInterruptibly(l);
     }
 

@@ -36,8 +36,12 @@ public class Delegate {
     public void onLockTryLock(Lock l) {
     }
 
+    public void onLockTryLockDone(Lock l) {
+    }
+
     public void onLockLock(Lock l) {
     }
+
     public void onLockLockInterruptibly(Lock l) {
     }
 

@@ -23,7 +23,10 @@ class LockInstrumenter(cv: ClassVisitor) :
       exceptions: Array<out String>?
   ): MethodVisitor {
     if (name == "tryLock") {
-      return MethodEnterVisitor(mv, Runtime::onLockTryLock, access, name, descriptor, true, false)
+      val eMv =
+          MethodEnterVisitor(mv, Runtime::onLockTryLock, access, name, descriptor, true, false)
+      return MethodExitVisitor(
+          eMv, Runtime::onLockTryLockDone, access, name, descriptor, true, false, true)
     }
     if (name == "lock" || name == "lockInterruptibly") {
       val eMv =

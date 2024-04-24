@@ -127,6 +127,10 @@ class RuntimeDelegate : Delegate() {
     }
   }
 
+  override fun onLockTryLockDone(l: Lock) {
+    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+  }
+
   override fun onLockLock(l: Lock) {
     if (checkEntered()) {
       skipFunctionEntered.set(1 + skipFunctionEntered.get())
@@ -135,8 +139,8 @@ class RuntimeDelegate : Delegate() {
     try {
       GlobalContext.lockLock(l, false)
     } finally {
-      entered.set(false)
       skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+      entered.set(false)
     }
   }
 
@@ -372,8 +376,8 @@ class RuntimeDelegate : Delegate() {
     try {
       GlobalContext.semaphoreAcquire(sem, permits, true, true)
     } finally {
-      entered.set(false)
       skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+      entered.set(false)
     }
   }
 

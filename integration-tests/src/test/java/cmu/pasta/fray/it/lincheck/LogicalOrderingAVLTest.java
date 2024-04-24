@@ -1,11 +1,9 @@
 package cmu.pasta.fray.it.lincheck;
 
-import cmu.pasta.fray.core.scheduler.POSScheduler;
+import cmu.pasta.fray.core.scheduler.*;
 import cmu.pasta.fray.it.IntegrationTestRunner;
 import cmu.pasta.fray.it.logicalorderingavl.LogicalOrderingAVL;
 import org.junit.jupiter.api.Test;
-
-import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -20,7 +18,7 @@ public class LogicalOrderingAVLTest extends IntegrationTestRunner {
                 throw new RuntimeException(e);
             }
             return null;
-        }, new POSScheduler(new Random()), 10000);
+        }, new PCTScheduler(new ControlledRandom(), 3), 50000);
         assertTrue(res.contains("Error found"));
     }
 
