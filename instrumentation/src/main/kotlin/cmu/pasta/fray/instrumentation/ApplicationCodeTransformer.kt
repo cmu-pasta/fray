@@ -48,6 +48,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = ConditionInstrumenter(cv)
       cv = SynchronizedMethodInstrumenter(cv)
       cv = ClassVersionInstrumenter(cv)
+      cv = ArrayOperationInstrumenter(cv)
       classReader.accept(cv, ClassReader.EXPAND_FRAMES)
       val out = classWriter.toByteArray()
       File("/tmp/out/app/${className.replace("/", ".").removePrefix(".")}.class").writeBytes(out)

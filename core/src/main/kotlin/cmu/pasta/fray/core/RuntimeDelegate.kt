@@ -483,6 +483,26 @@ class RuntimeDelegate : Delegate() {
     entered.set(false)
   }
 
+  override fun onArrayLoad(o: Any?, index: Int) {
+    if (o == null) return
+    if (checkEntered()) return
+    try {
+      GlobalContext.arrayOperation(o, index, MemoryOpType.MEMORY_READ)
+    } finally {
+      entered.set(false)
+    }
+  }
+
+  override fun onArrayStore(o: Any?, index: Int) {
+    if (o == null) return
+    if (checkEntered()) return
+    try {
+      GlobalContext.arrayOperation(o, index, MemoryOpType.MEMORY_WRITE)
+    } finally {
+      entered.set(false)
+    }
+  }
+
   override fun start() {
     // For the first thread, it is not registered.
     // Therefor we cannot call `checkEntered` here.

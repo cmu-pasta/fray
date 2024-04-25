@@ -185,5 +185,11 @@ public class Delegate {
 
     public void onUnsafeWriteVolatile(Object o, long offset) {
     }
+
+    public void onArrayLoad(Object o, int index) {
+    }
+
+    public void onArrayStore(Object o, int index) {
+    }
 }
 

@@ -4,7 +4,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 // No recursion is allowed in Runtime
@@ -91,6 +90,14 @@ public class Runtime {
 
     public static void onAtomicOperation(Object o, MemoryOpType type) {
         DELEGATE.onAtomicOperation(o, type);
+    }
+
+    public static void onArrayLoad(Object o, int index) {
+        DELEGATE.onArrayLoad(o, index);
+    }
+
+    public static void onArrayStore(Object o, int index) {
+        DELEGATE.onArrayStore(o, index);
     }
 
     public static void onFieldRead(Object o, String owner, String name, String descriptor) {

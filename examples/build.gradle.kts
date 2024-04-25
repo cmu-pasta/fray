@@ -60,7 +60,7 @@ tasks.register<JavaExec>("runSCT") {
     else -> emptyList()
   }
   classpath += files(cp)
-  args = listOf("cmu.pasta.fray.benchmark.$main", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "csv", "--iter", "10000") + extraArgs
+  args = listOf("cmu.pasta.sfuzz.benchmark.$main", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "csv", "--iter", "10000") + extraArgs
 }
 
 tasks.register<JavaExec>("runArithmeticProgBad") {

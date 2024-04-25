@@ -571,6 +571,12 @@ object GlobalContext {
     memoryOperation(objId, type)
   }
 
+  fun arrayOperation(obj: Any, index: Int, type: MemoryOpType) {
+    if (!config!!.interleaveMemoryOps) return
+    val objId = System.identityHashCode(obj)
+    memoryOperation((31 * objId) + index, type)
+  }
+
   fun unsafeOperation(obj: Any, offset: Long, type: MemoryOpType) {
     val objId = System.identityHashCode(obj)
     memoryOperation((31 * objId) + offset.toInt(), type)
@@ -667,69 +673,65 @@ object GlobalContext {
   }
 
   fun scheduleNextOperation(shouldBlockCurrentThread: Boolean) {
-    try {
-      // Our current design makes sure that reschedule is only called
-      // by scheduled thread.
-      val currentThread = registeredThreads[currentThreadId]!!
-      assert(
-          Thread.currentThread() is HelperThread ||
-              currentThreadId == Thread.currentThread().id ||
-              currentThread.state == ThreadState.Enabled ||
-              currentThread.state == ThreadState.Completed)
-      assert(registeredThreads.none { it.value.state == ThreadState.Running })
-      var enabledOperations =
-          registeredThreads.values
-              .toList()
-              .filter { it.state == ThreadState.Enabled }
-              .sortedBy { it.thread.id }
-      if (mainExiting && (currentThreadId == mainThreadId || enabledOperations.size > 1)) {
-        enabledOperations = enabledOperations.filter { it.thread.id != mainThreadId }
-      }
+    // Our current design makes sure that reschedule is only called
+    // by scheduled thread.
+    val currentThread = registeredThreads[currentThreadId]!!
+    assert(
+        Thread.currentThread() is HelperThread ||
+            currentThreadId == Thread.currentThread().id ||
+            currentThread.state == ThreadState.Enabled ||
+            currentThread.state == ThreadState.Completed)
+    assert(registeredThreads.none { it.value.state == ThreadState.Running })
+    var enabledOperations =
+        registeredThreads.values
+            .toList()
+            .filter { it.state == ThreadState.Enabled }
+            .sortedBy { it.thread.id }
+    if (mainExiting && (currentThreadId == mainThreadId || enabledOperations.size > 1)) {
+      enabledOperations = enabledOperations.filter { it.thread.id != mainThreadId }
+    }
 
-      if (enabledOperations.isEmpty()) {
-        if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
-          // We are done here, we should go back to the main thread.
-          if (currentThreadId != mainThreadId) {
-            registeredThreads[mainThreadId]!!.unblock()
-          }
-          return
-        } else if (!currentThread.isExiting || Thread.currentThread() is HelperThread) {
-          // Deadlock detected
-          val e = TargetTerminateException(-1)
-          reportError(e)
-          throw e
+    if (enabledOperations.isEmpty()) {
+      if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
+        // We are done here, we should go back to the main thread.
+        if (currentThreadId != mainThreadId) {
+          registeredThreads[mainThreadId]!!.unblock()
         }
-      }
-
-      step += 1
-      if (step > maxScheduledStep &&
-          !currentThread.isExiting &&
-          Thread.currentThread() !is HelperThread &&
-          !(mainExiting && currentThreadId == mainThreadId)) {
-        val e = TargetTerminateException(-2)
+        return
+      } else if (!currentThread.isExiting || Thread.currentThread() is HelperThread) {
+        // Deadlock detected
+        val e = TargetTerminateException(-1)
         reportError(e)
         throw e
       }
+    }
 
-      val nextThread = scheduler.scheduleNextOperation(enabledOperations)
-      val index = enabledOperations.indexOf(nextThread)
-      currentThreadId = nextThread.thread.id
-
-      if (enabledOperations.size > 1 || config!!.fullSchedule) {
-        loggers.forEach {
-          it.newOperationScheduled(
-              nextThread.pendingOperation, Choice(index, nextThread.index, enabledOperations.size))
-        }
-      }
-      nextThread.state = ThreadState.Running
-      if (currentThread != nextThread || currentThread.blockedBy != null) {
-        unblockThread(nextThread)
-      }
-      if (currentThread != nextThread && shouldBlockCurrentThread) {
-        currentThread.block()
-      }
-    } catch (e: Throwable) {
+    step += 1
+    if (step > maxScheduledStep &&
+        !currentThread.isExiting &&
+        Thread.currentThread() !is HelperThread &&
+        !(mainExiting && currentThreadId == mainThreadId)) {
+      val e = TargetTerminateException(-2)
+      reportError(e)
       throw e
+    }
+
+    val nextThread = scheduler.scheduleNextOperation(enabledOperations)
+    val index = enabledOperations.indexOf(nextThread)
+    currentThreadId = nextThread.thread.id
+
+    if (enabledOperations.size > 1 || config!!.fullSchedule) {
+      loggers.forEach {
+        it.newOperationScheduled(
+            nextThread.pendingOperation, Choice(index, nextThread.index, enabledOperations.size))
+      }
+    }
+    nextThread.state = ThreadState.Running
+    if (currentThread != nextThread || currentThread.blockedBy != null) {
+      unblockThread(nextThread)
+    }
+    if (currentThread != nextThread && shouldBlockCurrentThread) {
+      currentThread.block()
     }
   }
 
