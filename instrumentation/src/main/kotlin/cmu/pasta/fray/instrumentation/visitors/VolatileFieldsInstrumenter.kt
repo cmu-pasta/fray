@@ -117,6 +117,6 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   }
 
   companion object {
-    val volatileManager = VolatileManager(true)
+    val volatileManager = VolatileManager(false)
   }
 }

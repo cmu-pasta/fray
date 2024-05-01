@@ -38,7 +38,7 @@ object GlobalContext {
   var mainExiting = false
   private val lockManager = LockManager()
   private val semaphoreManager = SemaphoreManager()
-  private val volatileManager = VolatileManager(false)
+  private val volatileManager = VolatileManager(true)
   private val latchManager = CountDownLatchManager()
   private var step = 0
   private val maxScheduledStep = 10000

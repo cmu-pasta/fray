@@ -3,7 +3,7 @@ package cmu.pasta.fray.instrumentation.memory
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 
-class VolatileManager(val default: Boolean) {
+class VolatileManager(val tryResolve: Boolean) {
   private val volatileFields = HashMap<String, Boolean>()
 
   fun setVolatile(name: String, fieldName: String, access: Int) {
@@ -15,9 +15,8 @@ class VolatileManager(val default: Boolean) {
     if (key in volatileFields) {
       return volatileFields[key]!!
     }
-    if (name.startsWith("jdk/jfr")) {
-      volatileFields[key] = default
-      return default
+    if (!tryResolve) {
+      return true
     }
     try {
       val cl = Thread.currentThread().getContextClassLoader()
@@ -37,9 +36,9 @@ class VolatileManager(val default: Boolean) {
         volatileFields[key] = false
       }
     } catch (e: ClassNotFoundException) {
-      volatileFields[key] = default
+      volatileFields[key] = true
     } catch (e: LinkageError) {
-      volatileFields[key] = default
+      volatileFields[key] = true
     }
     return volatileFields[key]!!
   }
