@@ -102,13 +102,13 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
                     false,
                 )
           }
-        }
-        if (opcode == Opcodes.PUTFIELD) {
-          if (descriptor == "J" || descriptor == "D") {
-            dupX2()
-            pop()
-          } else {
-            swap() // objectref, value
+          if (opcode == Opcodes.PUTFIELD) {
+            if (descriptor == "J" || descriptor == "D") {
+              dupX2()
+              pop()
+            } else {
+              swap() // objectref, value
+            }
           }
         }
         super.visitFieldInsn(opcode, owner, name, descriptor)
