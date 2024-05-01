@@ -7,6 +7,8 @@ import org.objectweb.asm.FieldVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ASM9
+import org.objectweb.asm.Type
+import org.objectweb.asm.commons.AdviceAdapter
 
 class VolatileFieldsInstrumenter(cv: ClassVisitor, val instrumentJDK: Boolean) :
     ClassVisitor(ASM9, cv) {
@@ -54,13 +56,23 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor, val instrumentJDK: Boolean) :
     if (name == "<init>" || name == "<clinit>" || !shouldInstrument) {
       return mv
     }
-    return object : MethodVisitor(ASM9, mv) {
+    return object : AdviceAdapter(ASM9, mv, access, name, descriptor) {
       override fun visitFieldInsn(opcode: Int, owner: String, name: String, descriptor: String) {
         if (recursiveVisitClass(owner) ||
             !instrumentJDK ||
             volatileManager.isVolatile(owner, name)) {
-          if (opcode == Opcodes.GETFIELD || opcode == Opcodes.PUTFIELD) {
-            visitVarInsn(Opcodes.ALOAD, 0)
+          if (opcode == Opcodes.GETFIELD) {
+            dup()
+          }
+          if (opcode == Opcodes.PUTFIELD) {
+            if (descriptor == "J" || descriptor == "D") {
+              dup2X1()
+              pop2()
+            } else {
+              dupX1()
+              pop()
+            }
+            dup()
           }
           visitLdcInsn(owner)
           visitLdcInsn(name)
@@ -94,6 +106,13 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor, val instrumentJDK: Boolean) :
                     Runtime::onStaticFieldRead.name,
                     Utils.kFunctionToJvmMethodDescriptor(Runtime::onStaticFieldRead),
                     false)
+          }
+        }
+        if (opcode == Opcodes.PUTFIELD) {
+          if (descriptor == "J" || descriptor == "D") {
+            swap(Type.LONG_TYPE, Type.INT_TYPE)
+          } else {
+            swap()
           }
         }
         super.visitFieldInsn(opcode, owner, name, descriptor)
