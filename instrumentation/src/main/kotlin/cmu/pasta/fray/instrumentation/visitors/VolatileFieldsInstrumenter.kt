@@ -7,13 +7,10 @@ import org.objectweb.asm.FieldVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ASM9
-import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
 
-class VolatileFieldsInstrumenter(cv: ClassVisitor, val instrumentJDK: Boolean) :
-    ClassVisitor(ASM9, cv) {
+class VolatileFieldsInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   var className = ""
-  var shouldInstrument = !instrumentJDK
 
   override fun visit(
       version: Int,
@@ -25,9 +22,6 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor, val instrumentJDK: Boolean) :
   ) {
     super.visit(version, access, name, signature, superName, interfaces)
     className = name
-    if (className.startsWith("java/util/concurrent")) {
-      shouldInstrument = true
-    }
   }
 
   override fun visitField(
@@ -53,26 +47,23 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor, val instrumentJDK: Boolean) :
       exceptions: Array<out String>?
   ): MethodVisitor {
     var mv = super.visitMethod(access, name, descriptor, signature, exceptions)
-    if (name == "<init>" || name == "<clinit>" || !shouldInstrument) {
+    if (name == "<init>" || name == "<clinit>") {
       return mv
     }
     return object : AdviceAdapter(ASM9, mv, access, name, descriptor) {
       override fun visitFieldInsn(opcode: Int, owner: String, name: String, descriptor: String) {
-        if (recursiveVisitClass(owner) ||
-            !instrumentJDK ||
-            volatileManager.isVolatile(owner, name)) {
+        if (recursiveVisitClass(owner) || volatileManager.isVolatile(owner, name)) {
           if (opcode == Opcodes.GETFIELD) {
             dup()
           }
           if (opcode == Opcodes.PUTFIELD) {
             if (descriptor == "J" || descriptor == "D") {
-              dup2X1()
-              pop2()
+              dup2X1() // value, objectref, value
+              pop2() // value, objectref
             } else {
-              dupX1()
-              pop()
+              swap()
             }
-            dup()
+            dup() // value, objectref, objectref
           }
           visitLdcInsn(owner)
           visitLdcInsn(name)
@@ -84,35 +75,40 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor, val instrumentJDK: Boolean) :
                     Runtime::class.java.name.replace(".", "/"),
                     Runtime::onFieldRead.name,
                     Utils.kFunctionToJvmMethodDescriptor(Runtime::onFieldRead),
-                    false)
+                    false,
+                )
             Opcodes.PUTFIELD ->
                 super.visitMethodInsn(
                     Opcodes.INVOKESTATIC,
                     Runtime::class.java.name.replace(".", "/"),
                     Runtime::onFieldWrite.name,
                     Utils.kFunctionToJvmMethodDescriptor(Runtime::onFieldWrite),
-                    false)
+                    false,
+                )
             Opcodes.PUTSTATIC ->
                 super.visitMethodInsn(
                     Opcodes.INVOKESTATIC,
                     Runtime::class.java.name.replace(".", "/"),
                     Runtime::onStaticFieldWrite.name,
                     Utils.kFunctionToJvmMethodDescriptor(Runtime::onStaticFieldWrite),
-                    false)
+                    false,
+                )
             Opcodes.GETSTATIC ->
                 super.visitMethodInsn(
                     Opcodes.INVOKESTATIC,
                     Runtime::class.java.name.replace(".", "/"),
                     Runtime::onStaticFieldRead.name,
                     Utils.kFunctionToJvmMethodDescriptor(Runtime::onStaticFieldRead),
-                    false)
+                    false,
+                )
           }
         }
         if (opcode == Opcodes.PUTFIELD) {
           if (descriptor == "J" || descriptor == "D") {
-            swap(Type.LONG_TYPE, Type.INT_TYPE)
+            dupX2()
+            pop()
           } else {
-            swap()
+            swap() // objectref, value
           }
         }
         super.visitFieldInsn(opcode, owner, name, descriptor)
