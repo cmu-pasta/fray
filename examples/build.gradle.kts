@@ -26,6 +26,7 @@ tasks.withType<JavaExec> {
   jvmArgs("-agentpath:$agentPath")
   jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
   jvmArgs("-ea")
+  jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
   doFirst {
     // Printing the full command
     println("Executing command: ${executable} ${jvmArgs!!.joinToString(" ")} -cp ${classpath.asPath} ${mainClass.get()} ${args!!.joinToString(" ")}")
@@ -52,6 +53,17 @@ tasks.register<JavaExec>("replay") {
   args = listOf("cmu.pasta.fray.benchmark.$main", "main", "-o", "/tmp/report", "--logger", "csv", "--iter", "10000") + extraArgs
 }
 
+tasks.register<JavaExec>("runJC") {
+  val cp = properties["classpath"] as String? ?: ""
+  val main = properties["mainClass"] as String? ?: ""
+  val extraArgs = when (val extraArgs = properties["extraArgs"]) {
+    is String -> extraArgs.split(" ")
+    else -> emptyList()
+  }
+  classpath += files(cp.split(":"))
+  args = listOf(main, "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "csv", "--iter", "10000") + extraArgs
+}
+
 tasks.register<JavaExec>("runSCT") {
   val cp = properties["classpath"] as String? ?: ""
   val main = properties["mainClass"] as String? ?: ""
@@ -59,7 +71,7 @@ tasks.register<JavaExec>("runSCT") {
     is String -> extraArgs.split(" ")
     else -> emptyList()
   }
-  classpath += files(cp)
+  classpath += files(cp.split(":"))
   args = listOf("cmu.pasta.sfuzz.benchmark.$main", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "csv", "--iter", "10000") + extraArgs
 }
 
