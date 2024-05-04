@@ -16,7 +16,7 @@ import org.objectweb.asm.util.CheckClassAdapter
 fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
   val byteArray = inputStream.readBytes()
   File("/tmp/out/origin/${path.replace("/", ".").removePrefix(".")}").writeBytes(byteArray)
-  val shouldSkipChecking = !path.contains("SystemModules") && !path.contains("$")
+  val shouldSkipChecking = path.contains("SystemModules") || path.contains("$")
 
   try {
     val classReader = ClassReader(byteArray)
