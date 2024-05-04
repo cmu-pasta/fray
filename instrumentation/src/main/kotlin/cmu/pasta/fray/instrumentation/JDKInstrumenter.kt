@@ -16,12 +16,11 @@ import org.objectweb.asm.util.CheckClassAdapter
 fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
   val byteArray = inputStream.readBytes()
   File("/tmp/out/origin/${path.replace("/", ".").removePrefix(".")}").writeBytes(byteArray)
-  val shouldCheckDataFlow = !path.contains("SystemModules")
+  val shouldSkipChecking = !path.contains("SystemModules") && !path.contains("$")
 
   try {
     val classReader = ClassReader(byteArray)
     val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
-    val checkClassAdapter = CheckClassAdapter(classWriter, shouldCheckDataFlow)
     val cn = ClassNode()
     var cv: ClassVisitor = ThreadInstrumenter(cn)
     cv = FieldInstanceReadWriteInstrumenter(cv)
@@ -46,7 +45,11 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     // it inlines monitors for synchronized methods.
     //    cv = SynchronizedMethodInstrumenter(cv)
     classReader.accept(cv, ClassReader.EXPAND_FRAMES)
-    cn.accept(checkClassAdapter)
+    if (shouldSkipChecking) {
+      cn.accept(classWriter)
+    } else {
+      cn.accept(CheckClassAdapter(classWriter))
+    }
     val out = classWriter.toByteArray()
     File("/tmp/out/jdk/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)
     //        File("/tmp/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)

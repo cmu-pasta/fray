@@ -15,10 +15,10 @@ dependencies {
   add("shadow", localGroovy())
   add("shadow", gradleApi())
   implementation("org.jetbrains.kotlin:kotlin-reflect")
-  implementation("org.ow2.asm:asm:9.6")
-  implementation("org.ow2.asm:asm-tree:9.6")
-  implementation("org.ow2.asm:asm-commons:9.6")
-  implementation("org.ow2.asm:asm-util:9.6")
+  implementation("org.ow2.asm:asm:9.7")
+  implementation("org.ow2.asm:asm-tree:9.7")
+  implementation("org.ow2.asm:asm-commons:9.7")
+  implementation("org.ow2.asm:asm-util:9.7")
   implementation(project(":runtime"))
 }
 
