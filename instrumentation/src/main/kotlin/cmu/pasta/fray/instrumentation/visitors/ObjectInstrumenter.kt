@@ -5,6 +5,7 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
+import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
 
 class ObjectInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Object::class.java.name) {
@@ -34,27 +35,22 @@ class ObjectInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Object::class.
           if (opcode != ATHROW) {
             visitLabel(methodExitLabel)
             loadThis()
-            visitMethodInsn(
-                Opcodes.INVOKESTATIC,
-                Runtime::class.java.name.replace(".", "/"),
-                Runtime::onObjectWaitDone.name,
-                Utils.kFunctionToJvmMethodDescriptor(Runtime::onObjectWaitDone),
-                false)
+            invokeStatic(
+                Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+                Utils.kFunctionToASMMethod(Runtime::onObjectWaitDone))
           }
           super.onMethodExit(opcode)
         }
 
         override fun visitMaxs(maxStack: Int, maxLocals: Int) {
-          val label = Label()
-          visitTryCatchBlock(methodEnterLabel, methodExitLabel, label, "java/lang/Throwable")
-          visitLabel(label)
+          catchException(
+              methodEnterLabel, methodExitLabel, Type.getObjectType("java/lang/Throwable"))
+          val locals = getLocals()
+          visitFrame(Opcodes.F_NEW, locals.size, getLocals(), 1, arrayOf("java/lang/Throwable"))
           loadThis()
-          visitMethodInsn(
-              Opcodes.INVOKESTATIC,
-              Runtime::class.java.name.replace(".", "/"),
-              Runtime::onObjectWaitDone.name,
-              Utils.kFunctionToJvmMethodDescriptor(Runtime::onObjectWaitDone),
-              false)
+          invokeStatic(
+              Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+              Utils.kFunctionToASMMethod(Runtime::onObjectWaitDone))
           visitInsn(ATHROW)
           super.visitMaxs(maxStack, maxLocals)
         }

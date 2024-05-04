@@ -56,7 +56,10 @@ class UnsafeInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, "sun.misc.Unsa
         name == "getAndSetObject") {
       return MethodEnterVisitor(
           mv, Runtime::onUnsafeWriteVolatile, access, name, descriptor, false, true) {
-            if (name == "putLongVolatile" || name == "putDoubleVolatile") {
+            if (name == "putLongVolatile" ||
+                name == "putDoubleVolatile" ||
+                name == "getAndAddLong" ||
+                name == "getAndSetLong") {
               pop2()
             } else {
               pop()

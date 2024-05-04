@@ -7,6 +7,8 @@ import java.security.ProtectionDomain
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.tree.ClassNode
+import org.objectweb.asm.util.CheckClassAdapter
 
 class ApplicationCodeTransformer : ClassFileTransformer {
   override fun transform(
@@ -29,18 +31,22 @@ class ApplicationCodeTransformer : ClassFileTransformer {
         dotClassName.startsWith("org.junit.") ||
         dotClassName.startsWith("org.gradle.") ||
         dotClassName.startsWith("worker.org.gradle.") ||
-        dotClassName.startsWith("com.github.ajalt.clikt") ||
+        dotClassName.startsWith("com.github.ajalt") ||
         (dotClassName.startsWith("cmu.pasta.fray") &&
             !dotClassName.startsWith("cmu.pasta.fray.benchmark") &&
             !dotClassName.startsWith("cmu.pasta.fray.it"))) {
       // This is likely a JDK class, so skip transformation
       return classfileBuffer
     }
-    var classReader = ClassReader(classfileBuffer)
-    var classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
+    File("/tmp/out/origin/${className.replace("/", ".").removePrefix(".")}.class")
+        .writeBytes(classfileBuffer)
+    val classReader = ClassReader(classfileBuffer)
+    val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
+    val checkClassAdapter = CheckClassAdapter(classWriter)
+    val cn = ClassNode()
 
     try {
-      var cv: ClassVisitor = ObjectNotifyInstrumenter(classWriter)
+      var cv: ClassVisitor = ObjectNotifyInstrumenter(cn)
       cv = TargetExitInstrumenter(cv)
       cv = VolatileFieldsInstrumenter(cv)
       cv = ObjectNotifyInstrumenter(cv)
@@ -50,6 +56,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = ClassVersionInstrumenter(cv)
       cv = ArrayOperationInstrumenter(cv)
       classReader.accept(cv, ClassReader.EXPAND_FRAMES)
+      cn.accept(checkClassAdapter)
       val out = classWriter.toByteArray()
       File("/tmp/out/app/${className.replace("/", ".").removePrefix(".")}.class").writeBytes(out)
       return out

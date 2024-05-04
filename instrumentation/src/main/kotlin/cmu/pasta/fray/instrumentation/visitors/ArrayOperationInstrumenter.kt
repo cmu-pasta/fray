@@ -3,8 +3,11 @@ package cmu.pasta.fray.instrumentation.visitors
 import cmu.pasta.fray.runtime.Runtime
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.Opcodes.ASM9
-import org.objectweb.asm.commons.AdviceAdapter
+import org.objectweb.asm.Type
+import org.objectweb.asm.commons.GeneratorAdapter
+import org.objectweb.asm.commons.Method
 
 class ArrayOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   override fun visitMethod(
@@ -15,7 +18,7 @@ class ArrayOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       exceptions: Array<out String>?
   ): MethodVisitor {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
-    return object : AdviceAdapter(ASM9, mv, access, name, descriptor) {
+    return object : GeneratorAdapter(ASM9, mv, access, name, descriptor) {
       override fun visitInsn(opcode: Int) {
         if (opcode == AALOAD ||
             opcode == BALOAD ||
@@ -26,12 +29,12 @@ class ArrayOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
             opcode == LALOAD ||
             opcode == SALOAD) {
           dup2()
-          visitMethodInsn(
-              INVOKESTATIC,
-              cmu.pasta.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-              Runtime::onArrayLoad.name,
-              Utils.kFunctionToJvmMethodDescriptor(Runtime::onArrayLoad),
-              false)
+          invokeStatic(
+              Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+              Method(
+                  Runtime::onArrayLoad.name,
+                  Utils.kFunctionToJvmMethodDescriptor(Runtime::onArrayLoad)),
+          )
         }
         if (opcode == AASTORE ||
             opcode == BASTORE ||
@@ -49,12 +52,10 @@ class ArrayOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
             pop() // value, arrayref, index
           }
           dup2() // value, arrayref, index, arrayref, index
-          visitMethodInsn(
-              INVOKESTATIC,
-              cmu.pasta.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-              Runtime::onArrayStore.name,
-              Utils.kFunctionToJvmMethodDescriptor(Runtime::onArrayStore),
-              false)
+          invokeStatic(
+              Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+              Utils.kFunctionToASMMethod(Runtime::onArrayStore),
+          )
           /*
            Now we have [value, arrayref, index], we need to
            restore the stack to [arrayref, index, value]

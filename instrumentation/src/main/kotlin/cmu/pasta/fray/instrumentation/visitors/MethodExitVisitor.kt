@@ -5,6 +5,7 @@ import kotlin.reflect.KFunction
 import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
+import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
 
 class MethodExitVisitor(
@@ -33,12 +34,10 @@ class MethodExitVisitor(
       if (loadArgs) {
         loadArgs()
       }
-      visitMethodInsn(
-          Opcodes.INVOKESTATIC,
-          Runtime::class.java.name.replace(".", "/"),
-          method.name,
-          Utils.kFunctionToJvmMethodDescriptor(method),
-          false)
+      invokeStatic(
+          Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+          Utils.kFunctionToASMMethod(method),
+      )
     }
     super.onMethodExit(opcode)
   }
@@ -46,20 +45,20 @@ class MethodExitVisitor(
   override fun visitMaxs(maxStack: Int, maxLocals: Int) {
     if (addFinalBlock) {
       visitLabel(methodExitLabel)
-      visitTryCatchBlock(methodEnterLabel, methodExitLabel, methodExitLabel, "java/lang/Throwable")
+      catchException(methodEnterLabel, methodExitLabel, Type.getObjectType("java/lang/Throwable"))
+      val locals = getLocals()
+      visitFrame(Opcodes.F_NEW, locals.size, getLocals(), 1, arrayOf("java/lang/Throwable"))
       if (loadThis) {
         loadThis()
       }
       if (loadArgs) {
         loadArgs()
       }
-      visitMethodInsn(
-          Opcodes.INVOKESTATIC,
-          Runtime::class.java.name.replace(".", "/"),
-          method.name,
-          Utils.kFunctionToJvmMethodDescriptor(method),
-          false)
-      visitInsn(ATHROW)
+      invokeStatic(
+          Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+          Utils.kFunctionToASMMethod(method),
+      )
+      throwException()
     }
     super.visitMaxs(maxStack, maxLocals)
   }

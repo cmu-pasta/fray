@@ -7,4 +7,5 @@ module cmu.pasta.fray.instrumentation {
     requires org.objectweb.asm.tree;
     requires org.objectweb.asm.commons;
     requires java.instrument;
+    requires org.objectweb.asm.util;
 }

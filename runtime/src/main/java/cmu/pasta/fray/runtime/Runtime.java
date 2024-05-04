@@ -52,8 +52,8 @@ public class Runtime {
         DELEGATE.onLockUnlockDone(l);
     }
 
-    public static Condition onLockNewCondition(Condition c, Lock l) {
-        return DELEGATE.onLockNewCondition(c, l);
+    public static void onLockNewCondition(Condition c, Lock l) {
+        DELEGATE.onLockNewCondition(c, l);
     }
 
     public static void onObjectWait(Object o) {

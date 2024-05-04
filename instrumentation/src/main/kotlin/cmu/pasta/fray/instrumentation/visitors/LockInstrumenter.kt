@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 import kotlin.reflect.KFunction
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes
+import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
 
 class LockInstrumenter(cv: ClassVisitor) :
@@ -61,12 +61,9 @@ class LockInstrumenter(cv: ClassVisitor) :
       if (opcode == ARETURN) {
         dup()
         loadThis()
-        visitMethodInsn(
-            Opcodes.INVOKESTATIC,
-            Runtime::class.java.name.replace(".", "/"),
-            method.name,
-            Utils.kFunctionToJvmMethodDescriptor(method),
-            false)
+        invokeStatic(
+            Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+            Utils.kFunctionToASMMethod(method))
         super.onMethodExit(opcode)
       }
     }

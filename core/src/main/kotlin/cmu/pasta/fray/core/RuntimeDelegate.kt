@@ -195,11 +195,10 @@ class RuntimeDelegate : Delegate() {
     entered.set(false)
   }
 
-  override fun onLockNewCondition(c: Condition, l: Lock): Condition {
-    if (checkEntered()) return c
+  override fun onLockNewCondition(c: Condition, l: Lock) {
+    if (checkEntered()) return
     GlobalContext.lockNewCondition(c, l)
     entered.set(false)
-    return c
   }
 
   override fun onConditionAwait(o: Condition) {

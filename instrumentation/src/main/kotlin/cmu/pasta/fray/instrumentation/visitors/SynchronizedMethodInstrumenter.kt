@@ -34,7 +34,6 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) 
     val mv = super.visitMethod(newAccess, name, descriptor, signature, exceptions)
     return object : AdviceAdapter(ASM9, mv, newAccess, name, descriptor) {
       val enterLabel = Label()
-      val exitLabel = Label()
 
       override fun onMethodEnter() {
         super.onMethodEnter()
@@ -60,13 +59,13 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) 
       }
 
       override fun visitMaxs(maxStack: Int, maxLocals: Int) {
-        visitTryCatchBlock(enterLabel, exitLabel, exitLabel, "java/lang/Throwable")
-        visitLabel(exitLabel)
+        val label = mark()
+        catchException(enterLabel, label, Type.getObjectType("java/lang/Throwable"))
+        val locals = getLocals()
+        visitFrame(Opcodes.F_NEW, locals.size, getLocals(), 1, arrayOf("java/lang/Throwable"))
         if (access and Opcodes.ACC_STATIC != 0) {
-          visitFrame(F_NEW, 0, arrayOf<Any>(), 1, arrayOf<Any>("java/lang/Throwable"))
           push(Type.getObjectType(className))
         } else {
-          visitFrame(F_NEW, 1, arrayOf<Any>(className), 1, arrayOf<Any>("java/lang/Throwable"))
           loadThis()
         }
         visitInsn(MONITOREXIT)

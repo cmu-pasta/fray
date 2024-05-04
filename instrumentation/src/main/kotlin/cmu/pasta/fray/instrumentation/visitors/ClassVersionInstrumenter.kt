@@ -13,12 +13,13 @@ class ClassVersionInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       superName: String?,
       interfaces: Array<out String>?
   ) {
+    val majorVersion = version and 0xFF
     val patchedVersion =
-        if (version < Opcodes.V1_5) {
+        if (majorVersion < Opcodes.V1_5) {
           Opcodes.V1_5
         } else {
-          version
-        }
+          majorVersion
+        } + (version shr 16 shl 16)
     super.visit(patchedVersion, access, name, signature, superName, interfaces)
   }
 }

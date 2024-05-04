@@ -2,6 +2,7 @@ package cmu.pasta.fray.instrumentation.visitors
 
 import kotlin.reflect.KFunction
 import kotlin.reflect.javaType
+import org.objectweb.asm.commons.Method
 
 object Utils {
 
@@ -42,5 +43,9 @@ object Utils {
 
     val returnDescriptor = kotlinTypeToJvmDescriptor(function.returnType)
     return "($parameterDescriptors)$returnDescriptor"
+  }
+
+  fun kFunctionToASMMethod(function: KFunction<*>): Method {
+    return Method(function.name, kFunctionToJvmMethodDescriptor(function))
   }
 }

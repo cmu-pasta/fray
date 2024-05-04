@@ -11,15 +11,19 @@ import org.objectweb.asm.commons.ModuleResolutionAttribute
 import org.objectweb.asm.commons.ModuleTargetAttribute
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.ModuleExportNode
+import org.objectweb.asm.util.CheckClassAdapter
 
 fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
   val byteArray = inputStream.readBytes()
+  File("/tmp/out/origin/${path.replace("/", ".").removePrefix(".")}").writeBytes(byteArray)
+  val shouldCheckDataFlow = !path.contains("SystemModules")
+
   try {
     val classReader = ClassReader(byteArray)
-    //    var classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_FRAMES or
-    // ClassWriter.COMPUTE_MAXS)
     val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
-    var cv: ClassVisitor = ThreadInstrumenter(classWriter)
+    val checkClassAdapter = CheckClassAdapter(classWriter, shouldCheckDataFlow)
+    val cn = ClassNode()
+    var cv: ClassVisitor = ThreadInstrumenter(cn)
     cv = FieldInstanceReadWriteInstrumenter(cv)
     cv = ReentrantReadWriteLockInstrumenter(cv)
     cv = LockSupportInstrumenter(cv)
@@ -42,13 +46,14 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     // it inlines monitors for synchronized methods.
     //    cv = SynchronizedMethodInstrumenter(cv)
     classReader.accept(cv, ClassReader.EXPAND_FRAMES)
+    cn.accept(checkClassAdapter)
     val out = classWriter.toByteArray()
     File("/tmp/out/jdk/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)
     //        File("/tmp/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)
     return out
   } catch (e: Throwable) {
-    println("Exception during instrumentation: $e")
-    e.printStackTrace()
+    println(path)
+    throw e
   }
   File("/tmp/out/jdk/${path.replace("/", ".").removePrefix(".")}").writeBytes(byteArray)
   return byteArray

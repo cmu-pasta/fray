@@ -3,7 +3,7 @@ package cmu.pasta.fray.instrumentation.visitors
 import cmu.pasta.fray.runtime.Runtime
 import kotlin.reflect.KFunction
 import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes
+import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
 
 class MethodEnterVisitor(
@@ -25,11 +25,9 @@ class MethodEnterVisitor(
       loadArgs()
     }
     customizer(this)
-    visitMethodInsn(
-        Opcodes.INVOKESTATIC,
-        Runtime::class.java.name.replace(".", "/"),
-        method.name,
-        Utils.kFunctionToJvmMethodDescriptor(method),
-        false)
+    invokeStatic(
+        Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+        Utils.kFunctionToASMMethod(method),
+    )
   }
 }
