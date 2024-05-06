@@ -7,6 +7,7 @@ import java.security.ProtectionDomain
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.util.CheckClassAdapter
 
@@ -41,10 +42,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
     File("/tmp/out/origin/${className.replace("/", ".").removePrefix(".")}.class")
         .writeBytes(classfileBuffer)
     val classReader = ClassReader(classfileBuffer)
-    val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
-    val checkClassAdapter = CheckClassAdapter(classWriter)
     val cn = ClassNode()
-
     try {
       var cv: ClassVisitor = ObjectNotifyInstrumenter(cn)
       cv = TargetExitInstrumenter(cv)
@@ -53,10 +51,16 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = MonitorInstrumenter(cv)
       cv = ConditionInstrumenter(cv)
       cv = SynchronizedMethodInstrumenter(cv)
-      cv = ClassVersionInstrumenter(cv)
-      cv = ArrayOperationInstrumenter(cv)
+      val classVersionInstrumenter = ClassVersionInstrumenter(cv)
+      cv = ArrayOperationInstrumenter(classVersionInstrumenter)
       classReader.accept(cv, ClassReader.EXPAND_FRAMES)
-      cn.accept(checkClassAdapter)
+      val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
+      if (classVersionInstrumenter.classVersion >= Opcodes.V1_5) {
+        val checkClassAdapter = CheckClassAdapter(classWriter)
+        cn.accept(checkClassAdapter)
+      } else {
+        cn.accept(classWriter)
+      }
       val out = classWriter.toByteArray()
       File("/tmp/out/app/${className.replace("/", ".").removePrefix(".")}.class").writeBytes(out)
       return out

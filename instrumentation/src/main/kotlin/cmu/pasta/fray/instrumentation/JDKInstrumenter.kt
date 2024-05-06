@@ -58,8 +58,6 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     println(path)
     throw e
   }
-  File("/tmp/out/jdk/${path.replace("/", ".").removePrefix(".")}").writeBytes(byteArray)
-  return byteArray
 }
 
 fun instrumentModuleInfo(inputStream: InputStream, packages: List<String>): ByteArray {
