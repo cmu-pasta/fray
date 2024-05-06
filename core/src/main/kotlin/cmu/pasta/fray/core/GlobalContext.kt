@@ -41,7 +41,7 @@ object GlobalContext {
   private val volatileManager = VolatileManager(true)
   private val latchManager = CountDownLatchManager()
   private var step = 0
-  private val maxScheduledStep = 10000
+  private val maxScheduledStep = 100000
   val syncManager = SynchronizationManager()
   val loggers = mutableListOf<LoggerBase>()
   var executor =
