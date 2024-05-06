@@ -61,7 +61,7 @@ tasks.register<JavaExec>("runJC") {
     else -> emptyList()
   }
   classpath += files(cp.split(":"))
-  args = listOf(main, "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "csv", "--iter", "1") + extraArgs
+  args = listOf(main, "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "csv", "--iter", "10000") + extraArgs
 }
 
 tasks.register<JavaExec>("runSCT") {
@@ -72,7 +72,7 @@ tasks.register<JavaExec>("runSCT") {
     else -> emptyList()
   }
   classpath += files(cp.split(":"))
-  args = listOf("cmu.pasta.sfuzz.benchmark.$main", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "csv", "--iter", "1") + extraArgs
+  args = listOf("cmu.pasta.sfuzz.benchmark.$main", "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "csv", "--iter", "10000") + extraArgs
 }
 
 tasks.register<JavaExec>("runArithmeticProgBad") {
