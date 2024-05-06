@@ -6,6 +6,7 @@ import org.objectweb.asm.Opcodes.ASM9
 
 class ClassVersionInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   var classVersion = Opcodes.V21
+
   override fun visit(
       version: Int,
       access: Int,
