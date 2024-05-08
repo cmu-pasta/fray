@@ -31,7 +31,9 @@ public class IntegrationTestRunner {
                 scheduler,
                 true,
                 new CsvLogger("/tmp/report", false),
-                false
+                false,
+               false,
+               10000
         );
         TestRunner runner = new TestRunner(config);
         runner.run();

@@ -41,7 +41,6 @@ object GlobalContext {
   private val volatileManager = VolatileManager(true)
   private val latchManager = CountDownLatchManager()
   private var step = 0
-  private val maxScheduledStep = 10000
   val syncManager = SynchronizationManager()
   val loggers = mutableListOf<LoggerBase>()
   var executor =
@@ -65,7 +64,7 @@ object GlobalContext {
   }
 
   fun reportError(e: Throwable) {
-    if (!errorFound) {
+    if (!errorFound && !config!!.ignoreUnhandledExceptions) {
       errorFound = true
       val sw = StringWriter()
       sw.append("Error found: ${e}\n")
@@ -707,7 +706,7 @@ object GlobalContext {
     }
 
     step += 1
-    if (step > maxScheduledStep &&
+    if (step > config!!.maxScheduledStep &&
         !currentThread.isExiting &&
         Thread.currentThread() !is HelperThread &&
         !(mainExiting && currentThreadId == mainThreadId)) {

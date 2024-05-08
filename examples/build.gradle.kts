@@ -27,6 +27,8 @@ tasks.withType<JavaExec> {
   jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
   jvmArgs("-ea")
   jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
+  jvmArgs("--add-opens", "java.base/java.util=ALL-UNNAMED")
   doFirst {
     // Printing the full command
     println("Executing command: ${executable} ${jvmArgs!!.joinToString(" ")} -cp ${classpath.asPath} ${mainClass.get()} ${args!!.joinToString(" ")}")

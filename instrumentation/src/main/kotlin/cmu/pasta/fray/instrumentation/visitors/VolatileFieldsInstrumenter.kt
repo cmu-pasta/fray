@@ -9,8 +9,10 @@ import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.commons.AdviceAdapter
 
-class VolatileFieldsInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
+class VolatileFieldsInstrumenter(cv: ClassVisitor, private val instrumentingJdk: Boolean) :
+    ClassVisitor(ASM9, cv) {
   var className = ""
+  var shouldInstrument = !instrumentingJdk
 
   override fun visit(
       version: Int,
@@ -22,6 +24,9 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   ) {
     super.visit(version, access, name, signature, superName, interfaces)
     className = name
+    if (instrumentingJdk) {
+      shouldInstrument = name.startsWith("java/util/HashMap")
+    }
   }
 
   override fun visitField(
@@ -46,8 +51,8 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
-    var mv = super.visitMethod(access, name, descriptor, signature, exceptions)
-    if (name == "<init>" || name == "<clinit>") {
+    val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
+    if (name == "<init>" || name == "<clinit>" || !shouldInstrument) {
       return mv
     }
     return object : AdviceAdapter(ASM9, mv, access, name, descriptor) {

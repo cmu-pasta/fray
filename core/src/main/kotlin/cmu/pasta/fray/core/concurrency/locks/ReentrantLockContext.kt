@@ -62,12 +62,18 @@ class ReentrantLockContext : LockContext {
       }
       lockHolder = null
       for (thread in wakingThreads) {
-        GlobalContext.registeredThreads[thread]!!.pendingOperation = ThreadResumeOperation()
-        GlobalContext.registeredThreads[thread]!!.state = ThreadState.Enabled
+        val context = GlobalContext.registeredThreads[thread]!!
+        if (context.state != ThreadState.Completed) {
+          context.pendingOperation = ThreadResumeOperation()
+          context.state = ThreadState.Enabled
+        }
       }
       for (thread in lockWaiters.keys) {
-        GlobalContext.registeredThreads[thread]!!.pendingOperation = ThreadResumeOperation()
-        GlobalContext.registeredThreads[thread]!!.state = ThreadState.Enabled
+        val context = GlobalContext.registeredThreads[thread]!!
+        if (context.state != ThreadState.Completed) {
+          context.pendingOperation = ThreadResumeOperation()
+          context.state = ThreadState.Enabled
+        }
       }
       lockWaiters.clear()
       return true

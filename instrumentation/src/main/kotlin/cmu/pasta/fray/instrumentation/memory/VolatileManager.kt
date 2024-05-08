@@ -12,6 +12,11 @@ class VolatileManager(val tryResolve: Boolean) {
 
   fun isVolatile(name: String, fieldName: String): Boolean {
     val key = "$name:$fieldName"
+    if (key == "java/util/HashMap:modCount") {
+      return true
+    } else if (key.startsWith("java/util/HashMap")) {
+      return false
+    }
     if (key in volatileFields) {
       return volatileFields[key]!!
     }

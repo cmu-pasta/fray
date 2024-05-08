@@ -90,6 +90,9 @@ class ConfigurationCommand : CliktCommand() {
   val fullSchedule by option("-f", "--full").boolean().default(false)
   val logger by option("-l", "--logger").groupChoice("json" to Json(), "csv" to Csv())
   val interleaveMemoryOps by option("-m", "--memory").boolean().default(false)
+  val maxScheduledStep by option("-s", "--max-scheduled-step").int().default(10000)
+  val ignoreUnhandledExceptions by
+      option("-e", "--ignore-unhandled-exceptions").boolean().default(false)
 
   override fun run() {}
 
@@ -112,7 +115,9 @@ class ConfigurationCommand : CliktCommand() {
         scheduler!!.getScheduler(),
         fullSchedule,
         logger!!.getLogger(report, fullSchedule),
-        interleaveMemoryOps)
+        interleaveMemoryOps,
+        ignoreUnhandledExceptions,
+        maxScheduledStep)
   }
 }
 
@@ -124,4 +129,6 @@ data class Configuration(
     val fullSchedule: Boolean,
     val logger: LoggerBase,
     val interleaveMemoryOps: Boolean,
+    val ignoreUnhandledExceptions: Boolean,
+    val maxScheduledStep: Int,
 ) {}

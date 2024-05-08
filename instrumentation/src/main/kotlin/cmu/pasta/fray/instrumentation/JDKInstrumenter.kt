@@ -23,6 +23,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
     val cn = ClassNode()
     var cv: ClassVisitor = ThreadInstrumenter(cn)
+    cv = VolatileFieldsInstrumenter(cv, true)
     cv = FieldInstanceReadWriteInstrumenter(cv)
     cv = ReentrantReadWriteLockInstrumenter(cv)
     cv = LockSupportInstrumenter(cv)
@@ -43,7 +44,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = MonitorInstrumenter(cv)
     // SynchronizedMethodEmbeddingInstrumenter should come before MonitorInstrumenter because
     // it inlines monitors for synchronized methods.
-    //    cv = SynchronizedMethodInstrumenter(cv)
+    cv = SynchronizedMethodInstrumenter(cv, true)
     classReader.accept(cv, ClassReader.EXPAND_FRAMES)
     if (shouldSkipChecking) {
       cn.accept(classWriter)

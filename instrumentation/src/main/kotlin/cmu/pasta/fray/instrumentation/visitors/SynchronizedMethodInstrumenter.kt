@@ -4,8 +4,10 @@ import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.commons.AdviceAdapter
 
-class SynchronizedMethodInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
+class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumentingJdk: Boolean) :
+    ClassVisitor(ASM9, cv) {
   var className = ""
+  var shouldInstrument = !instrumentingJdk
 
   override fun visit(
       version: Int,
@@ -17,6 +19,9 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) 
   ) {
     super.visit(version, access, name, signature, superName, interfaces)
     className = name
+    if (instrumentingJdk) {
+      shouldInstrument = name.startsWith("java/util/Observable")
+    }
   }
 
   override fun visitMethod(
@@ -27,7 +32,9 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) 
       exceptions: Array<out String>?
   ): MethodVisitor {
 
-    if (access and Opcodes.ACC_NATIVE != 0 || access and Opcodes.ACC_SYNCHRONIZED == 0) {
+    if (access and Opcodes.ACC_NATIVE != 0 ||
+        access and Opcodes.ACC_SYNCHRONIZED == 0 ||
+        !shouldInstrument) {
       return super.visitMethod(access, name, descriptor, signature, exceptions)
     }
     val newAccess = access and Opcodes.ACC_SYNCHRONIZED.inv()

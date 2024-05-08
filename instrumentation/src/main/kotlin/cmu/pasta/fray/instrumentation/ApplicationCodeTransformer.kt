@@ -46,11 +46,11 @@ class ApplicationCodeTransformer : ClassFileTransformer {
     try {
       var cv: ClassVisitor = ObjectNotifyInstrumenter(cn)
       cv = TargetExitInstrumenter(cv)
-      cv = VolatileFieldsInstrumenter(cv)
+      cv = VolatileFieldsInstrumenter(cv, false)
       cv = ObjectNotifyInstrumenter(cv)
       cv = MonitorInstrumenter(cv)
       cv = ConditionInstrumenter(cv)
-      cv = SynchronizedMethodInstrumenter(cv)
+      cv = SynchronizedMethodInstrumenter(cv, false)
       val classVersionInstrumenter = ClassVersionInstrumenter(cv)
       cv = ArrayOperationInstrumenter(classVersionInstrumenter)
       classReader.accept(cv, ClassReader.EXPAND_FRAMES)
