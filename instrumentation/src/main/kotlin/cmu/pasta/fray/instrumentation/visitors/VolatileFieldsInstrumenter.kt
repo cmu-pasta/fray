@@ -24,9 +24,9 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor, private val instrumentingJdk:
   ) {
     super.visit(version, access, name, signature, superName, interfaces)
     className = name
-    if (instrumentingJdk) {
-      shouldInstrument = name.startsWith("java/util/HashMap")
-    }
+    //    if (instrumentingJdk) {
+    //      shouldInstrument = name.startsWith("java/util/HashMap")
+    //    }
   }
 
   override fun visitField(

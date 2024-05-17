@@ -1,6 +1,6 @@
 package cmu.pasta.fray.runtime;
 
-public class TargetTerminateException extends RuntimeException {
+public class TargetTerminateException extends Error {
     private final int status;
     public TargetTerminateException(int stats) {
         super();

@@ -33,7 +33,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = AtomicOperationInstrumenter(cv)
     cv = ObjectNotifyInstrumenter(cv)
     cv = UnsafeInstrumenter(cv)
-    cv = ClassloaderInstrumenter(cv)
+    cv = SkipMethodInstrumenter(cv)
     cv = PrintStreamInstrumenter(cv)
     cv = ObjectInstrumenter(cv)
     cv = SemaphoreInstrumenter(cv)

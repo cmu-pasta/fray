@@ -51,6 +51,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = MonitorInstrumenter(cv)
       cv = ConditionInstrumenter(cv)
       cv = SynchronizedMethodInstrumenter(cv, false)
+      cv = ClassConstructorInstrumenter(cv)
       val classVersionInstrumenter = ClassVersionInstrumenter(cv)
       cv = ArrayOperationInstrumenter(classVersionInstrumenter)
       classReader.accept(cv, ClassReader.EXPAND_FRAMES)

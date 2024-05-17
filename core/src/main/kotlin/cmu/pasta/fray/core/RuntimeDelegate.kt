@@ -3,7 +3,6 @@ package cmu.pasta.fray.core
 import cmu.pasta.fray.core.concurrency.HelperThread
 import cmu.pasta.fray.runtime.Delegate
 import cmu.pasta.fray.runtime.MemoryOpType
-import cmu.pasta.fray.runtime.TargetTerminateException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Semaphore
 import java.util.concurrent.locks.Condition
@@ -293,7 +292,7 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onExit(status: Int) {
-    throw TargetTerminateException(status)
+    //    throw TargetTerminateException(status)
   }
 
   override fun onYield() {
