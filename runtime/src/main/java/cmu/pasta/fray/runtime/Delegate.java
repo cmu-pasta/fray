@@ -136,6 +136,9 @@ public class Delegate {
     public void onSemaphoreAcquire(Semaphore sem, int permits) {
     }
 
+    public void onSemaphoreTryAcquire(Semaphore sem, int permits) {
+    }
+
     public void onSemaphoreAcquireUninterruptibly(Semaphore sem, int permits) {
     }
 

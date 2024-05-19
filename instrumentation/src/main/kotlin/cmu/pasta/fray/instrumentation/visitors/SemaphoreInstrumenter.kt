@@ -18,12 +18,13 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
       return MethodExitVisitor(
           mv, Runtime::onSemaphoreInit, access, name, descriptor, true, false, false)
     }
-    if ((name == "acquire" || name == "acquireUninterruptibly") && descriptor == "()V") {
+    if ((name == "acquire" || name == "acquireUninterruptibly" || name == "tryAcquire") &&
+        descriptor.startsWith("()")) {
       val eMv =
           if (name == "acquire") {
             MethodEnterVisitor(
                 mv, Runtime::onSemaphoreAcquire, access, name, descriptor, true, true)
-          } else {
+          } else if (name == "acquireUninterruptibly") {
             MethodEnterVisitor(
                 mv,
                 Runtime::onSemaphoreAcquireUninterruptibly,
@@ -32,16 +33,20 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
                 descriptor,
                 true,
                 true)
+          } else {
+            MethodEnterVisitor(
+                mv, Runtime::onSemaphoreTryAcquire, access, name, descriptor, true, true)
           }
       return MethodExitVisitor(
           eMv, Runtime::onSemaphoreAcquireDone, access, name, descriptor, false, false, true)
     }
-    if ((name == "acquire" || name == "acquireUninterruptibly") && descriptor == "(I)V") {
+    if ((name == "acquire" || name == "acquireUninterruptibly" || name == "tryAcquire") &&
+        descriptor.startsWith("(I)V")) {
       val eMv =
           if (name == "acquire") {
             MethodEnterVisitor(
                 mv, Runtime::onSemaphoreAcquirePermits, access, name, descriptor, true, true)
-          } else {
+          } else if (name == "acquireUninterruptibly") {
             MethodEnterVisitor(
                 mv,
                 Runtime::onSemaphoreAcquirePermitsUninterruptibly,
@@ -50,7 +55,11 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
                 descriptor,
                 true,
                 true)
+          } else {
+            MethodEnterVisitor(
+                mv, Runtime::onSemaphoreTryAcquirePermits, access, name, descriptor, true, true)
           }
+
       return MethodExitVisitor(
           eMv, Runtime::onSemaphoreAcquireDone, access, name, descriptor, false, false, true)
     }

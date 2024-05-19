@@ -393,15 +393,10 @@ object GlobalContext {
   }
 
   fun lockTryLock(lock: Any) {
-    val t = Thread.currentThread().id
-    val objId = System.identityHashCode(lock)
-    registeredThreads[t]?.pendingOperation = LockLockOperation(objId)
-    registeredThreads[t]?.state = ThreadState.Enabled
-    scheduleNextOperation(true)
-    lockManager.lock(lock, t, false, false, false)
+    lockImpl(lock, false, false, false)
   }
 
-  fun lockImpl(lock: Any, isMonitorLock: Boolean, canInterrupt: Boolean) {
+  fun lockImpl(lock: Any, isMonitorLock: Boolean, shouldBlock: Boolean, canInterrupt: Boolean) {
     val t = Thread.currentThread().id
     val objId = System.identityHashCode(lock)
     val context = registeredThreads[t]!!
@@ -426,7 +421,7 @@ object GlobalContext {
     // synchronized(lock) {
     //   lock.unlock();
     // }
-    while (!lockManager.lock(lock, t, true, false, canInterrupt)) {
+    while (!lockManager.lock(lock, t, shouldBlock, false, canInterrupt) && shouldBlock) {
       context.state = ThreadState.Paused
 
       // We want to block current thread because we do
@@ -441,11 +436,11 @@ object GlobalContext {
   }
 
   fun monitorEnter(lock: Any) {
-    lockImpl(lock, true, false)
+    lockImpl(lock, true, true, false)
   }
 
   fun lockLock(lock: Any, canInterrupt: Boolean) {
-    lockImpl(lock, false, canInterrupt)
+    lockImpl(lock, false, true, canInterrupt)
   }
 
   fun reentrantReadWriteLockInit(readLock: ReadLock, writeLock: WriteLock) {
@@ -530,7 +525,7 @@ object GlobalContext {
     context.state = ThreadState.Enabled
     scheduleNextOperation(true)
 
-    while (!semaphoreManager.acquire(sem, permits, true, canInterrupt)) {
+    while (!semaphoreManager.acquire(sem, permits, shouldBlock, canInterrupt) && shouldBlock) {
       context.state = ThreadState.Paused
 
       scheduleNextOperation(true)
@@ -538,7 +533,6 @@ object GlobalContext {
         context.checkInterrupt()
       }
     }
-    semaphoreManager.acquire(sem, permits, shouldBlock, canInterrupt)
   }
 
   fun semaphoreRelease(sem: Semaphore, permits: Int) {

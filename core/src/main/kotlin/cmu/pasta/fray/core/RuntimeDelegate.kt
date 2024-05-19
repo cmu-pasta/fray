@@ -366,6 +366,19 @@ class RuntimeDelegate : Delegate() {
     entered.set(false)
   }
 
+  override fun onSemaphoreTryAcquire(sem: Semaphore, permits: Int) {
+    if (checkEntered()) {
+      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      return
+    }
+    try {
+      GlobalContext.semaphoreAcquire(sem, permits, false, true)
+    } finally {
+      skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+      entered.set(false)
+    }
+  }
+
   override fun onSemaphoreAcquire(sem: Semaphore, permits: Int) {
     if (checkEntered()) {
       skipFunctionEntered.set(1 + skipFunctionEntered.get())

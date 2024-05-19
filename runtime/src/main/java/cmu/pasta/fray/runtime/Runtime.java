@@ -196,6 +196,14 @@ public class Runtime {
         DELEGATE.onSemaphoreAcquire(sem, 1);
     }
 
+    public static void onSemaphoreTryAcquire(Semaphore sem) {
+        DELEGATE.onSemaphoreTryAcquire(sem, 1);
+    }
+
+    public static void onSemaphoreTryAcquirePermits(Semaphore sem, int permits) {
+        DELEGATE.onSemaphoreTryAcquire(sem, permits);
+    }
+
     public static void onSemaphoreAcquireUninterruptibly(Semaphore sem) {
         DELEGATE.onSemaphoreAcquireUninterruptibly(sem, 1);
     }

@@ -7,7 +7,7 @@ plugins {
 val buildPath = layout.buildDirectory.get().asFile
 
 dependencies {
-  implementation(fileTree(mapOf("dir" to "${buildPath}/libs/unzipped", "include" to listOf("*.jar"))))
+  implementation(fileTree(mapOf("dir" to "/Users/aoli/repos/dacapobench/benchmarks", "include" to listOf("*.jar"))))
   implementation(project(":core"))
 }
 
@@ -53,7 +53,7 @@ tasks.register<JavaExec>("run") {
     else -> emptyList()
   }
   args = listOf("Harness", "main", "-a",
-      "$appName --size small", "-o", "${layout.buildDirectory.get().asFile}/$appName-report", "--logger", "csv", "--iter", "10000", "-s", "10000000") + extraArgs
+      "$appName --size small", "-o", "${layout.buildDirectory.get().asFile}/$appName-report", "--logger", "csv", "--iter", "10000", "-s", "90000000") + extraArgs
 }
 
 tasks.register<JavaExec>("replay") {
