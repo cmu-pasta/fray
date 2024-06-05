@@ -224,15 +224,27 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onConditionSignal(o: Condition) {
-    if (checkEntered()) return
+    if (checkEntered()) {
+      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      return
+    }
     GlobalContext.conditionSignal(o)
     entered.set(false)
+    skipFunctionEntered.set(1 + skipFunctionEntered.get())
+  }
+
+  override fun onConditionSignalDone(l: Condition?) {
+    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
   }
 
   override fun onConditionSignalAll(o: Condition) {
-    if (checkEntered()) return
+    if (checkEntered()) {
+      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      return
+    }
     GlobalContext.conditionSignalAll(o)
     entered.set(false)
+    skipFunctionEntered.set(1 + skipFunctionEntered.get())
   }
 
   override fun onUnsafeReadVolatile(o: Any?, offset: Long) {
@@ -255,7 +267,8 @@ class RuntimeDelegate : Delegate() {
     }
   }
 
-  override fun onFieldRead(o: Any, owner: String, name: String, descriptor: String) {
+  override fun onFieldRead(o: Any?, owner: String, name: String, descriptor: String) {
+    if (o == null) return
     if (checkEntered()) return
     try {
       GlobalContext.fieldOperation(o, owner, name, MemoryOpType.MEMORY_READ)
@@ -264,7 +277,8 @@ class RuntimeDelegate : Delegate() {
     }
   }
 
-  override fun onFieldWrite(o: Any, owner: String, name: String, descriptor: String) {
+  override fun onFieldWrite(o: Any?, owner: String, name: String, descriptor: String) {
+    if (o == null) return
     if (checkEntered()) return
     try {
       GlobalContext.fieldOperation(o, owner, name, MemoryOpType.MEMORY_WRITE)

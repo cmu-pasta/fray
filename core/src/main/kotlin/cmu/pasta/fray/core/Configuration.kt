@@ -101,7 +101,12 @@ class ConfigurationCommand : CliktCommand() {
       val clazz = Class.forName(clazz)
       if (targetArgs.isEmpty() && method != "main") {
         val m = clazz.getMethod(method)
-        m.invoke(null)
+        if (m.modifiers and java.lang.reflect.Modifier.STATIC == 0) {
+          val obj = clazz.getConstructor().newInstance()
+          m.invoke(obj)
+        } else {
+          m.invoke(null)
+        }
       } else {
         val m = clazz.getMethod(method, Array<String>::class.java)
         m.invoke(null, targetArgs.split(" ").toTypedArray())

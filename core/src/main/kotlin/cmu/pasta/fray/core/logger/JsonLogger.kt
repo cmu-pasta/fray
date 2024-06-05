@@ -15,7 +15,6 @@ data class Record(
 )
 
 class JsonLogger(val base: String, val fullSchedule: Boolean) : LoggerBase {
-  val executions = mutableListOf<Record>()
   var currentTimeline = mutableListOf<Operation>()
   var schedule = Schedule(mutableListOf(), fullSchedule)
   var savedSchedule = 0
@@ -31,13 +30,15 @@ class JsonLogger(val base: String, val fullSchedule: Boolean) : LoggerBase {
     schedule.choices.add(choice)
   }
 
-  override fun executionDone() {
-    executions.add(Record(currentTimeline, schedule))
+  override fun executionDone(bugFound: Boolean) {
+    //    executions.add(Record(currentTimeline, schedule))
     //        if (result != AnalysisResult.COMPLETE) {
     //
     // File("$base/schedule_${savedSchedule++}.json").writeText(json.encodeToString(schedule))
     //        }
-    File("$base/schedule_${savedSchedule++}.json").writeText(json.encodeToString(schedule))
+    if (bugFound) {
+      File("$base/schedule_${savedSchedule++}.json").writeText(json.encodeToString(schedule))
+    }
   }
 
   override fun applicationEvent(event: String) {}

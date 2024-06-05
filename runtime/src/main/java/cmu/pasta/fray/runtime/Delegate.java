@@ -69,6 +69,9 @@ public class Delegate {
     public void onConditionSignal(Condition l) {
     }
 
+    public void onConditionSignalDone(Condition l) {
+    }
+
     public void onConditionSignalAll(Condition l) {
     }
 

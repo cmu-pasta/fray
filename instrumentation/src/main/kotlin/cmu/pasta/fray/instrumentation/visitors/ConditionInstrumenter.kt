@@ -23,12 +23,17 @@ class ConditionInstrumenter(cv: ClassVisitor) :
           eMv, Runtime::onConditionAwaitDone, access, name, descriptor, true, false, true)
     }
     if (name == "signal") {
-      return MethodEnterVisitor(
-          mv, Runtime::onConditionSignal, access, name, descriptor, true, false)
+      val eMv =
+          MethodEnterVisitor(mv, Runtime::onConditionSignal, access, name, descriptor, true, false)
+      return MethodExitVisitor(
+          eMv, Runtime::onConditionSignalDone, access, name, descriptor, true, false, true)
     }
     if (name == "signalAll") {
-      return MethodEnterVisitor(
-          mv, Runtime::onConditionSignalAll, access, name, descriptor, true, false)
+      val eMv =
+          MethodEnterVisitor(
+              mv, Runtime::onConditionSignalAll, access, name, descriptor, true, false)
+      return MethodExitVisitor(
+          eMv, Runtime::onConditionSignalDone, access, name, descriptor, true, false, true)
     }
     return mv
   }

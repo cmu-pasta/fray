@@ -8,6 +8,7 @@ enum class ThreadState {
   Enabled,
   Running,
   Paused,
+  Parked,
   Completed,
 }
 

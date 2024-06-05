@@ -91,9 +91,16 @@ class LockManager {
     lockToConditions[lock]!!.add(condition)
   }
 
-  fun getNumThreadsBlockBy(lock: Any): Int {
+  fun getNumThreadsBlockBy(lock: Any, isMonitorLock: Boolean): Int {
     val id = System.identityHashCode(lock)
-    return (getLockContext(lock).wakingThreads.size) + (waitingThreads[id]?.size ?: 0)
+    return (getLockContext(lock).wakingThreads.size) +
+        if (isMonitorLock) {
+          (waitingThreads[id]?.size ?: 0)
+        } else {
+          lockToConditions[lock]?.sumOf { condition ->
+            waitingThreads[System.identityHashCode(condition)]?.size ?: 0
+          } ?: 0
+        }
   }
 
   fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean): Boolean {

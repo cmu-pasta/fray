@@ -34,7 +34,7 @@ object GlobalContext {
   var mainThreadId: Long = -1
   var scheduler: Scheduler = FifoScheduler()
   var config: Configuration? = null
-  var errorFound = false
+  var bugFound = false
   var mainExiting = false
   private val lockManager = LockManager()
   private val semaphoreManager = SemaphoreManager()
@@ -64,8 +64,8 @@ object GlobalContext {
   }
 
   fun reportError(e: Throwable) {
-    if (!errorFound && !config!!.ignoreUnhandledExceptions) {
-      errorFound = true
+    if (!bugFound && !config!!.ignoreUnhandledExceptions) {
+      bugFound = true
       val sw = StringWriter()
       sw.append("Error found: ${e}\n")
       e.printStackTrace(PrintWriter(sw))
@@ -109,7 +109,7 @@ object GlobalContext {
     // thread creation
     executor.submit {}
     step = 0
-    errorFound = false
+    bugFound = false
     mainExiting = false
     currentThreadId = t.id
     mainThreadId = t.id
@@ -120,7 +120,7 @@ object GlobalContext {
   }
 
   fun done() {
-    loggers.forEach { it.executionDone() }
+    loggers.forEach { it.executionDone(bugFound) }
 
     assert(lockManager.waitingThreads.isEmpty())
     assert(syncManager.synchronizationPoints.isEmpty())
@@ -160,7 +160,7 @@ object GlobalContext {
   fun threadPark() {
     val t = Thread.currentThread()
     if (!registeredThreads[t.id]!!.unparkSignaled) {
-      registeredThreads[t.id]?.pendingOperation = PausedOperation()
+      registeredThreads[t.id]?.pendingOperation = ParkOperation()
       registeredThreads[t.id]?.state = ThreadState.Paused
       scheduleNextOperation(false)
     } else {
@@ -183,21 +183,19 @@ object GlobalContext {
 
   fun threadUnpark(t: Thread) {
     val context = registeredThreads[t.id]!!
-    if (context.state != ThreadState.Paused) {
-      context.unparkSignaled = true
-    } else {
+    if (context.state == ThreadState.Paused && context.pendingOperation is ParkOperation) {
       syncManager.createWait(t, 1)
       context.state = ThreadState.Enabled
       registeredThreads[t.id]?.pendingOperation = ThreadResumeOperation()
+    } else if (context.state == ThreadState.Enabled || context.state == ThreadState.Running) {
+      context.unparkSignaled = true
     }
   }
 
   fun threadUnparkDone(t: Thread) {
-    if (registeredThreads[t.id]!!.state != ThreadState.Paused) {
-      // SFuzz only needs to wait if `t` is parked and then
-      // waken up by this `unpark` operation.
-      syncManager.wait(t)
-    }
+    // SFuzz only needs to wait if `t` is parked and then
+    // waken up by this `unpark` operation.
+    syncManager.wait(t)
   }
 
   fun threadRun() {
@@ -465,7 +463,7 @@ object GlobalContext {
   ) {
     var waitingThreads =
         if (lockManager.unlock(lock, tid, unlockBecauseOfWait)) {
-          lockManager.getNumThreadsBlockBy(lock)
+          lockManager.getNumThreadsBlockBy(lock, isMonitorLock)
         } else {
           0
         }
@@ -618,7 +616,7 @@ object GlobalContext {
   }
 
   fun checkErrorAndExit() {
-    if (errorFound) {
+    if (bugFound) {
       val blockedThreads = mutableListOf<ThreadContext>()
       for (thread in registeredThreads.values) {
         if (thread.state != ThreadState.Running && thread.state != ThreadState.Completed) {

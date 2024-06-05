@@ -29,7 +29,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
         dotClassName.startsWith("com.sun.") ||
         dotClassName.startsWith("kotlin.") ||
         dotClassName.startsWith("kotlinx.") ||
-        dotClassName.startsWith("org.junit.") ||
+        (dotClassName.startsWith("org.junit.") && !dotClassName.contains("ConsoleLauncher")) ||
         dotClassName.startsWith("org.gradle.") ||
         dotClassName.startsWith("worker.org.gradle.") ||
         dotClassName.startsWith("com.github.ajalt") ||

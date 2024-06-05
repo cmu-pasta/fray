@@ -40,7 +40,7 @@ class TestRunner(val config: Configuration) {
           Runtime.onReportError(e)
           Runtime.onMainExit()
         }
-        if (GlobalContext.errorFound) {
+        if (GlobalContext.bugFound) {
           println("Error found at iter: $i")
           break
         }

@@ -8,7 +8,7 @@ class ConsoleLogger : LoggerBase {
 
   override fun newOperationScheduled(op: Operation, choice: Choice) {}
 
-  override fun executionDone() {}
+  override fun executionDone(bugFound: Boolean) {}
 
   override fun applicationEvent(event: String) {
     println(event)

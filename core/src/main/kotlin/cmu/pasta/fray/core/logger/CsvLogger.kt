@@ -19,7 +19,7 @@ class CsvLogger(private val baseFolder: String, private val fullSchedule: Boolea
         "${choice.selected},${choice.threadId},${choice.enabled},${op.javaClass.name}\n")
   }
 
-  override fun executionDone() {
+  override fun executionDone(bugFound: Boolean) {
     index += 1
   }
 

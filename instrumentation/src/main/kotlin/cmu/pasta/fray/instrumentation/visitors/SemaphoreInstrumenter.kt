@@ -63,6 +63,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
       return MethodExitVisitor(
           eMv, Runtime::onSemaphoreAcquireDone, access, name, descriptor, false, false, true)
     }
+    //    if (name == "tryAcquire") {
+    //    }
     if (name == "release" && descriptor == "()V") {
       val eMv =
           MethodEnterVisitor(mv, Runtime::onSemaphoreRelease, access, name, descriptor, true, true)

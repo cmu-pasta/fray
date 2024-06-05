@@ -84,6 +84,10 @@ public class Runtime {
         DELEGATE.onConditionSignal(o);
     }
 
+    public static void onConditionSignalDone(Condition o) {
+        DELEGATE.onConditionSignalDone(o);
+    }
+
     public static void onConditionSignalAll(Condition o) {
         DELEGATE.onConditionSignalAll(o);
     }
