@@ -77,22 +77,23 @@ class ConfigurationCommand : CliktCommand() {
   val method by argument()
   val report by option("-o").default("/tmp/report")
   val targetArgs by
-      option("-a", "--args", help = "Arguments passed to target application").default("")
+  option("-a", "--args", help = "Arguments passed to target application").split(";")
+      .default(emptyList())
   val iter by option("-i", "--iter", help = "Number of iterations").int().default(1)
   val scheduler by
-      option()
-          .groupChoice(
-              "replay" to Replay(),
-              "fifo" to Fifo(),
-              "pos" to POS(),
-              "random" to Rand(),
-              "pct" to PCT())
+  option()
+      .groupChoice(
+          "replay" to Replay(),
+          "fifo" to Fifo(),
+          "pos" to POS(),
+          "random" to Rand(),
+          "pct" to PCT())
   val fullSchedule by option("-f", "--full").boolean().default(false)
   val logger by option("-l", "--logger").groupChoice("json" to Json(), "csv" to Csv())
   val interleaveMemoryOps by option("-m", "--memory").boolean().default(false)
   val maxScheduledStep by option("-s", "--max-scheduled-step").int().default(10000)
   val ignoreUnhandledExceptions by
-      option("-e", "--ignore-unhandled-exceptions").boolean().default(false)
+  option("-e", "--ignore-unhandled-exceptions").boolean().default(false)
 
   override fun run() {}
 
@@ -109,7 +110,7 @@ class ConfigurationCommand : CliktCommand() {
         }
       } else {
         val m = clazz.getMethod(method, Array<String>::class.java)
-        m.invoke(null, targetArgs.split(" ").toTypedArray())
+        m.invoke(null, targetArgs.toTypedArray())
       }
       Unit
     }
@@ -127,13 +128,13 @@ class ConfigurationCommand : CliktCommand() {
 }
 
 data class Configuration(
-    val exec: () -> Unit,
-    val report: String,
-    val iter: Int,
-    val scheduler: Scheduler,
-    val fullSchedule: Boolean,
-    val logger: LoggerBase,
-    val interleaveMemoryOps: Boolean,
-    val ignoreUnhandledExceptions: Boolean,
-    val maxScheduledStep: Int,
+  val exec: () -> Unit,
+  val report: String,
+  val iter: Int,
+  val scheduler: Scheduler,
+  val fullSchedule: Boolean,
+  val logger: LoggerBase,
+  val interleaveMemoryOps: Boolean,
+  val ignoreUnhandledExceptions: Boolean,
+  val maxScheduledStep: Int,
 ) {}

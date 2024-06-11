@@ -1,3 +1,4 @@
+import java.util.regex.Pattern
 plugins {
   id("java")
 }
@@ -38,6 +39,23 @@ tasks.withType<JavaExec> {
   }
 }
 
+tasks.register<JavaExec>("runFray") {
+  val testClass = properties["testClass"] as String? ?: ""
+  val testMethod = properties["testMethod"] as String? ?: ""
+  val extraArgs = when (val extraArgs = properties["extraArgs"]) {
+    is String -> {
+      val pattern = Pattern.compile("""("[^"]+"|\S+)""")
+      val matcher = pattern.matcher(extraArgs)
+      val result = mutableListOf<String>()
+      while (matcher.find()) {
+        result.add(matcher.group(1).replace("\"", ""))
+      }
+      result
+    }
+    else -> emptyList()
+  }
+  args = listOf(testClass, testMethod) + extraArgs
+}
 
 tasks.compileJava {
   options.compilerArgs.addAll(listOf("--add-exports", "java.base/jdk.internal.misc=ALL-UNNAMED"))
@@ -95,7 +113,7 @@ tasks.register<JavaExec>("runJUnit") {
     else -> emptyList()
   }
   args = listOf(mainClass, method, "-a", "-m $testCase $classPath --details=verbose",
-      "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "csv", "--iter", "10000", "-s", "990000000") + extraArgs
+      "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "json", "--iter", "10000", "-s", "990000000") + extraArgs
 }
 
 tasks.register<JavaExec>("runSCT") {

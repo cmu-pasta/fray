@@ -70,6 +70,13 @@ class RuntimeDelegate : Delegate() {
     entered.set(false)
   }
 
+  override fun onThreadGetState(t: Thread, state: Thread.State): Thread.State {
+    if (checkEntered()) return state
+    val result = GlobalContext.threadGetState(t, state)
+    entered.set(false)
+    return result
+  }
+
   override fun onObjectWait(o: Any) {
     if (checkEntered()) return
     try {
@@ -306,7 +313,9 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onExit(status: Int) {
-    //    throw TargetTerminateException(status)
+    if (status != 0) {
+      GlobalContext.reportError(RuntimeException("Exit with status $status"))
+    }
   }
 
   override fun onYield() {

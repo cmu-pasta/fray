@@ -130,6 +130,10 @@ public class Delegate {
     public void onThreadInterrupt(Thread t) {
     }
 
+    public Thread.State onThreadGetState(Thread t, Thread.State state) {
+        return state;
+    }
+
     public void onReentrantReadWriteLockInit(ReentrantReadWriteLock lock) {
     }
 

@@ -11,14 +11,14 @@ repositories {
 }
 
 dependencies {
-  testImplementation("org.jetbrains.kotlin:kotlin-test")
   add("shadow", localGroovy())
   add("shadow", gradleApi())
+  testImplementation("org.jetbrains.kotlin:kotlin-test")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
-  implementation("org.ow2.asm:asm:9.7")
-  implementation("org.ow2.asm:asm-tree:9.7")
-  implementation("org.ow2.asm:asm-commons:9.7")
-  implementation("org.ow2.asm:asm-util:9.7")
+  api("org.ow2.asm:asm:9.7")
+  api("org.ow2.asm:asm-tree:9.7")
+  api("org.ow2.asm:asm-commons:9.7")
+  api("org.ow2.asm:asm-util:9.7")
   implementation(project(":runtime"))
 }
 

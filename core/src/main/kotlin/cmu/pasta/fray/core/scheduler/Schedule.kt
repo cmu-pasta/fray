@@ -19,7 +19,8 @@ data class Schedule(val choices: MutableList<Choice>, val fullSchedule: Boolean)
         }
         if (line.strip().isEmpty()) continue
         val parts = line.split(",")
-        choices.add(Choice(parts[0].toInt(), parts[1].toInt(), parts[2].toInt()))
+        val enabledIds = parts.subList(3, parts.size).map { it.toInt() }
+        choices.add(Choice(parts[0].toInt(), parts[1].toInt(), parts[2].toInt(), enabledIds))
       }
       return Schedule(choices, fullSchedule)
     }

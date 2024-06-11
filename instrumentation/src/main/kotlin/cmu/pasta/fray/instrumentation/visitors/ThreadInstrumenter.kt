@@ -35,6 +35,10 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
       return MethodEnterVisitor(
           mv, Runtime::onThreadInterrupt, access, name, descriptor, true, false)
     }
+    if (name == "getState") {
+      return MethodExitVisitor(
+          mv, Runtime::onThreadGetState, access, name, descriptor, true, false, false)
+    }
     return mv
   }
 }

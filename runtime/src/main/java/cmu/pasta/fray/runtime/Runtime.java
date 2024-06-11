@@ -176,6 +176,10 @@ public class Runtime {
         DELEGATE.onThreadInterrupt(t);
     }
 
+    public static Thread.State onThreadGetState(Thread.State state, Thread t) {
+        return DELEGATE.onThreadGetState(t, state);
+    }
+
     public static boolean onThreadGetAndClearInterrupt(boolean originValue, Thread t) {
         return DELEGATE.onThreadClearInterrupt(originValue, t);
     }

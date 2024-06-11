@@ -3,6 +3,7 @@ package cmu.pasta.fray.it.core;
 import cmu.pasta.fray.it.IntegrationTestRunner;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -11,6 +12,15 @@ import static cmu.pasta.fray.it.Utils.log;
 
 public class ConditionTest extends IntegrationTestRunner {
 
+
+    @Test
+    public void test() {
+        AtomicInteger i = new AtomicInteger(0);
+        runTest(() -> {
+            i.addAndGet(1);
+            return null;
+        });
+    }
 
     @Test
     public void testConditionAwait() {
