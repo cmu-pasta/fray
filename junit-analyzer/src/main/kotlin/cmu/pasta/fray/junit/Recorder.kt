@@ -1,13 +1,14 @@
 package cmu.pasta.fray.junit
 
 import cmu.pasta.fray.runtime.Runtime
-import junit.framework.TestCase
 import java.io.File
 import java.lang.instrument.Instrumentation
+import junit.framework.TestCase
 
 object Recorder {
   var newThreadSpawned = false
   val f = File("/tmp/junit.log")
+
   fun logThread() {
     newThreadSpawned = true
   }
@@ -30,7 +31,6 @@ object Recorder {
     f.createNewFile()
   }
 }
-
 
 fun premain(arguments: String?, instrumentation: Instrumentation) {
   Recorder.init()

@@ -207,7 +207,9 @@ object GlobalContext {
   }
 
   fun threadGetState(t: Thread, state: Thread.State): Thread.State {
-    if (state == Thread.State.WAITING || state == Thread.State.TIMED_WAITING || state == Thread.State.BLOCKED) {
+    if (state == Thread.State.WAITING ||
+        state == Thread.State.TIMED_WAITING ||
+        state == Thread.State.BLOCKED) {
       val context = registeredThreads[t.id]!!
       if (context.state == ThreadState.Running || context.state == ThreadState.Enabled) {
         return Thread.State.RUNNABLE
@@ -724,7 +726,12 @@ object GlobalContext {
     if (enabledOperations.size > 1 || config!!.fullSchedule) {
       loggers.forEach {
         it.newOperationScheduled(
-            nextThread.pendingOperation, Choice(index, nextThread.index, enabledOperations.size, enabledOperations.map { it.index }))
+            nextThread.pendingOperation,
+            Choice(
+                index,
+                nextThread.index,
+                enabledOperations.size,
+                enabledOperations.map { it.index }))
       }
     }
     nextThread.state = ThreadState.Running

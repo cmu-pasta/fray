@@ -18,7 +18,7 @@ class TestRunner(val config: Configuration) {
   }
 
   fun setup() {
-//    prepareReportPath(config.report)
+    //    prepareReportPath(config.report)
     GlobalContext.registerLogger(config.logger)
     GlobalContext.registerLogger(ConsoleLogger())
     GlobalContext.scheduler = config.scheduler
