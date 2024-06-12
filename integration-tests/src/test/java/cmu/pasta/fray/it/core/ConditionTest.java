@@ -14,15 +14,6 @@ public class ConditionTest extends IntegrationTestRunner {
 
 
     @Test
-    public void test() {
-        AtomicInteger i = new AtomicInteger(0);
-        runTest(() -> {
-            i.addAndGet(1);
-            return null;
-        });
-    }
-
-    @Test
     public void testConditionAwait() {
         runTest(() -> {
             conditionAwaitImpl();

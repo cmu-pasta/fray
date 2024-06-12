@@ -3,6 +3,7 @@ package cmu.pasta.fray.it;
 
 import cmu.pasta.fray.core.*;
 import cmu.pasta.fray.core.logger.CsvLogger;
+import cmu.pasta.fray.core.logger.JsonLogger;
 import cmu.pasta.fray.core.scheduler.FifoScheduler;
 import cmu.pasta.fray.core.scheduler.Scheduler;
 import kotlin.Unit;
@@ -30,10 +31,10 @@ public class IntegrationTestRunner {
                 iter,
                 scheduler,
                 true,
-                new CsvLogger("/tmp/report", false),
+                new JsonLogger("/tmp/report", false),
                 false,
-               false,
-               10000
+                false,
+                10000
         );
         TestRunner runner = new TestRunner(config);
         runner.run();

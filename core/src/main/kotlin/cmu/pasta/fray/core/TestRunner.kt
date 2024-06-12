@@ -18,7 +18,7 @@ class TestRunner(val config: Configuration) {
   }
 
   fun setup() {
-    //    prepareReportPath(config.report)
+    prepareReportPath(config.report)
     GlobalContext.registerLogger(config.logger)
     GlobalContext.registerLogger(ConsoleLogger())
     GlobalContext.scheduler = config.scheduler
@@ -29,7 +29,8 @@ class TestRunner(val config: Configuration) {
   fun run() {
     setup()
     val time = measureTimeMillis {
-      for (i in 0 ..< config.iter) {
+      var i = 0
+      while (i != config.iter) {
         println("Starting iteration $i")
         try {
           Runtime.DELEGATE = RuntimeDelegate()
@@ -44,6 +45,7 @@ class TestRunner(val config: Configuration) {
           println("Error found at iter: $i")
           break
         }
+        i++
       }
       GlobalContext.shutDown()
     }
