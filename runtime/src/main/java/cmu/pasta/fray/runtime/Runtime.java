@@ -40,8 +40,8 @@ public class Runtime {
         DELEGATE.onLockLock(l);
     }
 
-    public static void onLockLockDone(Lock l) {
-        DELEGATE.onLockLockDone(l);
+    public static void onLockLockDone() {
+        DELEGATE.onLockLockDone();
     }
 
     public static void onLockUnlock(Lock l) {
@@ -140,12 +140,12 @@ public class Runtime {
         DELEGATE.onYield();
     }
 
-    public static void onSkipMethod() {
-        DELEGATE.onSkipMethod();
+    public static void onSkipMethod(String signature) {
+        DELEGATE.onSkipMethod(signature);
     }
 
-    public static void onSkipMethodDone() {
-        DELEGATE.onSkipMethodDone();
+    public static void onSkipMethodDone(String signature) {
+        DELEGATE.onSkipMethodDone(signature);
     }
 
     public static void start() {
@@ -174,6 +174,10 @@ public class Runtime {
 
     public static void onThreadInterrupt(Thread t) {
         DELEGATE.onThreadInterrupt(t);
+    }
+
+    public static void onThreadInterruptDone(Thread t) {
+        DELEGATE.onThreadInterruptDone(t);
     }
 
     public static Thread.State onThreadGetState(Thread.State state, Thread t) {
@@ -282,6 +286,22 @@ public class Runtime {
 
     public static void onUnsafeWriteVolatile(Object o, long offset) {
         DELEGATE.onUnsafeWriteVolatile(o, offset);
+    }
+
+    public static void onThreadParkNanos(long nanos) {
+        DELEGATE.onThreadParkNanos(nanos);
+    }
+
+    public static void onThreadParkUntil(long deadline) {
+        DELEGATE.onThreadParkUntil(deadline);
+    }
+
+    public static void onThreadParkNanosWithBlocker(Object blocker, long nanos) {
+        DELEGATE.onThreadParkUntilWithBlocker(blocker, nanos);
+    }
+
+    public static void onThreadParkUntilWithBlocker(Object blocker, long deadline) {
+        DELEGATE.onThreadParkUntilWithBlocker(blocker, deadline);
     }
 
 }

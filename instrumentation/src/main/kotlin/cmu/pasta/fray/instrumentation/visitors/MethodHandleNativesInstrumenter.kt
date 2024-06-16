@@ -15,10 +15,15 @@ class MethodHandleNativesInstrumenter(cv: ClassVisitor) :
       exceptions: Array<out String>?
   ): MethodVisitor {
     if (name == "linkMethodHandleConstant") {
+      val methodSignature = "$className#$name$descriptor"
       val eMv =
-          MethodEnterVisitor(mv, Runtime::onSkipMethod, access, name, descriptor, false, false)
+          MethodEnterVisitor(mv, Runtime::onSkipMethod, access, name, descriptor, false, false) {
+            it.push(methodSignature)
+          }
       return MethodExitVisitor(
-          eMv, Runtime::onSkipMethodDone, access, name, descriptor, false, false, true)
+          eMv, Runtime::onSkipMethodDone, access, name, descriptor, false, false, true) {
+            it.push(methodSignature)
+          }
     }
     return super.instrumentMethod(mv, access, name, descriptor, signature, exceptions)
   }

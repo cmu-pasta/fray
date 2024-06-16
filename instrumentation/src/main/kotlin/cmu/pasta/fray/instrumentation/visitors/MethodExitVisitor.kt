@@ -17,13 +17,14 @@ class MethodExitVisitor(
     val loadThis: Boolean,
     val loadArgs: Boolean,
     val addFinalBlock: Boolean,
+    val customizer: MethodExitVisitor.(v: MethodExitVisitor) -> Unit = {}
 ) : AdviceAdapter(ASM9, mv, access, name, descriptor) {
   val methodEnterLabel = Label()
   val methodExitLabel = Label()
 
-  override fun onMethodEnter() {
-    super.onMethodEnter()
+  override fun visitCode() {
     visitLabel(methodEnterLabel)
+    super.visitCode()
   }
 
   override fun onMethodExit(opcode: Int) {
@@ -34,6 +35,7 @@ class MethodExitVisitor(
       if (loadArgs) {
         loadArgs()
       }
+      customizer(this)
       invokeStatic(
           Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
           Utils.kFunctionToASMMethod(method),
@@ -45,7 +47,7 @@ class MethodExitVisitor(
   override fun visitMaxs(maxStack: Int, maxLocals: Int) {
     if (addFinalBlock) {
       visitLabel(methodExitLabel)
-      catchException(methodEnterLabel, methodExitLabel, Type.getObjectType("java/lang/Throwable"))
+      catchException(methodEnterLabel, methodExitLabel, null)
       val locals = getLocals()
       visitFrame(Opcodes.F_NEW, locals.size, getLocals(), 1, arrayOf("java/lang/Throwable"))
       if (loadThis) {
@@ -54,6 +56,7 @@ class MethodExitVisitor(
       if (loadArgs) {
         loadArgs()
       }
+      customizer(this)
       invokeStatic(
           Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
           Utils.kFunctionToASMMethod(method),

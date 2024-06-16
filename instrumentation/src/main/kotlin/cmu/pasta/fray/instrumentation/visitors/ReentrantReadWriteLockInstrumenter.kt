@@ -17,7 +17,7 @@ class ReentrantReadWriteLockInstrumenter(cv: ClassVisitor) :
   ): MethodVisitor {
     if (name == "<init>" && descriptor == "(Z)V") {
       return MethodExitVisitor(
-          mv, Runtime::onReentrantReadWriteLockInit, access, name, descriptor, true, false, true)
+          mv, Runtime::onReentrantReadWriteLockInit, access, name, descriptor, true, false, false)
     }
     return mv
   }

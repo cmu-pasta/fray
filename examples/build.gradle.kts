@@ -1,6 +1,7 @@
 import java.util.regex.Pattern
 plugins {
   id("java")
+  kotlin("jvm")
 }
 
 repositories {
@@ -40,8 +41,7 @@ tasks.withType<JavaExec> {
 }
 
 tasks.register<JavaExec>("runFray") {
-  val testClass = properties["testClass"] as String? ?: ""
-  val testMethod = properties["testMethod"] as String? ?: ""
+  val configPath = properties["configPath"] as String? ?: ""
   val extraArgs = when (val extraArgs = properties["extraArgs"]) {
     is String -> {
       val pattern = Pattern.compile("""("[^"]+"|\S+)""")
@@ -54,7 +54,7 @@ tasks.register<JavaExec>("runFray") {
     }
     else -> emptyList()
   }
-  args = listOf(testClass, testMethod) + extraArgs
+  args = listOf("--run-config", "json", "--config-path", configPath) + extraArgs
 }
 
 tasks.compileJava {

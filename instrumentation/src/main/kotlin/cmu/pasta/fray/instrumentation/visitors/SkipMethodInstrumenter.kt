@@ -24,14 +24,14 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
-    //    if ((name == "loadClass" &&
-    //        descriptor == "(Ljava/lang/String;)Ljava/lang/Class;") ||
-    //        name == "makeImpl" ||
-    //        className == "java/util/logging/Logger") {
-    val eMv = MethodEnterVisitor(mv, Runtime::onSkipMethod, access, name, descriptor, false, false)
+    val methodSignature = "$className#$name$descriptor"
+    val eMv =
+        MethodEnterVisitor(mv, Runtime::onSkipMethod, access, name, descriptor, false, false) {
+          it.push(methodSignature)
+        }
     return MethodExitVisitor(
-        eMv, Runtime::onSkipMethodDone, access, name, descriptor, false, false, true)
-    //    }
-    return mv
+        eMv, Runtime::onSkipMethodDone, access, name, descriptor, false, false, true) {
+          it.push(methodSignature)
+        }
   }
 }

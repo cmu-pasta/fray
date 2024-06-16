@@ -60,7 +60,11 @@ class LockManager {
   }
 
   // TODO(aoli): can we merge this logic with `objectNotifyImply`?
-  fun threadInterruptDuringObjectWait(waitingObject: Any, lockObject: Any, context: ThreadContext) {
+  fun threadInterruptDuringObjectWait(
+      waitingObject: Any,
+      lockObject: Any,
+      context: ThreadContext
+  ): Boolean {
     val id = System.identityHashCode(waitingObject)
     val lockContext = getLockContext(lockObject)
     threadWaitsFor.remove(context.thread.id)
@@ -72,7 +76,9 @@ class LockManager {
     if (lockContext.canLock(context.thread.id)) {
       context.pendingOperation = ThreadResumeOperation()
       context.state = ThreadState.Enabled
+      return true
     }
+    return false
   }
 
   fun lockFromCondition(condition: Condition): Lock {

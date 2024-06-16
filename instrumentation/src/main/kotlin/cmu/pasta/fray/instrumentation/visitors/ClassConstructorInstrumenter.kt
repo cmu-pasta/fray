@@ -15,10 +15,21 @@ class ClassConstructorInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   ): MethodVisitor {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
     if (name == "<clinit>") {
+      val methodSignature = "#$name$descriptor"
       val eMv =
-          MethodEnterVisitor(mv, Runtime::onSkipMethod, access, name, descriptor, false, false)
+          MethodEnterVisitor(mv, Runtime::onSkipMethod, access, name, descriptor, false, false) {
+            it.push(methodSignature)
+          }
       return MethodExitVisitor(
-          eMv, Runtime::onSkipMethodDone, access, name, descriptor, false, false, true)
+          eMv,
+          Runtime::onSkipMethodDone,
+          access,
+          name,
+          descriptor,
+          false,
+          false,
+          true,
+          { it.push(methodSignature) })
     }
     return mv
   }

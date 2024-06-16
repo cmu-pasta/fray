@@ -2,10 +2,7 @@ package cmu.pasta.fray.runtime;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.*;
 
 public class Delegate {
 
@@ -45,7 +42,7 @@ public class Delegate {
     public void onLockLockInterruptibly(Lock l) {
     }
 
-    public void onLockLockDone(Lock l) {
+    public void onLockLockDone() {
     }
 
     public void onLockUnlock(Lock l) {
@@ -103,10 +100,10 @@ public class Delegate {
     public void onYield() {
     }
 
-    public void onSkipMethod() {
+    public void onSkipMethod(String signature) {
     }
 
-    public void onSkipMethodDone() {
+    public void onSkipMethodDone(String signature) {
     }
 
     public void start() {
@@ -199,6 +196,25 @@ public class Delegate {
     }
 
     public void onArrayStore(Object o, int index) {
+    }
+
+    public void onThreadParkNanos(long nanos) {
+        LockSupport.parkNanos(nanos);
+    }
+
+    public void onThreadParkNanosWithBlocker(Object blocker, long nanos) {
+        LockSupport.parkNanos(blocker, nanos);
+    }
+
+    public void onThreadParkUntil(long nanos) {
+        LockSupport.parkUntil(nanos);
+    }
+
+    public void onThreadParkUntilWithBlocker(Object blocker, long nanos) {
+        LockSupport.parkUntil(blocker, nanos);
+    }
+
+    public void onThreadInterruptDone(Thread t) {
     }
 }
 

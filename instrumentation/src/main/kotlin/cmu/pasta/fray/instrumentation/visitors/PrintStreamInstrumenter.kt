@@ -16,10 +16,15 @@ class PrintStreamInstrumenter(cv: ClassVisitor) :
       exceptions: Array<out String>?
   ): MethodVisitor {
     if (name == "println" || name == "writeln" || name == "write") {
+      val methodSignature = "$className#$name$descriptor"
       val eMv =
-          MethodEnterVisitor(mv, Runtime::onSkipMethod, access, name, descriptor, false, false)
+          MethodEnterVisitor(mv, Runtime::onSkipMethod, access, name, descriptor, false, false) {
+            it.push(methodSignature)
+          }
       return MethodExitVisitor(
-          eMv, Runtime::onSkipMethodDone, access, name, descriptor, false, false, false)
+          eMv, Runtime::onSkipMethodDone, access, name, descriptor, false, false, true) {
+            it.push(methodSignature)
+          }
     }
     return super.instrumentMethod(mv, access, name, descriptor, signature, exceptions)
   }

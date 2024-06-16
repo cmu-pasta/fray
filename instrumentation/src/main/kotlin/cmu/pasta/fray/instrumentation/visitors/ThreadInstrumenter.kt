@@ -3,6 +3,9 @@ package cmu.pasta.fray.instrumentation.visitors
 import cmu.pasta.fray.runtime.Runtime
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes.ASM9
+import org.objectweb.asm.Type
+import org.objectweb.asm.commons.GeneratorAdapter
 
 class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.java.name) {
 
@@ -31,13 +34,43 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
       return MethodExitVisitor(
           mv, Runtime::onThreadClearInterrupt, access, name, descriptor, true, false, false)
     }
-    if (name == "setInterrupt" || name == "interrupt") {
-      return MethodEnterVisitor(
-          mv, Runtime::onThreadInterrupt, access, name, descriptor, true, false)
+    if (name == "setInterrupt") {
+      val eMv =
+          MethodEnterVisitor(mv, Runtime::onThreadInterrupt, access, name, descriptor, true, false)
+      return MethodExitVisitor(
+          eMv, Runtime::onThreadInterruptDone, access, name, descriptor, true, false, true)
     }
     if (name == "getState") {
       return MethodExitVisitor(
           mv, Runtime::onThreadGetState, access, name, descriptor, true, false, false)
+    }
+
+    if (name == "interrupt") {
+      return object : GeneratorAdapter(ASM9, mv, access, name, descriptor) {
+        override fun visitMethodInsn(
+            opcode: Int,
+            owner: String,
+            name: String,
+            descriptor: String,
+            isInterface: Boolean
+        ) {
+          if (name == "interrupt0") {
+            loadThis()
+            invokeStatic(
+                Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+                Utils.kFunctionToASMMethod(Runtime::onThreadInterrupt),
+            )
+          }
+          super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
+          if (name == "interrupt0") {
+            loadThis()
+            invokeStatic(
+                Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+                Utils.kFunctionToASMMethod(Runtime::onThreadInterruptDone),
+            )
+          }
+        }
+      }
     }
     return mv
   }

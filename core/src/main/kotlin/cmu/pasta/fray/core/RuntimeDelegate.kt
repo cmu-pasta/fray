@@ -7,12 +7,14 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Semaphore
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class RuntimeDelegate : Delegate() {
 
   var entered = ThreadLocal.withInitial { false }
   var skipFunctionEntered = ThreadLocal.withInitial { 0 }
+  val stackTrace = ThreadLocal.withInitial { mutableListOf<String>() }
 
   private fun checkEntered(): Boolean {
     if (entered.get()) {
@@ -109,14 +111,14 @@ class RuntimeDelegate : Delegate() {
 
   override fun onLockLockInterruptibly(l: Lock) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Lock.lock")
       return
     }
     try {
       GlobalContext.lockLock(l, true)
     } finally {
       entered.set(false)
-      skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+      onSkipMethod("Lock.lock")
     }
   }
 
@@ -139,19 +141,19 @@ class RuntimeDelegate : Delegate() {
 
   override fun onLockLock(l: Lock) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Lock.lock")
       return
     }
     try {
       GlobalContext.lockLock(l, false)
     } finally {
-      skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+      onSkipMethod("Lock.lock")
       entered.set(false)
     }
   }
 
-  override fun onLockLockDone(l: Lock?) {
-    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+  override fun onLockLockDone() {
+    onSkipMethodDone("Lock.lock")
   }
 
   override fun onAtomicOperation(o: Any, type: MemoryOpType) {
@@ -327,11 +329,20 @@ class RuntimeDelegate : Delegate() {
     }
   }
 
-  override fun onSkipMethod() {
+  override fun onSkipMethod(signature: String) {
+    stackTrace.get().add(signature)
     skipFunctionEntered.set(1 + skipFunctionEntered.get())
   }
 
-  override fun onSkipMethodDone() {
+  override fun onSkipMethodDone(signature: String) {
+    if (stackTrace.get().isEmpty()) {
+      println("?????")
+      return
+    }
+    val last = stackTrace.get().removeLast()
+    if (last != signature) {
+      println("?????")
+    }
     skipFunctionEntered.set(skipFunctionEntered.get() - 1)
   }
 
@@ -366,7 +377,16 @@ class RuntimeDelegate : Delegate() {
 
   override fun onThreadInterrupt(t: Thread) {
     if (checkEntered()) return
-    GlobalContext.threadInterrupt(t)
+    try {
+      GlobalContext.threadInterrupt(t)
+    } finally {
+      entered.set(false)
+    }
+  }
+
+  override fun onThreadInterruptDone(t: Thread) {
+    if (checkEntered()) return
+    GlobalContext.threadInterruptDone(t)
     entered.set(false)
   }
 
@@ -547,5 +567,21 @@ class RuntimeDelegate : Delegate() {
     } catch (e: Throwable) {
       e.printStackTrace()
     }
+  }
+
+  override fun onThreadParkNanos(nanos: Long) {
+    LockSupport.park()
+  }
+
+  override fun onThreadParkUntil(nanos: Long) {
+    LockSupport.park()
+  }
+
+  override fun onThreadParkNanosWithBlocker(blocker: Any?, nanos: Long) {
+    LockSupport.park(blocker)
+  }
+
+  override fun onThreadParkUntilWithBlocker(blocker: Any?, nanos: Long) {
+    LockSupport.park(blocker)
   }
 }

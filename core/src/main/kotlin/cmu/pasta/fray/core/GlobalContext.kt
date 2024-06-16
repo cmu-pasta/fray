@@ -17,6 +17,7 @@ import cmu.pasta.fray.runtime.Runtime
 import cmu.pasta.fray.runtime.TargetTerminateException
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.lang.Thread.UncaughtExceptionHandler
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
@@ -143,7 +144,12 @@ object GlobalContext {
   }
 
   fun threadStart(t: Thread) {
-    t.setUncaughtExceptionHandler { t, e -> Runtime.onReportError(e) }
+    val originalHanlder = t.uncaughtExceptionHandler
+    val handler = UncaughtExceptionHandler { t, e ->
+      Runtime.onReportError(e)
+      originalHanlder?.uncaughtException(t, e)
+    }
+    t.setUncaughtExceptionHandler(handler)
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size)
     syncManager.createWait(t, 1)
   }
@@ -159,12 +165,14 @@ object GlobalContext {
 
   fun threadPark() {
     val t = Thread.currentThread()
-    if (!registeredThreads[t.id]!!.unparkSignaled) {
-      registeredThreads[t.id]?.pendingOperation = ParkOperation()
-      registeredThreads[t.id]?.state = ThreadState.Paused
+    val context = registeredThreads[t.id]!!
+    context.checkInterrupt()
+    if (!context.unparkSignaled) {
+      context.pendingOperation = ParkOperation()
+      context.state = ThreadState.Paused
       scheduleNextOperation(false)
     } else {
-      registeredThreads[t.id]!!.unparkSignaled = false
+      context.unparkSignaled = false
     }
   }
 
@@ -176,7 +184,13 @@ object GlobalContext {
     if (context.state == ThreadState.Running) {
       return
     }
-    assert(context.state == ThreadState.Enabled)
+    val state = context.state
+    val operation = context.pendingOperation
+    if (state != ThreadState.Enabled) {
+      println(state)
+      println(operation)
+    }
+    assert(state == ThreadState.Enabled)
     syncManager.signal(t)
     context.block()
   }
@@ -186,7 +200,7 @@ object GlobalContext {
     if (context.state == ThreadState.Paused && context.pendingOperation is ParkOperation) {
       syncManager.createWait(t, 1)
       context.state = ThreadState.Enabled
-      registeredThreads[t.id]?.pendingOperation = ThreadResumeOperation()
+      context.pendingOperation = ThreadResumeOperation()
     } else if (context.state == ThreadState.Enabled || context.state == ThreadState.Running) {
       context.unparkSignaled = true
     }
@@ -274,6 +288,7 @@ object GlobalContext {
       context.blockedBy = null
       assert(lockManager.lock(lockObject, t, false, true, false))
       syncManager.removeWait(lockObject)
+      context.state = ThreadState.Running
     }
 
     // We need a daemon thread here because
@@ -333,10 +348,42 @@ object GlobalContext {
           } else {
             context.blockedBy!!
           }
-      lockManager.threadInterruptDuringObjectWait(context.blockedBy!!, lock, context)
+      if (lockManager.threadInterruptDuringObjectWait(context.blockedBy!!, lock, context)) {
+        syncManager.createWait(lock, 1)
+      }
+    }
+
+    // A thread is interrupted during park.
+
+    if (context.state == ThreadState.Paused && context.pendingOperation is ParkOperation) {
+      syncManager.createWait(t, 1)
+      context.pendingOperation = ThreadResumeOperation()
+      context.state = ThreadState.Enabled
     }
 
     // A thread is interrupted during lockInterruptibly.
+    if (context.waitingForLock != null) {
+      val lock = context.waitingForLock!!
+      lockManager.getLockContext(lock).interrupt(t.id)
+    }
+  }
+
+  fun threadInterruptDone(t: Thread) {
+    val context = registeredThreads[t.id]!!
+    context.interruptSignaled = true
+
+    // A thread is interrupted during wait/await.
+    if (context.blockedBy != null) {
+      val lock =
+          if (context.blockedBy is Condition) {
+            lockManager.lockFromCondition(context.blockedBy as Condition)
+          } else {
+            context.blockedBy!!
+          }
+      syncManager.wait(lock)
+    } else {
+      syncManager.wait(t)
+    }
   }
 
   fun threadClearInterrupt(t: Thread): Boolean {
@@ -433,12 +480,16 @@ object GlobalContext {
     // }
     while (!lockManager.lock(lock, t, shouldBlock, false, canInterrupt) && shouldBlock) {
       context.state = ThreadState.Paused
-
-      // We want to block current thread because we do
-      // not want to rely on ReentrantLock. This allows
-      // us to pick which Thread to run next if multiple
-      // threads hold the same lock.
-      scheduleNextOperation(true)
+      context.waitingForLock = lock
+      try {
+        // We want to block current thread because we do
+        // not want to rely on ReentrantLock. This allows
+        // us to pick which Thread to run next if multiple
+        // threads hold the same lock.
+        scheduleNextOperation(true)
+      } finally {
+        context.waitingForLock = null
+      }
       if (canInterrupt) {
         context.checkInterrupt()
       }
@@ -595,9 +646,10 @@ object GlobalContext {
   fun latchAwait(latch: CountDownLatch) {
     if (latchManager.await(latch, true)) {
       val t = Thread.currentThread().id
-      registeredThreads[t]?.pendingOperation = PausedOperation()
-      registeredThreads[t]?.state = ThreadState.Paused
-      checkDeadlock {}
+      val context = registeredThreads[t]!!
+      context.pendingOperation = PausedOperation()
+      context.state = ThreadState.Paused
+      checkDeadlock { context.state = ThreadState.Running }
       executor.submit {
         while (registeredThreads[t]!!.thread.state == Thread.State.RUNNABLE) {
           Thread.yield()
@@ -714,6 +766,7 @@ object GlobalContext {
         !currentThread.isExiting &&
         Thread.currentThread() !is HelperThread &&
         !(mainExiting && currentThreadId == mainThreadId)) {
+      currentThread.state = ThreadState.Running
       val e = TargetTerminateException(-2)
       reportError(e)
       throw e

@@ -16,7 +16,7 @@ class LockSupportInstrumenter(cv: ClassVisitor) :
       exceptions: Array<out String>?
   ): MethodVisitor {
     var mv = super.instrumentMethod(mv, access, name, descriptor, signature, exceptions)
-    if (name.startsWith("park")) {
+    if (name == "park") {
       val eMv =
           MethodEnterVisitor(mv, Runtime::onThreadPark, access, name, descriptor, false, false)
       return MethodExitVisitor(
