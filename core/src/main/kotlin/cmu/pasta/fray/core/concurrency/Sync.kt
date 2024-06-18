@@ -4,6 +4,7 @@ package cmu.pasta.fray.core.concurrency
 // for signals.
 class Sync(val goal: Int) : Any() {
   private var count = 0
+  private val signaler = mutableListOf<String>()
   private var isBlocked = false
 
   @Synchronized fun isBlocked() = isBlocked
@@ -28,11 +29,13 @@ class Sync(val goal: Int) : Any() {
     isBlocked = false
     // At this point no concurrency.
     count = 0
+    signaler.clear()
   }
 
   @Synchronized
   fun unblock() {
     count += 1
+    signaler.add(Thread.currentThread().name)
     if (count > goal) {
       println("?")
     }

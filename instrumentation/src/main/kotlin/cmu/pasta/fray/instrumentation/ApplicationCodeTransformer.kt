@@ -45,6 +45,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
     try {
       var cv: ClassVisitor = ObjectNotifyInstrumenter(cn)
       cv = TargetExitInstrumenter(cv)
+      cv = TimedWaitInstrumenter(cv)
       cv = VolatileFieldsInstrumenter(cv, false)
       cv = ObjectNotifyInstrumenter(cv)
       cv = MonitorInstrumenter(cv)

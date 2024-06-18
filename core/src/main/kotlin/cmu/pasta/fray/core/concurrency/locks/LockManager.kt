@@ -11,15 +11,15 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 class LockManager {
   val lockContextManager = ReferencedContextManager<LockContext> { ReentrantLockContext() }
   val waitingThreads = mutableMapOf<Int, MutableList<Long>>()
-  val threadWaitsFor = mutableMapOf<Long, Int>()
+  val threadWaitsFor = mutableMapOf<Long, ThreadWaitsForInfo>()
   val conditionToLock = mutableMapOf<Condition, Lock>()
   val lockToConditions = mutableMapOf<Lock, MutableList<Condition>>()
 
   fun threadUnblockedDueToDeadlock(t: Thread) {
-    val id = threadWaitsFor[t.id] ?: return
-    waitingThreads[id]?.remove(t.id)
-    if (waitingThreads[id]?.isEmpty() == true) {
-      waitingThreads.remove(id)
+    val info = threadWaitsFor[t.id] ?: return
+    waitingThreads[info.id]?.remove(t.id)
+    if (waitingThreads[info.id]?.isEmpty() == true) {
+      waitingThreads.remove(info.id)
     }
     threadWaitsFor.remove(t.id)
   }
@@ -49,14 +49,14 @@ class LockManager {
     getLockContext(lockObject).addWakingThread(lockObject, t)
   }
 
-  fun addWaitingThread(waitingObject: Any, t: Thread) {
+  fun addWaitingThread(waitingObject: Any, t: Thread, canInterrupt: Boolean) {
     val id = System.identityHashCode(waitingObject)
     if (id !in waitingThreads) {
       waitingThreads[id] = mutableListOf()
     }
     assert(t.id !in waitingThreads[id]!!)
     waitingThreads[id]!!.add(t.id)
-    threadWaitsFor[t.id] = id
+    threadWaitsFor[t.id] = ThreadWaitsForInfo(id, canInterrupt)
   }
 
   // TODO(aoli): can we merge this logic with `objectNotifyImply`?
@@ -67,6 +67,10 @@ class LockManager {
   ): Boolean {
     val id = System.identityHashCode(waitingObject)
     val lockContext = getLockContext(lockObject)
+    val info = threadWaitsFor[context.thread.id] ?: return false
+    if (!info.canInterrupt) {
+      return false
+    }
     threadWaitsFor.remove(context.thread.id)
     waitingThreads[id]?.remove(context.thread.id)
     if (waitingThreads[id]?.isEmpty() == true) {

@@ -261,7 +261,7 @@ object GlobalContext {
     }
   }
 
-  private fun objectWaitImpl(waitingObject: Any, lockObject: Any) {
+  private fun objectWaitImpl(waitingObject: Any, lockObject: Any, canInterrupt: Boolean) {
     val t = Thread.currentThread().id
     val objId = System.identityHashCode(waitingObject)
     val context = registeredThreads[t]!!
@@ -271,18 +271,15 @@ object GlobalContext {
     // If we resume executing, the Object.wait is executed. We should update the
     // state of current thread.
 
+    if (canInterrupt) {
+      context.checkInterrupt()
+    }
     context.blockedBy = waitingObject
     // No matter if an interrupt is signaled, we need to enter the `wait` method
     // first which will unlock the reentrant lock and tries to reacquire it.
-    if (context.interruptSignaled) {
-      lockManager.addWakingThread(lockObject, context.thread)
-      context.pendingOperation = ThreadResumeOperation()
-      context.state = ThreadState.Enabled
-    } else {
-      context.pendingOperation = PausedOperation()
-      context.state = ThreadState.Paused
-      lockManager.addWaitingThread(waitingObject, Thread.currentThread())
-    }
+    context.pendingOperation = PausedOperation()
+    context.state = ThreadState.Paused
+    lockManager.addWaitingThread(waitingObject, Thread.currentThread(), canInterrupt)
     unlockImpl(lockObject, t, true, true, lockObject == waitingObject)
     checkDeadlock {
       context.blockedBy = null
@@ -305,15 +302,15 @@ object GlobalContext {
   }
 
   fun objectWait(o: Any) {
-    objectWaitImpl(o, o)
+    objectWaitImpl(o, o, true)
   }
 
-  fun conditionAwait(o: Condition) {
+  fun conditionAwait(o: Condition, canInterrupt: Boolean) {
     val lock = lockManager.lockFromCondition(o)
-    objectWaitImpl(o, lock)
+    objectWaitImpl(o, lock, canInterrupt)
   }
 
-  fun objectWaitDoneImpl(waitingObject: Any, lockObject: Any) {
+  fun objectWaitDoneImpl(waitingObject: Any, lockObject: Any, canInterrupt: Boolean) {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
     // We will unblock here only if the scheduler
@@ -321,8 +318,15 @@ object GlobalContext {
     while (context.state != ThreadState.Running) {
       syncManager.signal(lockObject)
       try {
+        if (context.interruptSignaled) {
+          Thread.interrupted()
+        }
         if (waitingObject is Condition) {
-          waitingObject.await()
+          if (canInterrupt) {
+            waitingObject.await()
+          } else {
+            waitingObject.awaitUninterruptibly()
+          }
         } else {
           (waitingObject as Object).wait()
         }
@@ -330,10 +334,11 @@ object GlobalContext {
         // We want to also catch interrupt exception here.
       }
     }
-    lockManager.threadWaitsFor.remove(t.id)
     // If a thread is enabled, the lock must be available.
     assert(lockManager.lock(lockObject, t.id, false, true, false))
-    context.checkInterrupt()
+    if (canInterrupt) {
+      context.checkInterrupt()
+    }
   }
 
   fun threadInterrupt(t: Thread) {
@@ -394,11 +399,11 @@ object GlobalContext {
   }
 
   fun objectWaitDone(o: Any) {
-    objectWaitDoneImpl(o, o)
+    objectWaitDoneImpl(o, o, true)
   }
 
-  fun conditionAwaitDone(o: Condition) {
-    objectWaitDoneImpl(o, lockManager.lockFromCondition(o))
+  fun conditionAwaitDone(o: Condition, canInterrupt: Boolean) {
+    objectWaitDoneImpl(o, lockManager.lockFromCondition(o), canInterrupt)
   }
 
   fun objectNotifyImpl(waitingObject: Any, lockObject: Any) {
@@ -406,6 +411,7 @@ object GlobalContext {
     lockManager.waitingThreads[id]?.let {
       if (it.size > 0) {
         val t = it.removeFirst()
+        lockManager.threadWaitsFor.remove(t)
         val context = registeredThreads[t]!!
         lockManager.addWakingThread(lockObject, context.thread)
         context.blockedBy = waitingObject
@@ -431,6 +437,7 @@ object GlobalContext {
       if (it.size > 0) {
         for (t in it) {
           val context = registeredThreads[t]!!
+          lockManager.threadWaitsFor.remove(t)
           // We cannot enable the thread immediately because
           // the thread is still waiting for the monitor lock.
           context.blockedBy = waitingObject

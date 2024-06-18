@@ -1,7 +1,9 @@
 package cmu.pasta.fray.runtime;
 
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.*;
 
 public class Delegate {
@@ -103,7 +105,8 @@ public class Delegate {
     public void onSkipMethod(String signature) {
     }
 
-    public void onSkipMethodDone(String signature) {
+    public boolean onSkipMethodDone(String signature) {
+        return false;
     }
 
     public void start() {
@@ -216,5 +219,24 @@ public class Delegate {
 
     public void onThreadInterruptDone(Thread t) {
     }
+
+    public long onConditionAwaitNanos(Condition object, long nanos) throws InterruptedException {
+        return object.awaitNanos(nanos);
+    }
+
+    public boolean onConditionAwaitTime(Condition object, long time, TimeUnit unit) throws InterruptedException {
+        return object.await(time, unit);
+    }
+
+    public boolean onConditionAwaitUntil(Condition object, Date deadline) throws InterruptedException {
+        return object.awaitUntil(deadline);
+    }
+
+    public void onConditionAwaitUninterruptibly(Condition object) {
+    }
+
+    public void onConditionAwaitUninterruptiblyDone(Condition object) {
+    }
+
 }
 

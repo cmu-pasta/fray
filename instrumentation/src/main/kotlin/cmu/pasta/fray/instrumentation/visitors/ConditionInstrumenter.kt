@@ -16,11 +16,17 @@ class ConditionInstrumenter(cv: ClassVisitor) :
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
-    if (name.startsWith("await")) {
-      val eMv =
-          MethodEnterVisitor(mv, Runtime::onConditionAwait, access, name, descriptor, true, false)
-      return MethodExitVisitor(
-          eMv, Runtime::onConditionAwaitDone, access, name, descriptor, true, false, true)
+    if ((name == "await" || name == "awaitUninterruptibly") && descriptor == "()V") {
+      val method =
+          if (name == "await") {
+            Pair(Runtime::onConditionAwait, Runtime::onConditionAwaitDone)
+          } else {
+            Pair(
+                Runtime::onConditionAwaitUninterruptibly,
+                Runtime::onConditionAwaitUninterruptiblyDone)
+          }
+      val eMv = MethodEnterVisitor(mv, method.first, access, name, descriptor, true, false)
+      return MethodExitVisitor(eMv, method.second, access, name, descriptor, true, false, true)
     }
     if (name == "signal") {
       val eMv =

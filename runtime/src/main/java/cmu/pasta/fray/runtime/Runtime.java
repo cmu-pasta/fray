@@ -1,7 +1,9 @@
 package cmu.pasta.fray.runtime;
 
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -302,6 +304,26 @@ public class Runtime {
 
     public static void onThreadParkUntilWithBlocker(Object blocker, long deadline) {
         DELEGATE.onThreadParkUntilWithBlocker(blocker, deadline);
+    }
+
+    public static long onConditionAwaitNanos(Condition object, long nanos) throws InterruptedException {
+        return DELEGATE.onConditionAwaitNanos(object, nanos);
+    }
+
+    public static boolean onConditionAwaitTime(Condition object, long time, TimeUnit unit) throws InterruptedException {
+        return DELEGATE.onConditionAwaitTime(object, time, unit);
+    }
+
+    public static boolean onConditionAwaitUntil(Condition object, Date deadline) throws InterruptedException {
+        return DELEGATE.onConditionAwaitUntil(object, deadline);
+    }
+
+    public static void onConditionAwaitUninterruptibly(Condition object) {
+        DELEGATE.onConditionAwaitUninterruptibly(object);
+    }
+
+    public static void onConditionAwaitUninterruptiblyDone(Condition object) {
+        DELEGATE.onConditionAwaitUninterruptiblyDone(object);
     }
 
 }

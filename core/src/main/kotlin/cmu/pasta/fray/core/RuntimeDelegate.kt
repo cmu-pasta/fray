@@ -3,8 +3,10 @@ package cmu.pasta.fray.core
 import cmu.pasta.fray.core.concurrency.HelperThread
 import cmu.pasta.fray.runtime.Delegate
 import cmu.pasta.fray.runtime.MemoryOpType
+import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.LockSupport
@@ -45,16 +47,16 @@ class RuntimeDelegate : Delegate() {
 
   override fun onThreadStart(t: Thread) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("thread.start")
       return
     }
     GlobalContext.threadStart(t)
-    skipFunctionEntered.set(1 + skipFunctionEntered.get())
+    onSkipMethod("thread.start")
     entered.set(false)
   }
 
   override fun onThreadStartDone(t: Thread) {
-    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    onSkipMethodDone("thread.start")
     if (checkEntered()) return
     GlobalContext.threadStartDone(t)
     entered.set(false)
@@ -124,19 +126,19 @@ class RuntimeDelegate : Delegate() {
 
   override fun onLockTryLock(l: Lock) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Lock.tryLock")
       return
     }
     try {
       GlobalContext.lockTryLock(l)
     } finally {
       entered.set(false)
-      skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+      onSkipMethod("Lock.tryLock")
     }
   }
 
   override fun onLockTryLockDone(l: Lock) {
-    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    onSkipMethodDone("Lock.tryLock")
   }
 
   override fun onLockLock(l: Lock) {
@@ -167,16 +169,19 @@ class RuntimeDelegate : Delegate() {
 
   override fun onLockUnlock(l: Lock) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Lock.unlock")
       return
     }
-    GlobalContext.lockUnlock(l)
-    entered.set(false)
-    skipFunctionEntered.set(1 + skipFunctionEntered.get())
+    try {
+      GlobalContext.lockUnlock(l)
+    } finally {
+      entered.set(false)
+      onSkipMethod("Lock.unlock")
+    }
   }
 
   override fun onLockUnlockDone(l: Lock) {
-    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    onSkipMethodDone("Lock.unlock")
     if (checkEntered()) return
     GlobalContext.lockUnlockDone(l)
     entered.set(false)
@@ -211,22 +216,49 @@ class RuntimeDelegate : Delegate() {
 
   override fun onConditionAwait(o: Condition) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Condition.await")
       return
     }
     try {
-      GlobalContext.conditionAwait(o)
+      GlobalContext.conditionAwait(o, true)
     } finally {
       entered.set(false)
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Condition.await")
+    }
+  }
+
+  override fun onConditionAwaitUninterruptibly(o: Condition) {
+    if (checkEntered()) {
+      onSkipMethod("Condition.await")
+      return
+    }
+    try {
+      GlobalContext.conditionAwait(o, false)
+    } finally {
+      entered.set(false)
+      onSkipMethod("Condition.await")
     }
   }
 
   override fun onConditionAwaitDone(o: Condition) {
-    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    if (!onSkipMethodDone("Condition.await")) {
+      return
+    }
     if (checkEntered()) return
     try {
-      GlobalContext.conditionAwaitDone(o)
+      GlobalContext.conditionAwaitDone(o, true)
+    } finally {
+      entered.set(false)
+    }
+  }
+
+  override fun onConditionAwaitUninterruptiblyDone(o: Condition) {
+    if (!onSkipMethodDone("Condition.await")) {
+      return
+    }
+    if (checkEntered()) return
+    try {
+      GlobalContext.conditionAwaitDone(o, false)
     } finally {
       entered.set(false)
     }
@@ -234,26 +266,26 @@ class RuntimeDelegate : Delegate() {
 
   override fun onConditionSignal(o: Condition) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Condition.signal")
       return
     }
     GlobalContext.conditionSignal(o)
     entered.set(false)
-    skipFunctionEntered.set(1 + skipFunctionEntered.get())
+    onSkipMethod("Condition.signal")
   }
 
-  override fun onConditionSignalDone(l: Condition?) {
-    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+  override fun onConditionSignalDone(l: Condition) {
+    onSkipMethodDone("Condition.signal")
   }
 
   override fun onConditionSignalAll(o: Condition) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Condition.signal")
       return
     }
     GlobalContext.conditionSignalAll(o)
     entered.set(false)
-    skipFunctionEntered.set(1 + skipFunctionEntered.get())
+    onSkipMethod("Condition.signal")
   }
 
   override fun onUnsafeReadVolatile(o: Any?, offset: Long) {
@@ -330,20 +362,26 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onSkipMethod(signature: String) {
+    if (!GlobalContext.registeredThreads.containsKey(Thread.currentThread().id)) {
+      return
+    }
     stackTrace.get().add(signature)
     skipFunctionEntered.set(1 + skipFunctionEntered.get())
   }
 
-  override fun onSkipMethodDone(signature: String) {
+  override fun onSkipMethodDone(signature: String): Boolean {
+    if (!GlobalContext.registeredThreads.containsKey(Thread.currentThread().id)) {
+      return false
+    }
     if (stackTrace.get().isEmpty()) {
-      println("?????")
-      return
+      return false
     }
     val last = stackTrace.get().removeLast()
     if (last != signature) {
-      println("?????")
+      return false
     }
     skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    return true
   }
 
   override fun onThreadPark() {
@@ -411,104 +449,104 @@ class RuntimeDelegate : Delegate() {
 
   override fun onSemaphoreTryAcquire(sem: Semaphore, permits: Int) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Semaphore.acquire")
       return
     }
     try {
       GlobalContext.semaphoreAcquire(sem, permits, false, true)
     } finally {
-      skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+      onSkipMethod("Semaphore.acquire")
       entered.set(false)
     }
   }
 
   override fun onSemaphoreAcquire(sem: Semaphore, permits: Int) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Semaphore.acquire")
       return
     }
     try {
       GlobalContext.semaphoreAcquire(sem, permits, true, true)
     } finally {
-      skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+      onSkipMethod("Semaphore.acquire")
       entered.set(false)
     }
   }
 
   override fun onSemaphoreAcquireUninterruptibly(sem: Semaphore, permits: Int) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Semaphore.acquire")
       return
     }
     try {
       GlobalContext.semaphoreAcquire(sem, permits, true, false)
     } finally {
       entered.set(false)
-      skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+      onSkipMethod("Semaphore.acquire")
     }
   }
 
   override fun onSemaphoreAcquireDone() {
-    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    onSkipMethodDone("Semaphore.acquire")
   }
 
   override fun onSemaphoreRelease(sem: Semaphore, permits: Int) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Semaphore.release")
       return
     }
     GlobalContext.semaphoreRelease(sem, permits)
     entered.set(false)
-    skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    onSkipMethod("Semaphore.release")
   }
 
   override fun onSemaphoreReleaseDone() {
-    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    onSkipMethodDone("Semaphore.release")
   }
 
   override fun onSemaphoreDrainPermits(sem: Semaphore) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Semaphore.drainPermits")
       return
     }
     GlobalContext.semaphoreDrainPermits(sem)
     entered.set(false)
-    skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    onSkipMethod("Semaphore.drainPermits")
   }
 
   override fun onSemaphoreDrainPermitsDone() {
-    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    onSkipMethodDone("Semaphore.drainPermits")
   }
 
   override fun onSemaphoreReducePermits(sem: Semaphore, permits: Int) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Semaphore.reducePermits")
       return
     }
     GlobalContext.semaphoreReducePermits(sem, permits)
     entered.set(false)
-    skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    onSkipMethod("Semaphore.reducePermits")
   }
 
   override fun onSemaphoreReducePermitsDone() {
-    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    onSkipMethodDone("Semaphore.reducePermits")
   }
 
   override fun onLatchAwait(latch: CountDownLatch) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Latch.await")
       return
     }
     try {
       GlobalContext.latchAwait(latch)
     } finally {
       entered.set(false)
-      skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+      onSkipMethod("Latch.await")
     }
   }
 
   override fun onLatchAwaitDone(latch: CountDownLatch) {
-    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    onSkipMethodDone("Latch.await")
     if (checkEntered()) return
     GlobalContext.latchAwaitDone(latch)
     entered.set(false)
@@ -516,16 +554,16 @@ class RuntimeDelegate : Delegate() {
 
   override fun onLatchCountDown(latch: CountDownLatch) {
     if (checkEntered()) {
-      skipFunctionEntered.set(1 + skipFunctionEntered.get())
+      onSkipMethod("Latch.countDown")
       return
     }
     GlobalContext.latchCountDown(latch)
     entered.set(false)
-    skipFunctionEntered.set(skipFunctionEntered.get() + 1)
+    onSkipMethod("Latch.countDown")
   }
 
   override fun onLatchCountDownDone(latch: CountDownLatch) {
-    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    onSkipMethodDone("Latch.countDown")
     if (checkEntered()) return
     GlobalContext.latchCountDownDone(latch)
     entered.set(false)
@@ -583,5 +621,20 @@ class RuntimeDelegate : Delegate() {
 
   override fun onThreadParkUntilWithBlocker(blocker: Any?, nanos: Long) {
     LockSupport.park(blocker)
+  }
+
+  override fun onConditionAwaitTime(o: Condition, time: Long, unit: TimeUnit): Boolean {
+    o.await()
+    return true
+  }
+
+  override fun onConditionAwaitNanos(o: Condition, nanos: Long): Long {
+    o.await()
+    return 0
+  }
+
+  override fun onConditionAwaitUntil(o: Condition, deadline: Date): Boolean {
+    o.await()
+    return true
   }
 }
