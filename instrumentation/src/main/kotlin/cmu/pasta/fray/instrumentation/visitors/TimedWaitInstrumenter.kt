@@ -11,7 +11,8 @@ import org.objectweb.asm.commons.GeneratorAdapter
 class TimedWaitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
 
   fun findRuntimeMethod(owner: String, name: String, descriptor: String): KFunction<*>? {
-    if (owner == "java/lang/Thread" && (name == "parkNanos" || name == "parkUntil")) {
+    if (owner == "java/util/concurrent/locks/LockSupport" &&
+        (name == "parkNanos" || name == "parkUntil")) {
       return if (name == "parkNanos") {
         if (descriptor == "(J)V") {
           Runtime::onThreadParkNanos
