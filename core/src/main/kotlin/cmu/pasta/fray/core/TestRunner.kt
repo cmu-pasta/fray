@@ -1,5 +1,6 @@
 package cmu.pasta.fray.core
 
+import cmu.pasta.fray.core.command.Configuration
 import cmu.pasta.fray.core.logger.ConsoleLogger
 import cmu.pasta.fray.runtime.Runtime
 import java.nio.file.Paths
@@ -35,7 +36,7 @@ class TestRunner(val config: Configuration) {
         try {
           Runtime.DELEGATE = RuntimeDelegate()
           Runtime.start()
-          config.exec()
+          config.executionInfo.executor.execute()
           Runtime.onMainExit()
         } catch (e: Throwable) {
           Runtime.onReportError(e)

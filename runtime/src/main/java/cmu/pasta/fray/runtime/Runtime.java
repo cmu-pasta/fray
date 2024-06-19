@@ -258,6 +258,10 @@ public class Runtime {
         DELEGATE.onLatchAwait(latch);
     }
 
+    public static boolean onLatchAwaitTimeout(CountDownLatch latch, long timeout, TimeUnit unit) throws InterruptedException {
+        return DELEGATE.onLatchAwaitTimeout(latch, timeout, unit);
+    }
+
     public static void onLatchAwaitDone(CountDownLatch latch) {
         DELEGATE.onLatchAwaitDone(latch);
     }
@@ -299,7 +303,7 @@ public class Runtime {
     }
 
     public static void onThreadParkNanosWithBlocker(Object blocker, long nanos) {
-        DELEGATE.onThreadParkUntilWithBlocker(blocker, nanos);
+        DELEGATE.onThreadParkNanosWithBlocker(blocker, nanos);
     }
 
     public static void onThreadParkUntilWithBlocker(Object blocker, long deadline) {

@@ -173,6 +173,10 @@ public class Delegate {
     public void onLatchAwait(CountDownLatch latch) {
     }
 
+    public boolean onLatchAwaitTimeout(CountDownLatch latch, long timeout, TimeUnit unit) throws InterruptedException {
+        return latch.await(timeout, unit);
+    }
+
     public void onLatchAwaitDone(CountDownLatch latch) {
     }
 
@@ -213,8 +217,8 @@ public class Delegate {
         LockSupport.parkUntil(nanos);
     }
 
-    public void onThreadParkUntilWithBlocker(Object blocker, long nanos) {
-        LockSupport.parkUntil(blocker, nanos);
+    public void onThreadParkUntilWithBlocker(Object blocker, long until) {
+        LockSupport.parkUntil(blocker, until);
     }
 
     public void onThreadInterruptDone(Thread t) {

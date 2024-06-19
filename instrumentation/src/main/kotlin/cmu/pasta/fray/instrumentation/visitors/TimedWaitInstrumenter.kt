@@ -38,6 +38,11 @@ class TimedWaitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
         Runtime::onConditionAwaitUntil
       }
     }
+    if (owner == "java/util/concurrent/CountDownLatch" &&
+        name == "await" &&
+        descriptor == "(JLjava/util/concurrent/TimeUnit;)Z") {
+      return Runtime::onLatchAwaitTimeout
+    }
     return null
   }
 

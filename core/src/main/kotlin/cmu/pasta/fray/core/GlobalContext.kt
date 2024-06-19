@@ -1,5 +1,6 @@
 package cmu.pasta.fray.core
 
+import cmu.pasta.fray.core.command.Configuration
 import cmu.pasta.fray.core.concurrency.HelperThread
 import cmu.pasta.fray.core.concurrency.SynchronizationManager
 import cmu.pasta.fray.core.concurrency.locks.CountDownLatchManager
@@ -65,7 +66,7 @@ object GlobalContext {
   }
 
   fun reportError(e: Throwable) {
-    if (!bugFound && !config!!.ignoreUnhandledExceptions) {
+    if (!bugFound && !config!!.executionInfo.ignoreUnhandledExceptions) {
       bugFound = true
       val sw = StringWriter()
       sw.append("Error found: ${e}\n")
@@ -616,7 +617,8 @@ object GlobalContext {
   }
 
   fun fieldOperation(obj: Any?, owner: String, name: String, type: MemoryOpType) {
-    if (!config!!.interleaveMemoryOps && !volatileManager.isVolatile(owner, name)) return
+    if (!config!!.executionInfo.interleaveMemoryOps && !volatileManager.isVolatile(owner, name))
+        return
     val objIds = mutableListOf<Int>()
     if (obj != null) {
       objIds.add(System.identityHashCode(obj))
@@ -633,7 +635,7 @@ object GlobalContext {
   }
 
   fun arrayOperation(obj: Any, index: Int, type: MemoryOpType) {
-    if (!config!!.interleaveMemoryOps) return
+    if (!config!!.executionInfo.interleaveMemoryOps) return
     val objId = System.identityHashCode(obj)
     memoryOperation((31 * objId) + index, type)
   }
@@ -769,7 +771,7 @@ object GlobalContext {
     }
 
     step += 1
-    if (step > config!!.maxScheduledStep &&
+    if (step > config!!.executionInfo.maxScheduledStep &&
         !currentThread.isExiting &&
         Thread.currentThread() !is HelperThread &&
         !(mainExiting && currentThreadId == mainThreadId)) {

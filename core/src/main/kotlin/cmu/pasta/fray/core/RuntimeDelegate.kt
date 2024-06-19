@@ -545,6 +545,16 @@ class RuntimeDelegate : Delegate() {
     }
   }
 
+  override fun onLatchAwaitTimeout(latch: CountDownLatch, timeout: Long, unit: TimeUnit): Boolean {
+    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+      onYield()
+      return false
+    } else {
+      latch.await()
+      return true
+    }
+  }
+
   override fun onLatchAwaitDone(latch: CountDownLatch) {
     onSkipMethodDone("Latch.await")
     if (checkEntered()) return
@@ -608,33 +618,64 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onThreadParkNanos(nanos: Long) {
-    LockSupport.park()
+    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+      onYield()
+    } else {
+      LockSupport.park()
+    }
   }
 
   override fun onThreadParkUntil(nanos: Long) {
-    LockSupport.park()
+    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+      onYield()
+    } else {
+      LockSupport.park()
+    }
   }
 
   override fun onThreadParkNanosWithBlocker(blocker: Any?, nanos: Long) {
-    LockSupport.park(blocker)
+    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+      onYield()
+    } else {
+      LockSupport.park(blocker)
+    }
   }
 
   override fun onThreadParkUntilWithBlocker(blocker: Any?, nanos: Long) {
-    LockSupport.park(blocker)
+    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+      onYield()
+    } else {
+      LockSupport.park(blocker)
+    }
   }
 
   override fun onConditionAwaitTime(o: Condition, time: Long, unit: TimeUnit): Boolean {
-    o.await()
-    return true
+    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+      onYield()
+      return false
+    } else {
+      o.await()
+      return true
+    }
   }
 
   override fun onConditionAwaitNanos(o: Condition, nanos: Long): Long {
-    o.await()
-    return 0
+    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+      onYield()
+      return 0
+    } else {
+      o.await()
+      return nanos
+    }
   }
 
   override fun onConditionAwaitUntil(o: Condition, deadline: Date): Boolean {
-    o.await()
-    return true
+    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+      onYield()
+      return false
+    } else {
+      o.await()
+      return true
+    }
   }
 }

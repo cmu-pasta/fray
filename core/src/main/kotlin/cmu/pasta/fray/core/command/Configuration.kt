@@ -1,4 +1,4 @@
-package cmu.pasta.fray.core
+package cmu.pasta.fray.core.command
 
 import cmu.pasta.fray.core.logger.CsvLogger
 import cmu.pasta.fray.core.logger.JsonLogger
@@ -9,26 +9,29 @@ import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.groups.defaultByName
 import com.github.ajalt.clikt.parameters.groups.groupChoice
 import com.github.ajalt.clikt.parameters.options.*
-import com.github.ajalt.clikt.parameters.types.boolean
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
-import java.net.URI
-import java.net.URLClassLoader
 import java.util.*
+import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
 
 @Serializable
 data class ExecutionInfo(
-    val clazz: String,
-    val method: String,
-    val args: List<String>,
-    val classpaths: List<String>
-) {}
+    @Polymorphic val executor: Executor,
+    val ignoreUnhandledExceptions: Boolean,
+    val timedOpAsYield: Boolean,
+    val interleaveMemoryOps: Boolean,
+    val maxScheduledStep: Int,
+)
 
 sealed class ExecutionConfig(name: String) : OptionGroup(name) {
   open fun getExecutionInfo(): ExecutionInfo {
-    return ExecutionInfo("", "", emptyList(), emptyList())
+    return ExecutionInfo(
+        MethodExecutor("", "", emptyList(), emptyList()), false, false, false, 10000000)
   }
 }
 
@@ -43,9 +46,18 @@ class CliExecutionConfig : ExecutionConfig("cli") {
       option("-cp", "--classpath", help = "Arguments passed to target application")
           .split(":")
           .default(emptyList())
+  val timedOpAsYield by option("-t", "--timed-op-as-yield").flag()
+  val ignoreUnhandledExceptions by option("-e", "--ignore-unhandled-exceptions").flag()
+  val interleaveMemoryOps by option("-m", "--memory").flag()
+  val maxScheduledStep by option("-s", "--max-scheduled-step").int().default(10000)
 
   override fun getExecutionInfo(): ExecutionInfo {
-    return ExecutionInfo(clazz, method, targetArgs, classpaths)
+    return ExecutionInfo(
+        MethodExecutor(clazz, method, targetArgs, classpaths),
+        ignoreUnhandledExceptions,
+        timedOpAsYield,
+        interleaveMemoryOps,
+        maxScheduledStep)
   }
 }
 
@@ -53,7 +65,14 @@ class JsonExecutionConfig : ExecutionConfig("json") {
   val path by option("--config-path").file().required()
 
   override fun getExecutionInfo(): ExecutionInfo {
-    return Json.decodeFromString<ExecutionInfo>(path.readText())
+    val module = SerializersModule {
+      polymorphic(Executor::class) {
+        subclass(MethodExecutor::class)
+        defaultDeserializer { MethodExecutor.serializer() }
+      }
+    }
+    val json = Json { serializersModule = module }
+    return json.decodeFromString<ExecutionInfo>(path.readText())
   }
 }
 
@@ -118,13 +137,9 @@ class PCT : ScheduleAlgorithm("pct") {
 class MainCommand : CliktCommand() {
   val report by option("-o").default("/tmp/report")
   val iter by option("-i", "--iter", help = "Number of iterations").int().default(1)
-  val fullSchedule by option("-f", "--full").boolean().default(false)
+  val fullSchedule by option("-f", "--full").flag()
   val logger by
       option("-l", "--logger").groupChoice("json" to JsonLoggerOption(), "csv" to CsvLoggerOption())
-  val interleaveMemoryOps by option("-m", "--memory").boolean().default(false)
-  val maxScheduledStep by option("-s", "--max-scheduled-step").int().default(10000)
-  val ignoreUnhandledExceptions by
-      option("-e", "--ignore-unhandled-exceptions").boolean().default(false)
   val scheduler by
       option()
           .groupChoice(
@@ -145,48 +160,21 @@ class MainCommand : CliktCommand() {
 
   fun toConfiguration(): Configuration {
     val executionInfo = runConfig.getExecutionInfo()
-    val exec = {
-      val classLoader =
-          URLClassLoader(
-              executionInfo.classpaths.map { it -> URI("file://$it").toURL() }.toTypedArray(),
-              Thread.currentThread().contextClassLoader)
-      Thread.currentThread().contextClassLoader = classLoader
-      val clazz = Class.forName(executionInfo.clazz, true, classLoader)
-      if (executionInfo.args.isEmpty() && executionInfo.method != "main") {
-        val m = clazz.getMethod(executionInfo.method)
-        if (m.modifiers and java.lang.reflect.Modifier.STATIC == 0) {
-          val obj = clazz.getConstructor().newInstance()
-          m.invoke(obj)
-        } else {
-          m.invoke(null)
-        }
-      } else {
-        val m = clazz.getMethod(executionInfo.method, Array<String>::class.java)
-        m.invoke(null, executionInfo.args.toTypedArray())
-      }
-      Unit
-    }
     return Configuration(
-        exec,
+        executionInfo,
         report,
         iter,
         scheduler!!.getScheduler(),
         fullSchedule,
-        logger!!.getLogger(report, fullSchedule),
-        interleaveMemoryOps,
-        ignoreUnhandledExceptions,
-        maxScheduledStep)
+        logger!!.getLogger(report, fullSchedule))
   }
 }
 
 data class Configuration(
-    val exec: () -> Unit,
+    val executionInfo: ExecutionInfo,
     val report: String,
     val iter: Int,
     val scheduler: Scheduler,
     val fullSchedule: Boolean,
     val logger: LoggerBase,
-    val interleaveMemoryOps: Boolean,
-    val ignoreUnhandledExceptions: Boolean,
-    val maxScheduledStep: Int,
 ) {}

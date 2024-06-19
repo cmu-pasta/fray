@@ -15,7 +15,7 @@ class CountDownLatchInstrumenter(cv: ClassVisitor) :
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
-    if (name == "await") {
+    if (name == "await" && descriptor == "()V") {
       val eMv = MethodEnterVisitor(mv, Runtime::onLatchAwait, access, name, descriptor, true, false)
       return MethodExitVisitor(
           eMv, Runtime::onLatchAwaitDone, access, name, descriptor, true, false, true)
