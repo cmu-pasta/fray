@@ -13,6 +13,6 @@ fun main(args: Array<String>) {
 
   val result = JUnitCore().run(request)
   if (!result.wasSuccessful()) {
-    throw RuntimeException("Test failed")
+    throw RuntimeException(result.toString())
   }
 }
