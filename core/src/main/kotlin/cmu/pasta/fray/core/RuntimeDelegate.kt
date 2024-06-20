@@ -395,13 +395,18 @@ class RuntimeDelegate : Delegate() {
 
   override fun onThreadParkDone() {
     if (checkEntered()) return
-    GlobalContext.threadParkDone()
-    entered.set(false)
+    try {
+      GlobalContext.threadParkDone()
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onThreadUnpark(t: Thread?) {
     if (t == null) return
-    if (checkEntered()) return
+    if (checkEntered()) {
+      return
+    }
     GlobalContext.threadUnpark(t)
     entered.set(false)
   }

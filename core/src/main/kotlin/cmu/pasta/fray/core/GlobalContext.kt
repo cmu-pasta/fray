@@ -24,6 +24,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
@@ -167,39 +168,44 @@ object GlobalContext {
   fun threadPark() {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
+
+    context.state = ThreadState.Enabled
+    context.pendingOperation = ParkOperation()
+    scheduleNextOperation(true)
+
     context.checkInterrupt()
-    if (!context.unparkSignaled) {
-      context.pendingOperation = ParkOperation()
-      context.state = ThreadState.Paused
-      scheduleNextOperation(false)
-    } else {
-      context.unparkSignaled = false
-    }
+    // Well, unpark is signaled everywhere. We cannot really rely on it to
+    // block the thread.
+    LockSupport.unpark(t)
   }
 
   fun threadParkDone() {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
-    // If the thread is still running, it means
-    // that the thread is unparked before it is parked.
-    if (context.state == ThreadState.Running) {
-      return
+
+    if (!context.unparkSignaled) {
+      context.pendingOperation = ParkOperation()
+      context.state = ThreadState.Paused
+      scheduleNextOperation(true)
+      if (context.unparkSignaled) {
+        context.checkInterrupt()
+      }
+    } else {
+      context.unparkSignaled = false
     }
     val state = context.state
     val operation = context.pendingOperation
     if (state != ThreadState.Enabled) {
       println(state)
       println(operation)
+      return
     }
     assert(state == ThreadState.Enabled)
-    syncManager.signal(t)
-    context.block()
   }
 
   fun threadUnpark(t: Thread) {
     val context = registeredThreads[t.id]!!
     if (context.state == ThreadState.Paused && context.pendingOperation is ParkOperation) {
-      syncManager.createWait(t, 1)
       context.state = ThreadState.Enabled
       context.pendingOperation = ThreadResumeOperation()
     } else if (context.state == ThreadState.Enabled || context.state == ThreadState.Running) {
@@ -207,11 +213,7 @@ object GlobalContext {
     }
   }
 
-  fun threadUnparkDone(t: Thread) {
-    // SFuzz only needs to wait if `t` is parked and then
-    // waken up by this `unpark` operation.
-    syncManager.wait(t)
-  }
+  fun threadUnparkDone(t: Thread) {}
 
   fun threadRun() {
     var t = Thread.currentThread()
@@ -360,9 +362,7 @@ object GlobalContext {
     }
 
     // A thread is interrupted during park.
-
     if (context.state == ThreadState.Paused && context.pendingOperation is ParkOperation) {
-      syncManager.createWait(t, 1)
       context.pendingOperation = ThreadResumeOperation()
       context.state = ThreadState.Enabled
     }
