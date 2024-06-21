@@ -242,5 +242,8 @@ public class Delegate {
     public void onConditionAwaitUninterruptiblyDone(Condition object) {
     }
 
+    public boolean onThreadIsInterrupted(boolean result, Thread t) {
+        return result;
+    }
 }
 

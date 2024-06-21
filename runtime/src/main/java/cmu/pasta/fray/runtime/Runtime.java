@@ -330,4 +330,7 @@ public class Runtime {
         DELEGATE.onConditionAwaitUninterruptiblyDone(object);
     }
 
+    public static boolean onThreadIsInterrupted(boolean result, Thread t) {
+        return DELEGATE.onThreadIsInterrupted(result, t);
+    }
 }

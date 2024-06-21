@@ -683,4 +683,11 @@ class RuntimeDelegate : Delegate() {
       return true
     }
   }
+
+  override fun onThreadIsInterrupted(result: Boolean, t: Thread): Boolean {
+    if (checkEntered()) return result
+    val isInterrupted = GlobalContext.threadIsInterrupted(t, result)
+    entered.set(false)
+    return isInterrupted
+  }
 }

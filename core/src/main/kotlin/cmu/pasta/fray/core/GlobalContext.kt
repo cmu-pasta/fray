@@ -234,6 +234,10 @@ object GlobalContext {
     registeredThreads[t.id]?.block()
   }
 
+  fun threadIsInterrupted(t: Thread, result: Boolean): Boolean {
+    return result || registeredThreads[t.id]!!.interruptSignaled
+  }
+
   fun threadGetState(t: Thread, state: Thread.State): Thread.State {
     if (state == Thread.State.WAITING ||
         state == Thread.State.TIMED_WAITING ||
