@@ -4,7 +4,6 @@ import cmu.pasta.fray.core.ThreadContext
 import cmu.pasta.fray.core.ThreadState
 import cmu.pasta.fray.core.concurrency.operations.ConditionWakeBlocking
 import cmu.pasta.fray.core.concurrency.operations.ObjectWakeBlocking
-import cmu.pasta.fray.core.concurrency.operations.ThreadResumeOperation
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
