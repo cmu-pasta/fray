@@ -21,4 +21,8 @@ class CountDownLatchManager {
   fun countDown(latch: CountDownLatch): Int {
     return latchStore.getLockContext(latch).countDown()
   }
+
+  fun release(latch: CountDownLatch): Int {
+    return latchStore.getLockContext(latch).release()
+  }
 }

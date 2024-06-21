@@ -13,6 +13,7 @@ fun main(args: Array<String>) {
 
   val result = JUnitCore().run(request)
   if (!result.wasSuccessful()) {
-    throw RuntimeException(result.toString())
+    val failureReport = result.failures.joinToString { "\n =========== \n" }
+    throw RuntimeException(failureReport)
   }
 }

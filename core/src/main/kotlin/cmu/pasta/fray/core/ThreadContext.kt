@@ -17,11 +17,6 @@ class ThreadContext(val thread: Thread, val index: Int) {
   var interruptSignaled = false
   var isExiting = false
 
-  // This field is set when a thread is resumed by `o.notify()`
-  // but hasn't acquire the monitor lock.
-  var blockedBy: Any? = null
-  var waitingForLock: Any? = null
-
   // Pending operation is null if a thread is just resumed/blocked.
   var pendingOperation: Operation = ThreadStartOperation()
   val sync = Sync(1)

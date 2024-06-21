@@ -2,6 +2,8 @@ package cmu.pasta.fray.core.concurrency.locks
 
 import cmu.pasta.fray.core.ThreadContext
 import cmu.pasta.fray.core.ThreadState
+import cmu.pasta.fray.core.concurrency.operations.ConditionWakeBlocking
+import cmu.pasta.fray.core.concurrency.operations.ObjectWakeBlocking
 import cmu.pasta.fray.core.concurrency.operations.ThreadResumeOperation
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
@@ -11,17 +13,18 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 class LockManager {
   val lockContextManager = ReferencedContextManager<LockContext> { ReentrantLockContext() }
   val waitingThreads = mutableMapOf<Int, MutableList<Long>>()
-  val threadWaitsFor = mutableMapOf<Long, ThreadWaitsForInfo>()
+  val threadWaitsFor = mutableMapOf<Long, Int>()
   val conditionToLock = mutableMapOf<Condition, Lock>()
   val lockToConditions = mutableMapOf<Lock, MutableList<Condition>>()
 
   fun threadUnblockedDueToDeadlock(t: Thread) {
-    val info = threadWaitsFor[t.id] ?: return
-    waitingThreads[info.id]?.remove(t.id)
-    if (waitingThreads[info.id]?.isEmpty() == true) {
-      waitingThreads.remove(info.id)
+    val id = threadWaitsFor[t.id]
+    waitingThreads[id]?.remove(t.id)
+    if (waitingThreads[id]?.isEmpty() == true) {
+      waitingThreads.remove(id)
     }
     threadWaitsFor.remove(t.id)
+    //    val pendingOperation = registerNewCondition
   }
 
   fun getLockContext(lock: Any): LockContext {
@@ -49,14 +52,14 @@ class LockManager {
     getLockContext(lockObject).addWakingThread(lockObject, t)
   }
 
-  fun addWaitingThread(waitingObject: Any, t: Thread, canInterrupt: Boolean) {
+  fun addWaitingThread(waitingObject: Any, t: Thread) {
     val id = System.identityHashCode(waitingObject)
     if (id !in waitingThreads) {
       waitingThreads[id] = mutableListOf()
     }
     assert(t.id !in waitingThreads[id]!!)
     waitingThreads[id]!!.add(t.id)
-    threadWaitsFor[t.id] = ThreadWaitsForInfo(id, canInterrupt)
+    threadWaitsFor[t.id] = id
   }
 
   // TODO(aoli): can we merge this logic with `objectNotifyImply`?
@@ -67,18 +70,18 @@ class LockManager {
   ): Boolean {
     val id = System.identityHashCode(waitingObject)
     val lockContext = getLockContext(lockObject)
-    val info = threadWaitsFor[context.thread.id] ?: return false
-    if (!info.canInterrupt) {
-      return false
-    }
     threadWaitsFor.remove(context.thread.id)
     waitingThreads[id]?.remove(context.thread.id)
     if (waitingThreads[id]?.isEmpty() == true) {
       waitingThreads.remove(id)
     }
     addWakingThread(lockObject, context.thread)
+    if (waitingObject == lockObject) {
+      context.pendingOperation = ObjectWakeBlocking(waitingObject)
+    } else {
+      context.pendingOperation = ConditionWakeBlocking(waitingObject as Condition)
+    }
     if (lockContext.canLock(context.thread.id)) {
-      context.pendingOperation = ThreadResumeOperation()
       context.state = ThreadState.Enabled
       return true
     }

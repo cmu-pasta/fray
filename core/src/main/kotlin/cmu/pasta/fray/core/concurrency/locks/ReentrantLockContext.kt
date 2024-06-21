@@ -67,7 +67,6 @@ class ReentrantLockContext : LockContext {
       for (thread in wakingThreads) {
         val context = GlobalContext.registeredThreads[thread]!!
         if (context.state != ThreadState.Completed) {
-          context.pendingOperation = ThreadResumeOperation()
           context.state = ThreadState.Enabled
         }
       }

@@ -27,6 +27,20 @@ class CountDownLatchContext(var count: Long) : Interruptible {
     }
   }
 
+  fun release(): Int {
+    if (count == 0L) {
+      return 0
+    }
+    count = 0
+    var threads = 0
+    for (tid in latchWaiters.keys) {
+      GlobalContext.registeredThreads[tid]!!.pendingOperation = ThreadResumeOperation()
+      GlobalContext.registeredThreads[tid]!!.state = ThreadState.Enabled
+      threads += 1
+    }
+    return threads
+  }
+
   /*
    * Returns number of unblocked threads.
    */
