@@ -28,28 +28,32 @@ class TestRunner(val config: Configuration) {
   }
 
   fun run() {
-    setup()
-    val time = measureTimeMillis {
-      var i = 0
-      while (i != config.iter) {
-        println("Starting iteration $i")
-        try {
-          Runtime.DELEGATE = RuntimeDelegate()
-          Runtime.start()
-          config.executionInfo.executor.execute()
-          Runtime.onMainExit()
-        } catch (e: Throwable) {
-          Runtime.onReportError(e)
-          Runtime.onMainExit()
+    if (config.noFray) {
+      config.executionInfo.executor.execute()
+    } else {
+      setup()
+      val time = measureTimeMillis {
+        var i = 0
+        while (i != config.iter) {
+          println("Starting iteration $i")
+          try {
+            Runtime.DELEGATE = RuntimeDelegate()
+            Runtime.start()
+            config.executionInfo.executor.execute()
+            Runtime.onMainExit()
+          } catch (e: Throwable) {
+            Runtime.onReportError(e)
+            Runtime.onMainExit()
+          }
+          if (GlobalContext.bugFound) {
+            println("Error found at iter: $i")
+            break
+          }
+          i++
         }
-        if (GlobalContext.bugFound) {
-          println("Error found at iter: $i")
-          break
-        }
-        i++
+        GlobalContext.shutDown()
       }
-      GlobalContext.shutDown()
+      println("Analysis done in: $time ms")
     }
-    println("Analysis done in: $time ms")
   }
 }

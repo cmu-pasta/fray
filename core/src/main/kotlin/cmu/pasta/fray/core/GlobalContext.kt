@@ -494,7 +494,7 @@ object GlobalContext {
   }
 
   fun lockTryLock(lock: Any) {
-    lockImpl(lock, false, false, false)
+    lockImpl(lock, false, false, true)
   }
 
   fun lockImpl(lock: Any, isMonitorLock: Boolean, shouldBlock: Boolean, canInterrupt: Boolean) {
@@ -504,6 +504,10 @@ object GlobalContext {
     context.pendingOperation = LockLockOperation(objId)
     context.state = ThreadState.Enabled
     scheduleNextOperation(true)
+
+    if (canInterrupt) {
+      context.checkInterrupt()
+    }
 
     /**
      * We need a while loop here because even a thread unlock this thread and makes this thread

@@ -42,7 +42,8 @@ public class IntegrationTestRunner {
                 iter,
                 scheduler,
                 true,
-                new JsonLogger("/tmp/report", false)
+                new JsonLogger("/tmp/report", false),
+                false
         );
         TestRunner runner = new TestRunner(config);
         runner.run();
