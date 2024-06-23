@@ -22,7 +22,7 @@ class LockInstrumenter(cv: ClassVisitor) :
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
-    if (name == "tryLock") {
+    if (name == "tryLock" && descriptor == "()Z") {
       val eMv =
           MethodEnterVisitor(mv, Runtime::onLockTryLock, access, name, descriptor, true, false)
       return MethodExitVisitor(

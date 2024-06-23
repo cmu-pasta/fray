@@ -43,6 +43,11 @@ class TimedWaitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
         descriptor == "(JLjava/util/concurrent/TimeUnit;)Z") {
       return Runtime::onLatchAwaitTimeout
     }
+    if (owner == "java/util/concurrent/locks/ReentrantLock" &&
+        name == "tryLock" &&
+        descriptor == "(JLjava/util/concurrent/TimeUnit;)Z") {
+      return Runtime::onLockTryLockTimeout
+    }
     return null
   }
 

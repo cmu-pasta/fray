@@ -690,4 +690,13 @@ class RuntimeDelegate : Delegate() {
     entered.set(false)
     return isInterrupted
   }
+
+  override fun onLockTryLockTimeout(l: Lock, timeout: Long, unit: TimeUnit): Boolean {
+    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+      onYield()
+      return false
+    } else {
+      return l.tryLock()
+    }
+  }
 }

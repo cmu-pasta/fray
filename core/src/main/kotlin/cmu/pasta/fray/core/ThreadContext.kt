@@ -34,6 +34,7 @@ class ThreadContext(val thread: Thread, val index: Int) {
   fun checkInterrupt() {
     if (interruptSignaled) {
       interruptSignaled = false
+      Thread.interrupted()
       throw InterruptedException()
     }
   }
