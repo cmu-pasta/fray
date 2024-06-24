@@ -130,7 +130,7 @@ class RuntimeDelegate : Delegate() {
       return
     }
     try {
-      GlobalContext.lockTryLock(l)
+      GlobalContext.lockTryLock(l, false)
     } finally {
       entered.set(false)
       onSkipMethod("Lock.tryLock")
@@ -138,6 +138,24 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onLockTryLockDone(l: Lock) {
+    onSkipMethodDone("Lock.tryLock")
+  }
+
+  override fun onLockTryLockInterruptibly(l: Lock, timeout: Long): Long {
+    if (checkEntered()) {
+      onSkipMethod("Lock.tryLock")
+      return timeout
+    }
+    try {
+      GlobalContext.lockTryLock(l, true)
+    } finally {
+      entered.set(false)
+      onSkipMethod("Lock.tryLock")
+    }
+    return 0
+  }
+
+  override fun onLockTryLockInterruptiblyDone(l: Lock) {
     onSkipMethodDone("Lock.tryLock")
   }
 

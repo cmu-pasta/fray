@@ -493,8 +493,8 @@ object GlobalContext {
     objectNotifyAllImpl(o, lockManager.lockFromCondition(o))
   }
 
-  fun lockTryLock(lock: Any) {
-    lockImpl(lock, false, false, true)
+  fun lockTryLock(lock: Any, canInterrupt: Boolean) {
+    lockImpl(lock, false, false, canInterrupt)
   }
 
   fun lockImpl(lock: Any, isMonitorLock: Boolean, shouldBlock: Boolean, canInterrupt: Boolean) {

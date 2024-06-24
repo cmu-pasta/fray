@@ -35,6 +35,13 @@ public class Delegate {
     public void onLockTryLock(Lock l) {
     }
 
+    public long onLockTryLockInterruptibly(Lock l, long timeout) {
+        return timeout;
+    }
+
+    public void onLockTryLockInterruptiblyDone(Lock l) {
+    }
+
     public boolean onLockTryLockTimeout(Lock l, long timeout, TimeUnit unit) throws InterruptedException {
         return l.tryLock(timeout, unit);
     }

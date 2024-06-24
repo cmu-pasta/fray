@@ -14,7 +14,8 @@ class MethodEnterVisitor(
     descriptor: String,
     val loadThis: Boolean,
     val loadArgs: Boolean,
-    val customizer: MethodEnterVisitor.(v: MethodEnterVisitor) -> Unit = {}
+    val preCustomizer: MethodEnterVisitor.(v: MethodEnterVisitor) -> Unit = {},
+    val postCustomizer: MethodEnterVisitor.(v: MethodEnterVisitor) -> Unit = {}
 ) : AdviceAdapter(ASM9, mv, access, name, descriptor) {
   override fun onMethodEnter() {
     super.onMethodEnter()
@@ -24,10 +25,11 @@ class MethodEnterVisitor(
     if (loadArgs) {
       loadArgs()
     }
-    customizer(this)
+    preCustomizer(this)
     invokeStatic(
         Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
         Utils.kFunctionToASMMethod(method),
     )
+    postCustomizer(this)
   }
 }

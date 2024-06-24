@@ -7,8 +7,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 import kotlin.reflect.KFunction
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
+import org.objectweb.asm.commons.GeneratorAdapter
 
 class LockInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(
@@ -27,6 +29,14 @@ class LockInstrumenter(cv: ClassVisitor) :
           MethodEnterVisitor(mv, Runtime::onLockTryLock, access, name, descriptor, true, false)
       return MethodExitVisitor(
           eMv, Runtime::onLockTryLockDone, access, name, descriptor, true, false, true)
+    }
+    if (name == "tryLock" && descriptor == "(JLjava/util/concurrent/TimeUnit;)Z") {
+      val eMv =
+          MethodEnterVisitor(mv, Runtime::onLockTryLockInterruptibly, access, name, descriptor, true, true, postCustomizer = {
+            storeArg(0)
+          })
+      return MethodExitVisitor(
+          eMv, Runtime::onLockTryLockInterruptiblyDone, access, name, descriptor, true, false, true)
     }
     if (name == "lock" || name == "lockInterruptibly") {
       val eMv =

@@ -17,9 +17,9 @@ class MethodHandleNativesInstrumenter(cv: ClassVisitor) :
     if (name == "linkMethodHandleConstant") {
       val methodSignature = "$className#$name$descriptor"
       val eMv =
-          MethodEnterVisitor(mv, Runtime::onSkipMethod, access, name, descriptor, false, false) {
+          MethodEnterVisitor(mv, Runtime::onSkipMethod, access, name, descriptor, false, false, preCustomizer = {
             it.push(methodSignature)
-          }
+          })
       return MethodExitVisitor(
           eMv, Runtime::onSkipMethodDone, access, name, descriptor, false, false, true) {
             it.push(methodSignature)

@@ -26,12 +26,12 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
   ): MethodVisitor {
     val methodSignature = "$className#$name$descriptor"
     val eMv =
-        MethodEnterVisitor(mv, Runtime::onSkipMethod, access, name, descriptor, false, false) {
-          it.push(methodSignature)
-        }
+        MethodEnterVisitor(mv, Runtime::onSkipMethod, access, name, descriptor, false, false, preCustomizer =  {
+          push(methodSignature)
+        })
     return MethodExitVisitor(
-        eMv, Runtime::onSkipMethodDone, access, name, descriptor, false, false, true) {
-          it.push(methodSignature)
-        }
+        eMv, Runtime::onSkipMethodDone, access, name, descriptor, false, false, true, {
+          push(methodSignature)
+        })
   }
 }
