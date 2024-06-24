@@ -38,7 +38,7 @@ public class Runtime {
         return DELEGATE.onLockTryLockInterruptibly(l, timeout);
     }
 
-    public void onLockTryLockInterruptiblyDone(Lock l) {
+    public static void onLockTryLockInterruptiblyDone(Lock l) {
         DELEGATE.onLockTryLockInterruptiblyDone(l);
     }
 
