@@ -18,7 +18,14 @@ class UnsafeInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, "sun.misc.Unsa
         name == "compareAndSwapLong" ||
         name == "compareAndSetReference") {
       return MethodEnterVisitor(
-          mv, Runtime::onUnsafeWriteVolatile, access, name, descriptor, false, true, preCustomizer = {
+          mv,
+          Runtime::onUnsafeWriteVolatile,
+          access,
+          name,
+          descriptor,
+          false,
+          true,
+          preCustomizer = {
             if (name == "compareAndSwapLong") {
               pop2()
               pop2()
@@ -55,7 +62,14 @@ class UnsafeInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, "sun.misc.Unsa
         name == "getAndSetInt" ||
         name == "getAndSetObject") {
       return MethodEnterVisitor(
-          mv, Runtime::onUnsafeWriteVolatile, access, name, descriptor, false, true, preCustomizer = {
+          mv,
+          Runtime::onUnsafeWriteVolatile,
+          access,
+          name,
+          descriptor,
+          false,
+          true,
+          preCustomizer = {
             if (name == "putLongVolatile" ||
                 name == "putDoubleVolatile" ||
                 name == "getAndAddLong" ||

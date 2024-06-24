@@ -17,9 +17,15 @@ class ClassConstructorInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
     if (name == "<clinit>") {
       val methodSignature = "#$name$descriptor"
       val eMv =
-          MethodEnterVisitor(mv, Runtime::onSkipMethod, access, name, descriptor, false, false, preCustomizer = {
-            it.push(methodSignature)
-          })
+          MethodEnterVisitor(
+              mv,
+              Runtime::onSkipMethod,
+              access,
+              name,
+              descriptor,
+              false,
+              false,
+              preCustomizer = { it.push(methodSignature) })
       return MethodExitVisitor(
           eMv,
           Runtime::onSkipMethodDone,
