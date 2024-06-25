@@ -15,6 +15,16 @@ class ReentrantReadWriteLockContext : LockContext {
   private val readLockWaiters = mutableMapOf<Long, Boolean>()
   private val writeLockWaiters = mutableMapOf<Long, Boolean>()
 
+  override fun hasQueuedThreads(): Boolean {
+    return writeLockWaiters.any() || wakingThreads.any() || readLockWaiters.any()
+  }
+
+  override fun hasQueuedThread(tid: Long): Boolean {
+    return writeLockWaiters.containsKey(tid) ||
+        wakingThreads.contains(tid) ||
+        readLockWaiters.containsKey(tid)
+  }
+
   override fun addWakingThread(lockObject: Any, t: Thread) {
     wakingThreads.add(t.id)
   }

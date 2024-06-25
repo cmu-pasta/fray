@@ -43,6 +43,14 @@ class LockInstrumenter(cv: ClassVisitor) :
       return MethodExitVisitor(
           eMv, Runtime::onLockTryLockInterruptiblyDone, access, name, descriptor, true, false, true)
     }
+    if (name == "hasQueuedThreads") {
+      return MethodExitVisitor(
+          mv, Runtime::onLockHasQueuedThreads, access, name, descriptor, true, false, false)
+    }
+    if (name == "hasQueuedThread") {
+      return MethodExitVisitor(
+          mv, Runtime::onLockHasQueuedThread, access, name, descriptor, true, true, false)
+    }
     if (name == "lock" || name == "lockInterruptibly") {
       val eMv =
           if (name == "lock") {

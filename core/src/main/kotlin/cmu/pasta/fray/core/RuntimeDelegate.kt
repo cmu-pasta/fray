@@ -124,6 +124,26 @@ class RuntimeDelegate : Delegate() {
     }
   }
 
+  override fun onLockHasQueuedThreads(l: Lock, result: Boolean): Boolean {
+    if (checkEntered()) {
+      entered.set(false)
+      return result
+    }
+    val result = GlobalContext.lockHasQueuedThreads(l)
+    entered.set(false)
+    return result
+  }
+
+  override fun onLockHasQueuedThread(l: Lock, t: Thread, result: Boolean): Boolean {
+    if (checkEntered()) {
+      entered.set(false)
+      return result
+    }
+    val result = GlobalContext.lockHasQueuedThread(l, t)
+    entered.set(false)
+    return result
+  }
+
   override fun onLockTryLock(l: Lock) {
     if (checkEntered()) {
       onSkipMethod("Lock.tryLock")

@@ -20,6 +20,14 @@ class ReentrantLockContext : LockContext {
   override fun isEmpty(): Boolean =
       lockHolder == null && lockTimes.isEmpty() && lockWaiters.isEmpty() && wakingThreads.isEmpty()
 
+  override fun hasQueuedThreads(): Boolean {
+    return lockWaiters.any() || wakingThreads.any()
+  }
+
+  override fun hasQueuedThread(tid: Long): Boolean {
+    return lockWaiters.containsKey(tid) || wakingThreads.contains(tid)
+  }
+
   override fun lock(
       lock: Any,
       tid: Long,

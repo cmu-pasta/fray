@@ -47,6 +47,14 @@ class LockManager {
     return getLockContext(lock).lock(lock, tid, shouldBlock, lockBecauseOfWait, canInterrupt)
   }
 
+  fun hasQueuedThreads(lock: Any): Boolean {
+    return getLockContext(lock).hasQueuedThreads()
+  }
+
+  fun hasQueuedThread(lock: Any, t: Thread): Boolean {
+    return getLockContext(lock).hasQueuedThread(t.id)
+  }
+
   fun addWakingThread(lockObject: Any, t: Thread) {
     getLockContext(lockObject).addWakingThread(lockObject, t)
   }

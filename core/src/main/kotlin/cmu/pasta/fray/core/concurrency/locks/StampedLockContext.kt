@@ -3,6 +3,14 @@ package cmu.pasta.fray.core.concurrency.locks
 class StampedLockContext : LockContext {
   override val wakingThreads: MutableSet<Long> = mutableSetOf()
 
+  override fun hasQueuedThread(tid: Long): Boolean {
+    TODO("Not yet implemented")
+  }
+
+  override fun hasQueuedThreads(): Boolean {
+    TODO("Not yet implemented")
+  }
+
   override fun addWakingThread(lockObject: Any, t: Thread) {
     TODO("Not yet implemented")
   }

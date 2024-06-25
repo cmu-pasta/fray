@@ -17,5 +17,9 @@ interface LockContext : Interruptible {
 
   fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean): Boolean
 
+  fun hasQueuedThreads(): Boolean
+
+  fun hasQueuedThread(tid: Long): Boolean
+
   fun isEmpty(): Boolean
 }

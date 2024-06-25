@@ -12,7 +12,9 @@ import cmu.pasta.fray.core.scheduler.Choice
 import cmu.pasta.fray.core.scheduler.FifoScheduler
 import cmu.pasta.fray.core.scheduler.Scheduler
 import cmu.pasta.fray.instrumentation.memory.VolatileManager
+import cmu.pasta.fray.runtime.DeadlockException
 import cmu.pasta.fray.runtime.Delegate
+import cmu.pasta.fray.runtime.LivenessException
 import cmu.pasta.fray.runtime.MemoryOpType
 import cmu.pasta.fray.runtime.Runtime
 import cmu.pasta.fray.runtime.TargetTerminateException
@@ -71,7 +73,19 @@ object GlobalContext {
       bugFound = true
       val sw = StringWriter()
       sw.append("Error found: ${e}\n")
-      e.printStackTrace(PrintWriter(sw))
+      if (e is DeadlockException) {
+        for (registeredThread in registeredThreads.values) {
+          if (registeredThread.state == ThreadState.Paused) {
+            sw.append("Thread: ${registeredThread.index}\n")
+            sw.append("Stacktrace: \n")
+            for (stackTraceElement in registeredThread.thread.stackTrace) {
+              sw.append("\tat $stackTraceElement\n")
+            }
+          }
+        }
+      } else {
+        e.printStackTrace(PrintWriter(sw))
+      }
       for (logger in loggers) {
         logger.applicationEvent(sw.toString())
       }
@@ -90,7 +104,7 @@ object GlobalContext {
         scheduleNextOperation(true)
       } catch (e: TargetTerminateException) {
         // If deadlock detected let's try to unblock one thread and continue.
-        if (e.status == -1) {
+        if (e is DeadlockException) {
           for (thread in registeredThreads.values) {
             if (thread.state == ThreadState.Paused) {
               thread.state = ThreadState.Enabled
@@ -707,6 +721,14 @@ object GlobalContext {
     }
   }
 
+  fun lockHasQueuedThreads(lock: Lock): Boolean {
+    return lockManager.hasQueuedThreads(lock)
+  }
+
+  fun lockHasQueuedThread(lock: Lock, thread: Thread): Boolean {
+    return lockManager.hasQueuedThread(lock, thread)
+  }
+
   fun latchAwaitDone(latch: CountDownLatch) {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
@@ -739,7 +761,7 @@ object GlobalContext {
       for (blockedThread in blockedThreads) {
         blockedThread.unblock()
       }
-      throw TargetTerminateException(-2)
+      throw LivenessException()
     }
   }
 
@@ -781,7 +803,7 @@ object GlobalContext {
       registeredThreads[Thread.currentThread().id]!!.state = ThreadState.Enabled
       lockManager.threadUnblockedDueToDeadlock(Thread.currentThread())
       cleanUp()
-      val e = TargetTerminateException(-1)
+      val e = DeadlockException()
       reportError(e)
       throw e
     }
@@ -820,7 +842,7 @@ object GlobalContext {
         return
       } else if (!currentThread.isExiting || Thread.currentThread() is HelperThread) {
         // Deadlock detected
-        val e = TargetTerminateException(-1)
+        val e = DeadlockException()
         reportError(e)
         throw e
       }
@@ -832,7 +854,7 @@ object GlobalContext {
         Thread.currentThread() !is HelperThread &&
         !(mainExiting && currentThreadId == mainThreadId)) {
       currentThread.state = ThreadState.Running
-      val e = TargetTerminateException(-2)
+      val e = LivenessException()
       reportError(e)
       throw e
     }

@@ -52,6 +52,14 @@ public class Delegate {
     public void onLockLock(Lock l) {
     }
 
+    public boolean onLockHasQueuedThreads(Lock l, boolean result) {
+        return result;
+    }
+
+    public boolean onLockHasQueuedThread(Lock l, Thread t, boolean result) {
+        return result;
+    }
+
     public void onLockLockInterruptibly(Lock l) {
     }
 

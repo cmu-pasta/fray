@@ -6,6 +6,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 // No recursion is allowed in Runtime
@@ -344,5 +345,13 @@ public class Runtime {
 
     public static boolean onThreadIsInterrupted(boolean result, Thread t) {
         return DELEGATE.onThreadIsInterrupted(result, t);
+    }
+
+    public static boolean onLockHasQueuedThreads(boolean result, Lock l) {
+        return DELEGATE.onLockHasQueuedThreads(l, result);
+    }
+
+    public static boolean onLockHasQueuedThread(boolean result, Lock l, Thread t) {
+        return DELEGATE.onLockHasQueuedThread(l, t, result);
     }
 }
