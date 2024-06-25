@@ -800,11 +800,11 @@ object GlobalContext {
   fun checkDeadlock(cleanUp: () -> Unit) {
     val deadLock = registeredThreads.values.toList().none { it.schedulable() }
     if (deadLock) {
+      val e = DeadlockException()
+      reportError(e)
       registeredThreads[Thread.currentThread().id]!!.state = ThreadState.Enabled
       lockManager.threadUnblockedDueToDeadlock(Thread.currentThread())
       cleanUp()
-      val e = DeadlockException()
-      reportError(e)
       throw e
     }
   }
