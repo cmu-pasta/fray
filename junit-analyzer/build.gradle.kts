@@ -10,6 +10,9 @@ repositories {
 
 dependencies {
   compileOnly("junit:junit:4.13.2")
+  compileOnly("org.junit.platform:junit-platform-engine:1.10.2")
+  compileOnly("org.junit.platform:junit-platform-launcher:1.10.2")
+  compileOnly("org.junit.platform:junit-platform-console-standalone:1.10.2")
   compileOnly(project(":runtime"))
   implementation(project(":instrumentation"))
   implementation(kotlin("stdlib-jdk8"))

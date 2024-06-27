@@ -206,7 +206,6 @@ object GlobalContext {
     context.pendingOperation = ParkBlocking()
     scheduleNextOperation(true)
 
-    context.checkInterrupt()
     // Well, unpark is signaled everywhere. We cannot really rely on it to
     // block the thread.
     LockSupport.unpark(t)
@@ -216,14 +215,11 @@ object GlobalContext {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
 
-    if (!context.unparkSignaled) {
+    if (!context.unparkSignaled && !context.interruptSignaled) {
       context.pendingOperation = ParkBlocking()
       context.state = ThreadState.Paused
       scheduleNextOperation(true)
-      if (context.unparkSignaled) {
-        context.checkInterrupt()
-      }
-    } else {
+    } else if (context.unparkSignaled) {
       context.unparkSignaled = false
     }
   }

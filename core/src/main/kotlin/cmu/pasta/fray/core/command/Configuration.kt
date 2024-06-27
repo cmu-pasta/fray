@@ -31,7 +31,7 @@ data class ExecutionInfo(
 sealed class ExecutionConfig(name: String) : OptionGroup(name) {
   open fun getExecutionInfo(): ExecutionInfo {
     return ExecutionInfo(
-        MethodExecutor("", "", emptyList(), emptyList()), false, false, false, 10000000)
+        MethodExecutor("", "", emptyList(), emptyList(), emptyMap()), false, false, false, 10000000)
   }
 }
 
@@ -50,10 +50,12 @@ class CliExecutionConfig : ExecutionConfig("cli") {
   val ignoreUnhandledExceptions by option("-e", "--ignore-unhandled-exceptions").flag()
   val interleaveMemoryOps by option("-m", "--memory").flag()
   val maxScheduledStep by option("-s", "--max-scheduled-step").int().default(10000)
+  val properties by option("-D", help = "System properties").pair().multiple()
 
   override fun getExecutionInfo(): ExecutionInfo {
+    val propertyMap = properties.toMap()
     return ExecutionInfo(
-        MethodExecutor(clazz, method, targetArgs, classpaths),
+        MethodExecutor(clazz, method, targetArgs, classpaths, propertyMap),
         ignoreUnhandledExceptions,
         timedOpAsYield,
         interleaveMemoryOps,

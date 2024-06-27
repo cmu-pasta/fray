@@ -16,9 +16,13 @@ data class MethodExecutor(
     val clazz: String,
     val method: String,
     val args: List<String>,
-    val classpaths: List<String>
+    val classpaths: List<String>,
+    val properties: Map<String, String>
 ) : Executor {
   override fun execute() {
+    for (property in properties) {
+      System.setProperty(property.key, property.value)
+    }
     val classLoader =
         URLClassLoader(
             classpaths.map { it -> URI("file://$it").toURL() }.toTypedArray(),

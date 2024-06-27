@@ -16,7 +16,8 @@ class JunitRunnerTransformer : ClassFileTransformer {
   ): ByteArray {
     val classReader = ClassReader(classfileBuffer)
     val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
-    val cv: ClassVisitor = JunitInstrumenter(classWriter)
+    var cv: ClassVisitor = JunitInstrumenter(classWriter)
+    cv = OutcomeDelayingEngineExecutionListenerInstrumenter(cv)
     classReader.accept(cv, ClassReader.EXPAND_FRAMES)
     return classWriter.toByteArray()
   }
