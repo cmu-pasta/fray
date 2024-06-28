@@ -9,9 +9,8 @@ repositories {
 }
 
 dependencies {
-  testImplementation(platform("org.junit:junit-bom:5.9.1"))
-  testImplementation("org.junit.jupiter:junit-jupiter")
-  implementation("org.junit.platform:junit-platform-console-standalone:1.11.0-M2")
+  implementation("org.junit.vintage:junit-vintage-engine:5.10.2")
+  implementation("org.junit.platform:junit-platform-console-standalone:1.10.2")
   implementation(project(":core"))
 }
 
