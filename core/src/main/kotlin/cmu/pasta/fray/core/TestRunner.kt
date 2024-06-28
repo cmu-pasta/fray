@@ -7,7 +7,6 @@ import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
-import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
 class TestRunner(val config: Configuration) {
@@ -28,7 +27,7 @@ class TestRunner(val config: Configuration) {
     GlobalContext.bootstrap()
   }
 
-  fun run() {
+  fun run(): Int {
     if (config.noFray) {
       config.executionInfo.executor.execute()
     } else {
@@ -48,7 +47,6 @@ class TestRunner(val config: Configuration) {
           }
           if (GlobalContext.bugFound) {
             println("Error found at iter: $i")
-            exitProcess(-1)
             break
           }
           i++
@@ -56,6 +54,11 @@ class TestRunner(val config: Configuration) {
         GlobalContext.shutDown()
       }
       println("Analysis done in: $time ms")
+    }
+    return if (GlobalContext.bugFound) {
+      -1
+    } else {
+      0
     }
   }
 }
