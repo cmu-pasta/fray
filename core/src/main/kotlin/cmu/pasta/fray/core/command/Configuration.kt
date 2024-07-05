@@ -15,6 +15,7 @@ import java.util.*
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
@@ -73,7 +74,10 @@ class JsonExecutionConfig : ExecutionConfig("json") {
         defaultDeserializer { MethodExecutor.serializer() }
       }
     }
-    val json = Json { serializersModule = module }
+    val json = Json {
+      serializersModule = module
+      namingStrategy = JsonNamingStrategy.SnakeCase
+    }
     return json.decodeFromString<ExecutionInfo>(path.readText())
   }
 }
