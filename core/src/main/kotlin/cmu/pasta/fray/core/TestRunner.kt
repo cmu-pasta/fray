@@ -28,6 +28,7 @@ class TestRunner(val config: Configuration) {
   }
 
   fun run(): Int {
+    config.executionInfo.executor.beforeExecution()
     if (config.noFray) {
       config.executionInfo.executor.execute()
     } else {
@@ -55,6 +56,7 @@ class TestRunner(val config: Configuration) {
       }
       println("Analysis done in: $time ms")
     }
+    config.executionInfo.executor.afterExecution()
     return if (GlobalContext.bugFound) {
       -1
     } else {

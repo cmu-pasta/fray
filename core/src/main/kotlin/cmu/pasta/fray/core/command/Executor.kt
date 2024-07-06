@@ -8,6 +8,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed interface Executor {
   fun execute()
+  fun beforeExecution()
+  fun afterExecution()
 }
 
 @Serializable
@@ -19,7 +21,8 @@ data class MethodExecutor(
     val classpaths: List<String>,
     val properties: Map<String, String>
 ) : Executor {
-  override fun execute() {
+
+  override fun beforeExecution() {
     for (property in properties) {
       System.setProperty(property.key, property.value)
     }
@@ -28,7 +31,10 @@ data class MethodExecutor(
             classpaths.map { it -> URI("file://$it").toURL() }.toTypedArray(),
             Thread.currentThread().contextClassLoader)
     Thread.currentThread().contextClassLoader = classLoader
-    val clazz = Class.forName(clazz, true, classLoader)
+  }
+
+  override fun execute() {
+    val clazz = Class.forName(clazz, true, Thread.currentThread().contextClassLoader)
     if (args.isEmpty() && method != "main") {
       val m = clazz.getMethod(method)
       if (m.modifiers and java.lang.reflect.Modifier.STATIC == 0) {
@@ -42,10 +48,20 @@ data class MethodExecutor(
       m.invoke(null, args.toTypedArray())
     }
   }
+
+  override fun afterExecution() {
+  }
 }
 
 class LambdaExecutor(val lambda: () -> Unit) : Executor {
+
+  override fun beforeExecution() {
+  }
+
   override fun execute() {
     lambda()
+  }
+
+  override fun afterExecution() {
   }
 }
