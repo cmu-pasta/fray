@@ -8,7 +8,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed interface Executor {
   fun execute()
+
   fun beforeExecution()
+
   fun afterExecution()
 }
 
@@ -49,19 +51,16 @@ data class MethodExecutor(
     }
   }
 
-  override fun afterExecution() {
-  }
+  override fun afterExecution() {}
 }
 
 class LambdaExecutor(val lambda: () -> Unit) : Executor {
 
-  override fun beforeExecution() {
-  }
+  override fun beforeExecution() {}
 
   override fun execute() {
     lambda()
   }
 
-  override fun afterExecution() {
-  }
+  override fun afterExecution() {}
 }
