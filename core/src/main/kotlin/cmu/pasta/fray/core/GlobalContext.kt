@@ -41,6 +41,7 @@ object GlobalContext {
   var config: Configuration? = null
   var bugFound = false
   var mainExiting = false
+  var nanoTime = System.nanoTime()
   private val lockManager = LockManager()
   private val semaphoreManager = SemaphoreManager()
   private val volatileManager = VolatileManager(true)
@@ -897,5 +898,10 @@ object GlobalContext {
     if (currentThread != nextThread) {
       nextThread.unblock()
     }
+  }
+
+  fun nanoTime(): Long {
+    nanoTime += 1000L
+    return nanoTime
   }
 }

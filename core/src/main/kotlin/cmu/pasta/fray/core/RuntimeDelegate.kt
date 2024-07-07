@@ -737,4 +737,8 @@ class RuntimeDelegate : Delegate() {
       return l.tryLock()
     }
   }
+
+  override fun onNanoTime(): Long {
+    return GlobalContext.nanoTime()
+  }
 }

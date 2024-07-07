@@ -354,4 +354,8 @@ public class Runtime {
     public static boolean onLockHasQueuedThread(boolean result, Lock l, Thread t) {
         return DELEGATE.onLockHasQueuedThread(l, t, result);
     }
+
+    public static long onNanoTime() {
+        return DELEGATE.onNanoTime();
+    }
 }

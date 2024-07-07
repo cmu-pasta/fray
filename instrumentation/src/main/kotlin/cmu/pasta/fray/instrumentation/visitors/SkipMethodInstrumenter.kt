@@ -14,7 +14,9 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
         Logger::class.java.name,
         MethodType::class.java.name,
         ServiceLoader::class.java.name,
-        "java.util.ServiceLoader\$LazyClassPathLookupIterator") {
+        "java.util.ServiceLoader\$LazyClassPathLookupIterator",
+        "sun.reflect.annotation.AnnotationParser",
+    ) {
 
   override fun instrumentMethod(
       mv: MethodVisitor,

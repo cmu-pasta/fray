@@ -264,5 +264,9 @@ public class Delegate {
     public boolean onThreadIsInterrupted(boolean result, Thread t) {
         return result;
     }
+
+    public long onNanoTime() {
+        return System.nanoTime();
+    }
 }
 
