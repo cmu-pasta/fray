@@ -6,6 +6,7 @@ import java.util.ServiceLoader
 import java.util.logging.Logger
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
+import java.lang.invoke.CallSite
 
 class SkipMethodInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(
@@ -16,6 +17,7 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
         ServiceLoader::class.java.name,
         "java.util.ServiceLoader\$LazyClassPathLookupIterator",
         "sun.reflect.annotation.AnnotationParser",
+        CallSite::class.java.name,
     ) {
 
   override fun instrumentMethod(
