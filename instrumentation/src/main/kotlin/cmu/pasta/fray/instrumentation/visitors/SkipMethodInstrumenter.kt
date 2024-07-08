@@ -1,12 +1,12 @@
 package cmu.pasta.fray.instrumentation.visitors
 
 import cmu.pasta.fray.runtime.Runtime
+import java.lang.invoke.CallSite
 import java.lang.invoke.MethodType
 import java.util.ServiceLoader
 import java.util.logging.Logger
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
-import java.lang.invoke.CallSite
 
 class SkipMethodInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(
