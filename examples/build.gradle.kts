@@ -10,7 +10,7 @@ repositories {
 
 dependencies {
   implementation("org.junit.vintage:junit-vintage-engine:5.10.2")
-  implementation("org.junit.platform:junit-platform-console-standalone:1.10.2")
+  implementation("org.junit.platform:junit-platform-launcher:1.10.3")
   implementation(project(":core"))
 }
 
@@ -75,6 +75,12 @@ tasks.register<JavaExec>("runJC") {
   args = listOf(main, "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "csv", "--iter", "10000", "-s", "10000000") + extraArgs
 }
 
+tasks.register<Copy>("copyDependencies") {
+  from(configurations.runtimeClasspath)
+  into("${layout.buildDirectory.get().asFile}/dependency")
+}
+
+
 fun resolveClasspath(classpath: String): List<String> {
   return classpath.split(":").flatMap { path ->
     if (path.contains("*")) {
@@ -88,3 +94,4 @@ fun resolveClasspath(classpath: String): List<String> {
     }
   }
 }
+
