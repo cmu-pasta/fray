@@ -846,7 +846,7 @@ object GlobalContext {
     }
 
     step += 1
-    if (step > config!!.executionInfo.maxScheduledStep &&
+    if (config!!.executionInfo.maxScheduledStep in 1 ..< step &&
         !currentThread.isExiting &&
         Thread.currentThread() !is HelperThread &&
         !(mainExiting && currentThreadId == mainThreadId)) {
