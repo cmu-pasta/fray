@@ -52,6 +52,7 @@ public class JUnitRunner {
                             .append("trace: ").append(failure.getTrace()).append("\n")
                             .append("description: ").append(failure.getDescription()).append("\n");
                 }
+                System.out.println(failureReport.toString());
                 throw new RuntimeException(failureReport.toString());
             }
         } else {
@@ -61,6 +62,7 @@ public class JUnitRunner {
             Class<?> testClass = Class.forName(testClassName, true, Thread.currentThread().getContextClassLoader());
             for (Method method : testClass.getDeclaredMethods()) {
                 if (method.getName().equals(classAndMethod[1])) {
+                    System.out.println(method.getName());
                     parameterTypes = method.getParameterTypes();
                 }
             }
@@ -85,6 +87,7 @@ public class JUnitRunner {
                             .append("trace: ").append(stringWriter.toString()).append("\n")
                             .append("exception: ").append(failure.getException()).append("\n");
                 });
+                System.out.println(failureReport.toString());
                 throw new RuntimeException(failureReport.toString());
             }
         }
