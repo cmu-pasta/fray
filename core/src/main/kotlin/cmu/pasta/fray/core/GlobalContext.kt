@@ -42,6 +42,7 @@ object GlobalContext {
   var bugFound = false
   var mainExiting = false
   var nanoTime = System.nanoTime()
+  val terminatingThread = mutableSetOf<Int>()
   private val lockManager = LockManager()
   private val semaphoreManager = SemaphoreManager()
   private val volatileManager = VolatileManager(true)
@@ -129,6 +130,7 @@ object GlobalContext {
                     }
                   }
               lockManager.threadUnblockedDueToDeadlock(thread.thread)
+              terminatingThread.add(thread.index)
               break
             }
           }
@@ -821,6 +823,12 @@ object GlobalContext {
             currentThread.state == ThreadState.Enabled ||
             currentThread.state == ThreadState.Completed)
     assert(registeredThreads.none { it.value.state == ThreadState.Running })
+
+    if (terminatingThread.contains(currentThread.index)) {
+      terminatingThread.remove(currentThread.index)
+      throw DeadlockException()
+    }
+
     var enabledOperations =
         registeredThreads.values
             .toList()
