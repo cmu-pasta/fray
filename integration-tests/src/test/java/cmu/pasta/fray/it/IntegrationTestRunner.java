@@ -43,6 +43,7 @@ public class IntegrationTestRunner {
                 scheduler,
                 true,
                 new JsonLogger("/tmp/report", false),
+                false,
                 false
         );
         TestRunner runner = new TestRunner(config);

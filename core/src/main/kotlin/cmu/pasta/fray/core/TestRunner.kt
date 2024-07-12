@@ -48,7 +48,9 @@ class TestRunner(val config: Configuration) {
           }
           if (GlobalContext.bugFound) {
             println("Error found at iter: $i")
-            break
+            if (!config.exploreMode) {
+              break
+            }
           }
           i++
         }

@@ -40,9 +40,9 @@ class ApplicationCodeTransformer : ClassFileTransformer {
     }
     //    File("/tmp/out/origin/${className.replace("/", ".").removePrefix(".")}.class")
     //        .writeBytes(classfileBuffer)
-    val classReader = ClassReader(classfileBuffer)
-    val cn = ClassNode()
     try {
+      val classReader = ClassReader(classfileBuffer)
+      val cn = ClassNode()
       var cv: ClassVisitor = ObjectNotifyInstrumenter(cn)
       cv = TargetExitInstrumenter(cv)
       cv = TimedWaitInstrumenter(cv)

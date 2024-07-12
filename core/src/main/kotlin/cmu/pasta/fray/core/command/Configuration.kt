@@ -155,6 +155,7 @@ class MainCommand : CliktCommand() {
               "random" to Rand(),
               "pct" to PCT())
   val noFray by option("--no-fray").flag()
+  val exploreMode by option("--explore").flag()
   val runConfig by
       option()
           .groupChoice(
@@ -174,6 +175,7 @@ class MainCommand : CliktCommand() {
         scheduler!!.getScheduler(),
         fullSchedule,
         logger!!.getLogger(report, fullSchedule),
+        exploreMode,
         noFray)
   }
 }
@@ -185,5 +187,6 @@ data class Configuration(
     val scheduler: Scheduler,
     val fullSchedule: Boolean,
     val logger: LoggerBase,
-    val noFray: Boolean = false
+    val exploreMode: Boolean,
+    val noFray: Boolean,
 ) {}
