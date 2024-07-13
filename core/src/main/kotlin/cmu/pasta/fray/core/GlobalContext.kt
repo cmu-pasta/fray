@@ -825,6 +825,7 @@ object GlobalContext {
     assert(registeredThreads.none { it.value.state == ThreadState.Running })
 
     if (terminatingThread.contains(currentThread.index)) {
+      currentThread.state = ThreadState.Running
       terminatingThread.remove(currentThread.index)
       throw DeadlockException()
     }
