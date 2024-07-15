@@ -741,4 +741,16 @@ class RuntimeDelegate : Delegate() {
   override fun onNanoTime(): Long {
     return GlobalContext.nanoTime()
   }
+
+  override fun onThreadHashCode(t: Any): Int {
+    if (t is Thread) {
+      val context = GlobalContext.registeredThreads[t.id]
+      if (context != null) {
+        return 0
+      } else {
+        return t.hashCode()
+      }
+    }
+    return t.hashCode()
+  }
 }

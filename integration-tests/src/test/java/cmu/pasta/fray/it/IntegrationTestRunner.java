@@ -44,6 +44,7 @@ public class IntegrationTestRunner {
                 true,
                 new JsonLogger("/tmp/report", false),
                 false,
+                false,
                 false
         );
         TestRunner runner = new TestRunner(config);

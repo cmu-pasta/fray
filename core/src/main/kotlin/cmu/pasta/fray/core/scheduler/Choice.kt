@@ -7,5 +7,6 @@ data class Choice(
     val selected: Int,
     val threadId: Int,
     val enabled: Int,
-    val enabledIds: List<Int>
+    val enabledIds: List<Int>,
+    val operation: String
 )

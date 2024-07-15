@@ -30,6 +30,7 @@ import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
+import kotlin.system.exitProcess
 
 // TODO(aoli): make this a class maybe?
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
@@ -90,6 +91,10 @@ object GlobalContext {
       }
       for (logger in loggers) {
         logger.applicationEvent(sw.toString())
+      }
+      if (!config!!.exploreMode && config!!.exitWhenBugFound) {
+        loggers.forEach { it.executionDone(bugFound) }
+        exitProcess(-1)
       }
     }
   }
@@ -877,7 +882,8 @@ object GlobalContext {
                 index,
                 nextThread.index,
                 enabledOperations.size,
-                enabledOperations.map { it.index }))
+                enabledOperations.map { it.index },
+                nextThread.pendingOperation.toString()))
       }
     }
     nextThread.state = ThreadState.Running

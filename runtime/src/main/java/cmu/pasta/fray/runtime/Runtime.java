@@ -358,4 +358,8 @@ public class Runtime {
     public static long onNanoTime() {
         return DELEGATE.onNanoTime();
     }
+
+    public static int onThreadHashCode(Object t) {
+        return DELEGATE.onThreadHashCode(t);
+    }
 }

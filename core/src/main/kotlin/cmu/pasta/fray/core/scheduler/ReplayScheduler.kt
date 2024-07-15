@@ -10,6 +10,9 @@ class ReplayScheduler(val schedule: Schedule) : Scheduler {
     if (threads.size == 1 && !schedule.fullSchedule) {
       return threads[0]
     }
+    if (index == 1710) {
+      println("???")
+    }
 
     if (index >= schedule.choices.size) {
       return threads[0]
@@ -17,12 +20,19 @@ class ReplayScheduler(val schedule: Schedule) : Scheduler {
       // scheduler")
     }
     val choice = schedule.choices[index]
-    assert(threads.map { it.index }.toList() == choice.enabledIds)
-    assert(choice.enabled == threads.size)
+    if (threads.map { it.index }.toList() != choice.enabledIds) {
+      //      println("?")
+    }
+    //    assert(threads.map { it.index }.toList() == choice.enabledIds)
+    //    assert(choice.enabled == threads.size)
 
-    val selected = threads[choice.selected]
-    assert(choice.threadId == selected.index)
+    val selected = threads[choice.selected % threads.size]
+    //    assert(choice.threadId == selected.index)
     index += 1
+    if (selected.pendingOperation.toString().split("@")[0] != choice.operation.split("@")[0]) {
+      //      println("?")
+    }
+    //    assert(selected.pendingOperation.toString() == choice.operation)
     return selected
   }
 

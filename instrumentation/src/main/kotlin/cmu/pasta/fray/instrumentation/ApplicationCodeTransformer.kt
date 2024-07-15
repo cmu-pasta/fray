@@ -54,6 +54,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = ClassConstructorInstrumenter(cv)
       cv = SleepInstrumenter(cv)
       cv = TimeInstrumenter(cv)
+      cv = ThreadHashCodeInstrumenter(cv)
       val classVersionInstrumenter = ClassVersionInstrumenter(cv)
       cv = ArrayOperationInstrumenter(classVersionInstrumenter)
       classReader.accept(cv, ClassReader.EXPAND_FRAMES)
