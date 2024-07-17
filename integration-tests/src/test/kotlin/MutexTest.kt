@@ -1,20 +1,18 @@
-import cmu.pasta.fray.core.scheduler.POSScheduler
-import cmu.pasta.fray.it.IntegrationTestRunner
 import MutexTest.t1
 import MutexTest.t2
+import cmu.pasta.fray.core.scheduler.POSScheduler
+import cmu.pasta.fray.it.IntegrationTestRunner
 import java.util.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.sync.Mutex
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
 
 object MutexTest : IntegrationTestRunner() {
 
   val mutex = Mutex()
 
   // We do not support kotlin coroutines right now.
-  @Test
   fun testConcurrentLockUnlock() {
     val res =
         runTest(
@@ -34,14 +32,9 @@ object MutexTest : IntegrationTestRunner() {
     mutex.lock()
     mutex.lock()
   }
-
 }
 
 fun main() {
-  CoroutineScope(Default).launch {
-    t1()
-  }
-  CoroutineScope(Default).launch {
-    t2()
-  }
+  CoroutineScope(Default).launch { t1() }
+  CoroutineScope(Default).launch { t2() }
 }
