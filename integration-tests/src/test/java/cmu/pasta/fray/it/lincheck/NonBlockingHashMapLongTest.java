@@ -14,7 +14,7 @@ public class NonBlockingHashMapLongTest extends IntegrationTestRunner {
     public void testConcurrentRemoveReplace() {
         String res = runTest(() -> {
             try {
-                testConcurrentRemoveReplaceImpl();
+                main(new String[0]);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -23,7 +23,7 @@ public class NonBlockingHashMapLongTest extends IntegrationTestRunner {
         assertTrue(res.contains("Error found"));
     }
 
-    public static void testConcurrentRemoveReplaceImpl() throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         NonBlockingHashMapLong<Integer> map = new NonBlockingHashMapLong<Integer>();
         map.putIfAbsent(2, 6);
 

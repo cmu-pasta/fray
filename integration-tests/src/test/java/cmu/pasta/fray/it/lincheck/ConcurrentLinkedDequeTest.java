@@ -19,7 +19,7 @@ public class ConcurrentLinkedDequeTest extends IntegrationTestRunner {
     void testLinearizedExecution() throws IOException {
         String res = runTest(() -> {
             try {
-                testLinearizedExecutionImpl();
+                main(new String[0]);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -28,7 +28,7 @@ public class ConcurrentLinkedDequeTest extends IntegrationTestRunner {
         assertTrue(res.contains("Error found"));
     }
 
-    void testLinearizedExecutionImpl() throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         t1Value = 0;
         t2Value = 0;
         ConcurrentLinkedDeque<Integer> deque = new ConcurrentLinkedDeque<>();

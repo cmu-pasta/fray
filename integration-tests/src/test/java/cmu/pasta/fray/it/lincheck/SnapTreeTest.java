@@ -15,7 +15,7 @@ public class SnapTreeTest extends IntegrationTestRunner {
     public void testConcurrentGetRemove() {
         String res = runTest(() -> {
             try {
-                testConcurrentGetRemoveImpl();
+                main(new String[0]);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -24,7 +24,7 @@ public class SnapTreeTest extends IntegrationTestRunner {
         assertTrue(res.contains("Error found"));
     }
 
-    public static void testConcurrentGetRemoveImpl() throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         SnapTreeMap<Long, Integer> map = new SnapTreeMap<>();
         map.putIfAbsent(4L, 4);
 

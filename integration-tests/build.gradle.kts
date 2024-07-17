@@ -26,3 +26,14 @@ tasks.test {
   jvmArgs("-agentpath:$agentPath")
   jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
 }
+
+tasks.register<Copy>("copyDependencies") {
+  from(configurations.testRuntimeClasspath)
+  into("${layout.buildDirectory.get().asFile}/dependency")
+}
+
+tasks.register<Jar>("testJar") {
+  from(sourceSets.test.get().output)
+}
+
+

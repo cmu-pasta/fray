@@ -20,7 +20,7 @@ public class ConcurrentSuffixTreeTest extends IntegrationTestRunner {
     public void testConcurrentPutAndGet() {
         String res = runTest(() -> {
             try {
-                testConcurrentPutAndGetImpl();
+                main(new String[0]);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -29,7 +29,7 @@ public class ConcurrentSuffixTreeTest extends IntegrationTestRunner {
         assertTrue(res.contains("Error found"));
     }
 
-    public static void testConcurrentPutAndGetImpl() throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         ConcurrentSuffixTree<Integer> tree = new ConcurrentSuffixTree<>(new DefaultCharArrayNodeFactory());
         Thread t1 = new Thread(() -> {
             tree.put("baa", 5);

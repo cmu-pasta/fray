@@ -15,7 +15,7 @@ public class CATreeTest extends IntegrationTestRunner {
     public void testClearAndPut() {
         String res = runTest(() -> {
             try {
-                testClearAndPutImpl();
+                main(new String[0]);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -25,7 +25,7 @@ public class CATreeTest extends IntegrationTestRunner {
     }
 
 
-    public static void testClearAndPutImpl() throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         CATreeMapAVL<Long, Integer> map = new CATreeMapAVL<>();
         Thread t1 = new Thread(() -> {
             map.clear();

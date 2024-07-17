@@ -15,7 +15,7 @@ public class ConcurrencyOptimalMapTest extends IntegrationTestRunner {
     public void testConcurrentPut() {
         String res = runTest(() -> {
             try {
-                testConcurrentPutImpl();
+                main(new String[0]);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -25,7 +25,7 @@ public class ConcurrencyOptimalMapTest extends IntegrationTestRunner {
     }
 
 
-    public static void testConcurrentPutImpl() throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         ConcurrencyOptimalTreeMap<Integer, Integer> map = new ConcurrencyOptimalTreeMap<>();
 
         Thread t1 = new Thread(() -> {

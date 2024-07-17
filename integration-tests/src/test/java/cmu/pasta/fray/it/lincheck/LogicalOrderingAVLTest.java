@@ -13,7 +13,7 @@ public class LogicalOrderingAVLTest extends IntegrationTestRunner {
     public void testConcurrentInsertRemove() {
         String res = runTest(() -> {
             try {
-                testConcurrentInsertRemoveImpl();
+                main(new String[0]);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -22,7 +22,7 @@ public class LogicalOrderingAVLTest extends IntegrationTestRunner {
         assertTrue(res.contains("Error found"));
     }
 
-    public static void testConcurrentInsertRemoveImpl() throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         LogicalOrderingAVL<Integer, Integer> map = new LogicalOrderingAVL<>();
         map.put(1, 4);
 

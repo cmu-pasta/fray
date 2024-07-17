@@ -20,7 +20,7 @@ public class ConcurrentRadixTreeTest extends IntegrationTestRunner {
     public void testConcurrentPut() {
         String res = runTest(() -> {
             try {
-                testConcurrentPutImpl();
+                main(new String[0]);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -29,7 +29,7 @@ public class ConcurrentRadixTreeTest extends IntegrationTestRunner {
         assertTrue(res.contains("Error found"));
     }
 
-    public static void testConcurrentPutImpl() throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         ConcurrentRadixTree<Integer> map = new ConcurrentRadixTree<>(new DefaultCharArrayNodeFactory());
         aaInserted = false;
         abInserted = false;
