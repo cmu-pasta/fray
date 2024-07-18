@@ -92,10 +92,11 @@ object GlobalContext {
       for (logger in loggers) {
         logger.applicationEvent(sw.toString())
       }
-      if (!config!!.exploreMode && config!!.exitWhenBugFound) {
-        loggers.forEach { it.executionDone(bugFound) }
-        exitProcess(-1)
+      if (config!!.exploreMode || config!!.noExitWhenBugFound) {
+        return
       }
+      loggers.forEach { it.executionDone(bugFound) }
+      exitProcess(-1)
     }
   }
 

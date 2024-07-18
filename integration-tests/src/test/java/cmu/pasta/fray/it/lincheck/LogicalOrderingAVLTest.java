@@ -1,9 +1,14 @@
 package cmu.pasta.fray.it.lincheck;
 
+import cmu.pasta.fray.core.command.Configuration;
 import cmu.pasta.fray.core.scheduler.*;
 import cmu.pasta.fray.it.IntegrationTestRunner;
 import cmu.pasta.fray.it.logicalorderingavl.LogicalOrderingAVL;
 import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,21 +23,22 @@ public class LogicalOrderingAVLTest extends IntegrationTestRunner {
                 throw new RuntimeException(e);
             }
             return null;
-        }, new PCTScheduler(new ControlledRandom(), 3), 50000);
+        }, new PCTScheduler(new ControlledRandom(), 3), -1);
         assertTrue(res.contains("Error found"));
     }
 
     public static void main(String[] args) throws InterruptedException {
         LogicalOrderingAVL<Integer, Integer> map = new LogicalOrderingAVL<>();
-        map.put(1, 4);
+        map.putIfAbsent(5, 2);
+        map.put(3, 5);
 
         Thread t1 = new Thread(() -> {
-            map.put(2, 6);
+            map.get(4);
+            map.put(4, 5);
         });
 
         Thread t2 = new Thread(() -> {
-            map.putIfAbsent(5, 6);
-            map.remove(2);
+            map.remove(5);
         });
 
         t1.start();

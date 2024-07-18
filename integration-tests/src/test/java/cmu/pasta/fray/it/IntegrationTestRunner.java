@@ -36,7 +36,7 @@ public class IntegrationTestRunner {
                         false,
                         true,
                         false,
-                        10000
+                       10000
                 ),
                 "/tmp/report",
                 iter,
@@ -44,7 +44,7 @@ public class IntegrationTestRunner {
                 true,
                 new JsonLogger("/tmp/report", false),
                 false,
-                false,
+                true,
                 false
         );
         TestRunner runner = new TestRunner(config);

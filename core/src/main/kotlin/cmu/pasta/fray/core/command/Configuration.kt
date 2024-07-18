@@ -156,7 +156,7 @@ class MainCommand : CliktCommand() {
               "pct" to PCT())
   val noFray by option("--no-fray").flag()
   val exploreMode by option("--explore").flag()
-  val exitWhenBugFound by option("--exit-on-bug").flag()
+  val noExitWhenBugFound by option("--no-exit-on-bug").flag()
   val runConfig by
       option()
           .groupChoice(
@@ -177,7 +177,7 @@ class MainCommand : CliktCommand() {
         fullSchedule,
         logger!!.getLogger(report, fullSchedule),
         exploreMode,
-        exitWhenBugFound,
+        noExitWhenBugFound,
         noFray)
   }
 }
@@ -190,6 +190,6 @@ data class Configuration(
     val fullSchedule: Boolean,
     val logger: LoggerBase,
     val exploreMode: Boolean,
-    val exitWhenBugFound: Boolean,
+    val noExitWhenBugFound: Boolean,
     val noFray: Boolean,
 ) {}
