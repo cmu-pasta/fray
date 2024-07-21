@@ -30,7 +30,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = LockInstrumenter(cv)
     cv = SystemModulesMapInstrumenter(cv)
     cv = ConditionInstrumenter(cv)
-    cv = AtomicOperationInstrumenter(cv)
+    //    cv = AtomicOperationInstrumenter(cv)
     cv = ObjectNotifyInstrumenter(cv)
     cv = UnsafeInstrumenter(cv)
     cv = SkipMethodInstrumenter(cv)

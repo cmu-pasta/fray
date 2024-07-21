@@ -53,6 +53,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = SynchronizedMethodInstrumenter(cv, false)
       cv = ClassConstructorInstrumenter(cv)
       cv = SleepInstrumenter(cv)
+      cv = AtomicOperationInstrumenter(cv)
       cv = TimeInstrumenter(cv)
       cv = ThreadHashCodeInstrumenter(cv)
       val classVersionInstrumenter = ClassVersionInstrumenter(cv)
