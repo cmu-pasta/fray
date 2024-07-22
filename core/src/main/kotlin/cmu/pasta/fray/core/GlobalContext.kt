@@ -830,12 +830,12 @@ object GlobalContext {
             currentThread.state == ThreadState.Completed)
     assert(registeredThreads.none { it.value.state == ThreadState.Running })
 
-    if (terminatingThread.contains(currentThread.index) &&
+    if (bugFound &&
         !currentThread.isExiting &&
+        currentThreadId != mainThreadId &&
         !(Thread.currentThread() is HelperThread)) {
       currentThread.state = ThreadState.Running
-      terminatingThread.remove(currentThread.index)
-      throw DeadlockException()
+      throw RuntimeException()
     }
 
     var enabledOperations =

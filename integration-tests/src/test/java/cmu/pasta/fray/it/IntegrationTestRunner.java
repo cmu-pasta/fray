@@ -52,6 +52,15 @@ public class IntegrationTestRunner {
         return logger.sb.toString();
     }
 
+//    public void runTest(String methodName, String testCase) {
+//        String testName = this.getClass().getSimpleName();
+//        String expectedFile = "expected/" + testName + "_" + testCase + ".txt";
+//        String scheduleFile = "schedules/" + testName + "_" + testCase + ".json";
+//        String expected = getResourceAsString(expectedFile);
+//        ReplayScheduler scheduler = new ReplayScheduler(Schedule.Companion.fromString(getResourceAsString(scheduleFile), true));
+//        assertEquals(expected, runTest(methodName, scheduler));
+//    }
+
     public String getResourceAsString(String path) {
         try(InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path)) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));

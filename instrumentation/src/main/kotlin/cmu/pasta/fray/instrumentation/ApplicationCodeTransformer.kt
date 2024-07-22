@@ -1,6 +1,7 @@
 package cmu.pasta.fray.instrumentation
 
 import cmu.pasta.fray.instrumentation.visitors.*
+import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.security.ProtectionDomain
 import org.objectweb.asm.ClassReader
@@ -53,9 +54,9 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = SynchronizedMethodInstrumenter(cv, false)
       cv = ClassConstructorInstrumenter(cv)
       cv = SleepInstrumenter(cv)
-      cv = AtomicOperationInstrumenter(cv)
       cv = TimeInstrumenter(cv)
       cv = ThreadHashCodeInstrumenter(cv)
+      cv = AtomicGetInstrumenter(cv)
       val classVersionInstrumenter = ClassVersionInstrumenter(cv)
       cv = ArrayOperationInstrumenter(classVersionInstrumenter)
       classReader.accept(cv, ClassReader.EXPAND_FRAMES)
@@ -67,8 +68,9 @@ class ApplicationCodeTransformer : ClassFileTransformer {
         cn.accept(classWriter)
       }
       val out = classWriter.toByteArray()
-      //      File("/tmp/out/app/${className.replace("/",
-      // ".").removePrefix(".")}.class").writeBytes(out)
+      File("/tmp/out/app/${className.replace("/",
+          ".").removePrefix(".")}.class")
+          .writeBytes(out)
       return out
     } catch (e: Throwable) {
       println("Failed to instrument: $className")

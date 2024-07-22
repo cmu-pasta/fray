@@ -7,8 +7,6 @@ import java.util.concurrent.atomic.*
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes.*
-import org.objectweb.asm.Type
-import org.objectweb.asm.commons.AdviceAdapter
 
 class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   var className = ""
@@ -33,54 +31,35 @@ class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       exceptions: Array<out String>?
   ): MethodVisitor {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
-    return object : AdviceAdapter(ASM9, mv, access, name, descriptor) {
-      override fun visitMethodInsn(
-          opcodeAndSource: Int,
-          owner: String,
-          name: String,
-          descriptor: String?,
-          isInterface: Boolean
-      ) {
-        if (atomicClasses.contains(owner) && !atomicNonVolatileMethodNames.contains(name)) {
-
-          val argumentTypes = Type.getArgumentTypes(descriptor)
-          val paramArrayIndex = newLocal(Type.getType("[Ljava/lang/Object;"))
-          push(argumentTypes.size)
-          newArray(Type.getObjectType("java/lang/Object"))
-          storeLocal(paramArrayIndex)
-          for (i in argumentTypes.indices) { // store call parameters to an array
-            val type = argumentTypes[argumentTypes.size - 1 - i]
-            box(type)
-            loadLocal(paramArrayIndex)
-            swap()
-            push(i)
-            swap()
-            arrayStore(Type.getObjectType("java/lang/Object"))
-          }
-          dup()
-          val memoryType = memoryTypeFromMethodName(name)
-          getStatic(
-              Type.getType(MemoryOpType::class.java),
-              memoryType.name,
-              Type.getType(MemoryOpType::class.java))
-          invokeStatic(
-              Type.getType(Runtime::class.java),
-              Utils.kFunctionToASMMethod(Runtime::onAtomicOperation))
-          for (i in argumentTypes.indices.reversed()) { // load call parameters from an array
-            loadLocal(paramArrayIndex)
-            push(i)
-            arrayLoad(Type.getObjectType("java/lang/Object"))
-            unbox(argumentTypes[argumentTypes.size - 1 - i])
-          }
+    val memoryType = memoryTypeFromMethodName(name)
+    if (atomicClasses.contains(className) &&
+        !atomicNonVolatileMethodNames.contains(name) &&
+        access and ACC_PUBLIC != 0 &&
+        // We cannot instrument Atomic.get method because the debugger will call
+        // it to evaluate the value of the atomic variable. Therefore, we move
+        // the Atomic.get instrumentation to application level in `AtomicGetInstrumenter`.
+        !(name == "get" && descriptor.startsWith("()"))) {
+      return object : MethodVisitor(ASM9, mv) {
+        override fun visitCode() {
+          super.visitCode()
+          val type = MemoryOpType::class.java.name.replace(".", "/")
+          visitVarInsn(ALOAD, 0)
+          visitFieldInsn(GETSTATIC, type, memoryType.name, "L$type;")
+          visitMethodInsn(
+              INVOKESTATIC,
+              cmu.pasta.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+              Runtime::onAtomicOperation.name,
+              Utils.kFunctionToJvmMethodDescriptor(Runtime::onAtomicOperation),
+              false)
         }
-        super.visitMethodInsn(opcodeAndSource, owner, name, descriptor, isInterface)
       }
     }
+    return mv
   }
 
   fun memoryTypeFromMethodName(name: String): MemoryOpType {
     val lname = name.lowercase()
-    return if (lname.contains("set") || lname.contains("exchange") || lname.contains("update")) {
+    return if (lname.contains("set") || lname.contains("exchange")) {
       MemoryOpType.MEMORY_WRITE
     } else {
       MemoryOpType.MEMORY_READ
@@ -115,7 +94,7 @@ class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
             "toString",
             "weakCompareAndSetPlain",
             "length",
-            "hashcode",
+            "hashCode",
             "equals",
             "clone",
             "getClass")

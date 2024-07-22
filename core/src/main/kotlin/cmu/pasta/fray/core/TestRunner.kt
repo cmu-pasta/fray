@@ -7,7 +7,7 @@ import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
-import kotlin.system.measureTimeMillis
+import kotlin.time.TimeSource
 
 class TestRunner(val config: Configuration) {
 
@@ -33,30 +33,28 @@ class TestRunner(val config: Configuration) {
       config.executionInfo.executor.execute()
     } else {
       setup()
-      val time = measureTimeMillis {
-        var i = 0
-        while (i != config.iter) {
-          println("Starting iteration $i")
-          try {
-            Runtime.DELEGATE = RuntimeDelegate()
-            Runtime.start()
-            config.executionInfo.executor.execute()
-            Runtime.onMainExit()
-          } catch (e: Throwable) {
-            Runtime.onReportError(e)
-            Runtime.onMainExit()
-          }
-          if (GlobalContext.bugFound) {
-            println("Error found at iter: $i")
-            if (!config.exploreMode) {
-              break
-            }
-          }
-          i++
+      val timeSource = TimeSource.Monotonic
+      var i = 0
+      while (i != config.iter) {
+        println("Starting iteration $i")
+        try {
+          Runtime.DELEGATE = RuntimeDelegate()
+          Runtime.start()
+          config.executionInfo.executor.execute()
+          Runtime.onMainExit()
+        } catch (e: Throwable) {
+          Runtime.onReportError(e)
+          Runtime.onMainExit()
         }
-        GlobalContext.shutDown()
+        if (GlobalContext.bugFound) {
+          println("Error found at iter: $i, Elapsed time: ${timeSource.markNow().elapsedNow()}")
+          if (!config.exploreMode) {
+            break
+          }
+        }
+        i++
       }
-      println("Analysis done in: $time ms")
+      GlobalContext.shutDown()
     }
     config.executionInfo.executor.afterExecution()
     return if (GlobalContext.bugFound) {

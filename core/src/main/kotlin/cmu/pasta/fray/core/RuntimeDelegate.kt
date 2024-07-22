@@ -385,9 +385,11 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onExit(status: Int) {
+    if (checkEntered()) return
     if (status != 0) {
       GlobalContext.reportError(RuntimeException("Exit with status $status"))
     }
+    entered.set(false)
   }
 
   override fun onYield() {
