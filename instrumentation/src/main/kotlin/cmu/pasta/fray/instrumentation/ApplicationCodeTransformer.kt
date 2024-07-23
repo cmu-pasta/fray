@@ -1,7 +1,6 @@
 package cmu.pasta.fray.instrumentation
 
 import cmu.pasta.fray.instrumentation.visitors.*
-import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.security.ProtectionDomain
 import org.objectweb.asm.ClassReader
@@ -68,9 +67,9 @@ class ApplicationCodeTransformer : ClassFileTransformer {
         cn.accept(classWriter)
       }
       val out = classWriter.toByteArray()
-      File("/tmp/out/app/${className.replace("/",
-          ".").removePrefix(".")}.class")
-          .writeBytes(out)
+      //      File("/tmp/out/app/${className.replace("/",
+      //          ".").removePrefix(".")}.class")
+      //          .writeBytes(out)
       return out
     } catch (e: Throwable) {
       println("Failed to instrument: $className")

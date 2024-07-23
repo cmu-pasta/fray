@@ -1,6 +1,7 @@
 package cmu.pasta.fray.instrumentation.visitors
 
 import cmu.pasta.fray.runtime.Runtime
+import java.io.PrintStream
 import java.lang.invoke.CallSite
 import java.lang.invoke.MethodType
 import java.util.ServiceLoader
@@ -15,6 +16,7 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
         Logger::class.java.name,
         MethodType::class.java.name,
         ServiceLoader::class.java.name,
+        PrintStream::class.java.name,
         "java.util.ServiceLoader\$LazyClassPathLookupIterator",
         "sun.reflect.annotation.AnnotationParser",
         CallSite::class.java.name,
