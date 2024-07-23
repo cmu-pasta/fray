@@ -34,6 +34,7 @@ class TestRunner(val config: Configuration) {
     } else {
       setup()
       val timeSource = TimeSource.Monotonic
+      val start = timeSource.markNow()
       var i = 0
       while (i != config.iter) {
         println("Starting iteration $i")
@@ -47,7 +48,7 @@ class TestRunner(val config: Configuration) {
           Runtime.onMainExit()
         }
         if (GlobalContext.bugFound) {
-          println("Error found at iter: $i, Elapsed time: ${timeSource.markNow().elapsedNow()}")
+          println("Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms")
           if (!config.exploreMode) {
             break
           }
