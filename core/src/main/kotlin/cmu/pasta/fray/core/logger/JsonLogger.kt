@@ -1,5 +1,6 @@
 package cmu.pasta.fray.core.logger
 
+import cmu.pasta.fray.core.GlobalContext
 import cmu.pasta.fray.core.concurrency.operations.Operation
 import cmu.pasta.fray.core.scheduler.Choice
 import cmu.pasta.fray.core.scheduler.Schedule
@@ -36,7 +37,7 @@ class JsonLogger(val base: String, val fullSchedule: Boolean) : LoggerBase {
     //
     // File("$base/schedule_${savedSchedule++}.json").writeText(json.encodeToString(schedule))
     //        }
-    if (bugFound) {
+    if (bugFound && !GlobalContext.config!!.exploreMode) {
       File("$base/schedule_${savedSchedule++}.json").writeText(json.encodeToString(schedule))
     }
   }
