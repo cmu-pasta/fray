@@ -8,7 +8,6 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.ClassNode
-import org.objectweb.asm.util.CheckClassAdapter
 
 class ApplicationCodeTransformer : ClassFileTransformer {
   override fun transform(
@@ -62,8 +61,8 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
       if (classVersionInstrumenter.classVersion >= Opcodes.V1_5) {
         cn.accept(classWriter)
-//        val checkClassAdapter = CheckClassAdapter(classWriter)
-//        cn.accept(checkClassAdapter)
+        //        val checkClassAdapter = CheckClassAdapter(classWriter)
+        //        cn.accept(checkClassAdapter)
       } else {
         cn.accept(classWriter)
       }

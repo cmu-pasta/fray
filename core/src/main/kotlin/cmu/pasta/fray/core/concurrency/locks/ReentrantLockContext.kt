@@ -3,9 +3,6 @@ package cmu.pasta.fray.core.concurrency.locks
 import cmu.pasta.fray.core.GlobalContext
 import cmu.pasta.fray.core.ThreadState
 import cmu.pasta.fray.core.concurrency.operations.ThreadResumeOperation
-import java.io.ByteArrayOutputStream
-import java.io.PrintWriter
-
 
 class ReentrantLockContext : LockContext {
   private var lockHolder: Long? = null

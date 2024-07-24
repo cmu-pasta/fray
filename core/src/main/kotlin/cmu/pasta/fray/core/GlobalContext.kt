@@ -518,7 +518,8 @@ object GlobalContext {
 
   fun lockImpl(lock: Any, isMonitorLock: Boolean, shouldBlock: Boolean, canInterrupt: Boolean) {
     if (lock.javaClass.name.contains("org.apache.derby.impl.jdbc.EmbedConnection40")) {
-      println("lock on org.apache.derby.impl.jdbc.EmbedConnection40${System.identityHashCode(lock)} from thread")
+      println(
+          "lock on org.apache.derby.impl.jdbc.EmbedConnection40${System.identityHashCode(lock)} from thread")
     }
     val t = Thread.currentThread().id
     val objId = System.identityHashCode(lock)

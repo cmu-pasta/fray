@@ -48,7 +48,8 @@ class TestRunner(val config: Configuration) {
           Runtime.onMainExit()
         }
         if (GlobalContext.bugFound) {
-          println("Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms")
+          println(
+              "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms")
           if (!config.exploreMode) {
             break
           }
