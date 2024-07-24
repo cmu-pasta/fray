@@ -122,7 +122,7 @@ class Fifo : ScheduleAlgorithm("fifo") {
 
 class POS : ScheduleAlgorithm("pos") {
   override fun getScheduler(): Scheduler {
-    return POSScheduler(Random())
+    return POSScheduler(Random(0))
   }
 }
 

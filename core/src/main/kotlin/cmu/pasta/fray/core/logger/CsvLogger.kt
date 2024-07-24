@@ -17,7 +17,7 @@ class CsvLogger(private val baseFolder: String, private val fullSchedule: Boolea
   override fun newOperationScheduled(op: Operation, choice: Choice) {
     if (choice.enabled > 1 || fullSchedule) {
       scheduleFile?.appendText(
-          "${choice.selected},${choice.threadId},${choice.enabled},${choice.enabledIds.joinToString(",")}\n")
+          "${choice.selected},${choice.threadId},${choice.enabled},${choice.enabledIds.joinToString(",")},${choice.operation}\n")
     }
   }
 

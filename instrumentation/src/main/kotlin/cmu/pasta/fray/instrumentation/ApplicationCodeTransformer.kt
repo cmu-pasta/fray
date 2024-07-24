@@ -61,8 +61,9 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       classReader.accept(cv, ClassReader.EXPAND_FRAMES)
       val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
       if (classVersionInstrumenter.classVersion >= Opcodes.V1_5) {
-        val checkClassAdapter = CheckClassAdapter(classWriter)
-        cn.accept(checkClassAdapter)
+        cn.accept(classWriter)
+//        val checkClassAdapter = CheckClassAdapter(classWriter)
+//        cn.accept(checkClassAdapter)
       } else {
         cn.accept(classWriter)
       }
