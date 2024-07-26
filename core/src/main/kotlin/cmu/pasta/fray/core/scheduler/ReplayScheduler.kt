@@ -17,19 +17,13 @@ class ReplayScheduler(val schedule: Schedule) : Scheduler {
       // scheduler")
     }
     val choice = schedule.choices[index]
-    if (threads.map { it.index }.toList() != choice.enabledIds) {
-      println("?")
-    }
     assert(threads.map { it.index }.toList() == choice.enabledIds)
     assert(choice.enabled == threads.size)
 
     val selected = threads[choice.selected % threads.size]
-    //    assert(choice.threadId == selected.index)
+    assert(choice.threadId == selected.index)
     index += 1
-    if (selected.pendingOperation.toString().split("@")[0] != choice.operation.split("@")[0]) {
-      println("?")
-    }
-    assert(selected.pendingOperation.toString() == choice.operation)
+    assert(selected.pendingOperation.toString().split("@")[0] == choice.operation.split("@")[0])
     return selected
   }
 

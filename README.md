@@ -1,83 +1,122 @@
-# Run Fray
+# Fray: An Efficient General-Purpose Concurrency Testing Platform for the JVM
 
-- To run Fray, you first need to build the project and create a instrumented JDK.
+## Build Fray
+
+- Run the following commands to build Fray
 
 ```bash
-./gradlew build
+./gradlew build -x test
 ./gradlew jlink
 ./gradlew shadowJar
 ```
 
-- Next, you can run Fray!
-  - You may follow the `examples` folder to understand how to run sfuzz using gradle.
-  - You can also run sfuzz through command line. We created a wrapper `bin/sfuzz` for you
-    to setup environment.
-    - Command: `bin/sfuzz CLASS_PATH ARGS_TO_FRAY`
-    - For example, to run `bin/sfuzz` for `examples` program, you need
-        - `./bin/sfuzz ./examples/build/classes/java/main example.Main -o ./examples/build/report --scheduler fifo`
-    - To understand Fray args you can:
-        - `./bin/sfuzz dummy --help`
+## Run Fray
 
 
-# Architecture
+### Application Configuration
 
-![image](./assets/fray-arch.png)
+First you need to provide a configuration file for the application you want to test. The configuration file should be in the following format:
 
-
-
-
-# Runtime
-
-Runtime should be **super** light weight. It should not include any dependencies. It should not call any JDK methods.
-It is a delegate between **core** and **instrumentation**.
-
-# Scheduling
-
-It is operations' responsibility to decide whether an operation triggers a reschedule.
-
-# Threads
-
-Each thread should only try to block itself.
-
-We should reschedule a thread **before** a non-local operation. This gives us the opportunity to
-schedule operations based on the knowledge of their effects.
-
-Fray should proactively maintain the state of each thread instead of reactively.
-
-
-
-# Locks
-
-Thread blocking/resuming should be managed at Thread level instead of sync information level.
-
-We should use `wati` and `notify` to block/unblock a thread because we will instrument semaphores as well.
-
-```java
-synchronized (monitor) {
-    monitor.wait();
-}
-synchronized (monitor) {
-        monitor.notify();
+```json
+{
+  "executor": {
+    "clazz": "com.example.Main",
+    "method": "main",
+    "args": ["arg1", "arg2"],
+    "classpaths": ["path/to/your/application.jar"],
+    "properties": {"PROPERTY1": "VALUE1", "PROPERTY2": "VALUE2"}
+  },
+  "ignore_unhandled_exceptions": false,
+  "timed_op_as_yield": false,
+  "interleave_memory_ops": false,
+  "max_scheduled_step": -1
 }
 ```
 
-`Thread.join` should be handled the same way as `Object.wait`
-
-# Instrumentation
-
-Instrumentation should be as simple as possible. Ideally only static method calls.
-
-We should have different classes to instrument different types of code so that they can be disabled easily.
-
-# Synchronization
-
-We should **strictly** enforce sequential execution. If a new thread is created/resumed, we
-should wait for them to finish bootstrap and fully stopped before proceeding.
-
-Thread rescheduling can only be called by the current scheduled thread.
+- `executor` defines the entrypoint and environment of the application you want to test.
+  - `clazz`: the main class of the application.
+  - `method`: the main method of the application.
+  - `args`: the arguments to the main method.
+  - `classpaths`: the classpaths of the application.
+  - `properties`: the system properties of the application.
+- `ignore_unhandled_exceptions`: whether to treat unhandled exceptions as failures.
+- `timed_op_as_yield`: whether to treat timed operations as yields otherwise they will be treated as no timeout op.
+- `interleave_memory_ops`: whether to interleave memory operations.
+- `max_scheduled_step`: the maximum number of scheduled steps. And Fray will throw `LivenessException` if the number of scheduled steps exceeds this value. If the value is -1, then there is no limit.
 
 
-# Limitations
+### Fray Configuration
 
-- We cannot remove monitors in JDK, but we can for applications.
+You may use the following gradle task to run Fray:
 
+```bash
+./gradlew runFray -PconfigPath=path/to/your/application_config.json -PextraArgs="extra args passed to Fray"
+```
+
+Here are the available extra args:
+
+```
+Options:
+  -o=<text>                Report output directory.
+  -i, --iter=<int>         Number of iterations.
+  -f, --full               If the report should save full schedule. Otherwise,
+                           Fray only saves schedules points if there are more
+                           than one runnable threads.
+  -l, --logger=(json|csv)  Logger type.
+  --scheduler=(replay|fifo|pos|random|pct)
+                           Scheduling algorithm.
+  --no-fray                Runnning in no-Fray mode.
+  --explore                Running in explore mode and Fray will continue if a
+                           failure is found.
+  --no-exit-on-bug         Fray will not immediately exit when a failure is
+                           found.
+  --run-config=(cli|json)  Run configuration for the application.
+  -h, --help               Show this message and exit
+```
+
+### Output 
+
+The output of Fray will be saved in the `output` directory. The output directory contains the following files:
+ 
+- `output.txt`: the Fray of the testing.
+- `schedule_{id}.json/csv`: the schedule you can replay.
+
+## Replay a buggy schedule
+
+Once Fray finds a bug as indicated in `output.txt`. You may replay it by providing the corresponding schedule.
+
+```bash
+./gradlew runFray -PconfigPath=path/to/your/application_config.json -PextraArgs="--scheduler=replay --path=path/to/schedule.json"
+```
+
+## Example
+
+We provide an example application in the `integration-tests/src/main/java/example/FrayExample.java`. You may run the following command to test it:
+
+```bash
+mkdir out
+javac integration-tests/src/main/java/example/FrayExample.java -d out
+echo '{
+  "executor": {
+    "clazz": "example.FrayExample",
+    "method": "main",
+    "args": [],
+    "classpaths": ["CURRENT_DIR/out/"],
+    "properties": {}
+  },
+  "ignore_unhandled_exceptions": false,
+  "timed_op_as_yield": false,
+  "interleave_memory_ops": false,
+  "max_scheduled_step": -1
+}' | sed "s|CURRENT_DIR|$(pwd)|g" > out/config.json
+./gradlew runFray -PconfigPath="out/config.json" -PextraArgs="--iter=1000 --logger=json --scheduler=random -o=/tmp/fray-example/"
+```
+
+And you may see a failure `AssertionError` or `DeadlockException` in stdout. In `/tmp/report/`, you will see one schedule is 
+saved which will lead to the failure.
+
+To replay that schedule, you may run the following command:
+
+```bash
+./gradlew runFray -PconfigPath="out/config.json" -PextraArgs="--iter=1000 --logger=json --scheduler=replay --path=/tmp/fray-example/schedule_XXX.json"
+```

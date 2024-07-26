@@ -41,7 +41,7 @@ tasks.withType<JavaExec> {
 }
 
 tasks.register<JavaExec>("runFray") {
-  val configPath = properties["configPath"] as String? ?: ""
+  var configPath = properties["configPath"] as String? ?: ""
   val extraArgs = when (val extraArgs = properties["extraArgs"]) {
     is String -> {
       val pattern = Pattern.compile("""("[^"]+"|\S+)""")
@@ -53,6 +53,9 @@ tasks.register<JavaExec>("runFray") {
       result
     }
     else -> emptyList()
+  }
+  if (!File(configPath).isAbsolute) {
+    configPath = System.getProperty("user.dir") + "/" + configPath
   }
   args = listOf("--run-config", "json", "--config-path", configPath) + extraArgs
 }

@@ -107,7 +107,7 @@ sealed class ScheduleAlgorithm(name: String) : OptionGroup(name) {
 }
 
 class Replay : ScheduleAlgorithm("replay") {
-  val path by option().file().required()
+  val path by option("-p", "--path", help = "Path to the saved schedule.").file().required()
 
   override fun getScheduler(): Scheduler {
     return ReplayScheduler(Schedule.fromString(path.readText(), path.extension == "json", false))
@@ -141,24 +141,37 @@ class PCT : ScheduleAlgorithm("pct") {
 }
 
 class MainCommand : CliktCommand() {
-  val report by option("-o").default("/tmp/report")
-  val iter by option("-i", "--iter", help = "Number of iterations").int().default(1)
-  val fullSchedule by option("-f", "--full").flag()
+  val report by option("-o", "--output", help = "Report output directory.").default("/tmp/report")
+  val iter by option("-i", "--iter", help = "Number of iterations.").int().default(1)
+  val fullSchedule by
+      option(
+              "-f",
+              "--full",
+              help =
+                  "If the report should save full schedule. Otherwise, Fray only saves schedules points if there are more than one runnable threads.")
+          .flag()
   val logger by
-      option("-l", "--logger").groupChoice("json" to JsonLoggerOption(), "csv" to CsvLoggerOption())
+      option("-l", "--logger", help = "Logger type.")
+          .groupChoice("json" to JsonLoggerOption(), "csv" to CsvLoggerOption())
   val scheduler by
-      option()
+      option(help = "Scheduling algorithm.")
           .groupChoice(
               "replay" to Replay(),
               "fifo" to Fifo(),
               "pos" to POS(),
               "random" to Rand(),
               "pct" to PCT())
-  val noFray by option("--no-fray").flag()
-  val exploreMode by option("--explore").flag()
-  val noExitWhenBugFound by option("--no-exit-on-bug").flag()
+  val noFray by option("--no-fray", help = "Runnning in no-Fray mode.").flag()
+  val exploreMode by
+      option(
+              "--explore",
+              help = "Running in explore mode and Fray will continue if a failure is found.")
+          .flag()
+  val noExitWhenBugFound by
+      option("--no-exit-on-bug", help = "Fray will not immediately exit when a failure is found.")
+          .flag()
   val runConfig by
-      option()
+      option(help = "Run configuration for the application.")
           .groupChoice(
               "cli" to CliExecutionConfig(),
               "json" to JsonExecutionConfig(),
