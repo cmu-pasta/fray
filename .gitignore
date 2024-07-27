@@ -39,3 +39,4 @@ bin/
 .DS_Store
 *.log
 scratch
+./bin/fray

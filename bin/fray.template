@@ -7,9 +7,9 @@ import argparse
 
 BASE = os.path.dirname(os.path.realpath('__file__'))
 JAVA_PATH = os.path.join(BASE, "jdk", "build", "java-inst", "bin", "java")
-JVMTI_PATH = "/Users/aoli/repos/sfuzz/jvmti/build/cmake/native_release/mac-aarch64/cpp/libjvmti.dylib"
-AGENT_PATH = "/Users/aoli/repos/sfuzz/instrumentation/build/libs/instrumentation-1.0-SNAPSHOT-all.jar"
-CORE_PATH = "/Users/aoli/repos/sfuzz/core/build/libs/core-1.0-SNAPSHOT-all.jar"
+JVMTI_PATH = "#JVM_TI_PATH#"
+AGENT_PATH = "#AGENT_PATH#"
+CORE_PATH = "#CORE_PATH#"
 
 def main():
     parser = argparse.ArgumentParser(description="Fray Fuzzer")

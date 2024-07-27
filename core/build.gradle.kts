@@ -33,6 +33,7 @@ tasks.named<ShadowJar>("shadowJar") {
 
 tasks.named("build") {
   dependsOn("shadowJar")
+  finalizedBy("genRunner")
 }
 
 tasks.withType<JavaExec> {
@@ -87,11 +88,11 @@ tasks.create("genRunner") {
     val core = tasks.named("shadowJar").get().outputs.files.first().absolutePath
     val agentPath: String by rootProject.extra
     val binDir = "${rootProject.projectDir.absolutePath}/bin"
-    var runner = file("${binDir}/sfuzz.template").readText()
+    var runner = file("${binDir}/fray.template").readText()
     runner = runner.replace("#JVM_TI_PATH#", agentPath)
     runner = runner.replace("#AGENT_PATH#", instrumentation)
     runner = runner.replace("#CORE_PATH#", core)
-    val file = File("${binDir}/sfuzz")
+    val file = File("${binDir}/fray")
     file.writeText(runner)
     file.setExecutable(true)
   }
