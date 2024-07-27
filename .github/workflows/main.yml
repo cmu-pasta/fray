@@ -18,12 +18,5 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           cache: 'gradle'
-      - name: Build fray (no tests)
-        run: ./gradlew build -x test
-      - name: Instrument JDK
-        run: ./gradlew jlink
-      - name: Build shadow JAR
-        run: ./gradlew shadowJar
-      - name: Test fray
-        run: ./gradlew test
-
+      - name: Build fray and run tests
+        run: ./gradlew build

@@ -28,6 +28,7 @@ class JlinkPlugin : Plugin {
 
   override fun transform(input: ResourcePool, output: ResourcePoolBuilder): ResourcePool {
     println("Start fray plugin!")
+
     Utils.prepareDebugFolder("jdk")
     Utils.prepareDebugFolder("origin")
     input.transformAndCopy(

@@ -64,38 +64,8 @@ tasks.compileJava {
   options.compilerArgs.addAll(listOf("--add-exports", "java.base/jdk.internal.misc=ALL-UNNAMED"))
 }
 
-tasks.register<JavaExec>("runExample") {
-  args = listOf("example.Main", "-o", "${layout.buildDirectory.get().asFile}/report", "--scheduler", "fifo")
-}
-
-tasks.register<JavaExec>("runJC") {
-  val cp = properties["classpath"] as String? ?: ""
-  val main = properties["mainClass"] as String? ?: ""
-  val extraArgs = when (val extraArgs = properties["extraArgs"]) {
-    is String -> extraArgs.split(" ")
-    else -> emptyList()
-  }
-  classpath += files(cp.split(":"))
-  args = listOf(main, "main", "-o", "${layout.buildDirectory.get().asFile}/report", "--logger", "csv", "--iter", "10000", "-s", "10000000") + extraArgs
-}
-
 tasks.register<Copy>("copyDependencies") {
   from(configurations.runtimeClasspath)
   into("${layout.buildDirectory.get().asFile}/dependency")
-}
-
-
-fun resolveClasspath(classpath: String): List<String> {
-  return classpath.split(":").flatMap { path ->
-    if (path.contains("*")) {
-      val dir = File(path.substringBeforeLast("/"))
-      val pattern = path.substringAfterLast("/")
-      dir.listFiles { _, name -> name.matches(Regex(pattern.replace("*", ".*"))) }
-          ?.map { it.absolutePath }
-        ?: emptyList()
-    } else {
-      listOf(File(path).absolutePath)
-    }
-  }
 }
 

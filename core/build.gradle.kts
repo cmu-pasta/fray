@@ -28,3 +28,7 @@ tasks.named<ShadowJar>("shadowJar") {
         attributes(mapOf("Main-Class" to "cmu.pasta.fray.core.MainKt"))
     }
 }
+
+tasks.named("build") {
+  dependsOn("shadowJar")
+}

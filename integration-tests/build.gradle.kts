@@ -25,6 +25,8 @@ tasks.test {
   executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
   jvmArgs("-agentpath:$agentPath")
   jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
+  dependsOn(":jdk:build")
+  dependsOn(":jvmti:build")
 }
 
 tasks.register<Copy>("copyDependencies") {

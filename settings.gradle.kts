@@ -4,7 +4,7 @@ plugins {
 rootProject.name = "fray"
 include("jdk")
 include("runtime")
-include("examples")
+include("junit-runner")
 include("jvmti")
 include("core")
 include("instrumentation")

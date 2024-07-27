@@ -1,4 +1,4 @@
-package cmu.pasta.fray.examples;
+package cmu.pasta.fray.runner;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

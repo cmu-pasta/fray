@@ -26,9 +26,7 @@ tasks.withType<JavaExec> {
   jvmArgs("--patch-module", "cmu.pasta.fray.instrumentation=${sourceSets["main"].output.asPath}")
 }
 
-
 tasks.compileJava {
-  println(sourceSets["main"].output.asPath)
   options.compilerArgumentProviders.add(CommandLineArgumentProvider {
     // Provide compiled Kotlin classes to javac – needed for Java/Kotlin mixed sources to work
     listOf("--patch-module", "cmu.pasta.fray.instrumentation=${sourceSets["main"].output.asPath}")
@@ -42,8 +40,6 @@ tasks.jar {
 }
 
 tasks.named<ShadowJar>("shadowJar") {
-  // In Kotlin DSL, setting properties is done through Kotlin property syntax.
-//    isEnableRelocation = true
   relocate("org.objectweb.asm", "cmu.pasta.fray.instrumentation.asm")
   manifest {
     attributes(mapOf("Premain-Class" to "cmu.pasta.fray.instrumentation.PreMainKt"))
@@ -53,3 +49,8 @@ tasks.named<ShadowJar>("shadowJar") {
 tasks.test {
   useJUnitPlatform()
 }
+
+tasks.named("build") {
+  dependsOn("shadowJar")
+}
+
