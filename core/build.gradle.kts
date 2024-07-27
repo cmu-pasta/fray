@@ -81,16 +81,18 @@ tasks.register<JavaExec>("runFray") {
 }
 
 tasks.create("genRunner") {
-  val instrumentationTask = evaluationDependsOn(":instrumentation").tasks.named("shadowJar").get()
-  val instrumentation = instrumentationTask.outputs.files.first().absolutePath
-  val core = tasks.named("shadowJar").get().outputs.files.first().absolutePath
-  val agentPath: String by rootProject.extra
-  val binDir = "${rootProject.projectDir.absolutePath}/bin"
-  var runner = file("${binDir}/sfuzz.template").readText()
-  runner = runner.replace("#JVM_TI_PATH#", agentPath)
-  runner = runner.replace("#AGENT_PATH#", instrumentation)
-  runner = runner.replace("#CORE_PATH#", core)
-  val file = File("${binDir}/sfuzz")
-  file.writeText(runner)
-  file.setExecutable(true)
+  doLast {
+    val instrumentationTask = evaluationDependsOn(":instrumentation").tasks.named("shadowJar").get()
+    val instrumentation = instrumentationTask.outputs.files.first().absolutePath
+    val core = tasks.named("shadowJar").get().outputs.files.first().absolutePath
+    val agentPath: String by rootProject.extra
+    val binDir = "${rootProject.projectDir.absolutePath}/bin"
+    var runner = file("${binDir}/sfuzz.template").readText()
+    runner = runner.replace("#JVM_TI_PATH#", agentPath)
+    runner = runner.replace("#AGENT_PATH#", instrumentation)
+    runner = runner.replace("#CORE_PATH#", core)
+    val file = File("${binDir}/sfuzz")
+    file.writeText(runner)
+    file.setExecutable(true)
+  }
 }
