@@ -1,22 +1,49 @@
-#!/bin/python3
+#!/usr/bin/python3
 
 import os
 import sys
 import subprocess
+import argparse
 
 BASE = os.path.dirname(os.path.realpath('__file__'))
 JAVA_PATH = os.path.join(BASE, "jdk", "build", "java-inst", "bin", "java")
-JVMTI_PATH = os.path.join(BASE, "jvmti", "build", "cmake", "native_release", "linux-amd64", "cpp", "libjvmti.so")
-AGENT_PATH = os.path.join(BASE, "instrumentation", "build", "libs", "instrumentation-1.0-SNAPSHOT-all.jar")
-CORE_PATH = os.path.join(BASE, "core", "build", "libs", "core-1.0-SNAPSHOT-all.jar")
+JVMTI_PATH = "/Users/aoli/repos/sfuzz/jvmti/build/cmake/native_release/mac-aarch64/cpp/libjvmti.dylib"
+AGENT_PATH = "/Users/aoli/repos/sfuzz/instrumentation/build/libs/instrumentation-1.0-SNAPSHOT-all.jar"
+CORE_PATH = "/Users/aoli/repos/sfuzz/core/build/libs/core-1.0-SNAPSHOT-all.jar"
 
-command = [
-    JAVA_PATH, 
-    "-cp", CORE_PATH + ":" + sys.argv[1],
-    "-agentpath:" + JVMTI_PATH,
-    "-javaagent:" + AGENT_PATH,
-    "cmu.pasta.fray.core.MainKt",
-    *sys.argv[2:]
-]
+def main():
+    parser = argparse.ArgumentParser(description="Fray Fuzzer")
+    parser.add_argument("-cp", "--class-path",
+                        help="class search path of directories and zip/jar files. A : separated list of directories, JAR archives, and ZIP archives to search for class files.",
+                        default="")
+    parser.add_argument("clazz", help="Main class to run")
+    parser.add_argument("args", nargs=argparse.REMAINDER,
+                        help="Arguments to pass to the target")
+    args = parser.parse_args()
 
-subprocess.run(command)
+    class_path = CORE_PATH
+    if args.class_path:
+        class_path = class_path + ":" + args.class_path
+    command = [
+        JAVA_PATH,
+        "-cp", class_path,
+        "-agentpath:" + JVMTI_PATH,
+        "-javaagent:" + AGENT_PATH,
+        "cmu.pasta.fray.core.MainKt",
+        "--run-config",
+        "cli",
+        "--clazz",
+        args.clazz,
+        "--method",
+        "main",
+    ]
+    if args.args:
+        command.extend([
+            "--args",
+            ":".join(args.args)
+        ])
+    subprocess.run(command)
+
+
+if __name__ == "__main__":
+    main()

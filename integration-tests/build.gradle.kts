@@ -21,10 +21,10 @@ tasks.test {
   useJUnitPlatform()
   val agentPath: String by rootProject.extra
   val jdk = project(":jdk")
-  val instrumentation = project(":instrumentation")
+  val instrumentation = project(":instrumentation").tasks.named("shadowJar").get().outputs.files.first().absolutePath
   executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
   jvmArgs("-agentpath:$agentPath")
-  jvmArgs("-javaagent:${instrumentation.layout.buildDirectory.get().asFile}/libs/${instrumentation.name}-${instrumentation.version}-all.jar")
+  jvmArgs("-javaagent:$instrumentation")
   dependsOn(":jdk:build")
   dependsOn(":jvmti:build")
 }

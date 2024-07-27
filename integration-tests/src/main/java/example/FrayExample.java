@@ -17,6 +17,8 @@ public class FrayExample extends Thread {
         b = x;
     }
     public static void main(String[] args) throws Exception {
+        a = new AtomicInteger();
+        b = 0;
         FrayExample[] threads = {new FrayExample(), new FrayExample()};
         for (var thread : threads) thread.start();
         for (var thread : threads) thread.join();

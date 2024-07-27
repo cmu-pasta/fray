@@ -1,3 +1,5 @@
+import java.util.regex.Pattern
+
 plugins {
     kotlin("jvm") version "1.9.22"
     id("com.ncorti.ktfmt.gradle") version "0.17.0"
@@ -25,13 +27,16 @@ kotlin {
 }
 
 val jvmti = project(":jvmti")
-extra["agentPath"] = if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+extra["agentPath"] = if (System.getProperty("os.name").lowercase().contains("mac")) {
     "${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/mac-aarch64/cpp/lib${jvmti.name}.dylib"
 } else {
     "${jvmti.layout.buildDirectory.get().asFile}/cmake/native_release/linux-amd64/cpp/lib${jvmti.name}.so"
 }
 
-
 configure(allprojects - project(":jvmti")) {
   plugins.apply("com.ncorti.ktfmt.gradle")
 }
+
+
+
+

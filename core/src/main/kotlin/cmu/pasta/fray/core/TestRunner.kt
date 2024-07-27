@@ -33,12 +33,11 @@ class TestRunner(val config: Configuration) {
       config.executionInfo.executor.execute()
     } else {
       setup()
-      val outputFile = Paths.get(config.report, "output.txt").toFile()
       val timeSource = TimeSource.Monotonic
       val start = timeSource.markNow()
       var i = 0
       while (i != config.iter) {
-        outputFile.appendText("Starting iteration $i\n")
+        println("Starting iteration $i")
         try {
           Runtime.DELEGATE = RuntimeDelegate()
           Runtime.start()
@@ -49,8 +48,8 @@ class TestRunner(val config: Configuration) {
           Runtime.onMainExit()
         }
         if (GlobalContext.bugFound) {
-          outputFile.appendText(
-              "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms\n")
+          println(
+              "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms")
           if (!config.exploreMode) {
             break
           }

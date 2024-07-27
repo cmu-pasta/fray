@@ -142,7 +142,7 @@ class PCT : ScheduleAlgorithm("pct") {
 
 class MainCommand : CliktCommand() {
   val report by option("-o", "--output", help = "Report output directory.").default("/tmp/report")
-  val iter by option("-i", "--iter", help = "Number of iterations.").int().default(1)
+  val iter by option("-i", "--iter", help = "Number of iterations.").int().default(1000)
   val fullSchedule by
       option(
               "-f",
@@ -153,6 +153,7 @@ class MainCommand : CliktCommand() {
   val logger by
       option("-l", "--logger", help = "Logger type.")
           .groupChoice("json" to JsonLoggerOption(), "csv" to CsvLoggerOption())
+          .defaultByName("json")
   val scheduler by
       option(help = "Scheduling algorithm.")
           .groupChoice(
@@ -161,6 +162,7 @@ class MainCommand : CliktCommand() {
               "pos" to POS(),
               "random" to Rand(),
               "pct" to PCT())
+          .defaultByName("random")
   val noFray by option("--no-fray", help = "Runnning in no-Fray mode.").flag()
   val exploreMode by
       option(
@@ -171,7 +173,7 @@ class MainCommand : CliktCommand() {
       option("--no-exit-on-bug", help = "Fray will not immediately exit when a failure is found.")
           .flag()
   val runConfig by
-      option(help = "Run configuration for the application.")
+      option("--run-config", help = "Run configuration for the application.")
           .groupChoice(
               "cli" to CliExecutionConfig(),
               "json" to JsonExecutionConfig(),

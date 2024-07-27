@@ -53,4 +53,3 @@ tasks.test {
 tasks.named("build") {
   dependsOn("shadowJar")
 }
-

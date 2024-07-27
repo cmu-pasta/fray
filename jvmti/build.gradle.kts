@@ -4,13 +4,8 @@ plugins {
 
 cmake {
   targets {
-    register("native_release") {
-      cmakeLists.set(file("src/CMakeLists.txt"))
+    register("native_release") { cmakeLists.set(file("src/CMakeLists.txt"))
       cmakeArgs.add("-DCMAKE_BUILD_TYPE=Release")
-    }
-    register("native_debug") {
-      cmakeLists.set(file("src/CMakeLists.txt"))
-      cmakeArgs.add("-DCMAKE_BUILD_TYPE=Debug")
     }
   }
 }

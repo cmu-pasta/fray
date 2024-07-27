@@ -5,12 +5,14 @@
 - Run the following commands to build Fray
 
 ```bash
-./gradlew build -x test
-./gradlew jlink
-./gradlew shadowJar
+./gradlew build 
 ```
 
 ## Run Fray
+
+### Push-button Testing
+
+
 
 
 ### Application Configuration
