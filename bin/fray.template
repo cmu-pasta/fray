@@ -27,6 +27,7 @@ def main():
         class_path = class_path + ":" + args.class_path
     command = [
         JAVA_PATH,
+        "-ea",
         "-cp", class_path,
         "-agentpath:" + JVMTI_PATH,
         "-javaagent:" + AGENT_PATH,
