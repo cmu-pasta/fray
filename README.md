@@ -1,5 +1,9 @@
 # Fray: An Efficient General-Purpose Concurrency Testing Platform for the JVM
 
+## Requirements
+
+Please make sure you have Java 21 installed. To build the native plugin, you also need to have `g++` and `cmake` installed.
+
 ## Build Fray
 
 - Run the following commands to build Fray
