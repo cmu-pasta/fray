@@ -88,7 +88,7 @@ And you may find the recorded schedule in the `/tmp/report/` directory.
 To replay a schedule, you may run the following command:
 
 ```bash
-./bin/fray -cp ./out/ example.FrayExample --replay /tmp/report/schedule_0.json
+./bin/fray --replay /tmp/report/schedule_0.json -cp ./out/ example.FrayExample 
 ```
 
 
