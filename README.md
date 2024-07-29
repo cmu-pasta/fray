@@ -90,6 +90,9 @@ To replay a schedule, you may run the following command:
 
 ### Customized Fray Configuration
 
+<details>
+<summary>Click Me</summary>
+
 You may also choose to provide a configuration file for the application you want to test. The configuration file should be in the following format:
 
 ```json
@@ -186,3 +189,4 @@ To replay that schedule, you may run the following command:
 ```bash
 ./gradlew runFray -PconfigPath="out/config.json" -PextraArgs="--iter=1000 --logger=json --scheduler=replay --path=/tmp/fray-example/schedule_XXX.json"
 ```
+</details>
