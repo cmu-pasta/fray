@@ -2,6 +2,7 @@ package cmu.pasta.fray.core
 
 import cmu.pasta.fray.core.command.Configuration
 import cmu.pasta.fray.core.logger.ConsoleLogger
+import cmu.pasta.fray.core.scheduler.ReplayScheduler
 import cmu.pasta.fray.runtime.Runtime
 import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
@@ -19,8 +20,10 @@ class TestRunner(val config: Configuration) {
   }
 
   fun setup() {
-    prepareReportPath(config.report)
-    GlobalContext.registerLogger(config.logger)
+    if (config.scheduler !is ReplayScheduler) {
+      prepareReportPath(config.report)
+      GlobalContext.registerLogger(config.logger)
+    }
     GlobalContext.registerLogger(ConsoleLogger())
     GlobalContext.scheduler = config.scheduler
     GlobalContext.config = config
