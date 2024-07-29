@@ -12,6 +12,54 @@
 
 ### Push-button Testing
 
+The easiest way to run Fray is to replace `java` with `fray` in your command line. For example, if you want to run the following command:
+
+```bash
+./bin/fray -cp ./out/ example.FrayExample
+```
+
+Fray will run the application with a random scheduler and print the following error:
+
+```
+Error found: cmu.pasta.fray.runtime.DeadlockException
+Thread: 0
+Stacktrace:
+        at java.base/java.lang.Thread.getStackTrace(Thread.java:2450)
+        at cmu.pasta.fray.core.GlobalContext.reportError(GlobalContext.kt:84)
+        at cmu.pasta.fray.core.GlobalContext.checkDeadlock(GlobalContext.kt:813)
+        at cmu.pasta.fray.core.GlobalContext.objectWaitImpl(GlobalContext.kt:324)
+        at cmu.pasta.fray.core.GlobalContext.objectWait(GlobalContext.kt:345)
+        at cmu.pasta.fray.core.RuntimeDelegate.onObjectWait(RuntimeDelegate.kt:87)
+        at java.base/cmu.pasta.fray.runtime.Runtime.onObjectWait(Runtime.java:75)
+        at java.base/java.lang.Object.wait(Object.java)
+        at java.base/java.lang.Thread.join(Thread.java:2078)
+        at java.base/java.lang.Thread.join(Thread.java:2154)
+        at example.FrayExample.main(FrayExample.java:24)
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+        at cmu.pasta.fray.core.command.MethodExecutor.execute(Executor.kt:50)
+        at cmu.pasta.fray.core.TestRunner.run(TestRunner.kt:44)
+        at cmu.pasta.fray.core.MainKt.main(Main.kt:9)
+Thread: 1
+Stacktrace:
+        at java.base/java.lang.Object.wait0(Native Method)
+        at java.base/java.lang.Object.wait(Object.java:366)
+        at java.base/java.lang.Object.wait(Object.java:339)
+        at example.FrayExample.run(FrayExample.java:12)
+```
+
+And you may find the recorded schedule in the `/tmp/report/` directory.
+
+To replay a schedule, you may run the following command:
+
+[//]: # (```bash)
+
+[//]: # (./bin/fray -cp ./out/ example.FrayExample -scheduler replay -path /tmp/report/schedule_XXX.json)
+
+[//]: # (```)
+
+
+
 
 
 

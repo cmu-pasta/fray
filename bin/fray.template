@@ -16,6 +16,7 @@ def main():
     parser.add_argument("-cp", "--class-path",
                         help="class search path of directories and zip/jar files. A : separated list of directories, JAR archives, and ZIP archives to search for class files.",
                         default="")
+    parser.add_argument("--replay", help="Replay a trace file", type=str, default="")
     parser.add_argument("clazz", help="Main class to run")
     parser.add_argument("args", nargs=argparse.REMAINDER,
                         help="Arguments to pass to the target")
@@ -37,6 +38,13 @@ def main():
         "--method",
         "main",
     ]
+    if args.replay:
+        command.extend([
+            "--scheduler",
+            "replay",
+            "--path",
+            args.replay
+        ])
     if args.args:
         command.extend([
             "--args",
