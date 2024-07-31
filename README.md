@@ -10,6 +10,7 @@ Please make sure you have Java 21 installed. To build the native plugin, you als
 
 ```bash
 ./gradlew build 
+export PATH=$PATH:$(pwd)/bin
 ```
 
 ## Example
@@ -34,7 +35,7 @@ In the most cases, the program will show an `AssertionError`.
 The easiest way to run Fray is to replace `java` with `fray` in your command line. For example, if you want to run the following command:
 
 ```bash
-./bin/fray -cp ./out/ example.FrayExample
+fray -cp ./out/ example.FrayExample
 ```
 
 Fray will run the application with a random scheduler. Dependening on the schedule you may either see a `DeadlockException`:
@@ -88,7 +89,7 @@ And you may find the recorded schedule in the `/tmp/report/` directory.
 To replay a schedule, you may run the following command:
 
 ```bash
-./bin/fray --replay /tmp/report/schedule_0.json -cp ./out/ example.FrayExample 
+fray --replay /tmp/report/schedule_0.json -cp ./out/ example.FrayExample 
 ```
 
 
