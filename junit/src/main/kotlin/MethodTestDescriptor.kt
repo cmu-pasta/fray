@@ -4,7 +4,7 @@ import org.junit.platform.engine.TestDescriptor
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor
 import java.lang.reflect.Method
 
-class MethodTestDescriptor(val testMethod: Method, parent: ClassTestDescriptor) :
+class MethodTestDescriptor(val testMethod: Method, val parent: ClassTestDescriptor) :
     AbstractTestDescriptor(
         parent.uniqueId.append("method", testMethod.name),
         "Fray",

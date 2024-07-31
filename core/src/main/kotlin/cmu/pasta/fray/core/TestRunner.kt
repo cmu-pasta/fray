@@ -17,6 +17,7 @@ class TestRunner(val config: Configuration) {
     val path = Paths.get(reportPath)
     path.deleteRecursively()
     path.createDirectories()
+    println("Report is available at: ${path.toAbsolutePath()}")
   }
 
   fun setup() {
@@ -30,7 +31,7 @@ class TestRunner(val config: Configuration) {
     GlobalContext.bootstrap()
   }
 
-  fun run(): Int {
+  fun run(): Throwable? {
     config.executionInfo.executor.beforeExecution()
     if (config.noFray) {
       config.executionInfo.executor.execute()
@@ -50,7 +51,7 @@ class TestRunner(val config: Configuration) {
           Runtime.onReportError(e)
           Runtime.onMainExit()
         }
-        if (GlobalContext.bugFound) {
+        if (GlobalContext.bugFound != null) {
           println(
               "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms")
           if (!config.exploreMode) {
@@ -62,10 +63,6 @@ class TestRunner(val config: Configuration) {
       GlobalContext.shutDown()
     }
     config.executionInfo.executor.afterExecution()
-    return if (GlobalContext.bugFound) {
-      -1
-    } else {
-      0
-    }
+    return GlobalContext.bugFound
   }
 }

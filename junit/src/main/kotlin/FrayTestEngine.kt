@@ -61,5 +61,6 @@ class FrayTestEngine : TestEngine {
   }
 
   override fun execute(request: ExecutionRequest) {
+    FrayTestExecutor().execute(request, request.rootTestDescriptor)
   }
 }

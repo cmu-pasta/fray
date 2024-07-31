@@ -3,6 +3,8 @@ package cmu.pasta.fray.it.core;
 import cmu.pasta.fray.it.IntegrationTestRunner;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;

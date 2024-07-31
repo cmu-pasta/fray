@@ -40,7 +40,7 @@ object GlobalContext {
   var mainThreadId: Long = -1
   var scheduler: Scheduler = FifoScheduler()
   var config: Configuration? = null
-  var bugFound = false
+  var bugFound: Throwable? = null
   var mainExiting = false
   var nanoTime = System.nanoTime()
   val terminatingThread = mutableSetOf<Int>()
@@ -72,8 +72,8 @@ object GlobalContext {
   }
 
   fun reportError(e: Throwable) {
-    if (!bugFound && !config!!.executionInfo.ignoreUnhandledExceptions) {
-      bugFound = true
+    if (bugFound == null && !config!!.executionInfo.ignoreUnhandledExceptions) {
+      bugFound = e
       val sw = StringWriter()
       sw.append("Error found: ${e}\n")
       if (e is DeadlockException) {
@@ -95,7 +95,7 @@ object GlobalContext {
       if (config!!.exploreMode || config!!.noExitWhenBugFound) {
         return
       }
-      loggers.forEach { it.executionDone(bugFound) }
+      loggers.forEach { it.executionDone(bugFound != null) }
       exitProcess(-1)
     }
   }
@@ -154,7 +154,7 @@ object GlobalContext {
     // thread creation
     executor.submit {}
     step = 0
-    bugFound = false
+    bugFound = null
     mainExiting = false
     currentThreadId = t.id
     mainThreadId = t.id
@@ -165,7 +165,7 @@ object GlobalContext {
   }
 
   fun done() {
-    loggers.forEach { it.executionDone(bugFound) }
+    loggers.forEach { it.executionDone(bugFound != null) }
 
     assert(lockManager.waitingThreads.isEmpty())
     assert(syncManager.synchronizationPoints.isEmpty())
@@ -517,10 +517,6 @@ object GlobalContext {
   }
 
   fun lockImpl(lock: Any, isMonitorLock: Boolean, shouldBlock: Boolean, canInterrupt: Boolean) {
-    if (lock.javaClass.name.contains("org.apache.derby.impl.jdbc.EmbedConnection40")) {
-      println(
-          "lock on org.apache.derby.impl.jdbc.EmbedConnection40${System.identityHashCode(lock)} from thread")
-    }
     val t = Thread.currentThread().id
     val objId = System.identityHashCode(lock)
     val context = registeredThreads[t]!!
@@ -758,22 +754,6 @@ object GlobalContext {
     syncManager.wait(latch)
   }
 
-  fun checkErrorAndExit() {
-    if (bugFound) {
-      val blockedThreads = mutableListOf<ThreadContext>()
-      for (thread in registeredThreads.values) {
-        if (thread.state != ThreadState.Running && thread.state != ThreadState.Completed) {
-          thread.state = ThreadState.Running
-          blockedThreads.add(thread)
-        }
-      }
-      for (blockedThread in blockedThreads) {
-        blockedThread.unblock()
-      }
-      throw LivenessException()
-    }
-  }
-
   fun scheduleNextOperationAndCheckDeadlock(shouldBlockCurrentThread: Boolean) {
     try {
       scheduleNextOperation(shouldBlockCurrentThread)
@@ -834,7 +814,7 @@ object GlobalContext {
             currentThread.state == ThreadState.Completed)
     assert(registeredThreads.none { it.value.state == ThreadState.Running })
 
-    if (bugFound &&
+    if (bugFound != null &&
         !currentThread.isExiting &&
         currentThreadId != mainThreadId &&
         !(Thread.currentThread() is HelperThread)) {

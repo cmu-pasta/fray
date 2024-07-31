@@ -10,7 +10,7 @@ import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor
 import org.junit.platform.engine.support.descriptor.ClassSource
 import java.lang.reflect.Method
 
-class ClassTestDescriptor(private val testClass: Class<*>, parent: TestDescriptor) :
+class ClassTestDescriptor(val testClass: Class<*>, parent: TestDescriptor) :
     AbstractTestDescriptor(
         parent.uniqueId.append("class", testClass.name),
         testClass.simpleName,
