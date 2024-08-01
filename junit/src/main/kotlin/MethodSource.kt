@@ -1,7 +1,7 @@
 package cmu.edu.pasta.fray.junit
 
-import org.junit.platform.engine.TestSource
 import java.lang.reflect.Method
+import org.junit.platform.engine.TestSource
 
 class MethodSource(private val className: String, private val fieldName: String) : TestSource {
   companion object {

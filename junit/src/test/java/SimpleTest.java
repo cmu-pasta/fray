@@ -1,16 +1,11 @@
 import cmu.edu.pasta.fray.junit.annotations.Analyze;
 import cmu.edu.pasta.fray.junit.annotations.FrayTest;
+import cmu.pasta.fray.runtime.DeadlockException;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 @FrayTest
 public class SimpleTest {
-
-    @Analyze
-    public void test() {
-        System.out.println("Hello, world!");
-    }
-
     private static class FrayExample extends Thread {
         static Object o = new Object();
         static AtomicInteger a = new AtomicInteger();
@@ -32,7 +27,7 @@ public class SimpleTest {
         }
     }
 
-    @Analyze
+    @Analyze(expected = DeadlockException.class)
     public void testFrayExample() throws Exception {
         FrayExample.a = new AtomicInteger();
         FrayExample.b = 0;

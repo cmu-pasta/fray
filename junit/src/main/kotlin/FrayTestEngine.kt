@@ -1,7 +1,6 @@
 package cmu.edu.pasta.fray.junit
 
 import cmu.edu.pasta.fray.junit.annotations.FrayTest
-import java.net.URI
 import java.util.function.Predicate
 import org.junit.platform.commons.support.AnnotationSupport.isAnnotated
 import org.junit.platform.commons.support.ReflectionSupport.findAllClassesInClasspathRoot
@@ -39,9 +38,11 @@ class FrayTestEngine : TestEngine {
     }
     request.getSelectorsByType(PackageSelector::class.java).forEach { selector ->
       findAllClassesInPackage(
-          selector.packageName,
-          IS_FRAY_TEST_CONTAINER,
-      ) { true }
+              selector.packageName,
+              IS_FRAY_TEST_CONTAINER,
+          ) {
+            true
+          }
           .stream()
           .map { clazz ->
             ClassTestDescriptor(

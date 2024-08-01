@@ -40,3 +40,4 @@ bin/
 *.log
 scratch
 ./bin/fray
+fray-report/

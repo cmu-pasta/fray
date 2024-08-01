@@ -1,14 +1,12 @@
 package cmu.edu.pasta.fray.junit
 
 import cmu.edu.pasta.fray.junit.annotations.Analyze
-import java.lang.reflect.Field
-import java.util.function.Predicate
+import java.lang.reflect.Method
 import org.junit.platform.commons.util.AnnotationUtils
 import org.junit.platform.commons.util.ReflectionUtils
 import org.junit.platform.engine.TestDescriptor
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor
 import org.junit.platform.engine.support.descriptor.ClassSource
-import java.lang.reflect.Method
 
 class ClassTestDescriptor(val testClass: Class<*>, parent: TestDescriptor) :
     AbstractTestDescriptor(
@@ -22,12 +20,12 @@ class ClassTestDescriptor(val testClass: Class<*>, parent: TestDescriptor) :
   }
 
   private fun addAllChildren() {
-    val isTestMethod= { field: Method ->
-          AnnotationUtils.isAnnotated(
-              field,
-              Analyze::class.java,
-          )
-        }
+    val isTestMethod = { field: Method ->
+      AnnotationUtils.isAnnotated(
+          field,
+          Analyze::class.java,
+      )
+    }
 
     ReflectionUtils.findMethods(
             testClass, isTestMethod, ReflectionUtils.HierarchyTraversalMode.TOP_DOWN)
