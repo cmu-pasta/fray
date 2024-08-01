@@ -6,5 +6,7 @@ import kotlin.system.exitProcess
 fun main(args: Array<String>) {
   val config = MainCommand().apply { main(args) }.toConfiguration()
   val runner = TestRunner(config)
-  exitProcess(runner.run())
+  if (runner.run() != null) {
+    exitProcess(-1)
+  }
 }

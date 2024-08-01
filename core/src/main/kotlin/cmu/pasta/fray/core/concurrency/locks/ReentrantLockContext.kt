@@ -59,8 +59,8 @@ class ReentrantLockContext : LockContext {
   }
 
   override fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean): Boolean {
-    assert(lockHolder == tid || GlobalContext.bugFound)
-    if (lockHolder != tid && GlobalContext.bugFound) {
+    assert(lockHolder == tid || GlobalContext.bugFound != null)
+    if (lockHolder != tid && GlobalContext.bugFound != null) {
       return false
     }
     if (!unlockBecauseOfWait) {
