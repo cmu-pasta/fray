@@ -1,5 +1,9 @@
 package cmu.pasta.fray.it.core;
 
+import cmu.edu.pasta.fray.junit.annotations.Analyze;
+import cmu.edu.pasta.fray.junit.annotations.FrayTest;
+import cmu.pasta.fray.core.command.Fifo;
+import cmu.pasta.fray.core.scheduler.FifoScheduler;
 import cmu.pasta.fray.it.IntegrationTestRunner;
 import cmu.pasta.fray.it.Utils;
 import org.junit.jupiter.api.Test;
@@ -9,6 +13,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@FrayTest
 public class ReentrantReadWriteLockTest extends IntegrationTestRunner {
 
     private static final ReentrantReadWriteLock lock
@@ -16,50 +21,11 @@ public class ReentrantReadWriteLockTest extends IntegrationTestRunner {
 
     private static String message = "";
 
-    @Test
-    public void testReentrantLock() {
-        String s = runTest(() -> {
-            try {
-                testReentrantLockImpl();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            return null;
-        });
-        assertEquals("[3]: ReadThread Message is ab\n", s);
-    }
-
-    @Test
-    public void testInterrupt() {
-        String s = runTest(() -> {
-            try {
-                testInterruptImpl();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            return null;
-        });
-        assertEquals("[1]: Thread 1 trying to acquire write lock\n" +
-                "[1]: Thread 1 interrupted\n", s);
-    }
-
-    @Test
-    public void testInterruptAfterAcquire() {
-        String s = runTest(() -> {
-            try {
-                testInterruptAfterAcquireImpl();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            return null;
-        });
-        assertEquals("[1]: Thread 1 acquired write lock\n" +
-                "[0]: Thread 1 is interrupted\n" +
-                "[1]: Thread 1 interrupted\n", s);
-    }
-
-    public static void testReentrantLockImpl()
-            throws InterruptedException {
+    @Analyze(
+            expectedLog = "[3]: ReadThread Message is ab\n",
+            scheduler = FifoScheduler.class
+    )
+    public void testReentrantLock() throws InterruptedException {
         // Creating threads
         message = "";
         Thread t2 = new Thread(new ReentrantReadWriteLockTest.WriteA());
@@ -75,7 +41,12 @@ public class ReentrantReadWriteLockTest extends IntegrationTestRunner {
         t3.join();
     }
 
-    public static void testInterruptImpl() throws InterruptedException {
+    @Analyze(
+            expectedLog = "[1]: Thread 1 trying to acquire write lock\n" +
+                    "[1]: Thread 1 interrupted\n",
+            scheduler = FifoScheduler.class
+    )
+    public void testInterrupt() throws InterruptedException {
         ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         Thread t1 = new Thread(() -> {
             try {
@@ -92,7 +63,13 @@ public class ReentrantReadWriteLockTest extends IntegrationTestRunner {
         lock.writeLock().unlock();
     }
 
-    public static void testInterruptAfterAcquireImpl() throws InterruptedException {
+    @Analyze(
+            expectedLog = "[1]: Thread 1 acquired write lock\n" +
+                    "[0]: Thread 1 is interrupted\n" +
+                    "[1]: Thread 1 interrupted\n",
+            scheduler = FifoScheduler.class
+    )
+    public void testInterruptAfterAcquire() throws InterruptedException {
         ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         Semaphore semaphore = new Semaphore(0);
         Thread t1 = new Thread(() -> {

@@ -1,8 +1,8 @@
 package cmu.edu.pasta.fray.junit
 
 import cmu.edu.pasta.fray.junit.annotations.Analyze
+import cmu.pasta.fray.core.scheduler.Scheduler
 import java.lang.reflect.Method
-import kotlin.reflect.KClass
 import org.junit.platform.commons.support.AnnotationSupport.findAnnotation
 import org.junit.platform.engine.TestDescriptor
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor
@@ -17,9 +17,10 @@ class MethodTestDescriptor(val testMethod: Method, val parent: ClassTestDescript
     setParent(parent)
   }
 
-  fun getExpected(): KClass<*> {
-    val analyzeConfig = findAnnotation(testMethod, Analyze::class.java).get()
-    return analyzeConfig.expected
+  val analyzeConfig = findAnnotation(testMethod, Analyze::class.java).get()
+
+  fun getScheduler(): Scheduler {
+    return analyzeConfig.scheduler.java.getDeclaredConstructor().newInstance()
   }
 
   override fun getType(): TestDescriptor.Type {

@@ -37,10 +37,15 @@ tasks.jar {
   manifest {
     attributes(mapOf("Premain-Class" to "cmu.pasta.fray.instrumentation.PreMainKt"))
   }
+  archiveClassifier.set("original")
 }
 
 tasks.named<ShadowJar>("shadowJar") {
+  archiveClassifier.set("shadow")
   relocate("org.objectweb.asm", "cmu.pasta.fray.instrumentation.asm")
+  dependencies {
+    exclude(project(":runtime"))
+  }
   manifest {
     attributes(mapOf("Premain-Class" to "cmu.pasta.fray.instrumentation.PreMainKt"))
   }

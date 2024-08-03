@@ -1,30 +1,26 @@
 package cmu.pasta.fray.it.core;
 
+import cmu.edu.pasta.fray.junit.annotations.Analyze;
+import cmu.edu.pasta.fray.junit.annotations.FrayTest;
 import cmu.pasta.fray.core.scheduler.ControlledRandom;
 import cmu.pasta.fray.core.scheduler.PCTScheduler;
 import cmu.pasta.fray.it.IntegrationTestRunner;
+import cmu.pasta.fray.runtime.DeadlockException;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+@FrayTest
 public class LivenessTest extends IntegrationTestRunner {
     static int i = 0;
 
-    @Test
-    public void testLiveness() {
-        String result = runTest(() -> {
-            try {
-                testLivenessImpl();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            return null;
-        }, new PCTScheduler(new ControlledRandom(), 3), 10000);
-    }
-
-
-    public static void testLivenessImpl() throws InterruptedException {
+    @Analyze(
+            scheduler = PCTScheduler.class,
+            iteration = 10000,
+            expectedException = DeadlockException.class
+    )
+    public void testLivenessImpl() throws InterruptedException {
         Thread t = new Thread(() -> {
             ReentrantLock l = new ReentrantLock();
             Condition c = l.newCondition();

@@ -27,7 +27,7 @@ public class SimpleTest {
         }
     }
 
-    @Analyze(expected = DeadlockException.class)
+    @Analyze(expectedException = DeadlockException.class)
     public void testFrayExample() throws Exception {
         FrayExample.a = new AtomicInteger();
         FrayExample.b = 0;

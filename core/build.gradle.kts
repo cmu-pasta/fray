@@ -5,7 +5,6 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization") version "1.9.22"
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("maven-publish")
 }
 
 repositories {
@@ -29,7 +28,6 @@ tasks.named<ShadowJar>("shadowJar") {
         attributes(mapOf("Main-Class" to "cmu.pasta.fray.core.MainKt"))
     }
 }
-
 
 tasks.named("build") {
   dependsOn("shadowJar")

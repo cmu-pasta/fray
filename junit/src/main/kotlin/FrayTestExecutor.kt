@@ -1,11 +1,11 @@
 package cmu.edu.pasta.fray.junit
 
+import cmu.pasta.fray.core.GlobalContext.loggers
 import cmu.pasta.fray.core.TestRunner
 import cmu.pasta.fray.core.command.Configuration
 import cmu.pasta.fray.core.command.ExecutionInfo
 import cmu.pasta.fray.core.command.LambdaExecutor
 import cmu.pasta.fray.core.logger.JsonLogger
-import cmu.pasta.fray.core.scheduler.POSScheduler
 import java.util.*
 import org.junit.platform.engine.ExecutionRequest
 import org.junit.platform.engine.TestDescriptor
@@ -32,35 +32,54 @@ class FrayTestExecutor {
     val config =
         Configuration(
             ExecutionInfo(
-                LambdaExecutor { testMethod.invoke(testInstance) }, false, true, false, -1),
+                LambdaExecutor { testMethod.invoke(testInstance) },
+                false,
+                true,
+                false,
+                -1,
+            ),
             "fray-report",
-            10000,
-            POSScheduler(Random()),
+            descriptor.analyzeConfig.iteration,
+            descriptor.getScheduler(),
             true,
             JsonLogger("fray-report", false),
             false,
             true,
-            false)
+            false,
+        )
+    val logger = EventLogger()
+    loggers.add(logger)
     val runner = TestRunner(config)
     val result = runner.run()
+    verifyTestResult(request, descriptor, result, logger)
+  }
+
+  fun verifyTestResult(
+      request: ExecutionRequest,
+      descriptor: MethodTestDescriptor,
+      result: Throwable?,
+      logger: EventLogger
+  ) {
+    var testResult = TestExecutionResult.successful()
     if (result != null) {
-      if (descriptor.getExpected().isInstance(result)) {
-        request.engineExecutionListener.executionFinished(
-            descriptor, TestExecutionResult.successful())
-      } else {
-        request.engineExecutionListener.executionFinished(
-            descriptor, TestExecutionResult.failed(result))
+      if (descriptor.analyzeConfig.expectedException.java != result.javaClass) {
+        testResult = TestExecutionResult.failed(result)
       }
     } else {
-      if (descriptor.getExpected() == Any::class) {
-        request.engineExecutionListener.executionFinished(
-            descriptor, TestExecutionResult.successful())
-      } else {
-        request.engineExecutionListener.executionFinished(
-            descriptor,
-            TestExecutionResult.failed(RuntimeException("Expected exception not thrown")))
+      if (descriptor.analyzeConfig.expectedException != Any::class) {
+        testResult =
+            TestExecutionResult.failed(
+                RuntimeException(
+                    "Expected exception not thrown: ${descriptor.analyzeConfig.expectedException.simpleName}"))
       }
     }
+    if (descriptor.analyzeConfig.expectedLog != "" &&
+        !logger.sb.toString().contains(descriptor.analyzeConfig.expectedLog)) {
+      testResult =
+          TestExecutionResult.failed(
+              RuntimeException("Expected log not found: ${descriptor.analyzeConfig.expectedLog}"))
+    }
+    request.engineExecutionListener.executionFinished(descriptor, testResult)
   }
 
   fun executeContainer(request: ExecutionRequest, container: TestDescriptor) {

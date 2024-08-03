@@ -4,6 +4,7 @@ import cmu.pasta.fray.core.ThreadContext
 import cmu.pasta.fray.core.math.Utils
 
 class PCTScheduler(val rand: ControlledRandom, val numSwitchPoints: Int) : Scheduler {
+  constructor() : this(ControlledRandom(), 3) {}
 
   var currentStep = 0
   var nextSwitchPoint = 0

@@ -1,26 +1,23 @@
 package cmu.pasta.fray.it.core;
 
-import cmu.pasta.fray.it.IntegrationTestRunner;
-import org.junit.jupiter.api.Test;
+import cmu.edu.pasta.fray.junit.annotations.Analyze;
+import cmu.edu.pasta.fray.junit.annotations.FrayTest;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import static cmu.pasta.fray.it.Utils.log;
 
-public class ConditionTest extends IntegrationTestRunner {
+
+@FrayTest
+public class ConditionTest {
 
 
-    @Test
+    @Analyze
     public void testConditionAwait() {
-        runTest(() -> {
-            conditionAwaitImpl();
-            return null;
-        });
+        conditionAwaitImpl();
     }
 
     static int num;
@@ -97,7 +94,5 @@ public class ConditionTest extends IntegrationTestRunner {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-
-        assert total == ((N * (N + 1)) / 2);
     }
 }

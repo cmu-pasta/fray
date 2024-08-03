@@ -1,50 +1,21 @@
 package cmu.pasta.fray.it.core;
 
 
+import cmu.edu.pasta.fray.junit.annotations.Analyze;
+import cmu.edu.pasta.fray.junit.annotations.FrayTest;
+import cmu.pasta.fray.core.scheduler.FifoScheduler;
 import cmu.pasta.fray.it.IntegrationTestRunner;
 import cmu.pasta.fray.it.Utils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@FrayTest
 public class ThreadInterruptTest extends IntegrationTestRunner {
-    @Test
-    public void testInterruptBeforeWait() {
-        assertEquals("[1]: Interrupted\n", runTest(() -> {
-            try {
-                testInterruptBeforeWaitImpl();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            return null;
-        }));
-    }
-
-    @Test
-    public void testInterruptDuringWait() {
-        assertEquals("[1]: Interrupted\n", runTest(() -> {
-            try {
-                testInterruptDuringWaitImpl();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            return null;
-
-        }));
-    }
-
-    @Test
-    public void testInterruptCleared() {
-        runTest(() -> {
-            try {
-                testInterruptClearedImpl();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            return null;
-        });
-    }
-    public static void testInterruptClearedImpl() throws InterruptedException {
+    @Analyze(
+            scheduler = FifoScheduler.class
+    )
+    public void testInterruptCleared() throws InterruptedException {
         final Object lock1 = new Object();
         final Object lock2 = new Object();
         final boolean[] t1Waiting = {false};
@@ -93,7 +64,12 @@ public class ThreadInterruptTest extends IntegrationTestRunner {
         t1.join();
         t2.join();
     }
-    public static void testInterruptBeforeWaitImpl() throws InterruptedException {
+
+    @Analyze(
+            expectedLog = "[1]: Interrupted\n",
+            scheduler = FifoScheduler.class
+    )
+    public static void testInterruptBeforeWait() throws InterruptedException {
         final Object lock1 = new Object();
         final Object lock2 = new Object();
         Thread t1 = new Thread() {
@@ -129,7 +105,11 @@ public class ThreadInterruptTest extends IntegrationTestRunner {
         t2.join();
     }
 
-    public static void testInterruptDuringWaitImpl() throws InterruptedException {
+    @Analyze(
+            expectedLog = "[1]: Interrupted\n",
+            scheduler = FifoScheduler.class
+    )
+    public void testInterruptDuringWait() throws InterruptedException {
         final Object lock1 = new Object();
         final boolean[] t1Waiting = {false};
         Thread t1 = new Thread() {

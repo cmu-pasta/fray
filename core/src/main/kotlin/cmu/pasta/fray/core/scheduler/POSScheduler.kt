@@ -6,6 +6,8 @@ import cmu.pasta.fray.core.concurrency.operations.RacingOperation
 import java.util.Random
 
 class POSScheduler(val rand: Random) : Scheduler {
+  constructor() : this(Random()) {}
+
   val threadPriority = mutableMapOf<ThreadContext, Double>()
 
   override fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext {

@@ -1,4 +1,5 @@
 import org.gradle.internal.impldep.org.apache.commons.io.output.ByteArrayOutputStream
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 plugins {
     kotlin("jvm")
@@ -10,9 +11,9 @@ repositories {
 }
 
 dependencies {
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-    implementation(project(":runtime"))
-    implementation(project(":instrumentation"))
+  testImplementation("org.jetbrains.kotlin:kotlin-test")
+  implementation(project(":runtime"))
+  implementation(project(":instrumentation"))
 }
 
 tasks.test {
@@ -35,7 +36,7 @@ tasks.jar {
 
 tasks.build {
   dependsOn("jar")
-  val path = "${layout.buildDirectory.get().asFile}/libs"
+  val path = "${layout.buildDirectory.get().asFile}/dependency"
   val jdkPath = "${layout.buildDirectory.get().asFile}/java-inst"
   outputs.dirs(jdkPath)
   doLast {
@@ -45,14 +46,14 @@ tasks.build {
         if (File(jdkPath).exists()) {
           delete(file(jdkPath))
         }
-        var runtimeJar = "$path/${project.name}-$version.jar"
+        var runtimeJar = "$path/../libs/${project.name}-$version.jar"
         val jarDir = file(path)
 
         val jars = jarDir.listFiles { file -> file.extension == "jar" }
             ?.joinToString(separator = ":") { it.absolutePath }
           ?: "No JAR files found."
-        val command = listOf("jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars",
-            "-J--add-modules=cmu.pasta.fray.jdk", "-J--class-path=$jars",
+        val command = listOf("jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars:$runtimeJar",
+            "-J--add-modules=cmu.pasta.fray.jdk", "-J--class-path=$jars:$runtimeJar",
             "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH",  "--fray-instrumentation")
         commandLine(command)
       }
@@ -62,5 +63,5 @@ tasks.build {
 
 tasks.register<Copy>("copyDependencies") {
     from(configurations.runtimeClasspath)
-    into("${layout.buildDirectory.get().asFile}/libs")
+    into("${layout.buildDirectory.get().asFile}/dependency")
 }
