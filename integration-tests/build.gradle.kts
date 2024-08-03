@@ -20,18 +20,6 @@ dependencies {
   compileOnly(project(":core"))
 }
 
-//tasks.test {
-//  useJUnitPlatform()
-//  val agentPath: String by rootProject.extra
-//  val jdk = project(":jdk")
-//  val instrumentation = project(":instrumentation").tasks.named("shadowJar").get().outputs.files.first().absolutePath
-//  executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
-//  jvmArgs("-agentpath:$agentPath")
-//  jvmArgs("-javaagent:$instrumentation")
-//  dependsOn(":jdk:build")
-//  dependsOn(":jvmti:build")
-//}
-
 tasks.register<Copy>("copyDependencies") {
   from(configurations.testRuntimeClasspath)
   into("${layout.buildDirectory.get().asFile}/dependency")
@@ -41,4 +29,8 @@ tasks.register<Jar>("testJar") {
   from(sourceSets.test.get().output)
 }
 
+
+tasks.test {
+  dependsOn("frayTest")
+}
 

@@ -18,5 +18,14 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           cache: 'gradle'
+      - name: Clone fray-gradle-plugin
+        run: git clone https://github.com/cmu-pasta/fray-gradle-plugin.git
+      - name: Publish fray-gradle-plugin to Maven Local
+        run: |
+          cd fray-gradle-plugin
+          ./gradlew publishToMavenLocal
+          cd ..
+      - name: Build fray
+        run: ./gradlew publishToMavenLocal
       - name: Build fray and run tests
         run: ./gradlew build

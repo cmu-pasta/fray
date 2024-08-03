@@ -38,7 +38,7 @@ configure(allprojects - project(":jvmti")) {
   plugins.apply("com.ncorti.ktfmt.gradle")
 }
 
-configure(allprojects - project("jvmti") - project(":gradle-plugin") - rootProject) {
+configure(allprojects - project("jvmti") - rootProject) {
   plugins.apply("maven-publish")
   afterEvaluate {
     publishing {
