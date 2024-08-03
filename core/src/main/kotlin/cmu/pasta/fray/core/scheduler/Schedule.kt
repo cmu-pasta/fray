@@ -17,7 +17,7 @@ data class Schedule(val choices: MutableList<Choice>, val fullSchedule: Boolean)
           skipFirstLine = true
           continue
         }
-        if (line.strip().isEmpty()) continue
+        if (line.trim().isEmpty()) continue
         val parts = line.split(",")
         val enabledIds = parts.subList(3, parts.size - 1).map { it.toInt() }
         choices.add(
