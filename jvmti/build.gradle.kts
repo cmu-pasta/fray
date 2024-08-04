@@ -44,6 +44,7 @@ tasks.register<Copy>("collectNativeLibs") {
 
 
 tasks.register<Jar>("jarWithNativeLibs") {
+  dependsOn("build")
   archiveFileName.set("fray-jvmti.jar")
   destinationDirectory.set(file("${layout.buildDirectory.get().asFile}/libs"))
   archiveClassifier.set("$os-$arch")
