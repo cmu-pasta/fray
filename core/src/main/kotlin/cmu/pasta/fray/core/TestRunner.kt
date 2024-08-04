@@ -1,5 +1,7 @@
 package cmu.pasta.fray.core
 
+import cmu.pasta.fray.core.GlobalContext.bugFound
+import cmu.pasta.fray.core.GlobalContext.loggers
 import cmu.pasta.fray.core.command.Configuration
 import cmu.pasta.fray.core.logger.ConsoleLogger
 import cmu.pasta.fray.core.scheduler.ReplayScheduler
@@ -23,7 +25,7 @@ class TestRunner(val config: Configuration) {
   fun setup() {
     if (config.scheduler !is ReplayScheduler) {
       prepareReportPath(config.report)
-      GlobalContext.registerLogger(config.logger)
+      config.loggers.forEach(GlobalContext::registerLogger)
     }
     GlobalContext.registerLogger(ConsoleLogger())
     GlobalContext.scheduler = config.scheduler
@@ -51,7 +53,7 @@ class TestRunner(val config: Configuration) {
           Runtime.onReportError(e)
           Runtime.onMainExit()
         }
-        if (GlobalContext.bugFound != null) {
+        if (bugFound != null) {
           println(
               "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms")
           if (!config.exploreMode) {

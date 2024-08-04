@@ -190,7 +190,7 @@ class MainCommand : CliktCommand() {
         iter,
         scheduler!!.getScheduler(),
         fullSchedule,
-        logger!!.getLogger(report, fullSchedule),
+        listOf(logger!!.getLogger(report, fullSchedule)),
         exploreMode,
         noExitWhenBugFound,
         noFray)
@@ -203,7 +203,7 @@ data class Configuration(
     val iter: Int,
     val scheduler: Scheduler,
     val fullSchedule: Boolean,
-    val logger: LoggerBase,
+    val loggers: List<LoggerBase>,
     val exploreMode: Boolean,
     val noExitWhenBugFound: Boolean,
     val noFray: Boolean,

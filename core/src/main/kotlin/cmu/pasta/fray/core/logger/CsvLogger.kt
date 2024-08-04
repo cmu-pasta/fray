@@ -21,7 +21,7 @@ class CsvLogger(private val baseFolder: String, private val fullSchedule: Boolea
     }
   }
 
-  override fun executionDone(bugFound: Boolean) {
+  override fun executionDone(shouldSave: Boolean) {
     index += 1
   }
 

@@ -10,7 +10,7 @@ import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor
 class MethodTestDescriptor(val testMethod: Method, val parent: ClassTestDescriptor) :
     AbstractTestDescriptor(
         parent.uniqueId.append("method", testMethod.name),
-        "Fray",
+        testMethod.name,
         MethodSource.from(testMethod),
     ) {
   init {

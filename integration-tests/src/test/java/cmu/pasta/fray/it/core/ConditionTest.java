@@ -15,16 +15,12 @@ import static cmu.pasta.fray.it.Utils.log;
 public class ConditionTest {
 
 
-    @Analyze
-    public void testConditionAwait() {
-        conditionAwaitImpl();
-    }
-
     static int num;
     static long total;
     static boolean flag;
 
-    public static void conditionAwaitImpl() {
+    @Analyze
+    public void conditionAwait() {
 
         Lock m = new ReentrantLock();
         int N = 3;

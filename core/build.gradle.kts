@@ -38,13 +38,13 @@ tasks.withType<JavaExec> {
   dependsOn(":jvmti:build")
   dependsOn(":jdk:build")
   val instrumentationTask = evaluationDependsOn(":instrumentation").tasks.named("shadowJar").get()
-  val agentPath: String by rootProject.extra
   val jdk = project(":jdk")
+  val jvmti = project(":jvmti")
   val instrumentation = instrumentationTask.outputs.files.first().absolutePath
   classpath = tasks.named("shadowJar").get().outputs.files
   executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
   mainClass = "cmu.pasta.fray.core.MainKt"
-  jvmArgs("-agentpath:$agentPath")
+  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
   jvmArgs("-javaagent:$instrumentation")
   jvmArgs("-ea")
   jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
@@ -84,10 +84,10 @@ tasks.create("genRunner") {
     val instrumentationTask = evaluationDependsOn(":instrumentation").tasks.named("shadowJar").get()
     val instrumentation = instrumentationTask.outputs.files.first().absolutePath
     val core = tasks.named("shadowJar").get().outputs.files.first().absolutePath
-    val agentPath: String by rootProject.extra
+    val jvmti = project(":jvmti")
     val binDir = "${rootProject.projectDir.absolutePath}/bin"
     var runner = file("${binDir}/fray.template").readText()
-    runner = runner.replace("#JVM_TI_PATH#", agentPath)
+    runner = runner.replace("#JVM_TI_PATH#", "${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
     runner = runner.replace("#AGENT_PATH#", instrumentation)
     runner = runner.replace("#CORE_PATH#", core)
     val file = File("${binDir}/fray")

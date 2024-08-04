@@ -165,8 +165,8 @@ object GlobalContext {
   }
 
   fun done() {
-    loggers.forEach { it.executionDone(bugFound != null) }
-
+    loggers.forEach { it.executionDone(bugFound != null && config!!.exploreMode) }
+    loggers.clear()
     assert(lockManager.waitingThreads.isEmpty())
     assert(syncManager.synchronizationPoints.isEmpty())
     lockManager.done()

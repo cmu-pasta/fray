@@ -8,7 +8,7 @@ interface LoggerBase {
 
   fun newOperationScheduled(op: Operation, choice: Choice)
 
-  fun executionDone(bugFound: Boolean)
+  fun executionDone(shouldSave: Boolean)
 
   //  fun logError(error: String)
 
