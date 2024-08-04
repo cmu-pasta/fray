@@ -22,10 +22,6 @@ tasks.register("clean") {
   dependsOn("cmakeClean")
 }
 
-tasks.register("build") {
-  finalizedBy("collectNativeLibs")
-}
-
 tasks.register<Copy>("collectNativeLibs") {
   dependsOn("cmakeBuild")
   from(
@@ -44,7 +40,7 @@ tasks.register<Copy>("collectNativeLibs") {
 
 
 tasks.register<Jar>("jarWithNativeLibs") {
-  dependsOn("build")
+  dependsOn("collectNativeLibs")
   archiveFileName.set("fray-jvmti.jar")
   destinationDirectory.set(file("${layout.buildDirectory.get().asFile}/libs"))
   archiveClassifier.set("$os-$arch")
