@@ -2,17 +2,14 @@ package cmu.pasta.fray.it.core;
 
 import cmu.edu.pasta.fray.junit.annotations.Analyze;
 import cmu.edu.pasta.fray.junit.annotations.FrayTest;
-import cmu.pasta.fray.core.scheduler.ControlledRandom;
 import cmu.pasta.fray.core.scheduler.PCTScheduler;
-import cmu.pasta.fray.it.IntegrationTestRunner;
 import cmu.pasta.fray.runtime.DeadlockException;
-import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 @FrayTest
-public class LivenessTest extends IntegrationTestRunner {
+public class LivenessTest {
     static int i = 0;
 
     @Analyze(

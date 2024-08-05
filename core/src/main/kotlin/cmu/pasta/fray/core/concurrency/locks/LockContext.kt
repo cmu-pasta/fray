@@ -1,21 +1,23 @@
 package cmu.pasta.fray.core.concurrency.locks
 
-interface LockContext : Interruptible {
-  val wakingThreads: MutableSet<Long>
+import cmu.pasta.fray.core.ThreadContext
 
-  fun addWakingThread(lockObject: Any, t: Thread)
+interface LockContext : Interruptible {
+  val wakingThreads: MutableMap<Long, ThreadContext>
+
+  fun addWakingThread(lockObject: Any, t: ThreadContext)
 
   fun canLock(tid: Long): Boolean
 
   fun lock(
       lock: Any,
-      tid: Long,
+      lockThread: ThreadContext,
       shouldBlock: Boolean,
       lockBecauseOfWait: Boolean,
       canInterrupt: Boolean
   ): Boolean
 
-  fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean): Boolean
+  fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean, earlyExit: Boolean): Boolean
 
   fun hasQueuedThreads(): Boolean
 

@@ -1,5 +1,6 @@
 package cmu.pasta.fray.core.concurrency.locks
 
+import cmu.pasta.fray.core.ThreadContext
 import java.util.concurrent.CountDownLatch
 
 class CountDownLatchManager {
@@ -11,8 +12,8 @@ class CountDownLatchManager {
     }
   }
 
-  fun await(latch: CountDownLatch, canInterrupt: Boolean): Boolean {
-    return latchStore.getLockContext(latch).await(canInterrupt)
+  fun await(latch: CountDownLatch, canInterrupt: Boolean, thread: ThreadContext): Boolean {
+    return latchStore.getLockContext(latch).await(canInterrupt, thread)
   }
 
   /*

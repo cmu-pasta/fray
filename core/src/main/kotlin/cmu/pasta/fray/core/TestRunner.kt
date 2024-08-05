@@ -1,7 +1,5 @@
 package cmu.pasta.fray.core
 
-import cmu.pasta.fray.core.GlobalContext.bugFound
-import cmu.pasta.fray.core.GlobalContext.loggers
 import cmu.pasta.fray.core.command.Configuration
 import cmu.pasta.fray.core.logger.ConsoleLogger
 import cmu.pasta.fray.core.scheduler.ReplayScheduler
@@ -22,30 +20,30 @@ class TestRunner(val config: Configuration) {
     println("Report is available at: ${path.toAbsolutePath()}")
   }
 
-  fun setup() {
+  fun createContext(): GlobalContext {
+    val context = GlobalContext(config)
     if (config.scheduler !is ReplayScheduler) {
       prepareReportPath(config.report)
-      config.loggers.forEach(GlobalContext::registerLogger)
+      config.loggers.forEach(context::registerLogger)
     }
-    GlobalContext.registerLogger(ConsoleLogger())
-    GlobalContext.scheduler = config.scheduler
-    GlobalContext.config = config
-    GlobalContext.bootstrap()
+    context.registerLogger(ConsoleLogger())
+    context.bootstrap()
+    return context
   }
 
   fun run(): Throwable? {
     config.executionInfo.executor.beforeExecution()
+    val context = createContext()
     if (config.noFray) {
       config.executionInfo.executor.execute()
     } else {
-      setup()
       val timeSource = TimeSource.Monotonic
       val start = timeSource.markNow()
       var i = 0
       while (i != config.iter) {
         println("Starting iteration $i")
         try {
-          Runtime.DELEGATE = RuntimeDelegate()
+          Runtime.DELEGATE = RuntimeDelegate(context)
           Runtime.start()
           config.executionInfo.executor.execute()
           Runtime.onMainExit()
@@ -53,7 +51,7 @@ class TestRunner(val config: Configuration) {
           Runtime.onReportError(e)
           Runtime.onMainExit()
         }
-        if (bugFound != null) {
+        if (context.bugFound != null) {
           println(
               "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms")
           if (!config.exploreMode) {
@@ -62,9 +60,9 @@ class TestRunner(val config: Configuration) {
         }
         i++
       }
-      GlobalContext.shutDown()
+      context.shutDown()
     }
     config.executionInfo.executor.afterExecution()
-    return GlobalContext.bugFound
+    return context.bugFound
   }
 }

@@ -1,6 +1,6 @@
 package cmu.pasta.fray.core.concurrency.locks
 
-import cmu.pasta.fray.core.GlobalContext
+import cmu.pasta.fray.core.ThreadContext
 import cmu.pasta.fray.core.ThreadState
 import cmu.pasta.fray.core.concurrency.operations.ThreadResumeOperation
 
@@ -8,11 +8,11 @@ class ReentrantLockContext : LockContext {
   private var lockHolder: Long? = null
   private val lockTimes = mutableMapOf<Long, Int>()
   // Mapping from thread id to whether the thread is interruptible.
-  private val lockWaiters = mutableMapOf<Long, Boolean>()
-  override val wakingThreads: MutableSet<Long> = mutableSetOf()
+  private val lockWaiters = mutableMapOf<Long, LockWaiter>()
+  override val wakingThreads = mutableMapOf<Long, ThreadContext>()
 
-  override fun addWakingThread(lockObject: Any, t: Thread) {
-    wakingThreads.add(t.id)
+  override fun addWakingThread(lockObject: Any, t: ThreadContext) {
+    wakingThreads[t.thread.id] = t
   }
 
   override fun canLock(tid: Long) = lockHolder == null || lockHolder == tid
@@ -30,11 +30,12 @@ class ReentrantLockContext : LockContext {
 
   override fun lock(
       lock: Any,
-      tid: Long,
+      lockThread: ThreadContext,
       shouldBlock: Boolean,
       lockBecauseOfWait: Boolean,
       canInterrupt: Boolean,
   ): Boolean {
+    val tid = lockThread.thread.id
     if (lockHolder == null || lockHolder == tid) {
       lockHolder = tid
       if (!lockBecauseOfWait) {
@@ -43,24 +44,29 @@ class ReentrantLockContext : LockContext {
       wakingThreads.remove(tid)
 
       // TODO(aoli): I don't like the design that we need to access GlobalContext here.
-      for (thread in wakingThreads) {
-        GlobalContext.registeredThreads[thread]!!.state = ThreadState.Paused
+      for (thread in wakingThreads.values) {
+        thread.state = ThreadState.Paused
       }
       return true
     } else {
       if (canInterrupt) {
-        GlobalContext.registeredThreads[tid]?.checkInterrupt()
+        lockThread.checkInterrupt()
       }
       if (shouldBlock) {
-        lockWaiters[tid] = canInterrupt
+        lockWaiters[tid] = LockWaiter(canInterrupt, lockThread)
       }
     }
     return false
   }
 
-  override fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean): Boolean {
-    assert(lockHolder == tid || GlobalContext.bugFound != null)
-    if (lockHolder != tid && GlobalContext.bugFound != null) {
+  override fun unlock(
+      lock: Any,
+      tid: Long,
+      unlockBecauseOfWait: Boolean,
+      earlyExit: Boolean
+  ): Boolean {
+    assert(lockHolder == tid || earlyExit)
+    if (lockHolder != tid && earlyExit) {
       return false
     }
     if (!unlockBecauseOfWait) {
@@ -72,17 +78,15 @@ class ReentrantLockContext : LockContext {
         lockTimes.remove(tid)
       }
       lockHolder = null
-      for (thread in wakingThreads) {
-        val context = GlobalContext.registeredThreads[thread]!!
-        if (context.state != ThreadState.Completed) {
-          context.state = ThreadState.Enabled
+      for (thread in wakingThreads.values) {
+        if (thread.state != ThreadState.Completed) {
+          thread.state = ThreadState.Enabled
         }
       }
-      for (thread in lockWaiters.keys) {
-        val context = GlobalContext.registeredThreads[thread]!!
-        if (context.state != ThreadState.Completed) {
-          context.pendingOperation = ThreadResumeOperation()
-          context.state = ThreadState.Enabled
+      for (lockWaiter in lockWaiters.values) {
+        if (lockWaiter.thread.state != ThreadState.Completed) {
+          lockWaiter.thread.pendingOperation = ThreadResumeOperation()
+          lockWaiter.thread.state = ThreadState.Enabled
         }
       }
       lockWaiters.clear()
@@ -92,9 +96,10 @@ class ReentrantLockContext : LockContext {
   }
 
   override fun interrupt(tid: Long) {
-    if (lockWaiters[tid] == true) {
-      GlobalContext.registeredThreads[tid]!!.pendingOperation = ThreadResumeOperation()
-      GlobalContext.registeredThreads[tid]!!.state = ThreadState.Enabled
+    val lockWaiter = lockWaiters[tid] ?: return
+    if (lockWaiter.canInterrupt) {
+      lockWaiter.thread.pendingOperation = ThreadResumeOperation()
+      lockWaiter.thread.state = ThreadState.Enabled
       lockWaiters.remove(tid)
     }
   }

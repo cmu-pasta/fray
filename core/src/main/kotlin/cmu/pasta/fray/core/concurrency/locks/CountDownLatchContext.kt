@@ -1,18 +1,18 @@
 package cmu.pasta.fray.core.concurrency.locks
 
-import cmu.pasta.fray.core.GlobalContext
+import cmu.pasta.fray.core.ThreadContext
 import cmu.pasta.fray.core.ThreadState
 import cmu.pasta.fray.core.concurrency.operations.ThreadResumeOperation
 
 class CountDownLatchContext(var count: Long) : Interruptible {
-  val latchWaiters = mutableMapOf<Long, Boolean>()
+  val latchWaiters = mutableMapOf<Long, LockWaiter>()
 
-  fun await(canInterrupt: Boolean): Boolean {
+  fun await(canInterrupt: Boolean, thread: ThreadContext): Boolean {
     if (count > 0) {
       if (canInterrupt) {
-        GlobalContext.registeredThreads[Thread.currentThread().id]?.checkInterrupt()
+        thread.checkInterrupt()
       }
-      latchWaiters[Thread.currentThread().id] = canInterrupt
+      latchWaiters[Thread.currentThread().id] = LockWaiter(canInterrupt, thread)
       return true
     }
     assert(count == 0L)
@@ -20,9 +20,10 @@ class CountDownLatchContext(var count: Long) : Interruptible {
   }
 
   override fun interrupt(tid: Long) {
-    if (latchWaiters[tid] == true) {
-      GlobalContext.registeredThreads[tid]!!.pendingOperation = ThreadResumeOperation()
-      GlobalContext.registeredThreads[tid]!!.state = ThreadState.Enabled
+    val lockWaiter = latchWaiters[tid] ?: return
+    if (lockWaiter.canInterrupt) {
+      lockWaiter.thread.pendingOperation = ThreadResumeOperation()
+      lockWaiter.thread.state = ThreadState.Enabled
       latchWaiters.remove(tid)
     }
   }
@@ -33,9 +34,9 @@ class CountDownLatchContext(var count: Long) : Interruptible {
     }
     count = 0
     var threads = 0
-    for (tid in latchWaiters.keys) {
-      GlobalContext.registeredThreads[tid]!!.pendingOperation = ThreadResumeOperation()
-      GlobalContext.registeredThreads[tid]!!.state = ThreadState.Enabled
+    for (lockWaiter in latchWaiters.values) {
+      lockWaiter.thread.pendingOperation = ThreadResumeOperation()
+      lockWaiter.thread.state = ThreadState.Enabled
       threads += 1
     }
     return threads
@@ -53,9 +54,9 @@ class CountDownLatchContext(var count: Long) : Interruptible {
     count -= 1
     if (count == 0L) {
       var threads = 0
-      for (tid in latchWaiters.keys) {
-        GlobalContext.registeredThreads[tid]!!.pendingOperation = ThreadResumeOperation()
-        GlobalContext.registeredThreads[tid]!!.state = ThreadState.Enabled
+      for (lockWaiter in latchWaiters.values) {
+        lockWaiter.thread.pendingOperation = ThreadResumeOperation()
+        lockWaiter.thread.state = ThreadState.Enabled
         threads += 1
       }
       return threads

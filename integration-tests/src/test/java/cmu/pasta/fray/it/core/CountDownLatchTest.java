@@ -3,9 +3,7 @@ package cmu.pasta.fray.it.core;
 import cmu.edu.pasta.fray.junit.annotations.Analyze;
 import cmu.edu.pasta.fray.junit.annotations.FrayTest;
 import cmu.pasta.fray.core.scheduler.FifoScheduler;
-import cmu.pasta.fray.it.IntegrationTestRunner;
 import cmu.pasta.fray.it.Utils;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.concurrent.CountDownLatch;

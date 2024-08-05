@@ -1,22 +1,27 @@
 package cmu.pasta.fray.core.concurrency.locks
 
-import cmu.pasta.fray.core.GlobalContext
+import cmu.pasta.fray.core.ThreadContext
 import cmu.pasta.fray.core.ThreadState
 import cmu.pasta.fray.core.concurrency.operations.ThreadResumeOperation
 
 class SemaphoreContext(var totalPermits: Int) : Interruptible {
-  private val lockWaiters = mutableMapOf<Long, Pair<Int, Boolean>>()
+  private val lockWaiters = mutableMapOf<Long, Pair<Int, LockWaiter>>()
 
-  fun acquire(permits: Int, shouldBlock: Boolean, canInterrupt: Boolean): Boolean {
+  fun acquire(
+      permits: Int,
+      shouldBlock: Boolean,
+      canInterrupt: Boolean,
+      thread: ThreadContext
+  ): Boolean {
     if (totalPermits >= permits) {
       totalPermits -= permits
       return true
     } else {
       if (canInterrupt) {
-        GlobalContext.registeredThreads[Thread.currentThread().id]?.checkInterrupt()
+        thread.checkInterrupt()
       }
       if (shouldBlock) {
-        lockWaiters[Thread.currentThread().id] = Pair(permits, canInterrupt)
+        lockWaiters[Thread.currentThread().id] = Pair(permits, LockWaiter(canInterrupt, thread))
       }
     }
     return false
@@ -35,8 +40,8 @@ class SemaphoreContext(var totalPermits: Int) : Interruptible {
       while (it.hasNext()) {
         val (tid, p) = it.next()
         if (totalPermits >= p.first) {
-          GlobalContext.registeredThreads[tid]!!.pendingOperation = ThreadResumeOperation()
-          GlobalContext.registeredThreads[tid]!!.state = ThreadState.Enabled
+          p.second.thread.pendingOperation = ThreadResumeOperation()
+          p.second.thread.state = ThreadState.Enabled
           lockWaiters.remove(tid)
         }
       }
@@ -48,9 +53,10 @@ class SemaphoreContext(var totalPermits: Int) : Interruptible {
   }
 
   override fun interrupt(tid: Long) {
-    if (lockWaiters[tid]?.second == true) {
-      GlobalContext.registeredThreads[tid]!!.pendingOperation = ThreadResumeOperation()
-      GlobalContext.registeredThreads[tid]!!.state = ThreadState.Enabled
+    val lockWaiter = lockWaiters[tid] ?: return
+    if (lockWaiter.second.canInterrupt) {
+      lockWaiter.second.thread.pendingOperation = ThreadResumeOperation()
+      lockWaiter.second.thread.state = ThreadState.Enabled
       lockWaiters.remove(tid)
     }
   }

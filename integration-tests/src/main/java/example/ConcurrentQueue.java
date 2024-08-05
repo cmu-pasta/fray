@@ -14,7 +14,7 @@ class ConcurrentQueue<T> {
     private Integer maxSize;
 
     private void log (String format, Object... args) {
-        GlobalContext.INSTANCE.log(format, args);
+//        GlobalContext.INSTANCE.log(format, args);
     }
 
     public ConcurrentQueue(int size) {

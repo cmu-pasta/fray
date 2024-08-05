@@ -14,7 +14,7 @@ public class ParallelMergeSort {
   static final Object MSLOCK = "MERGESORTLOCK";
 
   private static void log (String format, Object... args) {
-    GlobalContext.INSTANCE.log(format, args);
+//    GlobalContext.INSTANCE.log(format, args);
   }
 
   /**

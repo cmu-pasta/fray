@@ -12,7 +12,7 @@ import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-class RuntimeDelegate : Delegate() {
+class RuntimeDelegate(val context: GlobalContext) : Delegate() {
 
   var entered = ThreadLocal.withInitial { false }
   var skipFunctionEntered = ThreadLocal.withInitial { 0 }
@@ -32,7 +32,7 @@ class RuntimeDelegate : Delegate() {
       return true
     }
     // We do not process threads created outside of application.
-    if (!GlobalContext.registeredThreads.containsKey(Thread.currentThread().id)) {
+    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
       entered.set(false)
       return true
     }
@@ -41,7 +41,7 @@ class RuntimeDelegate : Delegate() {
 
   override fun onMainExit() {
     if (checkEntered()) return
-    GlobalContext.mainExit()
+    context.mainExit()
     entered.set(false)
   }
 
@@ -50,7 +50,7 @@ class RuntimeDelegate : Delegate() {
       onSkipMethod("thread.start")
       return
     }
-    GlobalContext.threadStart(t)
+    context.threadStart(t)
     onSkipMethod("thread.start")
     entered.set(false)
   }
@@ -58,25 +58,25 @@ class RuntimeDelegate : Delegate() {
   override fun onThreadStartDone(t: Thread) {
     onSkipMethodDone("thread.start")
     if (checkEntered()) return
-    GlobalContext.threadStartDone(t)
+    context.threadStartDone(t)
     entered.set(false)
   }
 
   override fun onThreadRun() {
     if (checkEntered()) return
-    GlobalContext.threadRun()
+    context.threadRun()
     entered.set(false)
   }
 
   override fun onThreadEnd() {
     if (checkEntered()) return
-    GlobalContext.threadCompleted(Thread.currentThread())
+    context.threadCompleted(Thread.currentThread())
     entered.set(false)
   }
 
   override fun onThreadGetState(t: Thread, state: Thread.State): Thread.State {
     if (checkEntered()) return state
-    val result = GlobalContext.threadGetState(t, state)
+    val result = context.threadGetState(t, state)
     entered.set(false)
     return result
   }
@@ -84,7 +84,7 @@ class RuntimeDelegate : Delegate() {
   override fun onObjectWait(o: Any) {
     if (checkEntered()) return
     try {
-      GlobalContext.objectWait(o)
+      context.objectWait(o)
     } finally {
       entered.set(false)
     }
@@ -93,7 +93,7 @@ class RuntimeDelegate : Delegate() {
   override fun onObjectWaitDone(o: Any) {
     if (checkEntered()) return
     try {
-      GlobalContext.objectWaitDone(o)
+      context.objectWaitDone(o)
     } finally {
       entered.set(false)
     }
@@ -101,13 +101,13 @@ class RuntimeDelegate : Delegate() {
 
   override fun onObjectNotify(o: Any) {
     if (checkEntered()) return
-    GlobalContext.objectNotify(o)
+    context.objectNotify(o)
     entered.set(false)
   }
 
   override fun onObjectNotifyAll(o: Any) {
     if (checkEntered()) return
-    GlobalContext.objectNotifyAll(o)
+    context.objectNotifyAll(o)
     entered.set(false)
   }
 
@@ -117,7 +117,7 @@ class RuntimeDelegate : Delegate() {
       return
     }
     try {
-      GlobalContext.lockLock(l, true)
+      context.lockLock(l, true)
     } finally {
       entered.set(false)
       onSkipMethod("Lock.lock")
@@ -129,7 +129,7 @@ class RuntimeDelegate : Delegate() {
       entered.set(false)
       return result
     }
-    val result = GlobalContext.lockHasQueuedThreads(l)
+    val result = context.lockHasQueuedThreads(l)
     entered.set(false)
     return result
   }
@@ -139,7 +139,7 @@ class RuntimeDelegate : Delegate() {
       entered.set(false)
       return result
     }
-    val result = GlobalContext.lockHasQueuedThread(l, t)
+    val result = context.lockHasQueuedThread(l, t)
     entered.set(false)
     return result
   }
@@ -150,7 +150,7 @@ class RuntimeDelegate : Delegate() {
       return
     }
     try {
-      GlobalContext.lockTryLock(l, false)
+      context.lockTryLock(l, false)
     } finally {
       entered.set(false)
       onSkipMethod("Lock.tryLock")
@@ -167,7 +167,7 @@ class RuntimeDelegate : Delegate() {
       return timeout
     }
     try {
-      GlobalContext.lockTryLock(l, true)
+      context.lockTryLock(l, true)
     } finally {
       entered.set(false)
       onSkipMethod("Lock.tryLock")
@@ -185,7 +185,7 @@ class RuntimeDelegate : Delegate() {
       return
     }
     try {
-      GlobalContext.lockLock(l, false)
+      context.lockLock(l, false)
     } finally {
       onSkipMethod("Lock.lock")
       entered.set(false)
@@ -199,7 +199,7 @@ class RuntimeDelegate : Delegate() {
   override fun onAtomicOperation(o: Any, type: MemoryOpType) {
     if (checkEntered()) return
     try {
-      GlobalContext.atomicOperation(o, type)
+      context.atomicOperation(o, type)
     } finally {
       entered.set(false)
     }
@@ -211,7 +211,7 @@ class RuntimeDelegate : Delegate() {
       return
     }
     try {
-      GlobalContext.lockUnlock(l)
+      context.lockUnlock(l)
     } finally {
       entered.set(false)
       onSkipMethod("Lock.unlock")
@@ -221,14 +221,14 @@ class RuntimeDelegate : Delegate() {
   override fun onLockUnlockDone(l: Lock) {
     onSkipMethodDone("Lock.unlock")
     if (checkEntered()) return
-    GlobalContext.lockUnlockDone(l)
+    context.lockUnlockDone(l)
     entered.set(false)
   }
 
   override fun onMonitorEnter(o: Any) {
     if (checkEntered()) return
     try {
-      GlobalContext.monitorEnter(o)
+      context.monitorEnter(o)
     } finally {
       entered.set(false)
     }
@@ -236,19 +236,19 @@ class RuntimeDelegate : Delegate() {
 
   override fun onMonitorExit(o: Any) {
     if (checkEntered()) return
-    GlobalContext.monitorExit(o)
+    context.monitorExit(o)
     entered.set(false)
   }
 
   override fun onMonitorExitDone(o: Any) {
     if (checkEntered()) return
-    GlobalContext.monitorEnterDone(o)
+    context.monitorEnterDone(o)
     entered.set(false)
   }
 
   override fun onLockNewCondition(c: Condition, l: Lock) {
     if (checkEntered()) return
-    GlobalContext.lockNewCondition(c, l)
+    context.lockNewCondition(c, l)
     entered.set(false)
   }
 
@@ -258,7 +258,7 @@ class RuntimeDelegate : Delegate() {
       return
     }
     try {
-      GlobalContext.conditionAwait(o, true)
+      context.conditionAwait(o, true)
     } finally {
       entered.set(false)
       onSkipMethod("Condition.await")
@@ -271,7 +271,7 @@ class RuntimeDelegate : Delegate() {
       return
     }
     try {
-      GlobalContext.conditionAwait(o, false)
+      context.conditionAwait(o, false)
     } finally {
       entered.set(false)
       onSkipMethod("Condition.await")
@@ -284,7 +284,7 @@ class RuntimeDelegate : Delegate() {
     }
     if (checkEntered()) return
     try {
-      GlobalContext.conditionAwaitDone(o, true)
+      context.conditionAwaitDone(o, true)
     } finally {
       entered.set(false)
     }
@@ -296,7 +296,7 @@ class RuntimeDelegate : Delegate() {
     }
     if (checkEntered()) return
     try {
-      GlobalContext.conditionAwaitDone(o, false)
+      context.conditionAwaitDone(o, false)
     } finally {
       entered.set(false)
     }
@@ -307,7 +307,7 @@ class RuntimeDelegate : Delegate() {
       onSkipMethod("Condition.signal")
       return
     }
-    GlobalContext.conditionSignal(o)
+    context.conditionSignal(o)
     entered.set(false)
     onSkipMethod("Condition.signal")
   }
@@ -321,7 +321,7 @@ class RuntimeDelegate : Delegate() {
       onSkipMethod("Condition.signal")
       return
     }
-    GlobalContext.conditionSignalAll(o)
+    context.conditionSignalAll(o)
     entered.set(false)
     onSkipMethod("Condition.signal")
   }
@@ -330,7 +330,7 @@ class RuntimeDelegate : Delegate() {
     if (o == null) return
     if (checkEntered()) return
     try {
-      GlobalContext.unsafeOperation(o, offset, MemoryOpType.MEMORY_READ)
+      context.unsafeOperation(o, offset, MemoryOpType.MEMORY_READ)
     } finally {
       entered.set(false)
     }
@@ -340,7 +340,7 @@ class RuntimeDelegate : Delegate() {
     if (o == null) return
     if (checkEntered()) return
     try {
-      GlobalContext.unsafeOperation(o, offset, MemoryOpType.MEMORY_WRITE)
+      context.unsafeOperation(o, offset, MemoryOpType.MEMORY_WRITE)
     } finally {
       entered.set(false)
     }
@@ -350,7 +350,7 @@ class RuntimeDelegate : Delegate() {
     if (o == null) return
     if (checkEntered()) return
     try {
-      GlobalContext.fieldOperation(o, owner, name, MemoryOpType.MEMORY_READ)
+      context.fieldOperation(o, owner, name, MemoryOpType.MEMORY_READ)
     } finally {
       entered.set(false)
     }
@@ -360,7 +360,7 @@ class RuntimeDelegate : Delegate() {
     if (o == null) return
     if (checkEntered()) return
     try {
-      GlobalContext.fieldOperation(o, owner, name, MemoryOpType.MEMORY_WRITE)
+      context.fieldOperation(o, owner, name, MemoryOpType.MEMORY_WRITE)
     } finally {
       entered.set(false)
     }
@@ -369,7 +369,7 @@ class RuntimeDelegate : Delegate() {
   override fun onStaticFieldRead(owner: String, name: String, descriptor: String) {
     if (checkEntered()) return
     try {
-      GlobalContext.fieldOperation(null, owner, name, MemoryOpType.MEMORY_READ)
+      context.fieldOperation(null, owner, name, MemoryOpType.MEMORY_READ)
     } finally {
       entered.set(false)
     }
@@ -378,7 +378,7 @@ class RuntimeDelegate : Delegate() {
   override fun onStaticFieldWrite(owner: String, name: String, descriptor: String) {
     if (checkEntered()) return
     try {
-      GlobalContext.fieldOperation(null, owner, name, MemoryOpType.MEMORY_WRITE)
+      context.fieldOperation(null, owner, name, MemoryOpType.MEMORY_WRITE)
     } finally {
       entered.set(false)
     }
@@ -387,7 +387,7 @@ class RuntimeDelegate : Delegate() {
   override fun onExit(status: Int) {
     if (checkEntered()) return
     if (status != 0) {
-      GlobalContext.reportError(RuntimeException("Exit with status $status"))
+      context.reportError(RuntimeException("Exit with status $status"))
     }
     entered.set(false)
   }
@@ -395,14 +395,14 @@ class RuntimeDelegate : Delegate() {
   override fun onYield() {
     if (checkEntered()) return
     try {
-      GlobalContext.yield()
+      context.yield()
     } finally {
       entered.set(false)
     }
   }
 
   override fun onSkipMethod(signature: String) {
-    if (!GlobalContext.registeredThreads.containsKey(Thread.currentThread().id)) {
+    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
       return
     }
     stackTrace.get().add(signature)
@@ -410,7 +410,7 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onSkipMethodDone(signature: String): Boolean {
-    if (!GlobalContext.registeredThreads.containsKey(Thread.currentThread().id)) {
+    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
       return false
     }
     if (stackTrace.get().isEmpty()) {
@@ -427,7 +427,7 @@ class RuntimeDelegate : Delegate() {
   override fun onThreadPark() {
     if (checkEntered()) return
     try {
-      GlobalContext.threadPark()
+      context.threadPark()
     } finally {
       entered.set(false)
     }
@@ -436,7 +436,7 @@ class RuntimeDelegate : Delegate() {
   override fun onThreadParkDone() {
     if (checkEntered()) return
     try {
-      GlobalContext.threadParkDone()
+      context.threadParkDone()
     } finally {
       entered.set(false)
     }
@@ -447,21 +447,21 @@ class RuntimeDelegate : Delegate() {
     if (checkEntered()) {
       return
     }
-    GlobalContext.threadUnpark(t)
+    context.threadUnpark(t)
     entered.set(false)
   }
 
   override fun onThreadUnparkDone(t: Thread?) {
     if (t == null) return
     if (checkEntered()) return
-    GlobalContext.threadUnparkDone(t)
+    context.threadUnparkDone(t)
     entered.set(false)
   }
 
   override fun onThreadInterrupt(t: Thread) {
     if (checkEntered()) return
     try {
-      GlobalContext.threadInterrupt(t)
+      context.threadInterrupt(t)
     } finally {
       entered.set(false)
     }
@@ -469,26 +469,26 @@ class RuntimeDelegate : Delegate() {
 
   override fun onThreadInterruptDone(t: Thread) {
     if (checkEntered()) return
-    GlobalContext.threadInterruptDone(t)
+    context.threadInterruptDone(t)
     entered.set(false)
   }
 
   override fun onThreadClearInterrupt(origin: Boolean, t: Thread): Boolean {
     if (checkEntered()) return origin
-    val o = GlobalContext.threadClearInterrupt(t)
+    val o = context.threadClearInterrupt(t)
     entered.set(false)
     return o
   }
 
   override fun onReentrantReadWriteLockInit(lock: ReentrantReadWriteLock) {
     if (checkEntered()) return
-    GlobalContext.reentrantReadWriteLockInit(lock.readLock(), lock.writeLock())
+    context.reentrantReadWriteLockInit(lock.readLock(), lock.writeLock())
     entered.set(false)
   }
 
   override fun onSemaphoreInit(sem: Semaphore) {
     if (checkEntered()) return
-    GlobalContext.semaphoreInit(sem)
+    context.semaphoreInit(sem)
     entered.set(false)
   }
 
@@ -498,7 +498,7 @@ class RuntimeDelegate : Delegate() {
       return
     }
     try {
-      GlobalContext.semaphoreAcquire(sem, permits, false, true)
+      context.semaphoreAcquire(sem, permits, false, true)
     } finally {
       onSkipMethod("Semaphore.acquire")
       entered.set(false)
@@ -511,7 +511,7 @@ class RuntimeDelegate : Delegate() {
       return
     }
     try {
-      GlobalContext.semaphoreAcquire(sem, permits, true, true)
+      context.semaphoreAcquire(sem, permits, true, true)
     } finally {
       onSkipMethod("Semaphore.acquire")
       entered.set(false)
@@ -524,7 +524,7 @@ class RuntimeDelegate : Delegate() {
       return
     }
     try {
-      GlobalContext.semaphoreAcquire(sem, permits, true, false)
+      context.semaphoreAcquire(sem, permits, true, false)
     } finally {
       entered.set(false)
       onSkipMethod("Semaphore.acquire")
@@ -540,7 +540,7 @@ class RuntimeDelegate : Delegate() {
       onSkipMethod("Semaphore.release")
       return
     }
-    GlobalContext.semaphoreRelease(sem, permits)
+    context.semaphoreRelease(sem, permits)
     entered.set(false)
     onSkipMethod("Semaphore.release")
   }
@@ -554,7 +554,7 @@ class RuntimeDelegate : Delegate() {
       onSkipMethod("Semaphore.drainPermits")
       return
     }
-    GlobalContext.semaphoreDrainPermits(sem)
+    context.semaphoreDrainPermits(sem)
     entered.set(false)
     onSkipMethod("Semaphore.drainPermits")
   }
@@ -568,7 +568,7 @@ class RuntimeDelegate : Delegate() {
       onSkipMethod("Semaphore.reducePermits")
       return
     }
-    GlobalContext.semaphoreReducePermits(sem, permits)
+    context.semaphoreReducePermits(sem, permits)
     entered.set(false)
     onSkipMethod("Semaphore.reducePermits")
   }
@@ -583,7 +583,7 @@ class RuntimeDelegate : Delegate() {
       return
     }
     try {
-      GlobalContext.latchAwait(latch)
+      context.latchAwait(latch)
     } finally {
       entered.set(false)
       onSkipMethod("Latch.await")
@@ -591,7 +591,7 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onLatchAwaitTimeout(latch: CountDownLatch, timeout: Long, unit: TimeUnit): Boolean {
-    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+    if (context.config!!.executionInfo.timedOpAsYield) {
       onYield()
       return false
     } else {
@@ -603,7 +603,7 @@ class RuntimeDelegate : Delegate() {
   override fun onLatchAwaitDone(latch: CountDownLatch) {
     onSkipMethodDone("Latch.await")
     if (checkEntered()) return
-    GlobalContext.latchAwaitDone(latch)
+    context.latchAwaitDone(latch)
     entered.set(false)
   }
 
@@ -612,7 +612,7 @@ class RuntimeDelegate : Delegate() {
       onSkipMethod("Latch.countDown")
       return
     }
-    GlobalContext.latchCountDown(latch)
+    context.latchCountDown(latch)
     entered.set(false)
     onSkipMethod("Latch.countDown")
   }
@@ -620,13 +620,13 @@ class RuntimeDelegate : Delegate() {
   override fun onLatchCountDownDone(latch: CountDownLatch) {
     onSkipMethodDone("Latch.countDown")
     if (checkEntered()) return
-    GlobalContext.latchCountDownDone(latch)
+    context.latchCountDownDone(latch)
     entered.set(false)
   }
 
   override fun onReportError(e: Throwable) {
     if (checkEntered()) return
-    GlobalContext.reportError(e)
+    context.reportError(e)
     entered.set(false)
   }
 
@@ -634,7 +634,7 @@ class RuntimeDelegate : Delegate() {
     if (o == null) return
     if (checkEntered()) return
     try {
-      GlobalContext.arrayOperation(o, index, MemoryOpType.MEMORY_READ)
+      context.arrayOperation(o, index, MemoryOpType.MEMORY_READ)
     } finally {
       entered.set(false)
     }
@@ -644,7 +644,7 @@ class RuntimeDelegate : Delegate() {
     if (o == null) return
     if (checkEntered()) return
     try {
-      GlobalContext.arrayOperation(o, index, MemoryOpType.MEMORY_WRITE)
+      context.arrayOperation(o, index, MemoryOpType.MEMORY_WRITE)
     } finally {
       entered.set(false)
     }
@@ -655,7 +655,7 @@ class RuntimeDelegate : Delegate() {
     // Therefor we cannot call `checkEntered` here.
     try {
       entered.set(true)
-      GlobalContext.start()
+      context.start()
       entered.set(false)
     } catch (e: Throwable) {
       e.printStackTrace()
@@ -663,7 +663,7 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onThreadParkNanos(nanos: Long) {
-    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+    if (context.config!!.executionInfo.timedOpAsYield) {
       onYield()
     } else {
       LockSupport.park()
@@ -671,7 +671,7 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onThreadParkUntil(nanos: Long) {
-    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+    if (context.config!!.executionInfo.timedOpAsYield) {
       onYield()
     } else {
       LockSupport.park()
@@ -679,7 +679,7 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onThreadParkNanosWithBlocker(blocker: Any?, nanos: Long) {
-    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+    if (context.config!!.executionInfo.timedOpAsYield) {
       onYield()
     } else {
       LockSupport.park(blocker)
@@ -687,7 +687,7 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onThreadParkUntilWithBlocker(blocker: Any?, nanos: Long) {
-    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+    if (context.config!!.executionInfo.timedOpAsYield) {
       onYield()
     } else {
       LockSupport.park(blocker)
@@ -695,7 +695,7 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onConditionAwaitTime(o: Condition, time: Long, unit: TimeUnit): Boolean {
-    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+    if (context.config!!.executionInfo.timedOpAsYield) {
       onYield()
       return false
     } else {
@@ -705,7 +705,7 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onConditionAwaitNanos(o: Condition, nanos: Long): Long {
-    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+    if (context.config!!.executionInfo.timedOpAsYield) {
       onYield()
       return 0
     } else {
@@ -715,7 +715,7 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onConditionAwaitUntil(o: Condition, deadline: Date): Boolean {
-    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+    if (context.config!!.executionInfo.timedOpAsYield) {
       onYield()
       return false
     } else {
@@ -726,13 +726,13 @@ class RuntimeDelegate : Delegate() {
 
   override fun onThreadIsInterrupted(result: Boolean, t: Thread): Boolean {
     if (checkEntered()) return result
-    val isInterrupted = GlobalContext.threadIsInterrupted(t, result)
+    val isInterrupted = context.threadIsInterrupted(t, result)
     entered.set(false)
     return isInterrupted
   }
 
   override fun onLockTryLockTimeout(l: Lock, timeout: Long, unit: TimeUnit): Boolean {
-    if (GlobalContext.config!!.executionInfo.timedOpAsYield) {
+    if (context.config!!.executionInfo.timedOpAsYield) {
       onYield()
       return false
     } else {
@@ -741,12 +741,12 @@ class RuntimeDelegate : Delegate() {
   }
 
   override fun onNanoTime(): Long {
-    return GlobalContext.nanoTime()
+    return context.nanoTime()
   }
 
   override fun onThreadHashCode(t: Any): Int {
     if (t is Thread) {
-      val context = GlobalContext.registeredThreads[t.id]
+      val context = context.registeredThreads[t.id]
       if (context != null) {
         return 0
       } else {
@@ -754,5 +754,9 @@ class RuntimeDelegate : Delegate() {
       }
     }
     return t.hashCode()
+  }
+
+  override fun log(format: String, vararg args: Any) {
+    context.log(format, *args)
   }
 }

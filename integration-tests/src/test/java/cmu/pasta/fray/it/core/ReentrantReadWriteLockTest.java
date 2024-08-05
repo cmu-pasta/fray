@@ -2,11 +2,8 @@ package cmu.pasta.fray.it.core;
 
 import cmu.edu.pasta.fray.junit.annotations.Analyze;
 import cmu.edu.pasta.fray.junit.annotations.FrayTest;
-import cmu.pasta.fray.core.command.Fifo;
 import cmu.pasta.fray.core.scheduler.FifoScheduler;
-import cmu.pasta.fray.it.IntegrationTestRunner;
 import cmu.pasta.fray.it.Utils;
-import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -14,7 +11,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @FrayTest
-public class ReentrantReadWriteLockTest extends IntegrationTestRunner {
+public class ReentrantReadWriteLockTest {
 
     private static final ReentrantReadWriteLock lock
             = new ReentrantReadWriteLock(true);

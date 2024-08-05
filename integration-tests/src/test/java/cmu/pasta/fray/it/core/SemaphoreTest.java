@@ -3,9 +3,7 @@ package cmu.pasta.fray.it.core;
 import cmu.edu.pasta.fray.junit.annotations.Analyze;
 import cmu.edu.pasta.fray.junit.annotations.FrayTest;
 import cmu.pasta.fray.core.scheduler.FifoScheduler;
-import cmu.pasta.fray.it.IntegrationTestRunner;
 import cmu.pasta.fray.it.Utils;
-import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.Semaphore;
 
@@ -78,7 +76,7 @@ class MyThread extends Thread {
 
 // Driver class
 @FrayTest
-public class SemaphoreTest extends IntegrationTestRunner {
+public class SemaphoreTest {
 
     @Analyze(
             expectedLog = "[1]: Starting A\n" +

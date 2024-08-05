@@ -1,5 +1,6 @@
 package cmu.pasta.fray.core.concurrency.locks
 
+import cmu.pasta.fray.core.ThreadContext
 import java.util.concurrent.Semaphore
 
 class SemaphoreManager {
@@ -16,8 +17,16 @@ class SemaphoreManager {
     lockContextManager.addContext(sem, context)
   }
 
-  fun acquire(sem: Semaphore, permits: Int, shouldBlock: Boolean, canInterrupt: Boolean): Boolean {
-    return lockContextManager.getLockContext(sem).acquire(permits, shouldBlock, canInterrupt)
+  fun acquire(
+      sem: Semaphore,
+      permits: Int,
+      shouldBlock: Boolean,
+      canInterrupt: Boolean,
+      threadContext: ThreadContext
+  ): Boolean {
+    return lockContextManager
+        .getLockContext(sem)
+        .acquire(permits, shouldBlock, canInterrupt, threadContext)
   }
 
   fun release(sem: Semaphore, permits: Int) {

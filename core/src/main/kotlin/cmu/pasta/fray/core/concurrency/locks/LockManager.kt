@@ -39,12 +39,12 @@ class LockManager {
   /** Return true if [lock] is acquired by the current thread. */
   fun lock(
       lock: Any,
-      tid: Long,
+      lockThread: ThreadContext,
       shouldBlock: Boolean,
       lockBecauseOfWait: Boolean,
       canInterrupt: Boolean
   ): Boolean {
-    return getLockContext(lock).lock(lock, tid, shouldBlock, lockBecauseOfWait, canInterrupt)
+    return getLockContext(lock).lock(lock, lockThread, shouldBlock, lockBecauseOfWait, canInterrupt)
   }
 
   fun hasQueuedThreads(lock: Any): Boolean {
@@ -55,7 +55,7 @@ class LockManager {
     return getLockContext(lock).hasQueuedThread(t.id)
   }
 
-  fun addWakingThread(lockObject: Any, t: Thread) {
+  fun addWakingThread(lockObject: Any, t: ThreadContext) {
     getLockContext(lockObject).addWakingThread(lockObject, t)
   }
 
@@ -82,7 +82,7 @@ class LockManager {
     if (waitingThreads[id]?.isEmpty() == true) {
       waitingThreads.remove(id)
     }
-    addWakingThread(lockObject, context.thread)
+    addWakingThread(lockObject, context)
     if (waitingObject == lockObject) {
       context.pendingOperation = ObjectWakeBlocking(waitingObject)
     } else {
@@ -123,8 +123,8 @@ class LockManager {
         }
   }
 
-  fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean): Boolean {
-    return getLockContext(lock).unlock(lock, tid, unlockBecauseOfWait)
+  fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean, earlyExit: Boolean): Boolean {
+    return getLockContext(lock).unlock(lock, tid, unlockBecauseOfWait, earlyExit)
   }
 
   fun done() {

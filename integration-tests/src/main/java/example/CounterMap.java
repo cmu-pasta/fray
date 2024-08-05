@@ -14,7 +14,7 @@ public class CounterMap {
     }
 
     private void log (String format, Object... args) {
-        GlobalContext.INSTANCE.log(format, args);
+//        GlobalContext.INSTANCE.log(format, args);
     }
 
     public void putOrIncrement(String s) {

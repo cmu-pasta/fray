@@ -1,6 +1,6 @@
 package cmu.pasta.fray.core.concurrency.locks
 
-import cmu.pasta.fray.core.GlobalContext
+import cmu.pasta.fray.core.ThreadContext
 import cmu.pasta.fray.core.ThreadState
 import cmu.pasta.fray.core.concurrency.operations.ThreadResumeOperation
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
@@ -10,10 +10,10 @@ class ReentrantReadWriteLockContext : LockContext {
   private var writeLockHolder: Long? = null
   private val readLockTimes = mutableMapOf<Long, Int>()
   private val writeLockTimes = mutableMapOf<Long, Int>()
-  override val wakingThreads: MutableSet<Long> = mutableSetOf()
+  override val wakingThreads = mutableMapOf<Long, ThreadContext>()
 
-  private val readLockWaiters = mutableMapOf<Long, Boolean>()
-  private val writeLockWaiters = mutableMapOf<Long, Boolean>()
+  private val readLockWaiters = mutableMapOf<Long, LockWaiter>()
+  private val writeLockWaiters = mutableMapOf<Long, LockWaiter>()
 
   override fun hasQueuedThreads(): Boolean {
     return writeLockWaiters.any() || wakingThreads.any() || readLockWaiters.any()
@@ -25,8 +25,8 @@ class ReentrantReadWriteLockContext : LockContext {
         readLockWaiters.containsKey(tid)
   }
 
-  override fun addWakingThread(lockObject: Any, t: Thread) {
-    wakingThreads.add(t.id)
+  override fun addWakingThread(lockObject: Any, t: ThreadContext) {
+    wakingThreads[t.thread.id] = t
   }
 
   override fun canLock(tid: Long) =
@@ -43,32 +43,39 @@ class ReentrantReadWriteLockContext : LockContext {
 
   override fun lock(
       lock: Any,
-      tid: Long,
+      lockThread: ThreadContext,
       shouldBlock: Boolean,
       lockBecauseOfWait: Boolean,
       canInterrupt: Boolean,
   ): Boolean {
     return if (lock is ReadLock) {
-      readLockLock(tid, shouldBlock, lockBecauseOfWait, canInterrupt)
+      readLockLock(lockThread, shouldBlock, lockBecauseOfWait, canInterrupt)
     } else {
-      writeLockLock(tid, shouldBlock, lockBecauseOfWait, canInterrupt)
+      writeLockLock(lockThread, shouldBlock, lockBecauseOfWait, canInterrupt)
     }
   }
 
   override fun interrupt(tid: Long) {
-    if (writeLockWaiters[tid] == true) {
-      GlobalContext.registeredThreads[tid]!!.pendingOperation = ThreadResumeOperation()
-      GlobalContext.registeredThreads[tid]!!.state = ThreadState.Enabled
+    val writeLockWaiter = writeLockWaiters[tid]
+    if (writeLockWaiter != null && writeLockWaiter.canInterrupt) {
+      writeLockWaiter.thread.pendingOperation = ThreadResumeOperation()
+      writeLockWaiter.thread.state = ThreadState.Enabled
       writeLockWaiters.remove(tid)
     }
-    if (readLockWaiters[tid] == true) {
-      GlobalContext.registeredThreads[tid]!!.pendingOperation = ThreadResumeOperation()
-      GlobalContext.registeredThreads[tid]!!.state = ThreadState.Enabled
+    val readLockWaiter = readLockWaiters[tid]
+    if (readLockWaiter != null && readLockWaiter.canInterrupt) {
+      readLockWaiter.thread.pendingOperation = ThreadResumeOperation()
+      readLockWaiter.thread.state = ThreadState.Enabled
       readLockWaiters.remove(tid)
     }
   }
 
-  override fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean): Boolean {
+  override fun unlock(
+      lock: Any,
+      tid: Long,
+      unlockBecauseOfWait: Boolean,
+      earlyExit: Boolean
+  ): Boolean {
     return if (lock is ReadLock) {
       readLockUnlock(tid, unlockBecauseOfWait)
     } else {
@@ -77,18 +84,19 @@ class ReentrantReadWriteLockContext : LockContext {
   }
 
   fun readLockLock(
-      tid: Long,
+      lockThread: ThreadContext,
       shouldBlock: Boolean,
       lockBecauseOfWait: Boolean,
       canInterrupt: Boolean
   ): Boolean {
     assert(!lockBecauseOfWait) // Read lock does not have `Condition`
+    val tid = lockThread.thread.id
     if (writeLockHolder != null && writeLockHolder != tid) {
       if (canInterrupt) {
-        GlobalContext.registeredThreads[tid]?.checkInterrupt()
+        lockThread.checkInterrupt()
       }
       if (shouldBlock) {
-        readLockWaiters[tid] = canInterrupt
+        readLockWaiters[tid] = LockWaiter(canInterrupt, lockThread)
       }
       return false
     }
@@ -98,17 +106,18 @@ class ReentrantReadWriteLockContext : LockContext {
   }
 
   fun writeLockLock(
-      tid: Long,
+      lockThread: ThreadContext,
       shouldBlock: Boolean,
       lockBecauseOfWait: Boolean,
       canInterrupt: Boolean
   ): Boolean {
+    val tid = lockThread.thread.id
     if ((writeLockHolder != null && writeLockHolder != tid) || readLockHolder.isNotEmpty()) {
       if (canInterrupt) {
-        GlobalContext.registeredThreads[tid]?.checkInterrupt()
+        lockThread.checkInterrupt()
       }
       if (shouldBlock) {
-        writeLockWaiters[tid] = canInterrupt
+        writeLockWaiters[tid] = LockWaiter(canInterrupt, lockThread)
       }
       return false
     }
@@ -154,21 +163,21 @@ class ReentrantReadWriteLockContext : LockContext {
   }
 
   fun unlockWriteWaiters() {
-    for (writeLockWaiter in writeLockWaiters.keys) {
-      GlobalContext.registeredThreads[writeLockWaiter]!!.pendingOperation = ThreadResumeOperation()
-      GlobalContext.registeredThreads[writeLockWaiter]!!.state = ThreadState.Enabled
+    for (writeLockWaiter in writeLockWaiters.values) {
+      writeLockWaiter.thread.pendingOperation = ThreadResumeOperation()
+      writeLockWaiter.thread.state = ThreadState.Enabled
     }
     // Waking threads are write waiters as well.
-    for (thread in wakingThreads) {
-      GlobalContext.registeredThreads[thread]!!.pendingOperation = ThreadResumeOperation()
-      GlobalContext.registeredThreads[thread]!!.state = ThreadState.Enabled
+    for (thread in wakingThreads.values) {
+      thread.pendingOperation = ThreadResumeOperation()
+      thread.state = ThreadState.Enabled
     }
   }
 
   fun unlockReadWaiters() {
-    for (readLockWaiter in readLockWaiters.keys) {
-      GlobalContext.registeredThreads[readLockWaiter]!!.pendingOperation = ThreadResumeOperation()
-      GlobalContext.registeredThreads[readLockWaiter]!!.state = ThreadState.Enabled
+    for (readLockWaiter in readLockWaiters.values) {
+      readLockWaiter.thread.pendingOperation = ThreadResumeOperation()
+      readLockWaiter.thread.state = ThreadState.Enabled
     }
   }
 
