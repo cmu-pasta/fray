@@ -1,4 +1,4 @@
-package cmu.edu.pasta.fray.junit
+package org.pastalab.fray.junit
 
 import java.lang.reflect.Method
 import org.junit.platform.engine.TestSource

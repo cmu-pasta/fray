@@ -1,11 +1,11 @@
-package cmu.edu.pasta.fray.junit
+package org.pastalab.fray.junit
 
-import cmu.edu.pasta.fray.junit.annotations.Analyze
-import cmu.pasta.fray.core.scheduler.Scheduler
 import java.lang.reflect.Method
 import org.junit.platform.commons.support.AnnotationSupport.findAnnotation
 import org.junit.platform.engine.TestDescriptor
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor
+import org.pastalab.fray.core.scheduler.Scheduler
+import org.pastalab.fray.junit.annotations.Analyze
 
 class MethodTestDescriptor(val testMethod: Method, val parent: ClassTestDescriptor) :
     AbstractTestDescriptor(

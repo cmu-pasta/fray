@@ -1,7 +1,7 @@
 plugins {
   id("java")
   kotlin("jvm")
-  id("cmu.pasta.fray.gradle") version "1.0"
+  id("org.pastalab.fray.gradle") version "1.0"
 }
 
 

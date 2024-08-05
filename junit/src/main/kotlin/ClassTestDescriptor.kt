@@ -1,12 +1,12 @@
-package cmu.edu.pasta.fray.junit
+package org.pastalab.fray.junit
 
-import cmu.edu.pasta.fray.junit.annotations.Analyze
 import java.lang.reflect.Method
 import org.junit.platform.commons.util.AnnotationUtils
 import org.junit.platform.commons.util.ReflectionUtils
 import org.junit.platform.engine.TestDescriptor
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor
 import org.junit.platform.engine.support.descriptor.ClassSource
+import org.pastalab.fray.junit.annotations.Analyze
 
 class ClassTestDescriptor(val testClass: Class<*>, parent: TestDescriptor) :
     AbstractTestDescriptor(

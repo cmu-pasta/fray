@@ -2,7 +2,7 @@
 #include <jvmti.h>
 
 void CallRuntimeMethod(const char* method, JNIEnv_ *jni_env) {
-    const static auto runtime_class = "cmu/pasta/fray/runtime/Runtime";
+    const static auto runtime_class = "org/pastalab/fray/runtime/Runtime";
     const static auto callback_method_signature = "()V";
     auto clazz = jni_env->FindClass(runtime_class);
     auto method_id = jni_env->GetStaticMethodID(clazz, method, callback_method_signature);

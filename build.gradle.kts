@@ -8,7 +8,7 @@ plugins {
 
 
 allprojects {
-  group = "cmu.pasta.fray"
+  group = "org.pastalab.fray"
   version = "1.0-SNAPSHOT"
 }
 

@@ -29,8 +29,8 @@ kotlin {
 tasks.named<ShadowJar>("shadowJar") {
   // In Kotlin DSL, setting properties is done through Kotlin property syntax.
 //    isEnableRelocation = true
-  relocate("org.objectweb.asm", "cmu.pasta.fray.instrumentation.asm")
+  relocate("org.objectweb.asm", "org.pastalab.fray.instrumentation.asm")
   manifest {
-    attributes(mapOf("Premain-Class" to "cmu.pasta.fray.junit.RecorderKt"))
+    attributes(mapOf("Premain-Class" to "org.pastalab.fray.junit.RecorderKt"))
   }
 }

@@ -1,4 +1,4 @@
-package cmu.pasta.fray;
+package org.pastalab.fray;
 
 public class Main {
     public static void main(String[] args) {

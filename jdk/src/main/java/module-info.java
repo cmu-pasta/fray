@@ -1,9 +1,9 @@
-module cmu.pasta.fray.jdk {
+module org.pastalab.fray.jdk {
     requires jdk.jlink;
     requires java.instrument;
     requires kotlin.stdlib;
-    requires cmu.pasta.fray.instrumentation;
-    requires cmu.pasta.fray.runtime;
-    exports cmu.pasta.fray.jdk.agent;
-    exports cmu.pasta.fray.jdk.jlink;
+    requires org.pastalab.fray.instrumentation;
+    requires org.pastalab.fray.runtime;
+    exports org.pastalab.fray.jdk.agent;
+    exports org.pastalab.fray.jdk.jlink;
 }

@@ -26,7 +26,7 @@ tasks.compileJava {
 
 tasks.named<ShadowJar>("shadowJar") {
   manifest {
-    attributes(mapOf("Main-Class" to "cmu.pasta.fray.core.MainKt"))
+    attributes(mapOf("Main-Class" to "org.pastalab.fray.core.MainKt"))
   }
 }
 

@@ -1,6 +1,3 @@
-import org.gradle.internal.impldep.org.apache.commons.io.output.ByteArrayOutputStream
-import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
-
 plugins {
     kotlin("jvm")
     java
@@ -23,13 +20,13 @@ tasks.test {
 tasks.compileJava {
     options.compilerArgumentProviders.add(CommandLineArgumentProvider {
         // Provide compiled Kotlin classes to javac – needed for Java/Kotlin mixed sources to work
-        listOf("--patch-module", "cmu.pasta.fray.jdk=${sourceSets["main"].output.asPath}")
+        listOf("--patch-module", "org.pastalab.fray.jdk=${sourceSets["main"].output.asPath}")
     })
 }
 
 tasks.jar {
     manifest {
-        attributes(mapOf("Premain-Class" to "cmu.pasta.fray.jdk.agent.AgentKt"))
+        attributes(mapOf("Premain-Class" to "org.pastalab.fray.jdk.agent.AgentKt"))
     }
     dependsOn("copyDependencies")
 }
@@ -53,7 +50,7 @@ tasks.build {
             ?.joinToString(separator = ":") { it.absolutePath }
           ?: "No JAR files found."
         val command = listOf("jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars:$runtimeJar",
-            "-J--add-modules=cmu.pasta.fray.jdk", "-J--class-path=$jars:$runtimeJar",
+            "-J--add-modules=org.pastalab.fray.jdk", "-J--class-path=$jars:$runtimeJar",
             "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH",  "--fray-instrumentation")
         commandLine(command)
       }

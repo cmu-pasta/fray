@@ -25,7 +25,7 @@ tasks.test {
 
 tasks.named<ShadowJar>("shadowJar") {
     manifest {
-        attributes(mapOf("Main-Class" to "cmu.pasta.fray.core.MainKt"))
+        attributes(mapOf("Main-Class" to "org.pastalab.fray.core.MainKt"))
     }
 }
 
@@ -43,7 +43,7 @@ tasks.withType<JavaExec> {
   val instrumentation = instrumentationTask.outputs.files.first().absolutePath
   classpath = tasks.named("shadowJar").get().outputs.files
   executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
-  mainClass = "cmu.pasta.fray.core.MainKt"
+  mainClass = "org.pastalab.fray.core.MainKt"
   jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
   jvmArgs("-javaagent:$instrumentation")
   jvmArgs("-ea")

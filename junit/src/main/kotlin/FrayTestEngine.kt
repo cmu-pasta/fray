@@ -1,6 +1,5 @@
-package cmu.edu.pasta.fray.junit
+package org.pastalab.fray.junit
 
-import cmu.edu.pasta.fray.junit.annotations.FrayTest
 import java.util.function.Predicate
 import org.junit.platform.commons.support.AnnotationSupport.isAnnotated
 import org.junit.platform.commons.support.ReflectionSupport.findAllClassesInClasspathRoot
@@ -13,6 +12,7 @@ import org.junit.platform.engine.UniqueId
 import org.junit.platform.engine.discovery.ClassSelector
 import org.junit.platform.engine.discovery.ClasspathRootSelector
 import org.junit.platform.engine.discovery.PackageSelector
+import org.pastalab.fray.junit.annotations.FrayTest
 
 class FrayTestEngine : TestEngine {
   override fun getId(): String {

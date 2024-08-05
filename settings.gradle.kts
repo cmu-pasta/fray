@@ -1,8 +1,5 @@
 pluginManagement {
   repositories {
-    gradlePluginPortal()
-  }
-  repositories {
     mavenLocal()
     gradlePluginPortal()
   }

@@ -1,4 +1,4 @@
-package cmu.edu.pasta.fray.junit.annotations
+package org.pastalab.fray.junit.annotations
 
 import org.junit.platform.commons.annotation.Testable
 

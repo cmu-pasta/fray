@@ -1,8 +1,8 @@
-package cmu.edu.pasta.fray.junit
+package org.pastalab.fray.junit
 
-import cmu.pasta.fray.core.concurrency.operations.Operation
-import cmu.pasta.fray.core.logger.LoggerBase
-import cmu.pasta.fray.core.scheduler.Choice
+import org.pastalab.fray.core.concurrency.operations.Operation
+import org.pastalab.fray.core.logger.LoggerBase
+import org.pastalab.fray.core.scheduler.Choice
 
 class EventLogger : LoggerBase {
   var sb: StringBuilder = StringBuilder()

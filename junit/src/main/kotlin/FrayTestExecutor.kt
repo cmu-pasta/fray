@@ -1,10 +1,5 @@
-package cmu.edu.pasta.fray.junit
+package org.pastalab.fray.junit
 
-import cmu.pasta.fray.core.TestRunner
-import cmu.pasta.fray.core.command.Configuration
-import cmu.pasta.fray.core.command.ExecutionInfo
-import cmu.pasta.fray.core.command.LambdaExecutor
-import cmu.pasta.fray.core.logger.JsonLogger
 import java.io.File
 import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
@@ -13,6 +8,11 @@ import org.junit.platform.engine.ExecutionRequest
 import org.junit.platform.engine.TestDescriptor
 import org.junit.platform.engine.TestExecutionResult
 import org.junit.platform.engine.support.descriptor.EngineDescriptor
+import org.pastalab.fray.core.TestRunner
+import org.pastalab.fray.core.command.Configuration
+import org.pastalab.fray.core.command.ExecutionInfo
+import org.pastalab.fray.core.command.LambdaExecutor
+import org.pastalab.fray.core.logger.JsonLogger
 
 class FrayTestExecutor {
   fun execute(request: ExecutionRequest, descriptor: TestDescriptor) {

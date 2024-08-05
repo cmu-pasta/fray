@@ -23,31 +23,31 @@ dependencies {
 }
 
 tasks.withType<JavaExec> {
-  jvmArgs("--patch-module", "cmu.pasta.fray.instrumentation=${sourceSets["main"].output.asPath}")
+  jvmArgs("--patch-module", "org.pastalab.fray.instrumentation=${sourceSets["main"].output.asPath}")
 }
 
 tasks.compileJava {
   options.compilerArgumentProviders.add(CommandLineArgumentProvider {
     // Provide compiled Kotlin classes to javac – needed for Java/Kotlin mixed sources to work
-    listOf("--patch-module", "cmu.pasta.fray.instrumentation=${sourceSets["main"].output.asPath}")
+    listOf("--patch-module", "org.pastalab.fray.instrumentation=${sourceSets["main"].output.asPath}")
   })
 }
 
 tasks.jar {
   manifest {
-    attributes(mapOf("Premain-Class" to "cmu.pasta.fray.instrumentation.PreMainKt"))
+    attributes(mapOf("Premain-Class" to "org.pastalab.fray.instrumentation.PreMainKt"))
   }
   archiveClassifier.set("original")
 }
 
 tasks.named<ShadowJar>("shadowJar") {
   archiveClassifier.set("shadow")
-  relocate("org.objectweb.asm", "cmu.pasta.fray.instrumentation.asm")
+  relocate("org.objectweb.asm", "org.pastalab.fray.instrumentation.asm")
   dependencies {
     exclude(project(":runtime"))
   }
   manifest {
-    attributes(mapOf("Premain-Class" to "cmu.pasta.fray.instrumentation.PreMainKt"))
+    attributes(mapOf("Premain-Class" to "org.pastalab.fray.instrumentation.PreMainKt"))
   }
 }
 

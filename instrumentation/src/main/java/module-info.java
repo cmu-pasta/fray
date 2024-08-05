@@ -1,7 +1,7 @@
-module cmu.pasta.fray.instrumentation {
-    exports cmu.pasta.fray.instrumentation;
-    opens cmu.pasta.fray.instrumentation;
-    requires cmu.pasta.fray.runtime;
+module org.pastalab.fray.instrumentation {
+    exports org.pastalab.fray.instrumentation;
+    opens org.pastalab.fray.instrumentation;
+    requires org.pastalab.fray.runtime;
     requires kotlin.reflect;
     requires org.objectweb.asm;
     requires org.objectweb.asm.tree;

@@ -1,9 +1,9 @@
-package cmu.edu.pasta.fray.junit.annotations
+package org.pastalab.fray.junit.annotations
 
-import cmu.pasta.fray.core.scheduler.POSScheduler
-import cmu.pasta.fray.core.scheduler.Scheduler
 import kotlin.reflect.KClass
 import org.junit.platform.commons.annotation.Testable
+import org.pastalab.fray.core.scheduler.POSScheduler
+import org.pastalab.fray.core.scheduler.Scheduler
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)

@@ -1,7 +1,5 @@
 package example;
 
-import cmu.pasta.fray.core.GlobalContext;
-
 import java.util.Arrays;
 
 /** modification of the other mergesort (bug injected) */

@@ -1,6 +1,6 @@
-import cmu.edu.pasta.fray.junit.annotations.Analyze;
-import cmu.edu.pasta.fray.junit.annotations.FrayTest;
-import cmu.pasta.fray.runtime.DeadlockException;
+import org.pastalab.fray.junit.annotations.Analyze;
+import org.pastalab.fray.junit.annotations.FrayTest;
+import org.pastalab.fray.runtime.DeadlockException;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
