@@ -1,9 +1,11 @@
 package org.pastalab.fray.core.scheduler
 
+import kotlinx.serialization.Serializable
 import org.pastalab.fray.core.ThreadContext
 
-interface Scheduler {
+@Serializable
+sealed interface Scheduler {
   fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext
 
-  fun done()
+  fun nextIteration(): Scheduler
 }

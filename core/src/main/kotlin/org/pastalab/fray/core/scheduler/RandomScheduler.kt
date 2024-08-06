@@ -1,9 +1,12 @@
 package org.pastalab.fray.core.scheduler
 
+import kotlinx.serialization.Serializable
 import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.core.randomness.ControlledRandom
 
-class RandomScheduler : Scheduler {
-  var rand = ControlledRandom()
+@Serializable
+class RandomScheduler(val rand: ControlledRandom) : Scheduler {
+  constructor() : this(ControlledRandom())
 
   override fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext {
 
@@ -14,7 +17,7 @@ class RandomScheduler : Scheduler {
     return threads[index]
   }
 
-  override fun done() {
-    rand.done()
+  override fun nextIteration(): Scheduler {
+    return RandomScheduler(ControlledRandom())
   }
 }

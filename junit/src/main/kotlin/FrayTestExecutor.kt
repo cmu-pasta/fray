@@ -12,7 +12,6 @@ import org.pastalab.fray.core.TestRunner
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.command.ExecutionInfo
 import org.pastalab.fray.core.command.LambdaExecutor
-import org.pastalab.fray.core.logger.JsonLogger
 
 class FrayTestExecutor {
   fun execute(request: ExecutionRequest, descriptor: TestDescriptor) {
@@ -32,8 +31,8 @@ class FrayTestExecutor {
     val testInstance = descriptor.parent.testClass.getDeclaredConstructor().newInstance()
     val testMethod = descriptor.testMethod
     val workDir = createTempDirectory(WORK_DIR).absolutePathString()
-    val jsonLogger = JsonLogger(workDir, false)
     val eventLogger = EventLogger()
+    val schedulerInfo = descriptor.getScheduler()
     val config =
         Configuration(
             ExecutionInfo(
@@ -45,16 +44,18 @@ class FrayTestExecutor {
             ),
             workDir,
             descriptor.analyzeConfig.iteration,
-            descriptor.getScheduler(),
+            schedulerInfo.first,
+            schedulerInfo.second,
             false,
-            listOf(jsonLogger, eventLogger),
             false,
             true,
             false,
+            false,
         )
     val runner = TestRunner(config)
+    runner.context.registerLogger(eventLogger)
     val result = runner.run()
-    verifyTestResult(request, descriptor, result, eventLogger, workDir, jsonLogger)
+    verifyTestResult(request, descriptor, result, eventLogger, workDir, config)
   }
 
   fun verifyTestResult(
@@ -63,7 +64,7 @@ class FrayTestExecutor {
       result: Throwable?,
       logger: EventLogger,
       workDir: String,
-      jsonLogger: JsonLogger
+      config: Configuration
   ) {
     var testResult = TestExecutionResult.successful()
     if (result != null) {
@@ -80,7 +81,7 @@ class FrayTestExecutor {
     }
     if (descriptor.analyzeConfig.expectedLog != "" &&
         !logger.sb.toString().contains(descriptor.analyzeConfig.expectedLog)) {
-      jsonLogger.saveLogs()
+      config.saveToReportFolder(0)
       testResult =
           TestExecutionResult.failed(
               RuntimeException("Expected log not found: ${descriptor.analyzeConfig.expectedLog}"))

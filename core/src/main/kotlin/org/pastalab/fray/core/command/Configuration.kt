@@ -7,17 +7,19 @@ import com.github.ajalt.clikt.parameters.groups.groupChoice
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
+import java.io.File
+import java.nio.file.Paths
 import java.util.*
+import kotlin.io.path.createDirectories
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import org.pastalab.fray.core.logger.CsvLogger
-import org.pastalab.fray.core.logger.JsonLogger
-import org.pastalab.fray.core.logger.LoggerBase
+import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.*
 
 @Serializable
@@ -82,61 +84,47 @@ class JsonExecutionConfig : ExecutionConfig("json") {
   }
 }
 
-sealed class Logger(name: String) : OptionGroup(name) {
-  open fun getLogger(baseFolder: String, fullSchedule: Boolean): LoggerBase {
-    return JsonLogger(baseFolder, fullSchedule)
-  }
-}
-
-class JsonLoggerOption : Logger("json") {
-  override fun getLogger(baseFolder: String, fullSchedule: Boolean): LoggerBase {
-    return JsonLogger(baseFolder, fullSchedule)
-  }
-}
-
-class CsvLoggerOption : Logger("csv") {
-  override fun getLogger(baseFolder: String, fullSchedule: Boolean): LoggerBase {
-    return CsvLogger(baseFolder, fullSchedule)
-  }
-}
-
 sealed class ScheduleAlgorithm(name: String) : OptionGroup(name) {
-  open fun getScheduler(): Scheduler {
-    return FifoScheduler()
-  }
-}
-
-class Replay : ScheduleAlgorithm("replay") {
-  val path by option("-p", "--path", help = "Path to the saved schedule.").file().required()
-
-  override fun getScheduler(): Scheduler {
-    return ReplayScheduler(Schedule.fromString(path.readText(), path.extension == "json", false))
+  open fun getScheduler(): Pair<Scheduler, ControlledRandom> {
+    return Pair(FifoScheduler(), ControlledRandom())
   }
 }
 
 class Fifo : ScheduleAlgorithm("fifo") {
-  override fun getScheduler(): Scheduler {
-    return FifoScheduler()
+  override fun getScheduler(): Pair<Scheduler, ControlledRandom> {
+    return Pair(FifoScheduler(), ControlledRandom())
   }
 }
 
 class POS : ScheduleAlgorithm("pos") {
-  override fun getScheduler(): Scheduler {
-    return POSScheduler(Random(0))
+  override fun getScheduler(): Pair<Scheduler, ControlledRandom> {
+    return Pair(POSScheduler(), ControlledRandom())
+  }
+}
+
+class Replay : ScheduleAlgorithm("replay") {
+  val path by option("--path").file().required()
+
+  override fun getScheduler(): Pair<Scheduler, ControlledRandom> {
+    val randomPath = "${path.absolutePath}/random.json"
+    val schedulerPath = "${path.absolutePath}/schedule.json"
+    val randomnessProvider = Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
+    val scheduler = Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
+    return Pair(scheduler, randomnessProvider)
   }
 }
 
 class Rand : ScheduleAlgorithm("random") {
-  override fun getScheduler(): Scheduler {
-    return RandomScheduler()
+  override fun getScheduler(): Pair<Scheduler, ControlledRandom> {
+    return Pair(RandomScheduler(), ControlledRandom())
   }
 }
 
 class PCT : ScheduleAlgorithm("pct") {
   val numSwitchPoints by option().int().default(3)
 
-  override fun getScheduler(): Scheduler {
-    return PCTScheduler(ControlledRandom(), numSwitchPoints)
+  override fun getScheduler(): Pair<Scheduler, ControlledRandom> {
+    return Pair(PCTScheduler(ControlledRandom(), numSwitchPoints, 0), ControlledRandom())
   }
 }
 
@@ -150,18 +138,15 @@ class MainCommand : CliktCommand() {
               help =
                   "If the report should save full schedule. Otherwise, Fray only saves schedules points if there are more than one runnable threads.")
           .flag()
-  val logger by
-      option("-l", "--logger", help = "Logger type.")
-          .groupChoice("json" to JsonLoggerOption(), "csv" to CsvLoggerOption())
-          .defaultByName("json")
+
   val scheduler by
       option(help = "Scheduling algorithm.")
           .groupChoice(
-              "replay" to Replay(),
               "fifo" to Fifo(),
               "pos" to POS(),
               "random" to Rand(),
-              "pct" to PCT())
+              "pct" to PCT(),
+              "replay" to Replay())
           .defaultByName("random")
   val noFray by option("--no-fray", help = "Runnning in no-Fray mode.").flag()
   val exploreMode by
@@ -184,15 +169,17 @@ class MainCommand : CliktCommand() {
 
   fun toConfiguration(): Configuration {
     val executionInfo = runConfig.getExecutionInfo()
+    val s = scheduler.getScheduler()
     return Configuration(
         executionInfo,
         report,
         iter,
-        scheduler!!.getScheduler(),
+        s.first,
+        s.second,
         fullSchedule,
-        listOf(logger!!.getLogger(report, fullSchedule)),
         exploreMode,
         noExitWhenBugFound,
+        scheduler is Replay,
         noFray)
   }
 }
@@ -201,10 +188,17 @@ data class Configuration(
     val executionInfo: ExecutionInfo,
     val report: String,
     val iter: Int,
-    val scheduler: Scheduler,
+    var scheduler: Scheduler,
+    var randomnessProvider: ControlledRandom,
     val fullSchedule: Boolean,
-    val loggers: List<LoggerBase>,
     val exploreMode: Boolean,
     val noExitWhenBugFound: Boolean,
+    val isReplay: Boolean,
     val noFray: Boolean,
-) {}
+) {
+  fun saveToReportFolder(index: Int) {
+    Paths.get("$report/index_$index").createDirectories()
+    File("$report/index_$index/schedule.json").writeText(Json.encodeToString(scheduler))
+    File("$report/index_$index/random.json").writeText(Json.encodeToString(randomnessProvider))
+  }
+}

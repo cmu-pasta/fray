@@ -2,31 +2,31 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.util.regex.Pattern
 
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.serialization") version "1.9.22"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+  kotlin("jvm")
+  kotlin("plugin.serialization") version "2.0.0"
+  id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    compileOnly(project(":runtime"))
-    compileOnly(project(":instrumentation"))
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-    implementation("com.github.ajalt.clikt:clikt:4.2.2")
+  compileOnly(project(":runtime"))
+  compileOnly(project(":instrumentation"))
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+  testImplementation("org.jetbrains.kotlin:kotlin-test")
+  implementation("com.github.ajalt.clikt:clikt:4.2.2")
 }
 
 tasks.test {
-    useJUnitPlatform()
+  useJUnitPlatform()
 }
 
 tasks.named<ShadowJar>("shadowJar") {
-    manifest {
-        attributes(mapOf("Main-Class" to "org.pastalab.fray.core.MainKt"))
-    }
+  manifest {
+    attributes(mapOf("Main-Class" to "org.pastalab.fray.core.MainKt"))
+  }
 }
 
 tasks.named("build") {

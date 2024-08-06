@@ -161,7 +161,6 @@ class RunContext(val config: Configuration) {
     assert(syncManager.synchronizationPoints.isEmpty())
     lockManager.done()
     registeredThreads.clear()
-    config.scheduler.done()
   }
 
   fun shutDown() {
@@ -448,7 +447,8 @@ class RunContext(val config: Configuration) {
     val id = System.identityHashCode(waitingObject)
     lockManager.waitingThreads[id]?.let {
       if (it.size > 0) {
-        val t = it.removeFirst()
+        val index = config.randomnessProvider.nextInt() % it.size
+        val t = it.removeAt(index)
         lockManager.threadWaitsFor.remove(t)
         val context = registeredThreads[t]!!
         lockManager.addWakingThread(lockObject, context)

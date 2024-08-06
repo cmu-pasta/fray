@@ -1,11 +1,11 @@
 package org.pastalab.fray.it.core;
 
+import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.junit.annotations.Analyze;
 import org.pastalab.fray.junit.annotations.FrayTest;
 import org.pastalab.fray.core.scheduler.FifoScheduler;
 import org.pastalab.fray.it.Utils;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.concurrent.CountDownLatch;
 
 @FrayTest

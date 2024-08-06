@@ -1,9 +1,12 @@
 package org.pastalab.fray.junit
 
+import java.io.File
 import java.lang.reflect.Method
+import kotlinx.serialization.json.Json
 import org.junit.platform.commons.support.AnnotationSupport.findAnnotation
 import org.junit.platform.engine.TestDescriptor
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor
+import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.Scheduler
 import org.pastalab.fray.junit.annotations.Analyze
 
@@ -19,8 +22,17 @@ class MethodTestDescriptor(val testMethod: Method, val parent: ClassTestDescript
 
   val analyzeConfig = findAnnotation(testMethod, Analyze::class.java).get()
 
-  fun getScheduler(): Scheduler {
-    return analyzeConfig.scheduler.java.getDeclaredConstructor().newInstance()
+  fun getScheduler(): Pair<Scheduler, ControlledRandom> {
+    if (!analyzeConfig.replay.isEmpty()) {
+      val path = analyzeConfig.replay
+      val randomPath = "${path}/random.json"
+      val schedulerPath = "${path}/schedule.json"
+      val randomnessProvider = Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
+      val scheduler = Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
+      return Pair(scheduler, randomnessProvider)
+    }
+    return Pair(
+        analyzeConfig.scheduler.java.getDeclaredConstructor().newInstance(), ControlledRandom())
   }
 
   override fun getType(): TestDescriptor.Type {

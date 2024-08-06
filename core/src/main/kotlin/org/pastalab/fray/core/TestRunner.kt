@@ -7,9 +7,19 @@ import kotlin.io.path.deleteRecursively
 import kotlin.time.TimeSource
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.logger.ConsoleLogger
-import org.pastalab.fray.core.scheduler.ReplayScheduler
+import org.pastalab.fray.core.randomness.ControlledRandom
 
 class TestRunner(val config: Configuration) {
+
+  val context = RunContext(config)
+
+  init {
+    if (!config.isReplay) {
+      prepareReportPath(config.report)
+    }
+    context.registerLogger(ConsoleLogger())
+    context.bootstrap()
+  }
 
   @OptIn(ExperimentalPathApi::class)
   fun prepareReportPath(reportPath: String) {
@@ -19,20 +29,8 @@ class TestRunner(val config: Configuration) {
     println("Report is available at: ${path.toAbsolutePath()}")
   }
 
-  fun createContext(): RunContext {
-    val context = RunContext(config)
-    if (config.scheduler !is ReplayScheduler) {
-      prepareReportPath(config.report)
-      config.loggers.forEach(context::registerLogger)
-    }
-    context.registerLogger(ConsoleLogger())
-    context.bootstrap()
-    return context
-  }
-
   fun run(): Throwable? {
     config.executionInfo.executor.beforeExecution()
-    val context = createContext()
     if (config.noFray) {
       config.executionInfo.executor.execute()
     } else {
@@ -42,6 +40,10 @@ class TestRunner(val config: Configuration) {
       while (i != config.iter) {
         println("Starting iteration $i")
         try {
+          if (i != 0) {
+            config.scheduler = config.scheduler.nextIteration()
+            config.randomnessProvider = ControlledRandom()
+          }
           org.pastalab.fray.runtime.Runtime.DELEGATE = RuntimeDelegate(context)
           org.pastalab.fray.runtime.Runtime.start()
           config.executionInfo.executor.execute()
@@ -54,6 +56,7 @@ class TestRunner(val config: Configuration) {
           println(
               "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms")
           if (!config.exploreMode) {
+            config.saveToReportFolder(i)
             break
           }
         }

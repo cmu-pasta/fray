@@ -13,4 +13,5 @@ annotation class Analyze(
     val expectedLog: String = "",
     val scheduler: KClass<out Scheduler> = POSScheduler::class,
     val iteration: Int = 1,
+    val replay: String = "",
 )
