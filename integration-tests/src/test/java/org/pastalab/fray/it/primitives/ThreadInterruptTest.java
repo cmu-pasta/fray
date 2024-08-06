@@ -1,4 +1,4 @@
-package org.pastalab.fray.it.core;
+package org.pastalab.fray.it.primitives;
 
 
 import org.pastalab.fray.junit.annotations.Analyze;
@@ -143,4 +143,5 @@ public class ThreadInterruptTest {
         t1.join();
         t2.join();
     }
+
 }

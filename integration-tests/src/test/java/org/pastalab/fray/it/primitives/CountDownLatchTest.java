@@ -1,6 +1,5 @@
-package org.pastalab.fray.it.core;
+package org.pastalab.fray.it.primitives;
 
-import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.junit.annotations.Analyze;
 import org.pastalab.fray.junit.annotations.FrayTest;
 import org.pastalab.fray.core.scheduler.FifoScheduler;

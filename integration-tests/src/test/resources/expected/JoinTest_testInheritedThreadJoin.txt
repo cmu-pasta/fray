@@ -1,3 +1,0 @@
-[1]: Started.
-[2]: Started. Calling non-thread join.
-[2]: Exception 'ClassCastException' thrown correctly.

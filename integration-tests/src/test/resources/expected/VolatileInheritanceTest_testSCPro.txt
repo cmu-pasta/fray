@@ -1,8 +1,0 @@
-[2]: local = sc_volatile_pro
-[1]: local = sc_volatile_pro
-[2]: local -= input
-[2]: sc_volatile_pro = local
-[1]: local += input
-[1]: sc_volatile_pro = local
-[2]: done.
-[1]: done.

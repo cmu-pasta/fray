@@ -1,3 +1,5 @@
+package org.pastalab.fray.it.scheduler;
+import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.junit.annotations.Analyze;
 import org.pastalab.fray.junit.annotations.FrayTest;
 import org.pastalab.fray.runtime.DeadlockException;
@@ -5,7 +7,7 @@ import org.pastalab.fray.runtime.DeadlockException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @FrayTest
-public class SimpleTest {
+public class DeadlockTest {
     private static class FrayExample extends Thread {
         static Object o = new Object();
         static AtomicInteger a = new AtomicInteger();
@@ -27,13 +29,28 @@ public class SimpleTest {
         }
     }
 
-    @Analyze(expectedException = DeadlockException.class)
-    public void testFrayExample() throws Exception {
+    @Analyze(
+            expectedException = DeadlockException.class,
+            scheduler = POSScheduler.class,
+            iteration = 1000
+    )
+    public void testDeadlock() throws Exception {
         FrayExample.a = new AtomicInteger();
         FrayExample.b = 0;
         FrayExample[] threads = {new FrayExample(), new FrayExample()};
         for (var thread : threads) thread.start();
         for (var thread : threads) thread.join();
-        assert(FrayExample.b == 1);
+    }
+
+    @Analyze(
+            expectedException = DeadlockException.class,
+            replay = "classpath:/org/pastalab/fray/it/scheduler/DeadlockTest"
+    )
+    public void testDeadlockWithReplay() throws Exception {
+        FrayExample.a = new AtomicInteger();
+        FrayExample.b = 0;
+        FrayExample[] threads = {new FrayExample(), new FrayExample()};
+        for (var thread : threads) thread.start();
+        for (var thread : threads) thread.join();
     }
 }

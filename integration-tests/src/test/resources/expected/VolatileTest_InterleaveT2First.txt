@@ -1,8 +1,0 @@
-[1]: y = x
-[2]: y = x
-[2]: y -= input
-[2]: x = y
-[1]: y += input
-[1]: x = y
-[2]: done.
-[1]: done.
