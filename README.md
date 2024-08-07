@@ -1,4 +1,4 @@
-# Fray: An Efficient General-Purpose Concurrency Testing Platform for the JVM
+# Fray: General-Purpose Concurrency Testing 
 
 ## Requirements
 
