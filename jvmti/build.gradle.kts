@@ -1,10 +1,3 @@
-import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
-
-val os = DefaultNativePlatform.getCurrentOperatingSystem().toFamilyName()
-val arch = DefaultNativePlatform.getCurrentArchitecture().name
-val currentTarget = configurations.create("${os}-${arch}")
-
-
 plugins {
   java
   id("io.github.tomtzook.gradle-cmake") version "1.2.2"
@@ -48,7 +41,6 @@ tasks.register<Copy>("collectNativeLibs") {
 tasks.named<Jar>("jar") {
   dependsOn("collectNativeLibs")
   destinationDirectory.set(file("${layout.buildDirectory.get().asFile}/libs"))
-  archiveClassifier.set("$os-$arch")
   from("${layout.buildDirectory.get().asFile}/native-libs") {
     include("**/*.so")
     include("**/*.dylib")

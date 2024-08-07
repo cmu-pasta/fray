@@ -1,3 +1,4 @@
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import java.util.regex.Pattern
 
 plugins {
@@ -50,6 +51,8 @@ configure(allprojects - rootProject) {
     publishing {
       publications {
         create<MavenPublication>("maven") {
+          val os = DefaultNativePlatform.getCurrentOperatingSystem().toFamilyName()
+          val arch = DefaultNativePlatform.getCurrentArchitecture().name
           pom {
             name = "Fray Testing Framework"
             description = "Fray testing framework for concurrency programs."
@@ -64,6 +67,8 @@ configure(allprojects - rootProject) {
           from(components["java"])
           if (project.name != "jvmti") {
             artifact(tasks["dokkaJavadocJar"])
+          } else {
+            artifactId = "jvmti-$os-$arch"
           }
         }
       }
