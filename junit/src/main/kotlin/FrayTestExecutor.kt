@@ -31,7 +31,6 @@ class FrayTestExecutor {
     val testInstance = descriptor.parent.testClass.getDeclaredConstructor().newInstance()
     val testMethod = descriptor.testMethod
     val workDir = createTempDirectory(WORK_DIR).absolutePathString()
-    val eventLogger = EventLogger()
     val schedulerInfo = descriptor.getScheduler()
     val config =
         Configuration(
@@ -53,18 +52,15 @@ class FrayTestExecutor {
             false,
         )
     val runner = TestRunner(config)
-    runner.context.registerLogger(eventLogger)
     val result = runner.run()
-    verifyTestResult(request, descriptor, result, eventLogger, workDir, config)
+    verifyTestResult(request, descriptor, result, workDir)
   }
 
   fun verifyTestResult(
       request: ExecutionRequest,
       descriptor: MethodTestDescriptor,
       result: Throwable?,
-      logger: EventLogger,
       workDir: String,
-      config: Configuration
   ) {
     var testResult = TestExecutionResult.successful()
     if (result != null) {
@@ -78,13 +74,6 @@ class FrayTestExecutor {
                 RuntimeException(
                     "Expected exception not thrown: ${descriptor.analyzeConfig.expectedException.simpleName}"))
       }
-    }
-    if (descriptor.analyzeConfig.expectedLog != "" &&
-        !logger.sb.toString().contains(descriptor.analyzeConfig.expectedLog)) {
-      config.saveToReportFolder(0)
-      testResult =
-          TestExecutionResult.failed(
-              RuntimeException("Expected log not found: ${descriptor.analyzeConfig.expectedLog}"))
     }
     if (testResult == TestExecutionResult.successful()) {
       File(workDir).deleteRecursively()

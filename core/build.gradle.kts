@@ -1,10 +1,8 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.util.regex.Pattern
 
 plugins {
   kotlin("jvm")
   kotlin("plugin.serialization") version "2.0.0"
-  id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 repositories {
@@ -15,33 +13,27 @@ dependencies {
   compileOnly(project(":runtime"))
   compileOnly(project(":instrumentation"))
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
-  testImplementation("org.jetbrains.kotlin:kotlin-test")
   implementation("com.github.ajalt.clikt:clikt:4.2.2")
+  testImplementation("org.jetbrains.kotlin:kotlin-test")
+  implementation("org.apache.logging.log4j:log4j-core:2.23.1")
+  implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.23.1")
 }
 
 tasks.test {
   useJUnitPlatform()
 }
 
-tasks.named<ShadowJar>("shadowJar") {
-  manifest {
-    attributes(mapOf("Main-Class" to "org.pastalab.fray.core.MainKt"))
-  }
-}
-
 tasks.named("build") {
-  dependsOn("shadowJar")
   finalizedBy("genRunner")
 }
 
 tasks.withType<JavaExec> {
-  dependsOn(":jvmti:build")
   dependsOn(":jdk:build")
   val instrumentationTask = evaluationDependsOn(":instrumentation").tasks.named("shadowJar").get()
   val jdk = project(":jdk")
   val jvmti = project(":jvmti")
   val instrumentation = instrumentationTask.outputs.files.first().absolutePath
-  classpath = tasks.named("shadowJar").get().outputs.files
+  classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
   executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
   mainClass = "org.pastalab.fray.core.MainKt"
   jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
@@ -83,7 +75,7 @@ tasks.create("genRunner") {
   doLast {
     val instrumentationTask = evaluationDependsOn(":instrumentation").tasks.named("shadowJar").get()
     val instrumentation = instrumentationTask.outputs.files.first().absolutePath
-    val core = tasks.named("shadowJar").get().outputs.files.first().absolutePath
+    val core = tasks.named("jar").get().outputs.files.first().absolutePath
     val jvmti = project(":jvmti")
     val binDir = "${rootProject.projectDir.absolutePath}/bin"
     var runner = file("${binDir}/fray.template").readText()

@@ -9,7 +9,7 @@ plugins {
 
 allprojects {
   group = "org.pastalab.fray"
-  version = "1.0-SNAPSHOT"
+  version = "0.1-SNAPSHOT"
 }
 
 repositories {
@@ -34,6 +34,9 @@ configure(allprojects - project(":jvmti")) {
 configure(allprojects - project("jvmti") - rootProject) {
   plugins.apply("maven-publish")
   afterEvaluate {
+    java {
+      withSourcesJar()
+    }
     publishing {
       publications {
         create<MavenPublication>("fray") {

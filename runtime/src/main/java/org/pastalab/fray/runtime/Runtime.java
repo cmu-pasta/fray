@@ -361,8 +361,4 @@ public class Runtime {
     public static int onThreadHashCode(Object t) {
         return DELEGATE.onThreadHashCode(t);
     }
-
-    public static void log(String format, Object... args) {
-        DELEGATE.log(format, args);
-    }
 }

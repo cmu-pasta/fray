@@ -6,7 +6,7 @@ import org.junit.platform.commons.util.ReflectionUtils
 import org.junit.platform.engine.TestDescriptor
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor
 import org.junit.platform.engine.support.descriptor.ClassSource
-import org.pastalab.fray.junit.annotations.Analyze
+import org.pastalab.fray.junit.annotations.ConcurrencyTest
 
 class ClassTestDescriptor(val testClass: Class<*>, parent: TestDescriptor) :
     AbstractTestDescriptor(
@@ -23,7 +23,7 @@ class ClassTestDescriptor(val testClass: Class<*>, parent: TestDescriptor) :
     val isTestMethod = { field: Method ->
       AnnotationUtils.isAnnotated(
           field,
-          Analyze::class.java,
+          ConcurrencyTest::class.java,
       )
     }
 

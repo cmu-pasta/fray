@@ -21,8 +21,6 @@ import org.pastalab.fray.core.concurrency.locks.CountDownLatchManager
 import org.pastalab.fray.core.concurrency.locks.LockManager
 import org.pastalab.fray.core.concurrency.locks.SemaphoreManager
 import org.pastalab.fray.core.concurrency.operations.*
-import org.pastalab.fray.core.logger.LoggerBase
-import org.pastalab.fray.core.scheduler.Choice
 import org.pastalab.fray.instrumentation.memory.VolatileManager
 
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
@@ -34,13 +32,13 @@ class RunContext(val config: Configuration) {
   var mainExiting = false
   var nanoTime = System.nanoTime()
   val terminatingThread = mutableSetOf<Int>()
+  val logger = config.loggerContext.getLogger(RunContext::class.java)
   private val lockManager = LockManager()
   private val semaphoreManager = SemaphoreManager()
   private val volatileManager = VolatileManager(true)
   private val latchManager = CountDownLatchManager()
   private var step = 0
   val syncManager = SynchronizationManager()
-  val loggers = mutableListOf<LoggerBase>()
   var executor: ExecutorService =
       Executors.newSingleThreadExecutor { r ->
         object : HelperThread() {
@@ -79,14 +77,14 @@ class RunContext(val config: Configuration) {
       } else {
         e.printStackTrace(PrintWriter(sw))
       }
-      for (logger in loggers) {
-        logger.applicationEvent(sw.toString())
-      }
+      logger.error(sw.toString())
       if (config.exploreMode || config.noExitWhenBugFound) {
         return
       }
-      loggers.forEach { it.executionDone(bugFound != null) }
-      exitProcess(-1)
+      logger.error("Error found, the recording is saved to ${config.report}/index_0/")
+      println("Error found, you may find the error report in ${config.report}")
+      config.saveToReportFolder(0)
+      exitProcess(0)
     }
   }
 
@@ -150,13 +148,10 @@ class RunContext(val config: Configuration) {
     mainThreadId = t.id
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size)
     registeredThreads[t.id]?.state = ThreadState.Enabled
-    loggers.forEach { it.executionStart() }
     scheduleNextOperation(true)
   }
 
   fun done() {
-    loggers.forEach { it.executionDone(bugFound != null && config.exploreMode) }
-    loggers.clear()
     assert(lockManager.waitingThreads.isEmpty())
     assert(syncManager.synchronizationPoints.isEmpty())
     lockManager.done()
@@ -166,14 +161,6 @@ class RunContext(val config: Configuration) {
   fun shutDown() {
     org.pastalab.fray.runtime.Runtime.DELEGATE = org.pastalab.fray.runtime.Delegate()
     executor.shutdown()
-
-    for (logger in loggers) {
-      logger.shutdown()
-    }
-  }
-
-  fun registerLogger(l: LoggerBase) {
-    loggers.add(l)
   }
 
   fun threadStart(t: Thread) {
@@ -561,15 +548,6 @@ class RunContext(val config: Configuration) {
     lockManager.reentrantReadWriteLockInit(readLock, writeLock)
   }
 
-  fun log(format: String, vararg args: Any) {
-    val tid = Thread.currentThread().id
-    val context = registeredThreads[tid]!!
-    val data = "[${context.index}]: ${String.format(format, args)}\n"
-    for (logger in loggers) {
-      logger.applicationEvent(data)
-    }
-  }
-
   fun unlockImpl(
       lock: Any,
       tid: Long,
@@ -856,19 +834,6 @@ class RunContext(val config: Configuration) {
     val nextThread = config.scheduler.scheduleNextOperation(enabledOperations)
     val index = enabledOperations.indexOf(nextThread)
     currentThreadId = nextThread.thread.id
-
-    if (enabledOperations.size > 1 || config.fullSchedule) {
-      loggers.forEach {
-        it.newOperationScheduled(
-            nextThread.pendingOperation,
-            Choice(
-                index,
-                nextThread.index,
-                enabledOperations.size,
-                enabledOperations.map { it.index },
-                nextThread.pendingOperation.toString()))
-      }
-    }
     nextThread.state = ThreadState.Running
     unblockThread(currentThread, nextThread)
     if (currentThread != nextThread && shouldBlockCurrentThread) {

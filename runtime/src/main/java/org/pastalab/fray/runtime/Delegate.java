@@ -272,8 +272,5 @@ public class Delegate {
     public int onThreadHashCode(Object t) {
         return t.hashCode();
     }
-
-    public void log(String format, Object... args) {
-    }
 }
 

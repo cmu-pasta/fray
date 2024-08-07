@@ -1,32 +1,26 @@
 package org.pastalab.fray.core
 
-import java.nio.file.Paths
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.createDirectories
-import kotlin.io.path.deleteRecursively
 import kotlin.time.TimeSource
+import org.apache.logging.log4j.Logger
 import org.pastalab.fray.core.command.Configuration
-import org.pastalab.fray.core.logger.ConsoleLogger
 import org.pastalab.fray.core.randomness.ControlledRandom
 
 class TestRunner(val config: Configuration) {
 
   val context = RunContext(config)
 
+  val logger: Logger = config.loggerContext.getLogger(TestRunner::class.java)
+
   init {
-    if (!config.isReplay) {
-      prepareReportPath(config.report)
-    }
-    context.registerLogger(ConsoleLogger())
     context.bootstrap()
   }
 
-  @OptIn(ExperimentalPathApi::class)
-  fun prepareReportPath(reportPath: String) {
-    val path = Paths.get(reportPath)
-    path.deleteRecursively()
-    path.createDirectories()
-    println("Report is available at: ${path.toAbsolutePath()}")
+  fun reportProgress(iteration: Int, bugsFound: Int) {
+    print("\u001B[2J")
+    print("\u001B[2H")
+    println("Fray Testing:")
+    println("Iterations: $iteration")
+    println("Bugs Found: $bugsFound")
   }
 
   fun run(): Throwable? {
@@ -37,8 +31,9 @@ class TestRunner(val config: Configuration) {
       val timeSource = TimeSource.Monotonic
       val start = timeSource.markNow()
       var i = 0
+      var bugsFound = 0
       while (i != config.iter) {
-        println("Starting iteration $i")
+        reportProgress(i, bugsFound)
         try {
           if (i != 0) {
             config.scheduler = config.scheduler.nextIteration()
@@ -53,8 +48,10 @@ class TestRunner(val config: Configuration) {
           org.pastalab.fray.runtime.Runtime.onMainExit()
         }
         if (context.bugFound != null) {
+          bugsFound += 1
           println(
-              "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms")
+              "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms",
+          )
           if (!config.exploreMode) {
             config.saveToReportFolder(i)
             break

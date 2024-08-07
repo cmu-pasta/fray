@@ -9,7 +9,7 @@ import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor
 import org.junit.platform.engine.support.descriptor.MethodSource
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.Scheduler
-import org.pastalab.fray.junit.annotations.Analyze
+import org.pastalab.fray.junit.annotations.ConcurrencyTest
 
 class MethodTestDescriptor(val testMethod: Method, val parent: ClassTestDescriptor) :
     AbstractTestDescriptor(
@@ -21,7 +21,7 @@ class MethodTestDescriptor(val testMethod: Method, val parent: ClassTestDescript
     setParent(parent)
   }
 
-  val analyzeConfig = findAnnotation(testMethod, Analyze::class.java).get()
+  val analyzeConfig = findAnnotation(testMethod, ConcurrencyTest::class.java).get()
 
   fun getScheduler(): Pair<Scheduler, ControlledRandom> {
     if (!analyzeConfig.replay.isEmpty()) {
@@ -29,14 +29,16 @@ class MethodTestDescriptor(val testMethod: Method, val parent: ClassTestDescript
       val randomPath = "${path}/random.json"
       val schedulerPath = "${path}/schedule.json"
       if (path.startsWith("classpath")) {
-        val randomnessProvider = Json.decodeFromString<ControlledRandom>(javaClass.getResource
-        (randomPath.split(":")[1]).readText())
-        val scheduler = Json.decodeFromString<Scheduler>(javaClass.getResource(schedulerPath
-            .split(":")[1])
-            .readText())
+        val randomnessProvider =
+            Json.decodeFromString<ControlledRandom>(
+                javaClass.getResource(randomPath.split(":")[1])!!.readText())
+        val scheduler =
+            Json.decodeFromString<Scheduler>(
+                javaClass.getResource(schedulerPath.split(":")[1])!!.readText())
         return Pair(scheduler, randomnessProvider)
       } else {
-        val randomnessProvider = Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
+        val randomnessProvider =
+            Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
         val scheduler = Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
         return Pair(scheduler, randomnessProvider)
       }

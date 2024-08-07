@@ -753,8 +753,4 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     }
     return t.hashCode()
   }
-
-  override fun log(format: String, vararg args: Any) {
-    context.log(format, *args)
-  }
 }
