@@ -64,6 +64,16 @@ configure(allprojects - project("jvmti") - rootProject) {
           artifact(tasks["dokkaJavadocJar"])
         }
       }
+      repositories {
+        maven {
+          name = "GitHubPackages"
+          url = uri("https://maven.pkg.github.com/pasta-lab/fray")
+          credentials {
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")
+          }
+        }
+      }
     }
   }
 }
