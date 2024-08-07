@@ -6,6 +6,7 @@ val currentTarget = configurations.create("${os}-${arch}")
 
 
 plugins {
+  java
   id("io.github.tomtzook.gradle-cmake") version "1.2.2"
   id("maven-publish")
 }
@@ -18,7 +19,12 @@ cmake {
   }
 }
 
-tasks.register("clean") {
+tasks.create<Jar>("sourcesJar") {
+  archiveClassifier.set("sources")
+  from("src/cpp")
+}
+
+tasks.named("clean") {
   dependsOn("cmakeClean")
 }
 
@@ -39,29 +45,13 @@ tasks.register<Copy>("collectNativeLibs") {
 }
 
 
-tasks.register<Jar>("jarWithNativeLibs") {
+tasks.named<Jar>("jar") {
   dependsOn("collectNativeLibs")
-  archiveFileName.set("fray-jvmti.jar")
   destinationDirectory.set(file("${layout.buildDirectory.get().asFile}/libs"))
   archiveClassifier.set("$os-$arch")
   from("${layout.buildDirectory.get().asFile}/native-libs") {
     include("**/*.so")
     include("**/*.dylib")
     include("**/*.dll")
-  }
-}
-
-artifacts {
-  add("$os-$arch", tasks.named("jarWithNativeLibs"))
-}
-
-
-afterEvaluate {
-  publishing {
-    publications {
-      create<MavenPublication>("fray") {
-        artifact(tasks.named("jarWithNativeLibs"))
-      }
-    }
   }
 }

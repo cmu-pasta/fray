@@ -10,7 +10,7 @@ plugins {
 
 allprojects {
   group = "org.pastalab.fray"
-  version = "0.1-SNAPSHOT"
+  version = "0.1"
 }
 
 repositories {
@@ -30,18 +30,20 @@ kotlin {
 
 configure(allprojects - project(":jvmti")) {
   plugins.apply("com.ncorti.ktfmt.gradle")
-}
-
-configure(allprojects - project("jvmti") - rootProject) {
-  plugins.apply("maven-publish")
-  plugins.apply("org.jetbrains.dokka")
-
   afterEvaluate {
     tasks.register<Jar>("dokkaJavadocJar") {
       dependsOn(tasks.dokkaJavadoc)
       from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
       archiveClassifier.set("javadoc")
     }
+  }
+}
+
+configure(allprojects - rootProject) {
+  plugins.apply("maven-publish")
+  plugins.apply("org.jetbrains.dokka")
+
+  afterEvaluate {
     java {
       withSourcesJar()
     }
@@ -58,19 +60,20 @@ configure(allprojects - project("jvmti") - rootProject) {
                 url = "https://www.gnu.org/licenses/gpl-3.0.html"
               }
             }
-
           }
           from(components["java"])
-          artifact(tasks["dokkaJavadocJar"])
+          if (project.name != "jvmti") {
+            artifact(tasks["dokkaJavadocJar"])
+          }
         }
       }
       repositories {
         maven {
           name = "GitHubPackages"
-          url = uri("https://maven.pkg.github.com/pasta-lab/fray")
+          url = uri("https://maven.pkg.github.com/cmu-pasta/fray")
           credentials {
-            username = System.getenv("GITHUB_ACTOR")
-            password = System.getenv("GITHUB_TOKEN")
+            username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+            password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
           }
         }
       }
