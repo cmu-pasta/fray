@@ -50,12 +50,46 @@ public void MyHammerTest() {
 }
 ```
 
-
 ## Requirements
 
-Please make sure you have Java 21 installed. To build the native plugin, you also need to have `g++` and `cmake` installed.
+Fray currently requires Java 21. We are working on supporting more versions of Java.
 
-## Build Fray
+
+## HowTo
+
+### Use Fray as a Gradle Plugin
+
+The easist way to use Fray is through gradle plugin.
+
+```kotlin
+plugins {
+    id("org.pastalab.fray.gradle") version "0.1"
+}
+
+tasks.test {
+  dependsOn("frayTest")
+}
+```
+
+The gradle plugin will configure your project to use Fray. You can write Fray tests similar to JUnit tests. 
+
+```java 
+public class TestClass {
+  ...
+    @ConcurrencyTest(
+    )
+    public void test() throws Exception {
+      ...
+    }
+}
+```
+
+### Use Fray as a command line tool
+
+In order to use Fray as a command line tool. You need to build Fray first.
+
+
+#### Build Fray
 
 - Run the following commands to build Fray
 
@@ -64,26 +98,48 @@ Please make sure you have Java 21 installed. To build the native plugin, you als
 export PATH=$PATH:$(pwd)/bin
 ```
 
-## Example
+#### Example
 
-We provide an example application in the `integration-tests/src/main/java/example/FrayExample.java`. You may run the following command to build it:
+Consider the following application:
+
+```java
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class FrayExample extends Thread {
+  static Object o = new Object();
+  static AtomicInteger a = new AtomicInteger();
+  static volatile int b;
+  public void run() {
+    int x = a.getAndIncrement();
+    synchronized(o) { 
+      if (x == 0) {
+        try { o.wait(); } catch (InterruptedException ignore) { }
+      } else {
+        o.notify();
+      }
+    } 
+    b = x;
+  }
+  public static void main(String[] args) throws Exception {
+    a = new AtomicInteger();
+    b = 0;
+    FrayExample[] threads = {new FrayExample(), new FrayExample()};
+    for (var thread : threads) thread.start();
+    for (var thread : threads) thread.join();
+  }
+}
+```
 
 ```bash
-mkdir out
-javac integration-tests/src/main/java/example/FrayExample.java -d out
+javac FrayExample.java -d out
 ```
 
 You can run the program with regular Java command 
 ```
-java -ea -cp ./out/ example.FrayExample
+java -cp ./out/ FrayExample
 ```
-In the most cases, the program will show an `AssertionError`.
 
-## Run Fray
-
-### Push-button Testing
-
-The easiest way to run Fray is to replace `java` with `fray` in your command line. For example, if you want to run the following command:
+You can just replace `java` with `fray` in your command line to run the program with Fray!
 
 ```bash
 fray -cp ./out/ example.FrayExample
