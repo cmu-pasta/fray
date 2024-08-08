@@ -1,5 +1,56 @@
 # Fray: General-Purpose Concurrency Testing 
 
+Fray is a general-purpose concurrency testing tool that can be used to test Java applications. Fray is built on top of the Java Virtual Machine (JVM) and uses a combination of static and dynamic analysis to test concurrent programs.
+Fray is designed to be easy to use and can be integrated into existing testing frameworks.
+
+## Getting Started
+
+Consider you have a Java application that has a currency component (e.g., an asynchronous worker).
+
+```java
+public class TestExample extends Thread {
+    static AtomicInteger a = new AtomicInteger();
+    public void run() {
+        int x = a.getAndIncrement();
+        synchronized (o) {
+            if (x % 2 == 0) {
+                try {
+                    o.wait();
+                } catch (InterruptedException ignore) {
+                }
+            } else {
+                o.notify();
+            }
+        }
+    }
+}
+```
+
+In order to find bugs in the application, developers usually implement *hammer* tests, which run the application with a large number of threads and hope to find bugs. 
+
+```java 
+@Test 
+public void MyHammerTest() {
+    for (int i = 0; i < 1000; i++) {
+        new TestExample().start();
+    }
+}
+```
+
+However, this approach is not effective because it is hard to reproduce the bug and the test is non-deterministic. Fray 
+is designed to solve this problem. Simply replace `@Test` with `@ConcurrencyTest`, and Fray will automatically test 
+the application with different interleavings **deterministically**, and you don't need to launch the test with a large number of threads.
+
+```java
+@ConcurrencyTest
+public void MyHammerTest() {
+  for (int i = 0; i < 2; i++) {
+    new TestExample().start();
+  }
+}
+```
+
+
 ## Requirements
 
 Please make sure you have Java 21 installed. To build the native plugin, you also need to have `g++` and `cmake` installed.
