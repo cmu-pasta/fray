@@ -1,5 +1,8 @@
 # Fray: General-Purpose Concurrency Testing 
 
+[![Build](https://github.com/cmu-pasta/fray/actions/workflows/main.yml/badge.svg)](https://github.com/cmu-pasta/fray/actions/workflows/main.yml)
+
+
 Fray is a general-purpose concurrency testing tool for Java applications. It performs deterministic concurrency testing using various testing algorithms.
 Fray is designed to be easy to use and can be integrated into existing testing frameworks.
 
