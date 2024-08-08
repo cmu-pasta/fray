@@ -37,8 +37,9 @@ public void MyHammerTest() {
 }
 ```
 
-However, this approach is not effective because it is hard to reproduce the bug and the test is non-deterministic. Fray 
-is designed to solve this problem. Simply replace `@Test` with `@ConcurrencyTest`, and Fray will automatically test 
+However, this approach is not effective because it is hard to reproduce the bug and the test is non-deterministic. 
+
+Fray is designed to solve this problem. Simply replace `@Test` with `@ConcurrencyTest`, and Fray will automatically test 
 the application with different interleavings **deterministically**, and you don't need to launch the test with a large number of threads.
 
 ```java
