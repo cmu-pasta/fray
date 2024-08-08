@@ -1,6 +1,6 @@
 # Fray: General-Purpose Concurrency Testing 
 
-Fray is a general-purpose concurrency testing tool that can be used to test Java applications. Fray is built on top of the Java Virtual Machine (JVM) and uses a combination of static and dynamic analysis to test concurrent programs.
+Fray is a general-purpose concurrency testing tool for Java applications. It performs deterministic concurrency testing using various testing algorithms.
 Fray is designed to be easy to use and can be integrated into existing testing frameworks.
 
 ## Getting Started
