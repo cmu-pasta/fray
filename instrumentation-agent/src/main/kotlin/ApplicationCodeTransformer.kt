@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation
+package org.pastalab.fray.instrumentation.agent
 
 import java.io.File
 import java.lang.instrument.ClassFileTransformer

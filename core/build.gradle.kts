@@ -29,7 +29,8 @@ tasks.named("build") {
 
 tasks.withType<JavaExec> {
   dependsOn(":jdk:build")
-  val instrumentationTask = evaluationDependsOn(":instrumentation").tasks.named("shadowJar").get()
+  val instrumentationTask = evaluationDependsOn(":instrumentation-agent")
+      .tasks.named("shadowJar").get()
   val jdk = project(":jdk")
   val jvmti = project(":jvmti")
   val instrumentation = instrumentationTask.outputs.files.first().absolutePath
@@ -73,7 +74,8 @@ tasks.register<JavaExec>("runFray") {
 
 tasks.create("genRunner") {
   doLast {
-    val instrumentationTask = evaluationDependsOn(":instrumentation").tasks.named("shadowJar").get()
+    val instrumentationTask = evaluationDependsOn(":instrumentation-agent")
+        .tasks.named("shadowJar").get()
     val instrumentation = instrumentationTask.outputs.files.first().absolutePath
     val core = tasks.named("jar").get().outputs.files.first().absolutePath
     val jvmti = project(":jvmti")

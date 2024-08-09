@@ -1,9 +1,6 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 plugins {
   java
   kotlin("jvm")
-  id("io.github.goooler.shadow") version "8.1.7"
 }
 
 repositories {
@@ -11,8 +8,6 @@ repositories {
 }
 
 dependencies {
-  add("shadow", localGroovy())
-  add("shadow", gradleApi())
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   api("org.ow2.asm:asm:9.7")
@@ -33,28 +28,7 @@ tasks.compileJava {
   })
 }
 
-tasks.jar {
-  manifest {
-    attributes(mapOf("Premain-Class" to "org.pastalab.fray.instrumentation.PreMainKt"))
-  }
-  archiveClassifier.set("original")
-}
-
-tasks.named<ShadowJar>("shadowJar") {
-  archiveClassifier.set("shadow")
-  relocate("org.objectweb.asm", "org.pastalab.fray.instrumentation.asm")
-  dependencies {
-    exclude(project(":runtime"))
-  }
-  manifest {
-    attributes(mapOf("Premain-Class" to "org.pastalab.fray.instrumentation.PreMainKt"))
-  }
-}
 
 tasks.test {
   useJUnitPlatform()
-}
-
-tasks.named("build") {
-  finalizedBy("shadowJar")
 }

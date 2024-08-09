@@ -1,3 +1,6 @@
+import groovy.namespace.QName
+import groovy.util.Node
+import groovy.util.NodeList
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import java.util.regex.Pattern
 
@@ -64,7 +67,11 @@ configure(allprojects - rootProject) {
               }
             }
           }
-          from(components["java"])
+          afterEvaluate {
+            val shadowJar = tasks.findByName("shadowJar")
+            if (shadowJar == null) from(components["java"])
+            else artifact(shadowJar)
+          }
           if (project.name != "jvmti") {
             artifact(tasks["dokkaJavadocJar"])
           } else {

@@ -1,9 +1,7 @@
-package org.pastalab.fray.instrumentation
+package org.pastalab.fray.instrumentation.agent
 
 import java.lang.instrument.Instrumentation
 
 fun premain(arguments: String?, instrumentation: Instrumentation) {
-  //  Utils.prepareDebugFolder("app")
-  //  Utils.prepareDebugFolder("origin")
   instrumentation.addTransformer(ApplicationCodeTransformer())
 }

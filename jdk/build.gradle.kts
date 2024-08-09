@@ -52,6 +52,7 @@ tasks.build {
         val command = listOf("jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars:$runtimeJar",
             "-J--add-modules=org.pastalab.fray.jdk", "-J--class-path=$jars:$runtimeJar",
             "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH",  "--fray-instrumentation")
+        println(command.joinToString(" "))
         commandLine(command)
       }
     }
