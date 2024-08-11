@@ -32,7 +32,7 @@ kotlin {
   jvmToolchain(21)
 }
 
-configure(allprojects - project(":jvmti")) {
+configure(allprojects - project(":jvmti") - project(":instrumentation")) {
   plugins.apply("com.ncorti.ktfmt.gradle")
   afterEvaluate {
     tasks.register<Jar>("dokkaJavadocJar") {
