@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
   compileOnly(project(":runtime"))
-  compileOnly(project(":instrumentation"))
+  compileOnly(project(":instrumentation:base"))
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
   implementation("com.github.ajalt.clikt:clikt:4.2.2")
   testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -28,10 +28,10 @@ tasks.named("build") {
 }
 
 tasks.withType<JavaExec> {
-  dependsOn(":jdk:build")
-  val instrumentationTask = evaluationDependsOn(":instrumentation-agent")
+  dependsOn(":instrumentation:jdk:build")
+  val instrumentationTask = evaluationDependsOn(":instrumentation:agent")
       .tasks.named("shadowJar").get()
-  val jdk = project(":jdk")
+  val jdk = project(":instrumentation:jdk")
   val jvmti = project(":jvmti")
   val instrumentation = instrumentationTask.outputs.files.first().absolutePath
   classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
@@ -74,7 +74,7 @@ tasks.register<JavaExec>("runFray") {
 
 tasks.create("genRunner") {
   doLast {
-    val instrumentationTask = evaluationDependsOn(":instrumentation-agent")
+    val instrumentationTask = evaluationDependsOn(":instrumentation:agent")
         .tasks.named("shadowJar").get()
     val instrumentation = instrumentationTask.outputs.files.first().absolutePath
     val core = tasks.named("jar").get().outputs.files.first().absolutePath

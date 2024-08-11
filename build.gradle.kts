@@ -14,7 +14,7 @@ plugins {
 
 allprojects {
   group = "org.pastalab.fray"
-  version = "0.1"
+  version = "0.1.1"
 }
 
 repositories {
@@ -43,7 +43,7 @@ configure(allprojects - project(":jvmti")) {
   }
 }
 
-configure(allprojects - rootProject) {
+configure(allprojects - rootProject - project(":instrumentation")) {
   plugins.apply("maven-publish")
   plugins.apply("org.jetbrains.dokka")
 

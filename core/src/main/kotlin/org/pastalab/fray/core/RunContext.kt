@@ -21,7 +21,7 @@ import org.pastalab.fray.core.concurrency.locks.CountDownLatchManager
 import org.pastalab.fray.core.concurrency.locks.LockManager
 import org.pastalab.fray.core.concurrency.locks.SemaphoreManager
 import org.pastalab.fray.core.concurrency.operations.*
-import org.pastalab.fray.instrumentation.memory.VolatileManager
+import org.pastalab.fray.instrumentation.base.memory.VolatileManager
 
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 class RunContext(val config: Configuration) {
