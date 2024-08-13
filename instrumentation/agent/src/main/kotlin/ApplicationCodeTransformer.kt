@@ -34,7 +34,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
         dotClassName.startsWith("com.github.ajalt") ||
         (dotClassName.startsWith("org.pastalab.fray") &&
             !dotClassName.startsWith("org.pastalab.fray.benchmark") &&
-            !dotClassName.startsWith("org.pastalab.fray.it"))) {
+            !dotClassName.startsWith("org.pastalab.fray.core.test"))) {
       // This is likely a JDK class, so skip transformation
       return classfileBuffer
     }

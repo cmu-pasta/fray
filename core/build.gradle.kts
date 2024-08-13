@@ -17,10 +17,18 @@ dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   implementation("org.apache.logging.log4j:log4j-core:2.23.1")
   implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.23.1")
+  testCompileOnly(project(":runtime"))
 }
 
 tasks.test {
   useJUnitPlatform()
+  val jvmti = project(":jvmti")
+  val jdk = project(":instrumentation:jdk")
+  val agent = project(":instrumentation:agent")
+  executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
+  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
+  jvmArgs("-javaagent:${agent.layout.buildDirectory.get().asFile}/libs/" +
+      "${agent.name}-${agent.version}-shadow.jar")
 }
 
 tasks.named("build") {

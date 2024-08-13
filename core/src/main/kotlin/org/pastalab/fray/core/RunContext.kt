@@ -281,14 +281,19 @@ class RunContext(val config: Configuration) {
     context.pendingOperation = ObjectWaitOperation(objId)
     context.state = ThreadState.Enabled
     scheduleNextOperation(true)
-    // If we resume executing, the Object.wait is executed. We should update the
-    // state of current thread.
 
+    // First we need to check if current thread is interrupted.
     if (canInterrupt) {
       context.checkInterrupt()
     }
-    // No matter if an interrupt is signaled, we need to enter the `wait` method
-    // first which will unlock the reentrant lock and tries to reacquire it.
+
+    // We also need to check if current thread holds the monitor lock.
+    if (!lockManager.getLockContext(lockObject).isLockHolder(lockObject, t)) {
+      // If current thread is not lock holder, we should just continue because
+      // JVM will throw IllegalMonitorStateException.
+      return
+    }
+
     if (lockObject == waitingObject) {
       context.pendingOperation = ObjectWaitBlocking(waitingObject)
     } else {

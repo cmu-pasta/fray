@@ -5,7 +5,7 @@ import org.pastalab.fray.core.ThreadState
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
 
 class ReentrantLockContext : LockContext {
-  private var lockHolder: Long? = null
+  var lockHolder: Long? = null
   private val lockTimes = mutableMapOf<Long, Int>()
   // Mapping from thread id to whether the thread is interruptible.
   private val lockWaiters = mutableMapOf<Long, LockWaiter>()
@@ -101,5 +101,9 @@ class ReentrantLockContext : LockContext {
       lockWaiter.thread.state = ThreadState.Enabled
       lockWaiters.remove(tid)
     }
+  }
+
+  override fun isLockHolder(lock: Any, tid: Long): Boolean {
+    return lockHolder == tid
   }
 }

@@ -185,4 +185,12 @@ class ReentrantReadWriteLockContext : LockContext {
     unlockReadWaiters()
     unlockWriteWaiters()
   }
+
+  override fun isLockHolder(lock: Any, tid: Long): Boolean {
+    return if (lock is ReadLock) {
+      readLockHolder.contains(tid)
+    } else {
+      writeLockHolder == tid
+    }
+  }
 }
