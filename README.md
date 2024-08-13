@@ -8,24 +8,61 @@ Fray is designed to be easy to use and can be integrated into existing testing f
 
 ## Getting Started
 
-Consider you have a Java application that has a currency component (e.g., an asynchronous worker).
+> [!TIP]
+> Want to try Fray now? Clone the repository and run `./gradlew build`. Then replace `java` with `fray` in your command 
+> line to run your application with Fray.
+
+
+Consider you have a bank account application (you may find the complete example in 
+https://github.com/cmu-pasta/fray-examples/blob/main/fray-maven-example/src/test/java/BankAccountTest.java):
 
 ```java
-public class TestExample extends Thread {
-    static AtomicInteger a = new AtomicInteger();
-    public void run() {
-        int x = a.getAndIncrement();
-        synchronized (o) {
-            if (x % 2 == 0) {
-                try {
-                    o.wait();
-                } catch (InterruptedException ignore) {
-                }
-            } else {
-                o.notify();
-            }
+public static class BankAccount {
+    private AtomicInteger balance = new AtomicInteger();
+
+    public BankAccount(int initialBalance) {
+        this.balance.set(initialBalance);
+    }
+
+    // Transfer money from this account to another account
+    public void transfer(BankAccount target, int amount) {
+        if (this.balance.get() >= amount) {
+            this.balance.set(this.balance.get() - amount);
+            target.balance.set(target.balance.get() + amount);
+        } else {
+            System.out.println("Insufficient funds to transfer " + amount + " from " + this);
         }
     }
+}
+```
+
+You may write a test for the application using JUnit:
+
+```java
+public void testBankAccount() {
+    BankAccount account1 = new BankAccount(1000);
+    BankAccount account2 = new BankAccount(1000);
+    // Thread 1: Transfer 500 from account1 to account2
+    Thread thread1 = new Thread(() -> {
+        account1.transfer(account2, 500);
+    });
+    // Thread 2: Transfer 700 from account1 to account2
+    Thread thread2 = new Thread(() -> {
+        account1.transfer(account2, 700);
+    });
+
+    // Start both threads
+    thread1.start();
+    thread2.start();
+
+    // Wait for both threads to finish
+    try {
+        thread1.join();
+        thread2.join();
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+    assertTrue(account1.balance.get() >= 0);
 }
 ```
 
@@ -35,23 +72,22 @@ In order to find bugs in the application, developers usually implement *hammer* 
 @Test 
 public void MyHammerTest() {
     for (int i = 0; i < 1000; i++) {
-        new TestExample().start();
+        testBankAccount();
     }
 }
 ```
 
 However, this approach is not effective because it is hard to reproduce the bug and the test is non-deterministic. 
 
-Fray is designed to solve this problem. Simply replace `@Test` with `@ConcurrencyTest`, and Fray will automatically test 
-the application with different interleavings **deterministically**. So instead of spawning 1000 threads and hope to find a bug,
-why not just spawn 2 threads and Fray will test different interleaving thoroughly.
+Fray is designed to solve this problem. Simply add `@ConcurrencyTest` to `testBankAccount`, 
+and Fray will automatically test 
+the application with different interleavings **deterministically**. So instead of spawning run the test
+1000 times and hope to find a bug, why not using Fray to test different interleaving thoroughly.
 
 ```java
 @ConcurrencyTest
-public void MyHammerTest() {
-  for (int i = 0; i < 2; i++) {
-    new TestExample().start();
-  }
+public void testBankAccount() {
+  ...
 }
 ```
 
@@ -88,6 +124,36 @@ public class TestClass {
     }
 }
 ```
+
+### Use Fray as a Maven Plugin
+
+You may also use Fray as a Maven plugin. 
+
+```xml
+<!--Add following to the plugins section-->
+<plugin>
+    <groupId>org.pastalab.fray.maven</groupId>
+    <artifactId>fray-maven-plugin</artifactId>
+    <version>0.1.2</version>
+    <executions>
+        <execution>
+            <id>prepare-fray</id>
+            <goals>
+                <goal>prepare-fray</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+
+<!--Add following to the dependencies section-->
+<dependency>
+    <groupId>org.pastalab.fray</groupId>
+    <artifactId>junit</artifactId>
+    <version>0.1.1</version>
+    <scope>test</scope>
+</dependency>
+```
+
 
 ### Use Fray as a command line tool
 
