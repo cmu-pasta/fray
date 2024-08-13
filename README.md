@@ -35,6 +35,9 @@ public static class BankAccount {
     }
 }
 ```
+The bug here is in the logic of checking and updating the balance in the transfer method. The check 
+`if (this.balance >= amount)` is done before the actual transfer, but the method doesn’t account for the fact that 
+another thread might simultaneously perform a transfer.
 
 You may write a test for the application using JUnit:
 
@@ -66,7 +69,15 @@ public void testBankAccount() {
 }
 ```
 
-In order to find bugs in the application, developers usually implement *hammer* tests, which run the application with a large number of threads and hope to find bugs. 
+If Thread 1 and Thread 2 run concurrently, they might both pass the check `if (this.balance >= amount)` before either of them deducts the balance. For example:
+- Thread 1 checks the balance (1000), sees it’s sufficient, and proceeds to transfer 500.
+- At the same time, Thread 2 checks the balance (1000), also sees it’s sufficient, and proceeds to transfer 700.
+- Both threads then deduct from the balance, leading to an incorrect state where 1200 has been transferred out of an 
+  account that initially had only 1000.
+
+
+Unfortunately, traditional testing frameworks such as JUnit does not test the application under different thread 
+interleavings. In order to find bugs in the application, developers usually implement *hammer* tests, which run the application with a large number of threads and hope to find bugs. 
 
 ```java 
 @Test 
@@ -77,7 +88,8 @@ public void MyHammerTest() {
 }
 ```
 
-However, this approach is not effective because it is hard to reproduce the bug and the test is non-deterministic. 
+This approach is not effective because it is hard to reproduce the bug and the test is non-deterministic. More 
+importantly, in the most cases, the test will not trigger the bug!
 
 Fray is designed to solve this problem. Simply add `@ConcurrencyTest` to `testBankAccount`, 
 and Fray will automatically test 
@@ -90,6 +102,35 @@ public void testBankAccount() {
   ...
 }
 ```
+
+And Fray can help you find the bug!
+
+```
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.016 s <<< FAILURE! -- in BankAccountTest
+[ERROR] BankAccountTest.testBankAccount -- Time elapsed: 0.016 s <<< ERROR!
+java.lang.reflect.InvocationTargetException
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+        at org.pastalab.fray.junit.FrayTestExecutor.executeTest$lambda$0(FrayTestExecutor.kt:38)
+        at org.pastalab.fray.core.command.LambdaExecutor.execute(Executor.kt:62)
+        at org.pastalab.fray.core.TestRunner.run(TestRunner.kt:44)
+        at org.pastalab.fray.junit.FrayTestExecutor.executeTest(FrayTestExecutor.kt:55)
+        at org.pastalab.fray.junit.FrayTestExecutor.execute(FrayTestExecutor.kt:25)
+        at org.pastalab.fray.junit.FrayTestExecutor.executeContainer(FrayTestExecutor.kt:88)
+        at org.pastalab.fray.junit.FrayTestExecutor.execute(FrayTestExecutor.kt:22)
+        at org.pastalab.fray.junit.FrayTestExecutor.executeContainer(FrayTestExecutor.kt:88)
+        at org.pastalab.fray.junit.FrayTestExecutor.execute(FrayTestExecutor.kt:19)
+        at org.pastalab.fray.junit.FrayTestEngine.execute(FrayTestEngine.kt:50)
+Caused by: org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+        at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+        at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+        at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+        at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+        at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:31)
+        at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
+        at BankAccountTest.testBankAccount(BankAccountTest.java:63)
+        ... 11 more
+```
+
 
 ## Requirements
 
