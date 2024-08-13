@@ -17,6 +17,10 @@ dependencies {
   implementation(project(":instrumentation:base"))
 }
 
+tasks.build {
+  dependsOn("shadowJar")
+}
+
 tasks.named<ShadowJar>("shadowJar") {
   archiveClassifier.set("shadow")
   relocate("org.objectweb.asm", "org.pastalab.fray.instrumentation.agent.asm")

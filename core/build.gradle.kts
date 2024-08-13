@@ -29,6 +29,8 @@ tasks.test {
   jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
   jvmArgs("-javaagent:${agent.layout.buildDirectory.get().asFile}/libs/" +
       "${agent.name}-${agent.version}-shadow.jar")
+  dependsOn(":instrumentation:jdk:build")
+  dependsOn(":instrumentation:agent:build")
 }
 
 tasks.named("build") {

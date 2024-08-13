@@ -38,7 +38,6 @@ tasks.build {
   val jdkPath = "${layout.buildDirectory.get().asFile}/java-inst"
   outputs.dirs(jdkPath)
   doLast {
-    println(state)
     if (!state.upToDate) {
       exec {
         if (File(jdkPath).exists()) {
