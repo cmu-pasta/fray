@@ -6,11 +6,11 @@
 Fray is a general-purpose concurrency testing tool for Java applications. It performs deterministic concurrency testing using various testing algorithms.
 Fray is designed to be easy to use and can be integrated into existing testing frameworks.
 
-## Getting Started
-
 > [!TIP]
-> Want to try Fray now? Clone the repository and run `./gradlew build`. Then replace `java` with `fray` in your command 
-> line to run your application with Fray.
+> Can't wait to try Fray? Clone the repository and run `./gradlew build && export PATH=$PATH:$(pwd)/bin`. 
+> Then replace `java` with `fray` in your command line to run your application with Fray.
+
+## Getting Started
 
 
 Consider you have a bank account application (you may find the complete example in 
