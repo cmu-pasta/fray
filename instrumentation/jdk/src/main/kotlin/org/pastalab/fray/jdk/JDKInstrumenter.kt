@@ -1,6 +1,5 @@
 package org.pastalab.fray.jdk
 
-import java.io.File
 import java.io.InputStream
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
@@ -79,6 +78,8 @@ fun instrumentModuleInfo(inputStream: InputStream, packages: List<String>): Byte
   var cw = ClassWriter(0)
   cn.accept(cw)
   var out = cw.toByteArray()
-  File("/tmp/out/java.base.module-info.class").writeBytes(out)
+  if (DEBUG_MODE) {
+    writeClassFile("java.base.module-info.class", out, true)
+  }
   return out
 }
