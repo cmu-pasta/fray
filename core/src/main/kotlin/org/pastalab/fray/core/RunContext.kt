@@ -81,7 +81,7 @@ class RunContext(val config: Configuration) {
       if (config.exploreMode || config.noExitWhenBugFound) {
         return
       }
-      logger.error("Error found, the recording is saved to ${config.report}/index_0/")
+      logger.error("Error found, the recording is saved to ${config.report}/recording_0/")
       println("Error found, you may find the error report in ${config.report}")
       config.saveToReportFolder(0)
       exitProcess(0)

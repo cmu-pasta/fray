@@ -52,6 +52,7 @@ class TestRunner(val config: Configuration) {
           println(
               "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms",
           )
+          logger.error("Error found, the recording is saved to ${config.report}/recording_$i/")
           if (!config.exploreMode) {
             config.saveToReportFolder(i)
             break

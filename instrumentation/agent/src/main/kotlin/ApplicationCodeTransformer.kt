@@ -1,6 +1,5 @@
 package org.pastalab.fray.instrumentation.agent
 
-import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.security.ProtectionDomain
 import org.objectweb.asm.ClassReader
@@ -26,18 +25,30 @@ class ApplicationCodeTransformer : ClassFileTransformer {
     // and if the class name starts with known JDK prefixes.
     if (dotClassName.startsWith("java.") ||
         dotClassName.startsWith("javax.") ||
-        dotClassName.startsWith("jdk.") ||
+        dotClassName.startsWith(
+            "jdk.",
+        ) ||
         dotClassName.startsWith("sun.") ||
         dotClassName.startsWith("com.sun.") ||
-        dotClassName.startsWith("kotlin.") ||
+        dotClassName.startsWith(
+            "kotlin.",
+        ) ||
         dotClassName.startsWith("kotlinx.") ||
-        (dotClassName.startsWith("org.junit.") && !dotClassName.contains("ConsoleLauncher")) ||
+        (dotClassName.startsWith("org.junit.") &&
+            !dotClassName.contains(
+                "ConsoleLauncher",
+            )) ||
         dotClassName.startsWith("org.gradle.") ||
         dotClassName.startsWith("worker.org.gradle.") ||
-        dotClassName.startsWith("com.github.ajalt") ||
+        dotClassName.startsWith("org.slf4j.") ||
+        dotClassName.startsWith(
+            "com.github.ajalt",
+        ) ||
         (dotClassName.startsWith("org.pastalab.fray") &&
             !dotClassName.startsWith("org.pastalab.fray.benchmark") &&
-            !dotClassName.startsWith("org.pastalab.fray.core.test"))) {
+            !dotClassName.startsWith(
+                "org.pastalab.fray.core.test",
+            ))) {
       // This is likely a JDK class, so skip transformation
       return classfileBuffer
     }
@@ -66,7 +77,6 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       classReader.accept(cv, ClassReader.EXPAND_FRAMES)
       val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
       if (classVersionInstrumenter.classVersion >= Opcodes.V1_5) {
-        cn.accept(classWriter)
         val checkClassAdapter = CheckClassAdapter(classWriter)
         cn.accept(checkClassAdapter)
       } else {
@@ -74,9 +84,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       }
       val out = classWriter.toByteArray()
       if (DEBUG_MODE) {
-        File("/tmp/out/app/${className.replace("/",
-            ".").removePrefix(".")}.class")
-            .writeBytes(out)
+        writeClassFile(className, out, true)
       }
       return out
     } catch (e: Throwable) {

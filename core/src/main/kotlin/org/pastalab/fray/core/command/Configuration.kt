@@ -202,9 +202,9 @@ data class Configuration(
     val noFray: Boolean,
 ) {
   fun saveToReportFolder(index: Int) {
-    Paths.get("$report/index_$index").createDirectories()
-    File("$report/index_$index/schedule.json").writeText(Json.encodeToString(scheduler))
-    File("$report/index_$index/random.json").writeText(Json.encodeToString(randomnessProvider))
+    Paths.get("$report/recording_$index").createDirectories()
+    File("$report/recording_$index/schedule.json").writeText(Json.encodeToString(scheduler))
+    File("$report/recording_$index/random.json").writeText(Json.encodeToString(randomnessProvider))
   }
 
   val loggerContext by lazy {

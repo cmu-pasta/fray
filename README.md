@@ -106,8 +106,9 @@ public void testBankAccount() {
 And Fray can help you find the bug!
 
 ```
-[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.016 s <<< FAILURE! -- in BankAccountTest
-[ERROR] BankAccountTest.testBankAccount -- Time elapsed: 0.016 s <<< ERROR!
+Test: [engine:fray]/[class:BankAccountTest]/[method:testBankAccount] failed: report can be found at: /target/fray/fray-report/7212529822708563775
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.014 s <<< FAILURE! -- in BankAccountTest
+[ERROR] BankAccountTest.testBankAccount -- Time elapsed: 0.014 s <<< ERROR!
 java.lang.reflect.InvocationTargetException
         at java.base/java.lang.reflect.Method.invoke(Method.java:580)
         at org.pastalab.fray.junit.FrayTestExecutor.executeTest$lambda$0(FrayTestExecutor.kt:38)
@@ -129,6 +130,14 @@ Caused by: org.opentest4j.AssertionFailedError: expected: <true> but was: <false
         at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
         at BankAccountTest.testBankAccount(BankAccountTest.java:63)
         ... 11 more
+```
+
+Debugging the test failure is easy! You can replay the schedule that causes the bug with your favorite debugger!
+
+```java
+@ConcurrencyTest(
+        replay = "PATH_TO_THE_FRAY_REPORT_FOLDER/recording_0"
+)
 ```
 
 
@@ -158,8 +167,7 @@ The gradle plugin will configure your project to use Fray. You can write Fray te
 ```java 
 public class TestClass {
   ...
-    @ConcurrencyTest(
-    )
+    @ConcurrencyTest
     public void test() throws Exception {
       ...
     }
