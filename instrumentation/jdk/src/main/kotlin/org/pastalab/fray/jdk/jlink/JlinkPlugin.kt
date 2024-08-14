@@ -8,7 +8,6 @@ import jdk.tools.jlink.plugin.Plugin
 import jdk.tools.jlink.plugin.ResourcePool
 import jdk.tools.jlink.plugin.ResourcePoolBuilder
 import jdk.tools.jlink.plugin.ResourcePoolEntry
-import org.pastalab.fray.instrumentation.base.Utils
 import org.pastalab.fray.jdk.instrumentClass
 import org.pastalab.fray.jdk.instrumentModuleInfo
 
@@ -27,9 +26,6 @@ class JlinkPlugin : Plugin {
 
   override fun transform(input: ResourcePool, output: ResourcePoolBuilder): ResourcePool {
     println("Start fray plugin!")
-
-    Utils.prepareDebugFolder("jdk")
-    Utils.prepareDebugFolder("origin")
     input.transformAndCopy(
         { entry ->
           var resourcePoolEntry = entry

@@ -11,11 +11,15 @@ import org.objectweb.asm.commons.ModuleTargetAttribute
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.ModuleExportNode
 import org.objectweb.asm.util.CheckClassAdapter
+import org.pastalab.fray.instrumentation.base.Configs.DEBUG_MODE
+import org.pastalab.fray.instrumentation.base.Utils.writeClassFile
 import org.pastalab.fray.instrumentation.base.visitors.*
 
 fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
   val byteArray = inputStream.readBytes()
-  File("/tmp/out/origin/${path.replace("/", ".").removePrefix(".")}").writeBytes(byteArray)
+  if (DEBUG_MODE) {
+    writeClassFile(path, byteArray, false)
+  }
   val shouldSkipChecking = path.contains("SystemModules") || path.contains("$")
 
   try {
@@ -53,8 +57,9 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
       cn.accept(CheckClassAdapter(classWriter))
     }
     val out = classWriter.toByteArray()
-    File("/tmp/out/jdk/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)
-    //        File("/tmp/${path.replace("/", ".").removePrefix(".")}").writeBytes(out)
+    if (DEBUG_MODE) {
+      writeClassFile(path, out, true)
+    }
     return out
   } catch (e: Throwable) {
     println(path)

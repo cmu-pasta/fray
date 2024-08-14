@@ -8,6 +8,9 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.ClassNode
+import org.objectweb.asm.util.CheckClassAdapter
+import org.pastalab.fray.instrumentation.base.Configs.DEBUG_MODE
+import org.pastalab.fray.instrumentation.base.Utils.writeClassFile
 import org.pastalab.fray.instrumentation.base.visitors.*
 
 class ApplicationCodeTransformer : ClassFileTransformer {
@@ -38,8 +41,9 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       // This is likely a JDK class, so skip transformation
       return classfileBuffer
     }
-    File("/tmp/out/origin/${className.replace("/", ".").removePrefix(".")}.class")
-        .writeBytes(classfileBuffer)
+    if (DEBUG_MODE) {
+      writeClassFile(className, classfileBuffer, false)
+    }
     try {
       val classReader = ClassReader(classfileBuffer)
       val cn = ClassNode()
@@ -63,15 +67,17 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
       if (classVersionInstrumenter.classVersion >= Opcodes.V1_5) {
         cn.accept(classWriter)
-        //        val checkClassAdapter = CheckClassAdapter(classWriter)
-        //        cn.accept(checkClassAdapter)
+        val checkClassAdapter = CheckClassAdapter(classWriter)
+        cn.accept(checkClassAdapter)
       } else {
         cn.accept(classWriter)
       }
       val out = classWriter.toByteArray()
-      File("/tmp/out/app/${className.replace("/",
-          ".").removePrefix(".")}.class")
-          .writeBytes(out)
+      if (DEBUG_MODE) {
+        File("/tmp/out/app/${className.replace("/",
+            ".").removePrefix(".")}.class")
+            .writeBytes(out)
+      }
       return out
     } catch (e: Throwable) {
       println("Failed to instrument: $className")
