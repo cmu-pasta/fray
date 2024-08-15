@@ -283,7 +283,7 @@ Error found, you may find the error report in XXX
 To replay a schedule, you may run the following command:
 
 ```bash
-fray --replay /tmp/report/schedule_0.json -cp ./out/ example.FrayExample 
+fray --replay PATH_TO_THE_RECORDING_FOLDER -cp ./out/ example.FrayExample 
 ```
 
 
@@ -386,6 +386,7 @@ echo '{
 To replay that schedule, you may run the following command:
 
 ```bash
-./gradlew runFray -PconfigPath="out/config.json" -PextraArgs="--iter=1000 --logger=json --scheduler=replay --path=/tmp/fray-example/schedule_XXX.json"
+./gradlew runFray -PconfigPath="out/config.json" -PextraArgs="--iter=1000 --logger=json --scheduler=replay 
+--path=PATH_TO_THE_RECORDING_FOLDER"
 ```
 </details>
