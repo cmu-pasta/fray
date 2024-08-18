@@ -38,6 +38,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = UnsafeInstrumenter(cv)
     cv = SkipMethodInstrumenter(cv)
     cv = ObjectInstrumenter(cv)
+    cv = ObjectHashCodeInstrumenter(cv, true)
     cv = SemaphoreInstrumenter(cv)
     cv = CountDownLatchInstrumenter(cv)
     cv = MethodHandleNativesInstrumenter(cv)

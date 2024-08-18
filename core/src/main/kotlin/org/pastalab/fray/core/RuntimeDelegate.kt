@@ -742,15 +742,10 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     return context.nanoTime()
   }
 
-  override fun onThreadHashCode(t: Any): Int {
-    if (t is Thread) {
-      val context = context.registeredThreads[t.id]
-      if (context != null) {
-        return 0
-      } else {
-        return t.hashCode()
-      }
-    }
-    return t.hashCode()
+  override fun onObjectHashCode(t: Any): Int {
+    if (checkEntered()) return t.hashCode()
+    val hashCode = context.hashCode(t)
+    entered.set(false)
+    return hashCode
   }
 }

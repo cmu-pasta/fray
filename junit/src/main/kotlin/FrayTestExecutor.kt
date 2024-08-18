@@ -50,6 +50,7 @@ class FrayTestExecutor {
             true,
             false,
             false,
+            true,
         )
     val runner = TestRunner(config)
     val result = runner.run()

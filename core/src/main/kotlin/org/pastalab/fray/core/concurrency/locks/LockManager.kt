@@ -27,7 +27,7 @@ class LockManager {
   }
 
   fun getLockContext(lock: Any): LockContext {
-    return lockContextManager.getLockContext(lock)
+    return lockContextManager.getContext(lock)
   }
 
   fun reentrantReadWriteLockInit(readLock: ReadLock, writeLock: WriteLock) {

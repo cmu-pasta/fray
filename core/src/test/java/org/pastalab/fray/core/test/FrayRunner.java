@@ -6,18 +6,22 @@ import org.pastalab.fray.core.TestRunner;
 import org.pastalab.fray.core.command.Configuration;
 import org.pastalab.fray.core.command.ExecutionInfo;
 import org.pastalab.fray.core.command.LambdaExecutor;
+import org.pastalab.fray.core.observers.ScheduleRecorder;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.FifoScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 
 
 public class FrayRunner {
-    public Throwable runTest(Function0<Unit> exec) {
-        return runTest(exec, new FifoScheduler(), 1);
+    public Throwable runWithFifo(Function0<Unit> exec) {
+        return runWithFifo(exec, new FifoScheduler(), 1);
     }
 
-    public Throwable runTest(Function0<Unit> exec, Scheduler scheduler, int iter) {
-        String testName = this.getClass().getSimpleName();
+    public Throwable runWithFifo(Function0<Unit> exec, Scheduler scheduler, int iter) {
+        return buildRunner(exec, scheduler, iter).run();
+    }
+
+    public TestRunner buildRunner(Function0<Unit> exec, Scheduler scheduler, int iter) {
         Configuration config = new Configuration(
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
@@ -37,9 +41,10 @@ public class FrayRunner {
                 false,
                 true,
                 false,
+                false,
                 false
         );
         TestRunner runner = new TestRunner(config);
-        return runner.run();
+        return runner;
     }
 }

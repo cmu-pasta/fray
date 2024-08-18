@@ -269,7 +269,7 @@ public class Delegate {
         return System.nanoTime();
     }
 
-    public int onThreadHashCode(Object t) {
+    public int onObjectHashCode(Object t) {
         return t.hashCode();
     }
 }
