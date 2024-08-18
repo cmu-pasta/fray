@@ -11,7 +11,7 @@ public class WaitTest extends FrayRunner {
 
     @Test
     public void testWaitWithoutMonitorLock() {
-        Throwable result = runTest(() -> {
+        Throwable result = runWithFifo(() -> {
             try {
                 wait();
             } catch (InterruptedException e) {
@@ -23,8 +23,8 @@ public class WaitTest extends FrayRunner {
     }
 
     @Test
-    public void testWaitWithMonitorLock() {
-        Throwable result = runTest(() -> {
+    public void testWaitWithoutNotify() {
+        Throwable result = runWithFifo(() -> {
             try {
                 synchronized (this) {
                     wait();
@@ -35,5 +35,30 @@ public class WaitTest extends FrayRunner {
             return null;
         });
         assertTrue(result instanceof DeadlockException);
+    }
+
+    @Test
+    public void testWaitWithNotify() {
+        Throwable result = runWithFifo(() -> {
+            Thread t1 = new Thread(() -> {
+                synchronized (this) {
+                    notify();
+                }
+            });
+            t1.start();
+            try {
+                synchronized (this) {
+                    wait();
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                t1.join();
+            } catch (InterruptedException e) {
+            }
+            return null;
+        });
+        assertNull(result);
     }
 }

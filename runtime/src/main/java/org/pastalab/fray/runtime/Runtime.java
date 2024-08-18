@@ -358,7 +358,7 @@ public class Runtime {
         return DELEGATE.onNanoTime();
     }
 
-    public static int onThreadHashCode(Object t) {
-        return DELEGATE.onThreadHashCode(t);
+    public static int onObjectHashCode(Object t) {
+        return DELEGATE.onObjectHashCode(t);
     }
 }

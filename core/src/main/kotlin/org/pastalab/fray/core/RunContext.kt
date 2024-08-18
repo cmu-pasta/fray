@@ -19,6 +19,7 @@ import org.pastalab.fray.core.concurrency.HelperThread
 import org.pastalab.fray.core.concurrency.SynchronizationManager
 import org.pastalab.fray.core.concurrency.locks.CountDownLatchManager
 import org.pastalab.fray.core.concurrency.locks.LockManager
+import org.pastalab.fray.core.concurrency.locks.ReferencedContextManager
 import org.pastalab.fray.core.concurrency.locks.SemaphoreManager
 import org.pastalab.fray.core.concurrency.operations.*
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
@@ -33,6 +34,7 @@ class RunContext(val config: Configuration) {
   var nanoTime = System.nanoTime()
   val terminatingThread = mutableSetOf<Int>()
   val logger = config.loggerContext.getLogger(RunContext::class.java)
+  val hashCodeMapper = ReferencedContextManager<Int>({ config.randomnessProvider.nextInt() })
   private val lockManager = LockManager()
   private val semaphoreManager = SemaphoreManager()
   private val volatileManager = VolatileManager(true)
@@ -141,6 +143,7 @@ class RunContext(val config: Configuration) {
     // We need to submit a dummy task to trigger the executor
     // thread creation
     executor.submit {}
+    config.scheduleObservers.forEach { it.onExecutionStart() }
     step = 0
     bugFound = null
     mainExiting = false
@@ -156,6 +159,8 @@ class RunContext(val config: Configuration) {
     assert(syncManager.synchronizationPoints.isEmpty())
     lockManager.done()
     registeredThreads.clear()
+    config.scheduleObservers.forEach { it.onExecutionDone() }
+    hashCodeMapper.done()
   }
 
   fun shutDown() {
@@ -837,7 +842,7 @@ class RunContext(val config: Configuration) {
     }
 
     val nextThread = config.scheduler.scheduleNextOperation(enabledOperations)
-    val index = enabledOperations.indexOf(nextThread)
+    config.scheduleObservers.forEach { it.onNewSchedule(enabledOperations, nextThread) }
     currentThreadId = nextThread.thread.id
     nextThread.state = ThreadState.Running
     unblockThread(currentThread, nextThread)
@@ -865,6 +870,15 @@ class RunContext(val config: Configuration) {
     }
     if (currentThread != nextThread) {
       nextThread.unblock()
+    }
+  }
+
+  fun hashCode(obj: Any): Int {
+    val hashCodeMethod = obj.javaClass.getMethod("hashCode")
+    return if (hashCodeMethod.declaringClass == Object::class.java) {
+      hashCodeMapper.getContext(obj)
+    } else {
+      obj.hashCode()
     }
   }
 

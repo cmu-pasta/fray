@@ -6,7 +6,24 @@ import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
 
-class ThreadHashCodeInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
+class ObjectHashCodeInstrumenter(cv: ClassVisitor, val instrumentJdk: Boolean) :
+    ClassVisitor(ASM9, cv) {
+  var shouldInstrument = true
+
+  override fun visit(
+      version: Int,
+      access: Int,
+      name: String,
+      signature: String?,
+      superName: String?,
+      interfaces: Array<out String>?
+  ) {
+    if (instrumentJdk && !(name == "java/util/Arrays" || name.startsWith("java/util/concurrent"))) {
+      shouldInstrument = false
+    }
+    super.visit(version, access, name, signature, superName, interfaces)
+  }
+
   override fun visitMethod(
       access: Int,
       name: String,
@@ -14,13 +31,11 @@ class ThreadHashCodeInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
-    return object :
-        AdviceAdapter(
-            ASM9,
-            super.visitMethod(access, name, descriptor, signature, exceptions),
-            access,
-            name,
-            descriptor) {
+    val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
+    if (!shouldInstrument) {
+      return mv
+    }
+    return object : AdviceAdapter(ASM9, mv, access, name, descriptor) {
       override fun visitMethodInsn(
           opcodeAndSource: Int,
           owner: String,
@@ -32,7 +47,7 @@ class ThreadHashCodeInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           invokeStatic(
               Type.getObjectType(
                   org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
-              Utils.kFunctionToASMMethod(org.pastalab.fray.runtime.Runtime::onThreadHashCode),
+              Utils.kFunctionToASMMethod(org.pastalab.fray.runtime.Runtime::onObjectHashCode),
           )
         } else {
           super.visitMethodInsn(opcodeAndSource, owner, name, descriptor, isInterface)

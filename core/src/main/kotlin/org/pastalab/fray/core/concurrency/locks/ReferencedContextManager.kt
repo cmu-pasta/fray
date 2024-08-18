@@ -10,33 +10,33 @@ class IdentityPhantomReference<T>(referent: T, queue: ReferenceQueue<in T>) :
 
 class ReferencedContextManager<T>(val contextProducer: (Any) -> T) {
   val queue = ReferenceQueue<Any>()
-  val lockMap = mutableMapOf<Int, Pair<T, IdentityPhantomReference<*>>>()
+  val objMap = mutableMapOf<Int, Pair<T, IdentityPhantomReference<*>>>()
 
-  fun getLockContext(lock: Any): T {
-    val id = System.identityHashCode(lock)
-    if (!lockMap.containsKey(id)) {
-      lockMap[id] = Pair(contextProducer(lock), IdentityPhantomReference(lock, queue))
+  fun getContext(obj: Any): T {
+    val id = System.identityHashCode(obj)
+    if (!objMap.containsKey(id)) {
+      objMap[id] = Pair(contextProducer(obj), IdentityPhantomReference(obj, queue))
       gc()
     }
-    return lockMap[id]!!.first
+    return objMap[id]!!.first
   }
 
   fun addContext(lock: Any, context: T) {
     val id = System.identityHashCode(lock)
-    lockMap[id] = Pair(context, IdentityPhantomReference(lock, queue))
+    objMap[id] = Pair(context, IdentityPhantomReference(lock, queue))
     gc()
   }
 
   fun done() {
     gc()
-    lockMap.clear()
+    objMap.clear()
   }
 
   fun gc() {
     var ref = queue.poll()
     while (ref != null) {
       val id = (ref as IdentityPhantomReference<*>).id
-      lockMap.remove(id)
+      objMap.remove(id)
       ref = queue.poll()
     }
   }

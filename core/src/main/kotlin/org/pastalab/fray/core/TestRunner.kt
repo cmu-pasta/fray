@@ -32,6 +32,12 @@ class TestRunner(val config: Configuration) {
       val start = timeSource.markNow()
       var i = 0
       var bugsFound = 0
+      if (config.dummyRun) {
+        // We want to do a dummy-run first to make sure all variables are initialized
+        try {
+          config.executionInfo.executor.execute()
+        } catch (e: Throwable) {}
+      }
       while (i != config.iter) {
         reportProgress(i, bugsFound)
         try {

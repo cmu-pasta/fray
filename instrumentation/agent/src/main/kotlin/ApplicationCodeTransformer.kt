@@ -34,6 +34,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
             "kotlin.",
         ) ||
         dotClassName.startsWith("kotlinx.") ||
+        dotClassName.startsWith("org.mockito.") ||
         (dotClassName.startsWith("org.junit.") &&
             !dotClassName.contains(
                 "ConsoleLauncher",
@@ -69,7 +70,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = ClassConstructorInstrumenter(cv)
       cv = SleepInstrumenter(cv)
       cv = TimeInstrumenter(cv)
-      cv = ThreadHashCodeInstrumenter(cv)
+      cv = ObjectHashCodeInstrumenter(cv, false)
       cv = AtomicGetInstrumenter(cv)
       cv = ToStringInstrumenter(cv)
       val classVersionInstrumenter = ClassVersionInstrumenter(cv)

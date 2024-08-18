@@ -25,19 +25,19 @@ class SemaphoreManager {
       threadContext: ThreadContext
   ): Boolean {
     return lockContextManager
-        .getLockContext(sem)
+        .getContext(sem)
         .acquire(permits, shouldBlock, canInterrupt, threadContext)
   }
 
   fun release(sem: Semaphore, permits: Int) {
-    lockContextManager.getLockContext(sem).release(permits)
+    lockContextManager.getContext(sem).release(permits)
   }
 
   fun drainPermits(sem: Semaphore): Int {
-    return lockContextManager.getLockContext(sem).drainPermits()
+    return lockContextManager.getContext(sem).drainPermits()
   }
 
   fun reducePermits(sem: Semaphore, permits: Int) {
-    lockContextManager.getLockContext(sem).reducePermits(permits)
+    lockContextManager.getContext(sem).reducePermits(permits)
   }
 }

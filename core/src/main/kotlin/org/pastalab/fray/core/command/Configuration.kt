@@ -24,6 +24,10 @@ import kotlinx.serialization.modules.subclass
 import org.apache.logging.log4j.core.LoggerContext
 import org.apache.logging.log4j.core.config.Configurator
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory
+import org.pastalab.fray.core.observers.ScheduleObserver
+import org.pastalab.fray.core.observers.ScheduleRecorder
+import org.pastalab.fray.core.observers.ScheduleRecording
+import org.pastalab.fray.core.observers.ScheduleVerifier
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.*
 
@@ -90,46 +94,55 @@ class JsonExecutionConfig : ExecutionConfig("json") {
 }
 
 sealed class ScheduleAlgorithm(name: String) : OptionGroup(name) {
-  open fun getScheduler(): Pair<Scheduler, ControlledRandom> {
-    return Pair(FifoScheduler(), ControlledRandom())
+  open fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
+    return Triple(FifoScheduler(), ControlledRandom(), null)
   }
 }
 
 class Fifo : ScheduleAlgorithm("fifo") {
-  override fun getScheduler(): Pair<Scheduler, ControlledRandom> {
-    return Pair(FifoScheduler(), ControlledRandom())
+  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
+    return Triple(FifoScheduler(), ControlledRandom(), null)
   }
 }
 
 class POS : ScheduleAlgorithm("pos") {
-  override fun getScheduler(): Pair<Scheduler, ControlledRandom> {
-    return Pair(POSScheduler(), ControlledRandom())
+  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
+    return Triple(POSScheduler(), ControlledRandom(), null)
   }
 }
 
 class Replay : ScheduleAlgorithm("replay") {
   val path by option("--path").file().required()
 
-  override fun getScheduler(): Pair<Scheduler, ControlledRandom> {
+  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
     val randomPath = "${path.absolutePath}/random.json"
     val schedulerPath = "${path.absolutePath}/schedule.json"
     val randomnessProvider = Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
     val scheduler = Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
-    return Pair(scheduler, randomnessProvider)
+    val scheduleVerifier =
+        if (System.getProperty("fray.verifySchedule", "true").toBoolean()) {
+          val recordingPath = "${path.absolutePath}/recording.json"
+          val scheduleRecordings =
+              Json.decodeFromString<List<ScheduleRecording>>(File(recordingPath).readText())
+          ScheduleVerifier(scheduleRecordings)
+        } else {
+          null
+        }
+    return Triple(scheduler, randomnessProvider, scheduleVerifier)
   }
 }
 
 class Rand : ScheduleAlgorithm("random") {
-  override fun getScheduler(): Pair<Scheduler, ControlledRandom> {
-    return Pair(RandomScheduler(), ControlledRandom())
+  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
+    return Triple(RandomScheduler(), ControlledRandom(), null)
   }
 }
 
 class PCT : ScheduleAlgorithm("pct") {
   val numSwitchPoints by option().int().default(3)
 
-  override fun getScheduler(): Pair<Scheduler, ControlledRandom> {
-    return Pair(PCTScheduler(ControlledRandom(), numSwitchPoints, 0), ControlledRandom())
+  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
+    return Triple(PCTScheduler(ControlledRandom(), numSwitchPoints, 0), ControlledRandom(), null)
   }
 }
 
@@ -169,23 +182,37 @@ class MainCommand : CliktCommand() {
               "json" to JsonExecutionConfig(),
           )
           .defaultByName("cli")
+  val dummyRun by
+      option(
+              "--no-dummy-run",
+              help =
+                  "Run the target application without dummy run. The dummy run (run target once " +
+                      "before launching Fray) helps Fray to prune out non-determinism " +
+                      "introduced by the constructors and initializers.")
+          .flag(default = true)
 
   override fun run() {}
 
   fun toConfiguration(): Configuration {
     val executionInfo = runConfig.getExecutionInfo()
     val s = scheduler.getScheduler()
-    return Configuration(
-        executionInfo,
-        report,
-        iter,
-        s.first,
-        s.second,
-        fullSchedule,
-        exploreMode,
-        noExitWhenBugFound,
-        scheduler is Replay,
-        noFray)
+    val configuration =
+        Configuration(
+            executionInfo,
+            report,
+            iter,
+            s.first,
+            s.second,
+            fullSchedule,
+            exploreMode,
+            noExitWhenBugFound,
+            scheduler is Replay,
+            noFray,
+            dummyRun)
+    if (s.third != null) {
+      configuration.scheduleObservers.add(s.third!!)
+    }
+    return configuration
   }
 }
 
@@ -200,11 +227,15 @@ data class Configuration(
     val noExitWhenBugFound: Boolean,
     val isReplay: Boolean,
     val noFray: Boolean,
+    val dummyRun: Boolean,
 ) {
+  val scheduleObservers = mutableListOf<ScheduleObserver>()
+
   fun saveToReportFolder(index: Int) {
     Paths.get("$report/recording_$index").createDirectories()
     File("$report/recording_$index/schedule.json").writeText(Json.encodeToString(scheduler))
     File("$report/recording_$index/random.json").writeText(Json.encodeToString(randomnessProvider))
+    scheduleObservers.forEach { it.saveToReportFolder("$report/recording_$index") }
   }
 
   val loggerContext by lazy {
@@ -230,6 +261,9 @@ data class Configuration(
   init {
     if (!isReplay) {
       prepareReportPath(report)
+    }
+    if (System.getProperty("fray.recordSchedule", "false").toBoolean()) {
+      scheduleObservers.add(ScheduleRecorder())
     }
   }
 

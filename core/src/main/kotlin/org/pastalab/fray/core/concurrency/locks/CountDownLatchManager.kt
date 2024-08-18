@@ -13,17 +13,17 @@ class CountDownLatchManager {
   }
 
   fun await(latch: CountDownLatch, canInterrupt: Boolean, thread: ThreadContext): Boolean {
-    return latchStore.getLockContext(latch).await(canInterrupt, thread)
+    return latchStore.getContext(latch).await(canInterrupt, thread)
   }
 
   /*
    * Returns number of unblocked threads.
    */
   fun countDown(latch: CountDownLatch): Int {
-    return latchStore.getLockContext(latch).countDown()
+    return latchStore.getContext(latch).countDown()
   }
 
   fun release(latch: CountDownLatch): Int {
-    return latchStore.getLockContext(latch).release()
+    return latchStore.getContext(latch).release()
   }
 }

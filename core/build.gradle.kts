@@ -58,6 +58,7 @@ tasks.withType<JavaExec> {
   jvmArgs("--add-opens", "java.base/java.io=ALL-UNNAMED")
   jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
   jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
+  jvmArgs("-Dfray.recordSchedule=true")
   doFirst {
     // Printing the full command
     println("Executing command: ${executable} ${jvmArgs!!.joinToString(" ")} -cp ${classpath.asPath} ${mainClass.get()} ${args!!.joinToString(" ")}")
@@ -100,4 +101,9 @@ tasks.create("genRunner") {
     file.writeText(runner)
     file.setExecutable(true)
   }
+}
+
+tasks.register<Copy>("copyDependencies") {
+  from(configurations.runtimeClasspath)
+  into("${layout.buildDirectory.get().asFile}/dependency")
 }
