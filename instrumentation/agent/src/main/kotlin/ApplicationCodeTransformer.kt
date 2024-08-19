@@ -36,7 +36,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
         dotClassName.startsWith("kotlinx.") ||
         (dotClassName.startsWith("org.junit.") &&
             !(dotClassName.contains("ConsoleLauncher") ||
-                dotClassName.contains("NamespacedHierarchicalStore") ||
+//                dotClassName.contains("NamespacedHierarchicalStore") ||
                 dotClassName.contains("LauncherConfigurationParameters"))) ||
         dotClassName.startsWith("org.gradle.") ||
         dotClassName.startsWith("worker.org.gradle.") ||
