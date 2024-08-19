@@ -4,6 +4,9 @@ import kotlin.time.TimeSource
 import org.apache.logging.log4j.Logger
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.randomness.ControlledRandom
+import org.pastalab.fray.core.scheduler.FifoScheduler
+import org.pastalab.fray.runtime.Runtime
+import java.util.*
 
 class TestRunner(val config: Configuration) {
 
@@ -34,9 +37,28 @@ class TestRunner(val config: Configuration) {
       var bugsFound = 0
       if (config.dummyRun) {
         // We want to do a dummy-run first to make sure all variables are initialized
+        val noExitWhenBugFound = config.noExitWhenBugFound
+        val scheduler = config.scheduler
+        val randomnessProvider = config.randomnessProvider
+        val observers = config.scheduleObservers
+        Runtime.DELEGATE = RuntimeDelegate(context)
+        config.noExitWhenBugFound = true
+        config.scheduler = FifoScheduler()
+        config.randomnessProvider = ControlledRandom(mutableListOf(), mutableListOf(), Random(0))
+        config.scheduleObservers = mutableListOf()
+        Runtime.start()
         try {
+          config.executionInfo.executor.beforeExecution()
           config.executionInfo.executor.execute()
-        } catch (e: Throwable) {}
+          Runtime.onMainExit()
+        } catch (e: Throwable) {
+          Runtime.onMainExit()
+        }
+        config.executionInfo.executor.afterExecution()
+        config.noExitWhenBugFound = noExitWhenBugFound
+        config.scheduler = scheduler
+        config.randomnessProvider = randomnessProvider
+        config.scheduleObservers = observers
       }
       while (i != config.iter) {
         reportProgress(i, bugsFound)
@@ -45,13 +67,13 @@ class TestRunner(val config: Configuration) {
             config.scheduler = config.scheduler.nextIteration()
             config.randomnessProvider = ControlledRandom()
           }
-          org.pastalab.fray.runtime.Runtime.DELEGATE = RuntimeDelegate(context)
-          org.pastalab.fray.runtime.Runtime.start()
+          Runtime.DELEGATE = RuntimeDelegate(context)
+          Runtime.start()
           config.executionInfo.executor.execute()
-          org.pastalab.fray.runtime.Runtime.onMainExit()
+          Runtime.onMainExit()
         } catch (e: Throwable) {
-          org.pastalab.fray.runtime.Runtime.onReportError(e)
-          org.pastalab.fray.runtime.Runtime.onMainExit()
+          Runtime.onReportError(e)
+          Runtime.onMainExit()
         }
         if (context.bugFound != null) {
           bugsFound += 1

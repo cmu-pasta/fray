@@ -1,3 +1,7 @@
 package org.pastalab.fray.core.concurrency.operations
 
-interface Operation {}
+abstract class Operation {
+  override fun toString(): String {
+    return this.javaClass.simpleName
+  }
+}

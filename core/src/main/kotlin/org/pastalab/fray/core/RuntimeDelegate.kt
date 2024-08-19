@@ -677,11 +677,15 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onThreadParkNanosWithBlocker(blocker: Any?, nanos: Long) {
+    if (checkEntered()) {
+      LockSupport.parkNanos(nanos)
+    }
     if (context.config.executionInfo.timedOpAsYield) {
       onYield()
     } else {
       LockSupport.park(blocker)
     }
+    entered.set(false)
   }
 
   override fun onThreadParkUntilWithBlocker(blocker: Any?, nanos: Long) {
@@ -703,11 +707,16 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onConditionAwaitNanos(o: Condition, nanos: Long): Long {
+    if (checkEntered()) {
+      return o.awaitNanos(nanos);
+    }
     if (context.config.executionInfo.timedOpAsYield) {
       onYield()
+      entered.set(false)
       return 0
     } else {
       o.await()
+      entered.set(false)
       return nanos
     }
   }

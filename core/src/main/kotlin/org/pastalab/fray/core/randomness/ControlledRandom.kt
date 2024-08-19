@@ -7,10 +7,10 @@ import kotlinx.serialization.Transient
 @Serializable
 class ControlledRandom(
     val integers: MutableList<Int> = mutableListOf(),
-    val doubles: MutableList<Double> = mutableListOf()
+    val doubles: MutableList<Double> = mutableListOf(),
+    @Transient private val random: Random = Random()
 ) {
 
-  @Transient private val random = Random()
 
   @Transient private var integerIndex = 0
 

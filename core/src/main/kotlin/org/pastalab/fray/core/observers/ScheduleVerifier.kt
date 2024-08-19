@@ -13,7 +13,7 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) : ScheduleObserve
     val recording = schedules[index]
     val scheduledIndex = scheduled.index
     val enabled = enabledSchedules.map { it.index }.toList()
-    val operation = scheduled.pendingOperation.javaClass.name
+    val operation = scheduled.pendingOperation.toString()
     if (recording.scheduled != scheduledIndex) {
       throw IllegalStateException(
           "Scheduled index mismatch: expected ${recording.scheduled}, got $scheduledIndex")

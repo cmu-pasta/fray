@@ -21,7 +21,9 @@ open class ClassVisitorBase(cv: ClassVisitor, vararg classNames: String) : Class
       superName: String?,
       interfaces: Array<out String>?
   ) {
-    if (classNames.contains(name)) {
+    if (classNames.any {
+        name.startsWith(it)
+      }) {
       shouldInstrument = true
     }
     className = name

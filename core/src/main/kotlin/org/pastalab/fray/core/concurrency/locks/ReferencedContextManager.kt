@@ -27,9 +27,11 @@ class ReferencedContextManager<T>(val contextProducer: (Any) -> T) {
     gc()
   }
 
-  fun done() {
+  fun done(reset: Boolean = true) {
     gc()
-    objMap.clear()
+    if (reset) {
+      objMap.clear()
+    }
   }
 
   fun gc() {

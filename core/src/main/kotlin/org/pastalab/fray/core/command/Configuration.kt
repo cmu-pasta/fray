@@ -224,12 +224,12 @@ data class Configuration(
     var randomnessProvider: ControlledRandom,
     val fullSchedule: Boolean,
     val exploreMode: Boolean,
-    val noExitWhenBugFound: Boolean,
+    var noExitWhenBugFound: Boolean,
     val isReplay: Boolean,
     val noFray: Boolean,
     val dummyRun: Boolean,
 ) {
-  val scheduleObservers = mutableListOf<ScheduleObserver>()
+  var scheduleObservers = mutableListOf<ScheduleObserver>()
 
   fun saveToReportFolder(index: Int) {
     Paths.get("$report/recording_$index").createDirectories()
