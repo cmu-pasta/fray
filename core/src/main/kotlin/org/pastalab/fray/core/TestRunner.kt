@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.FifoScheduler
+import org.pastalab.fray.core.scheduler.RandomScheduler
 import org.pastalab.fray.runtime.Runtime
 import java.util.*
 
@@ -43,7 +44,7 @@ class TestRunner(val config: Configuration) {
         val observers = config.scheduleObservers
         Runtime.DELEGATE = RuntimeDelegate(context)
         config.noExitWhenBugFound = true
-        config.scheduler = FifoScheduler()
+        config.scheduler = RandomScheduler(ControlledRandom())
         config.randomnessProvider = ControlledRandom(mutableListOf(), mutableListOf(), Random(0))
         config.scheduleObservers = mutableListOf()
         Runtime.start()

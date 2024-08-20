@@ -10,6 +10,9 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) : ScheduleObserve
   }
 
   override fun onNewSchedule(enabledSchedules: List<ThreadContext>, scheduled: ThreadContext) {
+    if (index >= schedules.size) {
+      return
+    }
     val recording = schedules[index]
     val scheduledIndex = scheduled.index
     val enabled = enabledSchedules.map { it.index }.toList()

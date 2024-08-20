@@ -184,12 +184,12 @@ class MainCommand : CliktCommand() {
           .defaultByName("cli")
   val dummyRun by
       option(
-              "--no-dummy-run",
+              "--dummy-run",
               help =
                   "Run the target application without dummy run. The dummy run (run target once " +
                       "before launching Fray) helps Fray to prune out non-determinism " +
                       "introduced by the constructors and initializers.")
-          .flag(default = true)
+          .flag()
 
   override fun run() {}
 
