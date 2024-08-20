@@ -680,7 +680,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     if (checkEntered()) {
       try {
         LockSupport.parkNanos(nanos)
-      } finally{
+      } finally {
         entered.set(false)
       }
     }
@@ -713,8 +713,8 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   override fun onConditionAwaitNanos(o: Condition, nanos: Long): Long {
     if (checkEntered()) {
       try {
-        return o.awaitNanos(nanos);
-      } finally{
+        return o.awaitNanos(nanos)
+      } finally {
         entered.set(false)
       }
     }

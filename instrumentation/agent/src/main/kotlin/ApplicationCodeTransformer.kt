@@ -36,7 +36,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
         dotClassName.startsWith("kotlinx.") ||
         (dotClassName.startsWith("org.junit.") &&
             !(dotClassName.contains("ConsoleLauncher") ||
-//                dotClassName.contains("NamespacedHierarchicalStore") ||
+                //                dotClassName.contains("NamespacedHierarchicalStore") ||
                 dotClassName.contains("LauncherConfigurationParameters"))) ||
         dotClassName.startsWith("org.gradle.") ||
         dotClassName.startsWith("worker.org.gradle.") ||
@@ -71,7 +71,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = SkipMethodInstrumenter(cv)
       cv = ObjectHashCodeInstrumenter(cv, false)
       cv = AtomicGetInstrumenter(cv)
-//      cv = ToStringInstrumenter(cv)
+      //      cv = ToStringInstrumenter(cv)
       val classVersionInstrumenter = ClassVersionInstrumenter(cv)
       cv = ArrayOperationInstrumenter(classVersionInstrumenter)
       classReader.accept(cv, ClassReader.EXPAND_FRAMES)

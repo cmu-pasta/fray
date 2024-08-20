@@ -3,12 +3,12 @@ package org.pastalab.fray.instrumentation.base.visitors
 import java.io.PrintStream
 import java.lang.invoke.CallSite
 import java.lang.invoke.MethodType
+import java.net.JarURLConnection
+import java.net.URLClassLoader
 import java.util.ServiceLoader
 import java.util.logging.Logger
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
-import java.net.JarURLConnection
-import java.net.URLClassLoader
 
 class SkipMethodInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(
@@ -21,7 +21,7 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
         URLClassLoader::class.java.name,
         JarURLConnection::class.java.name,
         "org.junit.platform.launcher.core.LauncherConfigurationParameters",
-//        "org.junit.platform.engine.support.store.NamespacedHierarchicalStore",
+        //        "org.junit.platform.engine.support.store.NamespacedHierarchicalStore",
         "org.slf4j.LoggerFactory",
         "java.util.ServiceLoader\$LazyClassPathLookupIterator",
         "sun.reflect.annotation.AnnotationParser",

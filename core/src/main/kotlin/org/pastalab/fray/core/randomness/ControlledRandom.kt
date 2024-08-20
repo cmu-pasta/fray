@@ -11,7 +11,6 @@ class ControlledRandom(
     @Transient private val random: Random = Random()
 ) {
 
-
   @Transient private var integerIndex = 0
 
   @Transient private var doubleIndex = 0

@@ -1,13 +1,12 @@
 package org.pastalab.fray.core
 
+import java.util.*
 import kotlin.time.TimeSource
 import org.apache.logging.log4j.Logger
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.randomness.ControlledRandom
-import org.pastalab.fray.core.scheduler.FifoScheduler
 import org.pastalab.fray.core.scheduler.RandomScheduler
 import org.pastalab.fray.runtime.Runtime
-import java.util.*
 
 class TestRunner(val config: Configuration) {
 
