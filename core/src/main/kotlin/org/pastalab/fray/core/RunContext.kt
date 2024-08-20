@@ -160,7 +160,7 @@ class RunContext(val config: Configuration) {
     lockManager.done()
     registeredThreads.clear()
     config.scheduleObservers.forEach { it.onExecutionDone() }
-    hashCodeMapper.done()
+    hashCodeMapper.done(false)
   }
 
   fun shutDown() {
@@ -215,11 +215,11 @@ class RunContext(val config: Configuration) {
   }
 
   fun threadUnpark(t: Thread) {
-    val context = registeredThreads[t.id]!!
-    if (context.state == ThreadState.Paused && context.pendingOperation is ParkBlocking) {
+    val context = registeredThreads[t.id]
+    if (context?.state == ThreadState.Paused && context?.pendingOperation is ParkBlocking) {
       context.state = ThreadState.Enabled
       context.pendingOperation = ThreadResumeOperation()
-    } else if (context.state == ThreadState.Enabled || context.state == ThreadState.Running) {
+    } else if (context?.state == ThreadState.Enabled || context?.state == ThreadState.Running) {
       context.unparkSignaled = true
     }
   }
@@ -507,7 +507,7 @@ class RunContext(val config: Configuration) {
     val t = Thread.currentThread().id
     val objId = System.identityHashCode(lock)
     val context = registeredThreads[t]!!
-    context.pendingOperation = LockLockOperation(objId)
+    context.pendingOperation = LockLockOperation(lock)
     context.state = ThreadState.Enabled
     scheduleNextOperation(true)
 
@@ -622,8 +622,7 @@ class RunContext(val config: Configuration) {
   fun semaphoreAcquire(sem: Semaphore, permits: Int, shouldBlock: Boolean, canInterrupt: Boolean) {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
-    val objId = System.identityHashCode(sem)
-    context.pendingOperation = LockLockOperation(objId)
+    context.pendingOperation = LockLockOperation(sem)
     context.state = ThreadState.Enabled
     scheduleNextOperation(true)
 

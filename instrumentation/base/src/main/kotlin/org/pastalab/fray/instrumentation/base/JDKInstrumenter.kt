@@ -1,5 +1,6 @@
-package org.pastalab.fray.jdk
+package org.pastalab.fray.instrumentation.base
 
+import java.io.File
 import java.io.InputStream
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
@@ -82,4 +83,13 @@ fun instrumentModuleInfo(inputStream: InputStream, packages: List<String>): Byte
     writeClassFile("java.base.module-info.class", out, true)
   }
   return out
+}
+
+/**
+ * To run this main method you need to add --patch-module org.pastalab.fray.instrumentation.base=
+ * PATH_TO_FRAY/instrumentation/base/build/classes
+ */
+fun main(args: Array<String>) {
+  val inputStream = File(args[0]).inputStream()
+  instrumentClass(args[0], inputStream)
 }

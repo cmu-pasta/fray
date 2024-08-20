@@ -114,7 +114,8 @@ public class ConcurrentHashmapTest extends FrayRunner {
             };
             TestRunner runner2 = buildRunner(task, new FifoScheduler(), 1);
             runner2.getConfig()
-                    .setRandomnessProvider(new ControlledRandom(randomSource.getIntegers(), randomSource.getDoubles()));
+                    .setRandomnessProvider(new ControlledRandom(randomSource.getIntegers(),
+                            randomSource.getDoubles(), new Random()));
             ScheduleRecorder recorder2 = new ScheduleRecorder();
             runner2.getConfig().getScheduleObservers().add(recorder2);
             runner2.run();

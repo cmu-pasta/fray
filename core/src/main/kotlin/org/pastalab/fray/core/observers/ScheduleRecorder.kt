@@ -13,7 +13,7 @@ class ScheduleRecorder : ScheduleObserver {
   }
 
   override fun onNewSchedule(enabledSchedules: List<ThreadContext>, scheduled: ThreadContext) {
-    val operation = scheduled.pendingOperation.javaClass.name
+    val operation = scheduled.pendingOperation.toString()
     val enabled = enabledSchedules.map { it.index }.toList()
     val scheduledIndex = scheduled.index
     val recording = ScheduleRecording(scheduledIndex, enabled, operation)

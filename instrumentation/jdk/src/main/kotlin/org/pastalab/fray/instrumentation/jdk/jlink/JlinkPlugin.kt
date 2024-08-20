@@ -10,8 +10,8 @@ import jdk.tools.jlink.plugin.ResourcePoolBuilder
 import jdk.tools.jlink.plugin.ResourcePoolEntry
 import org.pastalab.fray.instrumentation.base.Configs.DEBUG_MODE
 import org.pastalab.fray.instrumentation.base.Utils.writeClassFile
-import org.pastalab.fray.jdk.instrumentClass
-import org.pastalab.fray.jdk.instrumentModuleInfo
+import org.pastalab.fray.instrumentation.base.instrumentClass
+import org.pastalab.fray.instrumentation.base.instrumentModuleInfo
 
 class JlinkPlugin : Plugin {
   override fun getName(): String {

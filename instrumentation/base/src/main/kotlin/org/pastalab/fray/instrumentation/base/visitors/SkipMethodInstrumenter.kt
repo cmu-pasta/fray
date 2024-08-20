@@ -3,6 +3,8 @@ package org.pastalab.fray.instrumentation.base.visitors
 import java.io.PrintStream
 import java.lang.invoke.CallSite
 import java.lang.invoke.MethodType
+import java.net.JarURLConnection
+import java.net.URLClassLoader
 import java.util.ServiceLoader
 import java.util.logging.Logger
 import org.objectweb.asm.ClassVisitor
@@ -16,8 +18,14 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
         MethodType::class.java.name,
         ServiceLoader::class.java.name,
         PrintStream::class.java.name,
+        URLClassLoader::class.java.name,
+        JarURLConnection::class.java.name,
+        "org.junit.platform.launcher.core.LauncherConfigurationParameters",
+        //        "org.junit.platform.engine.support.store.NamespacedHierarchicalStore",
+        "org.slf4j.LoggerFactory",
         "java.util.ServiceLoader\$LazyClassPathLookupIterator",
         "sun.reflect.annotation.AnnotationParser",
+        "java.lang.ProcessImpl",
         CallSite::class.java.name,
     ) {
 
@@ -29,6 +37,9 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
+    if (name == "<init>" || name == "<clinit>") {
+      return mv
+    }
     val methodSignature = "$className#$name$descriptor"
     val eMv =
         MethodEnterVisitor(
