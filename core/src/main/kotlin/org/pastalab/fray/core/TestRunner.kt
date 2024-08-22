@@ -11,6 +11,7 @@ import org.pastalab.fray.runtime.Runtime
 class TestRunner(val config: Configuration) {
 
   val context = RunContext(config)
+  var currentDivision = 1
 
   val logger: Logger = config.loggerContext.getLogger(TestRunner::class.java)
 
@@ -19,11 +20,16 @@ class TestRunner(val config: Configuration) {
   }
 
   fun reportProgress(iteration: Int, bugsFound: Int) {
-    print("\u001B[2J")
-    print("\u001B[2H")
-    println("Fray Testing:")
-    println("Iterations: $iteration")
-    println("Bugs Found: $bugsFound")
+    if (iteration % currentDivision == 0) {
+      print("\u001B[2J")
+      print("\u001B[2H")
+      println("Fray Testing:")
+      println("Iterations: $iteration")
+      println("Bugs Found: $bugsFound")
+    }
+    if (iteration / currentDivision == 10) {
+      currentDivision *= 10
+    }
   }
 
   fun run(): Throwable? {
