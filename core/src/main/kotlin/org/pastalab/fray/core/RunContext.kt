@@ -6,7 +6,9 @@ import java.lang.Thread.UncaughtExceptionHandler
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.LockSupport
@@ -35,6 +37,7 @@ class RunContext(val config: Configuration) {
   val terminatingThread = mutableSetOf<Int>()
   val logger = config.loggerContext.getLogger(RunContext::class.java)
   val hashCodeMapper = ReferencedContextManager<Int>({ config.randomnessProvider.nextInt() })
+  var forkJoinPool: ForkJoinPool? = null
   private val lockManager = LockManager()
   private val semaphoreManager = SemaphoreManager()
   private val volatileManager = VolatileManager(true)
@@ -87,6 +90,14 @@ class RunContext(val config: Configuration) {
       println("Error found, you may find the error report in ${config.report}")
       config.saveToReportFolder(0)
       exitProcess(0)
+    }
+  }
+
+  fun mainCleanup() {
+    if (forkJoinPool != null) {
+      forkJoinPool!!.shutdownNow()
+      forkJoinPool!!.awaitTermination(1, TimeUnit.SECONDS)
+      forkJoinPool = null
     }
   }
 
@@ -884,5 +895,12 @@ class RunContext(val config: Configuration) {
   fun nanoTime(): Long {
     nanoTime += 1000L
     return nanoTime
+  }
+
+  fun getForkJoinPoolCommon(): ForkJoinPool {
+    if (forkJoinPool == null) {
+      forkJoinPool = ForkJoinPool()
+    }
+    return forkJoinPool!!
   }
 }

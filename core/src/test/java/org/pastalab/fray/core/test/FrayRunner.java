@@ -31,7 +31,7 @@ public class FrayRunner {
                         false,
                         true,
                         false,
-                        10000
+                        -1
                 ),
                 "/tmp/report",
                 iter,

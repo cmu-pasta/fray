@@ -2,6 +2,7 @@ package org.pastalab.fray.runtime;
 
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -360,5 +361,9 @@ public class Runtime {
 
     public static int onObjectHashCode(Object t) {
         return DELEGATE.onObjectHashCode(t);
+    }
+
+    public static ForkJoinPool onForkJoinPoolCommonPool(ForkJoinPool pool) {
+        return DELEGATE.onForkJoinPoolCommonPool(pool);
     }
 }

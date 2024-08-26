@@ -8,6 +8,7 @@ import org.pastalab.fray.core.test.FrayRunner;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -20,10 +21,14 @@ public class IntStreamTest extends FrayRunner {
         Throwable result = buildRunner(() -> {
             AtomicInteger x = new AtomicInteger();
             IntStream.range(1, 10).parallel().forEach((i) -> x.compareAndSet(i-1, i+1));
-            assert(x.get() == 10);
+            assert(x.get() != 10);
             return null;
         }, new POSScheduler(new ControlledRandom(new ArrayList<>(), new ArrayList<>(), new Random())),
-                1000).run();
+                1000000).run();
+        if (result != null) {
+            result.printStackTrace();
+            System.out.println(result);
+        }
         assertNotNull(result);
     }
 

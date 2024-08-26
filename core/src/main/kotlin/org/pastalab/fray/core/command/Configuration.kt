@@ -148,7 +148,7 @@ class PCT : ScheduleAlgorithm("pct") {
 
 class MainCommand : CliktCommand() {
   val report by option("-o", "--output", help = "Report output directory.").default("/tmp/report")
-  val iter by option("-i", "--iter", help = "Number of iterations.").int().default(1000)
+  val iter by option("-i", "--iter", help = "Number of iterations.").int().default(100000)
   val fullSchedule by
       option(
               "-f",
