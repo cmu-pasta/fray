@@ -23,6 +23,7 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
         "org.junit.platform.launcher.core.LauncherConfigurationParameters",
         //        "org.junit.platform.engine.support.store.NamespacedHierarchicalStore",
         "org.slf4j.LoggerFactory",
+        "com.intellij.rt.debugger.agent",
         "java.util.ServiceLoader\$LazyClassPathLookupIterator",
         "sun.reflect.annotation.AnnotationParser",
         "java.lang.ProcessImpl",

@@ -24,6 +24,7 @@ class TestRunner(val config: Configuration) {
       print("\u001B[2J")
       print("\u001B[2H")
       println("Fray Testing:")
+      println("Report is available at: ${config.report}")
       println("Iterations: $iteration")
       println("Bugs Found: $bugsFound")
     }

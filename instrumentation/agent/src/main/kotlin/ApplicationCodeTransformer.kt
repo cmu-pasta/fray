@@ -11,6 +11,7 @@ import org.objectweb.asm.util.CheckClassAdapter
 import org.pastalab.fray.instrumentation.base.Configs.DEBUG_MODE
 import org.pastalab.fray.instrumentation.base.Utils.writeClassFile
 import org.pastalab.fray.instrumentation.base.visitors.*
+import org.pastalab.fray.runtime.Runtime
 
 class ApplicationCodeTransformer : ClassFileTransformer {
   override fun transform(
@@ -55,6 +56,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       writeClassFile(className, classfileBuffer, false)
     }
     try {
+      Runtime.onSkipMethod("instrumentation")
       val classReader = ClassReader(classfileBuffer)
       val cn = ClassNode()
       var cv: ClassVisitor = ObjectNotifyInstrumenter(cn)
@@ -90,6 +92,8 @@ class ApplicationCodeTransformer : ClassFileTransformer {
     } catch (e: Throwable) {
       println("Failed to instrument: $className")
       e.printStackTrace()
+    } finally {
+      Runtime.onSkipMethodDone("instrumentation")
     }
     return classfileBuffer
   }
