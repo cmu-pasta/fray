@@ -277,5 +277,9 @@ public class Delegate {
     public ForkJoinPool onForkJoinPoolCommonPool(ForkJoinPool pool) {
         return pool;
     }
+
+    public int onThreadLocalRandomGetProbe(int probe) {
+        return probe;
+    }
 }
 

@@ -773,4 +773,11 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     entered.set(false)
     return pool
   }
+
+  override fun onThreadLocalRandomGetProbe(probe: Int): Int {
+    if (checkEntered()) return probe
+    val probe = context.getThreadLocalRandomProbe()
+    entered.set(false)
+    return probe
+  }
 }

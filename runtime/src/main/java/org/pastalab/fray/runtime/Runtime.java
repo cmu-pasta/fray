@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -366,4 +367,9 @@ public class Runtime {
     public static ForkJoinPool onForkJoinPoolCommonPool(ForkJoinPool pool) {
         return DELEGATE.onForkJoinPoolCommonPool(pool);
     }
+
+    public static int onThreadLocalRandomGetProbe(int probe) {
+        return DELEGATE.onThreadLocalRandomGetProbe(probe);
+    }
+
 }
