@@ -20,6 +20,7 @@ class TestRunner(val config: Configuration) {
   }
 
   fun reportProgress(iteration: Int, bugsFound: Int) {
+    if (config.isReplay) return
     if (iteration % currentDivision == 0) {
       print("\u001B[2J")
       print("\u001B[2H")
@@ -89,6 +90,9 @@ class TestRunner(val config: Configuration) {
           println(
               "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms",
           )
+          if (config.isReplay) {
+            break
+          }
           logger.error("Error found, the recording is saved to ${config.report}/recording_$i/")
           if (!config.exploreMode) {
             config.saveToReportFolder(i)
