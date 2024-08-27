@@ -119,9 +119,10 @@ class Replay : ScheduleAlgorithm("replay") {
     val schedulerPath = "${path.absolutePath}/schedule.json"
     val randomnessProvider = Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
     val scheduler = Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
+    val recordingPath = "${path.absolutePath}/recording.json"
     val scheduleVerifier =
-        if (System.getProperty("fray.verifySchedule", "true").toBoolean()) {
-          val recordingPath = "${path.absolutePath}/recording.json"
+        if (System.getProperty("fray.verifySchedule", "true").toBoolean() &&
+            File(recordingPath).exists()) {
           val scheduleRecordings =
               Json.decodeFromString<List<ScheduleRecording>>(File(recordingPath).readText())
           ScheduleVerifier(scheduleRecordings)
