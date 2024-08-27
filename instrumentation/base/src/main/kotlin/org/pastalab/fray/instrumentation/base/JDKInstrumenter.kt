@@ -39,6 +39,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = UnsafeInstrumenter(cv)
     cv = SkipMethodInstrumenter(cv)
     cv = ObjectInstrumenter(cv)
+    cv = ForkJoinPoolInstrumenter(cv)
     cv = ObjectHashCodeInstrumenter(cv, true)
     cv = SemaphoreInstrumenter(cv)
     cv = CountDownLatchInstrumenter(cv)

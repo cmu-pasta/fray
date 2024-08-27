@@ -6,7 +6,7 @@ import subprocess
 import argparse
 
 BASE = os.path.dirname(os.path.realpath('__file__'))
-JAVA_PATH = os.path.join(BASE, "jdk", "build", "java-inst", "bin", "java")
+JAVA_PATH = os.path.join(BASE, "instrumentation", "jdk", "build", "java-inst", "bin", "java")
 JVMTI_PATH = "#JVM_TI_PATH#"
 AGENT_PATH = "#AGENT_PATH#"
 CORE_PATH = "#CORE_PATH#"

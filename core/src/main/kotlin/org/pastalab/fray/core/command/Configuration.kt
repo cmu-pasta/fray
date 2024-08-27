@@ -119,9 +119,10 @@ class Replay : ScheduleAlgorithm("replay") {
     val schedulerPath = "${path.absolutePath}/schedule.json"
     val randomnessProvider = Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
     val scheduler = Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
+    val recordingPath = "${path.absolutePath}/recording.json"
     val scheduleVerifier =
-        if (System.getProperty("fray.verifySchedule", "true").toBoolean()) {
-          val recordingPath = "${path.absolutePath}/recording.json"
+        if (System.getProperty("fray.verifySchedule", "true").toBoolean() &&
+            File(recordingPath).exists()) {
           val scheduleRecordings =
               Json.decodeFromString<List<ScheduleRecording>>(File(recordingPath).readText())
           ScheduleVerifier(scheduleRecordings)
@@ -148,7 +149,7 @@ class PCT : ScheduleAlgorithm("pct") {
 
 class MainCommand : CliktCommand() {
   val report by option("-o", "--output", help = "Report output directory.").default("/tmp/report")
-  val iter by option("-i", "--iter", help = "Number of iterations.").int().default(1000)
+  val iter by option("-i", "--iter", help = "Number of iterations.").int().default(100000)
   val fullSchedule by
       option(
               "-f",

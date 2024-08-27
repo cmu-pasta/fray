@@ -2,6 +2,7 @@ package org.pastalab.fray.core
 
 import java.util.*
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.Condition
@@ -38,6 +39,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onMainExit() {
+    context.mainCleanup()
     if (checkEntered()) return
     context.mainExit()
     entered.set(false)
@@ -763,5 +765,12 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     val hashCode = context.hashCode(t)
     entered.set(false)
     return hashCode
+  }
+
+  override fun onForkJoinPoolCommonPool(pool: ForkJoinPool): ForkJoinPool {
+    if (checkEntered()) return pool
+    val pool = context.getForkJoinPoolCommon()
+    entered.set(false)
+    return pool
   }
 }

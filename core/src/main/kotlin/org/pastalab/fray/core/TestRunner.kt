@@ -24,8 +24,11 @@ class TestRunner(val config: Configuration) {
       print("\u001B[2J")
       print("\u001B[2H")
       println("Fray Testing:")
+      println("Report is available at: ${config.report}")
       println("Iterations: $iteration")
-      println("Bugs Found: $bugsFound")
+      if (bugsFound > 0) {
+        println("Bugs Found: $bugsFound")
+      }
     }
     if (iteration / currentDivision == 10) {
       currentDivision *= 10

@@ -91,12 +91,13 @@ tasks.create("genRunner") {
         .tasks.named("shadowJar").get()
     val instrumentation = instrumentationTask.outputs.files.first().absolutePath
     val core = tasks.named("jar").get().outputs.files.first().absolutePath
+    val dependencies = configurations.runtimeClasspath.get().files.joinToString(":") + ":$core"
     val jvmti = project(":jvmti")
     val binDir = "${rootProject.projectDir.absolutePath}/bin"
     var runner = file("${binDir}/fray.template").readText()
     runner = runner.replace("#JVM_TI_PATH#", "${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
     runner = runner.replace("#AGENT_PATH#", instrumentation)
-    runner = runner.replace("#CORE_PATH#", core)
+    runner = runner.replace("#CORE_PATH#", dependencies)
     val file = File("${binDir}/fray")
     file.writeText(runner)
     file.setExecutable(true)
