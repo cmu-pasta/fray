@@ -11,7 +11,8 @@ enum class ThreadState {
   Completed,
 }
 
-class ThreadContext(val thread: Thread, val index: Int) {
+class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
+  val localRandomProbe = context.config.randomnessProvider.nextInt()
   var state = ThreadState.Paused
   var unparkSignaled = false
   var interruptSignaled = false

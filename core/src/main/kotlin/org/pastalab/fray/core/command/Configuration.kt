@@ -245,16 +245,15 @@ data class Configuration(
     builder.setLoggerContext(LoggerContext("Fray"))
     val standard = builder.newLayout("PatternLayout")
     standard.addAttribute("pattern", "%d [%t] %-5level: %msg%n%throwable")
-    val appender = if (isReplay) {
-      builder.newAppender("log", "Console")
-          .addAttribute("target", "SYSTEM_OUT")
-          .add(standard)
-    } else {
-      builder
-          .newAppender("log", "File")
-          .addAttribute("fileName", "${report}/fray.log")
-          .addAttribute("append", false)
-    }
+    val appender =
+        if (isReplay) {
+          builder.newAppender("log", "Console").addAttribute("target", "SYSTEM_OUT").add(standard)
+        } else {
+          builder
+              .newAppender("log", "File")
+              .addAttribute("fileName", "${report}/fray.log")
+              .addAttribute("append", false)
+        }
     appender.add(standard)
     builder.add(appender)
     val logger = builder.newLogger("org.pastalab.fray", "INFO")

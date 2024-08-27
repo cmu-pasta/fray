@@ -162,7 +162,7 @@ class RunContext(val config: Configuration) {
     mainExiting = false
     currentThreadId = t.id
     mainThreadId = t.id
-    registeredThreads[t.id] = ThreadContext(t, registeredThreads.size)
+    registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this)
     registeredThreads[t.id]?.state = ThreadState.Enabled
     scheduleNextOperation(true)
   }
@@ -188,7 +188,7 @@ class RunContext(val config: Configuration) {
       originalHanlder?.uncaughtException(t, e)
     }
     t.setUncaughtExceptionHandler(handler)
-    registeredThreads[t.id] = ThreadContext(t, registeredThreads.size)
+    registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this)
     syncManager.createWait(t, 1)
   }
 
@@ -904,5 +904,9 @@ class RunContext(val config: Configuration) {
       forkJoinPool = ForkJoinPool()
     }
     return forkJoinPool!!
+  }
+
+  fun getThreadLocalRandomProbe(): Int {
+    return registeredThreads[Thread.currentThread().id]!!.localRandomProbe
   }
 }

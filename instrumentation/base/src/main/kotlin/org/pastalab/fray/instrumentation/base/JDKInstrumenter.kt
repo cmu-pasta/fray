@@ -45,6 +45,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = CountDownLatchInstrumenter(cv)
     cv = MethodHandleNativesInstrumenter(cv)
     cv = TimedWaitInstrumenter(cv)
+    cv = ThreadLocalRandomInstrumenter(cv)
     // MonitorInstrumenter should come second because ObjectInstrumenter will insert more
     // monitors.
     cv = MonitorInstrumenter(cv)
