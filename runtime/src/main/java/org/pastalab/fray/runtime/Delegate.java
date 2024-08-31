@@ -1,5 +1,6 @@
 package org.pastalab.fray.runtime;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
@@ -280,6 +281,18 @@ public class Delegate {
 
     public int onThreadLocalRandomGetProbe(int probe) {
         return probe;
+    }
+
+    public void onThreadSleepMillis(long millis) throws InterruptedException {
+        Thread.sleep(millis);
+    }
+
+    public void onThreadSleepDuration(Duration duration) throws InterruptedException {
+        Thread.sleep(duration);
+    }
+
+    public void onThreadSleepMillisNanos(long millis, int nanos) throws InterruptedException {
+        Thread.sleep(millis, nanos);
     }
 }
 
