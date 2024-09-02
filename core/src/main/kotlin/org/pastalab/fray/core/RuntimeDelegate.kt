@@ -1,5 +1,6 @@
 package org.pastalab.fray.core
 
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ForkJoinPool
@@ -780,4 +781,10 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     entered.set(false)
     return probe
   }
+
+  override fun onThreadSleepDuration(duration: Duration?) {}
+
+  override fun onThreadSleepMillis(millis: Long) {}
+
+  override fun onThreadSleepMillisNanos(millis: Long, nanos: Int) {}
 }
