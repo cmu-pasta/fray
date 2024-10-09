@@ -4,12 +4,34 @@ import os
 import sys
 import subprocess
 import argparse
+import re
+from typing import List
 
-BASE = os.path.dirname(os.path.realpath('__file__'))
+
+BASE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 JAVA_PATH = os.path.join(BASE, "instrumentation", "jdk", "build", "java-inst", "bin", "java")
 JVMTI_PATH = "#JVM_TI_PATH#"
 AGENT_PATH = "#AGENT_PATH#"
 CORE_PATH = "#CORE_PATH#"
+
+def resolve_classpaths(classpaths: List[str]) -> List[str]:
+    resolved_paths = []
+    for path in classpaths:
+        if '*' in path:
+            dir_path = os.path.dirname(path)
+            pattern = os.path.basename(path).replace('*', '.*')
+            regex = re.compile(pattern)
+
+            if os.path.exists(dir_path) and os.path.isdir(dir_path):
+                for entry in os.listdir(dir_path):
+                    if regex.match(entry):
+                        resolved_paths.append(os.path.join(dir_path, entry))
+        else:
+            new_path = os.path.abspath(path)
+            if path.endswith('/'):
+                new_path += '/'
+            resolved_paths.append(new_path)
+    return resolved_paths
 
 def main():
     parser = argparse.ArgumentParser(description="Fray Fuzzer")
@@ -25,6 +47,7 @@ def main():
     class_path = CORE_PATH
     if args.class_path:
         class_path = class_path + ":" + args.class_path
+    class_path = ":".join(resolve_classpaths(class_path.split(":")))
     command = [
         JAVA_PATH,
         "-ea",
