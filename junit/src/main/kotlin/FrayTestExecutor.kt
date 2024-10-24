@@ -1,6 +1,7 @@
 package org.pastalab.fray.junit
 
 import java.io.File
+import java.lang.reflect.InvocationTargetException
 import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createTempDirectory
@@ -65,7 +66,13 @@ class FrayTestExecutor {
   ) {
     var testResult = TestExecutionResult.successful()
     if (result != null) {
-      if (descriptor.analyzeConfig.expectedException.java != result.javaClass) {
+      val runException =
+          if (result is InvocationTargetException) {
+            result.targetException
+          } else {
+            result
+          }
+      if (descriptor.analyzeConfig.expectedException.java != runException.javaClass) {
         testResult = TestExecutionResult.failed(result)
       }
     } else {
