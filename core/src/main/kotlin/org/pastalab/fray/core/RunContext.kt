@@ -322,17 +322,16 @@ class RunContext(val config: Configuration) {
       } else {
         context.pendingOperation = ConditionAwaitBlocking(waitingObject as Condition, canInterrupt)
       }
-      context.state = ThreadState.Paused
       lockManager.addWaitingThread(waitingObject, Thread.currentThread())
     } else {
-      context.state = ThreadState.Paused
-      lockManager.addWakingThread(lockObject, context)
       if (waitingObject == lockObject) {
         context.pendingOperation = ObjectWakeBlocking(waitingObject)
       } else {
         context.pendingOperation = ConditionWakeBlocking(waitingObject as Condition)
       }
+      lockManager.addWakingThread(lockObject, context)
     }
+    context.state = ThreadState.Paused
 
     unlockImpl(lockObject, t, true, true, lockObject == waitingObject)
 

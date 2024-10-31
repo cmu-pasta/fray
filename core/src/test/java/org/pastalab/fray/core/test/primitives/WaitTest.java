@@ -36,7 +36,7 @@ public class WaitTest extends FrayRunner {
             }
             return null;
         });
-        assertTrue(result instanceof DeadlockException);
+        assertInstanceOf(DeadlockException.class, result);
     }
 
     @Test
