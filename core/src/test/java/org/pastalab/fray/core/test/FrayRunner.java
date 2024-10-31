@@ -14,18 +14,18 @@ import org.pastalab.fray.core.scheduler.Scheduler;
 
 public class FrayRunner {
     public Throwable runWithFifo(Function0<Unit> exec) {
-        return runWithScheduler(exec, new FifoScheduler(), 1);
+        return runWithScheduler(exec, new FifoScheduler(), 1, new ControlledRandom());
     }
 
     public Throwable runWithPOS(Function0<Unit> exec) {
-        return runWithScheduler(exec, new POSScheduler(), 10000);
+        return runWithScheduler(exec, new POSScheduler(), 10000, new ControlledRandom());
     }
 
-    public Throwable runWithScheduler(Function0<Unit> exec, Scheduler scheduler, int iter) {
-        return buildRunner(exec, scheduler, iter).run();
+    public Throwable runWithScheduler(Function0<Unit> exec, Scheduler scheduler, int iter, ControlledRandom random) {
+        return buildRunner(exec, scheduler, iter, random).run();
     }
 
-    public TestRunner buildRunner(Function0<Unit> exec, Scheduler scheduler, int iter) {
+    public TestRunner buildRunner(Function0<Unit> exec, Scheduler scheduler, int iter, ControlledRandom random) {
         Configuration config = new Configuration(
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
@@ -40,7 +40,7 @@ public class FrayRunner {
                 "/tmp/report",
                 iter,
                 scheduler,
-                new ControlledRandom(),
+                random,
                 true,
                 false,
                 true,

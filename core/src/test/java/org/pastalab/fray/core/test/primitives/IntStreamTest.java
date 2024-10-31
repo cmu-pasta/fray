@@ -1,6 +1,7 @@
 package org.pastalab.fray.core.test.primitives;
 
 import org.junit.jupiter.api.Test;
+import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.test.FrayRunner;
 
@@ -19,7 +20,7 @@ public class IntStreamTest extends FrayRunner {
             assert(x.get() != 10);
             return null;
         }, new POSScheduler(),
-                1000000).run();
+                1000000, new ControlledRandom()).run();
         assertTrue(result instanceof AssertionError);
     }
 

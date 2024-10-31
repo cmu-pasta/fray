@@ -50,7 +50,7 @@ public class ConcurrentHashmapTest extends FrayRunner {
             map.put(new DeterministicHashCodeObject(1014958949), i.getAndIncrement());
             return null;
         };
-        TestRunner runner = buildRunner(task, new FifoScheduler(), 1);
+        TestRunner runner = buildRunner(task, new FifoScheduler(), 1, new ControlledRandom());
         ScheduleRecorder recorder = new ScheduleRecorder();
         runner.getConfig().getScheduleObservers().add(recorder);
         runner.run();
@@ -65,7 +65,7 @@ public class ConcurrentHashmapTest extends FrayRunner {
             map.put(new DeterministicHashCodeObject(-507498936), i.getAndIncrement());
             return null;
         };
-        TestRunner runner2 = buildRunner(task, new FifoScheduler(), 1);
+        TestRunner runner2 = buildRunner(task, new FifoScheduler(), 1, new ControlledRandom());
         ScheduleRecorder recorder2 = new ScheduleRecorder();
         runner2.getConfig().getScheduleObservers().add(recorder2);
         runner2.run();
@@ -90,7 +90,7 @@ public class ConcurrentHashmapTest extends FrayRunner {
                 map.put(o, i.getAndIncrement());
                 return null;
             };
-            TestRunner runner = buildRunner(task, new FifoScheduler(), 1);
+            TestRunner runner = buildRunner(task, new FifoScheduler(), 1, new ControlledRandom());
             ScheduleRecorder recorder = new ScheduleRecorder();
             runner.getConfig().getScheduleObservers().add(recorder);
             runner.run();
@@ -112,7 +112,7 @@ public class ConcurrentHashmapTest extends FrayRunner {
                 map.put(o, i.getAndIncrement());
                 return null;
             };
-            TestRunner runner2 = buildRunner(task, new FifoScheduler(), 1);
+            TestRunner runner2 = buildRunner(task, new FifoScheduler(), 1, new ControlledRandom());
             runner2.getConfig()
                     .setRandomnessProvider(new ControlledRandom(randomSource.getIntegers(),
                             randomSource.getDoubles(), new Random()));

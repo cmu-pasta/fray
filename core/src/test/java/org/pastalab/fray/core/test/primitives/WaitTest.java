@@ -1,9 +1,13 @@
 package org.pastalab.fray.core.test.primitives;
 
 import org.junit.jupiter.api.Test;
+import org.pastalab.fray.core.randomness.ControlledRandom;
+import org.pastalab.fray.core.scheduler.FifoScheduler;
 import org.pastalab.fray.core.test.FrayRunner;
 import org.pastalab.fray.runtime.DeadlockException;
 
+import java.util.ArrayList;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -26,7 +30,11 @@ public class WaitTest extends FrayRunner {
 
     @Test
     public void testWaitWithoutNotify() {
-        Throwable result = runWithFifo(() -> {
+        ArrayList<Integer> randInts = new ArrayList<>();
+        randInts.add(1);
+        randInts.add(1);
+        randInts.add(1);
+        Throwable result = runWithScheduler(() -> {
             try {
                 synchronized (this) {
                     wait();
@@ -35,7 +43,7 @@ public class WaitTest extends FrayRunner {
                 throw new RuntimeException(e);
             }
             return null;
-        });
+        }, new FifoScheduler(), 1, new ControlledRandom(randInts, new ArrayList<>(), new Random()));
         assertInstanceOf(DeadlockException.class, result);
     }
 
