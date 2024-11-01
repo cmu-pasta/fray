@@ -46,6 +46,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
         ) ||
         (dotClassName.startsWith("org.pastalab.fray") &&
             !dotClassName.startsWith("org.pastalab.fray.benchmark") &&
+            !dotClassName.startsWith("org.pastalab.fray.test") &&
             !dotClassName.startsWith(
                 "org.pastalab.fray.core.test",
             ))) {

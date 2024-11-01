@@ -1,5 +1,6 @@
 package org.pastalab.fray.core.command
 
+import java.lang.reflect.InvocationTargetException
 import java.net.URI
 import java.net.URLClassLoader
 import kotlinx.serialization.SerialName
@@ -37,17 +38,22 @@ data class MethodExecutor(
 
   override fun execute() {
     val clazz = Class.forName(clazz, true, Thread.currentThread().contextClassLoader)
-    if (args.isEmpty() && method != "main") {
-      val m = clazz.getMethod(method)
-      if (m.modifiers and java.lang.reflect.Modifier.STATIC == 0) {
-        val obj = clazz.getConstructor().newInstance()
-        m.invoke(obj)
+    try {
+
+      if (args.isEmpty() && method != "main") {
+        val m = clazz.getMethod(method)
+        if (m.modifiers and java.lang.reflect.Modifier.STATIC == 0) {
+          val obj = clazz.getConstructor().newInstance()
+          m.invoke(obj)
+        } else {
+          m.invoke(null)
+        }
       } else {
-        m.invoke(null)
+        val m = clazz.getMethod(method, Array<String>::class.java)
+        m.invoke(null, args.toTypedArray())
       }
-    } else {
-      val m = clazz.getMethod(method, Array<String>::class.java)
-      m.invoke(null, args.toTypedArray())
+    } catch (e: InvocationTargetException) {
+      throw e.targetException
     }
   }
 
