@@ -6,22 +6,26 @@ import org.pastalab.fray.core.TestRunner;
 import org.pastalab.fray.core.command.Configuration;
 import org.pastalab.fray.core.command.ExecutionInfo;
 import org.pastalab.fray.core.command.LambdaExecutor;
-import org.pastalab.fray.core.observers.ScheduleRecorder;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.FifoScheduler;
+import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 
 
 public class FrayRunner {
     public Throwable runWithFifo(Function0<Unit> exec) {
-        return runWithFifo(exec, new FifoScheduler(), 1);
+        return runWithScheduler(exec, new FifoScheduler(), 1, new ControlledRandom());
     }
 
-    public Throwable runWithFifo(Function0<Unit> exec, Scheduler scheduler, int iter) {
-        return buildRunner(exec, scheduler, iter).run();
+    public Throwable runWithPOS(Function0<Unit> exec) {
+        return runWithScheduler(exec, new POSScheduler(), 10000, new ControlledRandom());
     }
 
-    public TestRunner buildRunner(Function0<Unit> exec, Scheduler scheduler, int iter) {
+    public Throwable runWithScheduler(Function0<Unit> exec, Scheduler scheduler, int iter, ControlledRandom random) {
+        return buildRunner(exec, scheduler, iter, random).run();
+    }
+
+    public TestRunner buildRunner(Function0<Unit> exec, Scheduler scheduler, int iter, ControlledRandom random) {
         Configuration config = new Configuration(
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
@@ -36,7 +40,7 @@ public class FrayRunner {
                 "/tmp/report",
                 iter,
                 scheduler,
-                new ControlledRandom(),
+                random,
                 true,
                 false,
                 true,
