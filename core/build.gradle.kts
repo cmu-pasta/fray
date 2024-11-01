@@ -37,6 +37,7 @@ tasks.test {
 
 tasks.named("build") {
   finalizedBy("genRunner")
+  finalizedBy("copyDependencies")
 }
 
 tasks.withType<JavaExec> {
