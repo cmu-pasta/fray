@@ -312,19 +312,36 @@ class RunContext(val config: Configuration) {
       return
     }
 
-    if (lockObject == waitingObject) {
-      context.pendingOperation = ObjectWaitBlocking(waitingObject)
+    // This is a spurious wakeup.
+    // https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html#wait(long,int)
+    val spuriousWakeup = config.randomnessProvider.nextInt() % 2 == 0
+
+    if (!spuriousWakeup) {
+      if (lockObject == waitingObject) {
+        context.pendingOperation = ObjectWaitBlocking(waitingObject)
+      } else {
+        context.pendingOperation = ConditionAwaitBlocking(waitingObject as Condition, canInterrupt)
+      }
+      lockManager.addWaitingThread(waitingObject, Thread.currentThread())
     } else {
-      context.pendingOperation = ConditionAwaitBlocking(waitingObject as Condition, canInterrupt)
+      if (waitingObject == lockObject) {
+        context.pendingOperation = ObjectWakeBlocking(waitingObject)
+      } else {
+        context.pendingOperation = ConditionWakeBlocking(waitingObject as Condition)
+      }
+      lockManager.addWakingThread(lockObject, context)
     }
     context.state = ThreadState.Paused
-    lockManager.addWaitingThread(waitingObject, Thread.currentThread())
+
     unlockImpl(lockObject, t, true, true, lockObject == waitingObject)
-    checkDeadlock {
-      context.pendingOperation = ThreadResumeOperation()
-      assert(lockManager.lock(lockObject, context, false, true, false))
-      syncManager.removeWait(lockObject)
-      context.state = ThreadState.Running
+
+    if (!spuriousWakeup) {
+      checkDeadlock {
+        context.pendingOperation = ThreadResumeOperation()
+        assert(lockManager.lock(lockObject, context, false, true, false))
+        syncManager.removeWait(lockObject)
+        context.state = ThreadState.Running
+      }
     }
 
     // We need a daemon thread here because
@@ -590,6 +607,7 @@ class RunContext(val config: Configuration) {
     if (unlockBecauseOfWait) {
       waitingThreads -= 1
     }
+    assert(waitingThreads >= 0)
     if (waitingThreads > 0) {
       if (sendNotifyAll) {
         if (isMonitorLock) {
