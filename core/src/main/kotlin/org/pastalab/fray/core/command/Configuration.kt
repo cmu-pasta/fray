@@ -9,7 +9,6 @@ import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
 import java.io.File
 import java.nio.file.Paths
-import java.util.*
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
@@ -21,9 +20,7 @@ import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import org.apache.logging.log4j.core.LoggerContext
-import org.apache.logging.log4j.core.config.Configurator
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory
+import org.pastalab.fray.core.logger.FrayLogger
 import org.pastalab.fray.core.observers.ScheduleObserver
 import org.pastalab.fray.core.observers.ScheduleRecorder
 import org.pastalab.fray.core.observers.ScheduleRecording
@@ -58,7 +55,7 @@ class CliExecutionConfig : ExecutionConfig("cli") {
       option("-cp", "--classpath", help = "Arguments passed to target application")
           .split(":")
           .default(emptyList())
-  val timedOpAsYield by option("-t", "--timed-op-as-yield").flag()
+  val timedOpAsYield by option("-y", "--timed-op-as-yield").flag()
   val ignoreUnhandledExceptions by option("-e", "--ignore-unhandled-exceptions").flag()
   val interleaveMemoryOps by option("-m", "--memory").flag()
   val maxScheduledStep by option("-s", "--max-scheduled-step").int().default(10000)
@@ -149,6 +146,8 @@ class PCT : ScheduleAlgorithm("pct") {
 
 class MainCommand : CliktCommand() {
   val report by option("-o", "--output", help = "Report output directory.").default("/tmp/report")
+  val timeout by
+      option("-t", "--timeout", help = "Testing timeout in seconds.").int().default(60 * 10)
   val iter by option("-i", "--iter", help = "Number of iterations.").int().default(100000)
   val fullSchedule by
       option(
@@ -202,6 +201,7 @@ class MainCommand : CliktCommand() {
             executionInfo,
             report,
             iter,
+            timeout,
             s.first,
             s.second,
             fullSchedule,
@@ -221,6 +221,7 @@ data class Configuration(
     val executionInfo: ExecutionInfo,
     val report: String,
     val iter: Int,
+    val timeout: Int,
     var scheduler: Scheduler,
     var randomnessProvider: ControlledRandom,
     val fullSchedule: Boolean,
@@ -239,29 +240,7 @@ data class Configuration(
     scheduleObservers.forEach { it.saveToReportFolder("$report/recording_$index") }
   }
 
-  val loggerContext by lazy {
-    val builder = ConfigurationBuilderFactory.newConfigurationBuilder()
-    builder.setConfigurationName("Fray")
-    builder.setLoggerContext(LoggerContext("Fray"))
-    val standard = builder.newLayout("PatternLayout")
-    standard.addAttribute("pattern", "%d [%t] %-5level: %msg%n%throwable")
-    val appender =
-        if (isReplay) {
-          builder.newAppender("log", "Console").addAttribute("target", "SYSTEM_OUT").add(standard)
-        } else {
-          builder
-              .newAppender("log", "File")
-              .addAttribute("fileName", "${report}/fray.log")
-              .addAttribute("append", false)
-        }
-    appender.add(standard)
-    builder.add(appender)
-    val logger = builder.newLogger("org.pastalab.fray", "INFO")
-    logger.add(builder.newAppenderRef("log"))
-    logger.addAttribute("additivity", false)
-    builder.add(logger)
-    Configurator.initialize(builder.build())
-  }
+  val frayLogger = FrayLogger("$report/fray.log")
 
   init {
     if (!isReplay) {
