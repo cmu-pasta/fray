@@ -39,6 +39,7 @@ public class FrayRunner {
                 ),
                 "/tmp/report",
                 iter,
+                60,
                 scheduler,
                 random,
                 true,

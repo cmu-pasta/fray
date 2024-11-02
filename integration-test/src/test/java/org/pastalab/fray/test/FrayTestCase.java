@@ -38,6 +38,7 @@ public class FrayTestCase {
                 ),
                 "/tmp/report",
                 10000,
+                60,
                 new POSScheduler(),
                 new ControlledRandom(),
                 true,

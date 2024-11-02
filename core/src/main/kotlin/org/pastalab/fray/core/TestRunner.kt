@@ -44,6 +44,7 @@ class TestRunner(val config: Configuration) {
       val timeSource = TimeSource.Monotonic
       val start = timeSource.markNow()
       var i = 0
+      logger.info("Fray started.")
       var bugsFound = 0
       if (config.dummyRun) {
         // We want to do a dummy-run first to make sure all variables are initialized
@@ -70,7 +71,8 @@ class TestRunner(val config: Configuration) {
         config.randomnessProvider = randomnessProvider
         config.scheduleObservers = observers
       }
-      while (i != config.iter) {
+      while (((timeSource.markNow() - start).inWholeSeconds < config.timeout) &&
+          (i != config.iter)) {
         reportProgress(i, bugsFound)
         try {
           if (i != 0) {
@@ -93,10 +95,10 @@ class TestRunner(val config: Configuration) {
           if (config.isReplay) {
             break
           }
-          logger.error(
+          logger.info(
               "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms",
           )
-          logger.error("The recording is saved to ${config.report}/recording_$i/")
+          logger.info("The recording is saved to ${config.report}/recording_$i/")
           if (!config.exploreMode) {
             config.saveToReportFolder(i)
             break
@@ -105,6 +107,9 @@ class TestRunner(val config: Configuration) {
         i++
       }
       context.shutDown()
+      logger.info(
+          "Run finished. Total iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms",
+      )
     }
     config.executionInfo.executor.afterExecution()
     return context.bugFound

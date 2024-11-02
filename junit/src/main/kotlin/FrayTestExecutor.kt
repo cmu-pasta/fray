@@ -44,6 +44,7 @@ class FrayTestExecutor {
             ),
             workDir,
             descriptor.analyzeConfig.iteration,
+            60,
             schedulerInfo.first,
             schedulerInfo.second,
             false,
