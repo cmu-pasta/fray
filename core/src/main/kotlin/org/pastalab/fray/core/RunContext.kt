@@ -35,7 +35,6 @@ class RunContext(val config: Configuration) {
   var mainExiting = false
   var nanoTime = System.nanoTime()
   val terminatingThread = mutableSetOf<Int>()
-  val logger = config.loggerContext.getLogger(RunContext::class.java)
   val hashCodeMapper = ReferencedContextManager<Int>({ config.randomnessProvider.nextInt() })
   var forkJoinPool: ForkJoinPool? = null
   private val lockManager = LockManager()
@@ -82,12 +81,13 @@ class RunContext(val config: Configuration) {
       } else {
         e.printStackTrace(PrintWriter(sw))
       }
-      logger.error(sw.toString())
+      config.frayLogger.error(sw.toString())
       if (config.exploreMode || config.noExitWhenBugFound) {
         return
       }
       if (!config.isReplay) {
-        logger.error("Error found, the recording is saved to ${config.report}/recording_0/")
+        config.frayLogger.error(
+            "Error found, the recording is saved to ${config.report}/recording_0/")
         println("Error found, you may find the error report in ${config.report}")
         config.saveToReportFolder(0)
       }

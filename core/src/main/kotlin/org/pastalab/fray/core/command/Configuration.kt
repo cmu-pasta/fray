@@ -20,9 +20,7 @@ import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import org.apache.logging.log4j.core.LoggerContext
-import org.apache.logging.log4j.core.config.Configurator
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory
+import org.pastalab.fray.core.logger.FrayLogger
 import org.pastalab.fray.core.observers.ScheduleObserver
 import org.pastalab.fray.core.observers.ScheduleRecorder
 import org.pastalab.fray.core.observers.ScheduleRecording
@@ -242,29 +240,7 @@ data class Configuration(
     scheduleObservers.forEach { it.saveToReportFolder("$report/recording_$index") }
   }
 
-  val loggerContext by lazy {
-    val builder = ConfigurationBuilderFactory.newConfigurationBuilder()
-    builder.setConfigurationName("Fray")
-    builder.setLoggerContext(LoggerContext("Fray"))
-    val standard = builder.newLayout("PatternLayout")
-    standard.addAttribute("pattern", "%d [%t] %-5level: %msg%n%throwable")
-    val appender =
-        if (isReplay) {
-          builder.newAppender("log", "Console").addAttribute("target", "SYSTEM_OUT").add(standard)
-        } else {
-          builder
-              .newAppender("log", "File")
-              .addAttribute("fileName", "${report}/fray.log")
-              .addAttribute("append", false)
-        }
-    appender.add(standard)
-    builder.add(appender)
-    val logger = builder.newLogger("org.pastalab.fray", "INFO")
-    logger.add(builder.newAppenderRef("log"))
-    logger.addAttribute("additivity", false)
-    builder.add(logger)
-    Configurator.initialize(builder.build())
-  }
+  val frayLogger = FrayLogger("$report/fray.log")
 
   init {
     if (!isReplay) {

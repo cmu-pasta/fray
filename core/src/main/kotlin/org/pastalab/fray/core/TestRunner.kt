@@ -2,7 +2,6 @@ package org.pastalab.fray.core
 
 import java.util.*
 import kotlin.time.TimeSource
-import org.apache.logging.log4j.Logger
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.RandomScheduler
@@ -12,8 +11,6 @@ class TestRunner(val config: Configuration) {
 
   val context = RunContext(config)
   var currentDivision = 1
-
-  val logger: Logger = config.loggerContext.getLogger(TestRunner::class.java)
 
   init {
     context.bootstrap()
@@ -44,7 +41,7 @@ class TestRunner(val config: Configuration) {
       val timeSource = TimeSource.Monotonic
       val start = timeSource.markNow()
       var i = 0
-      logger.info("Fray started.")
+      config.frayLogger.info("Fray started.")
       var bugsFound = 0
       if (config.dummyRun) {
         // We want to do a dummy-run first to make sure all variables are initialized
@@ -95,10 +92,10 @@ class TestRunner(val config: Configuration) {
           if (config.isReplay) {
             break
           }
-          logger.info(
+          config.frayLogger.info(
               "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms",
           )
-          logger.info("The recording is saved to ${config.report}/recording_$i/")
+          config.frayLogger.info("The recording is saved to ${config.report}/recording_$i/")
           if (!config.exploreMode) {
             config.saveToReportFolder(i)
             break
@@ -107,7 +104,7 @@ class TestRunner(val config: Configuration) {
         i++
       }
       context.shutDown()
-      logger.info(
+      config.frayLogger.info(
           "Run finished. Total iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms",
       )
     }

@@ -15,8 +15,6 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
   implementation("com.github.ajalt.clikt:clikt:4.2.2")
   testImplementation("org.jetbrains.kotlin:kotlin-test")
-  implementation("org.apache.logging.log4j:log4j-core:2.23.1")
-  implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.23.1")
   testCompileOnly(project(":runtime"))
 }
 
