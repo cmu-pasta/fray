@@ -84,7 +84,7 @@ class ReentrantLockContext : LockContext {
       }
       for (lockWaiter in lockWaiters.values) {
         if (lockWaiter.thread.state != ThreadState.Completed) {
-          lockWaiter.thread.pendingOperation = ThreadResumeOperation()
+          lockWaiter.thread.pendingOperation = ThreadResumeOperation(true)
           lockWaiter.thread.state = ThreadState.Enabled
         }
       }
@@ -97,7 +97,7 @@ class ReentrantLockContext : LockContext {
   override fun interrupt(tid: Long) {
     val lockWaiter = lockWaiters[tid] ?: return
     if (lockWaiter.canInterrupt) {
-      lockWaiter.thread.pendingOperation = ThreadResumeOperation()
+      lockWaiter.thread.pendingOperation = ThreadResumeOperation(false)
       lockWaiter.thread.state = ThreadState.Enabled
       lockWaiters.remove(tid)
     }

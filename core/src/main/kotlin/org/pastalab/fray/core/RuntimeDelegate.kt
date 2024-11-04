@@ -82,10 +82,10 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     return result
   }
 
-  override fun onObjectWait(o: Any) {
+  override fun onObjectWait(o: Any, timeout: Long) {
     if (checkEntered()) return
     try {
-      context.objectWait(o)
+      context.objectWait(o, timeout != 0L)
     } finally {
       entered.set(false)
     }
@@ -254,53 +254,45 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onConditionAwait(o: Condition) {
+    onConditionAwaitImpl(o, true, false)
+  }
+
+  fun onConditionAwaitImpl(o: Condition, canInterrupt: Boolean, timed: Boolean): Boolean {
     if (checkEntered()) {
       onSkipMethod("Condition.await")
-      return
+      return true
     }
     try {
-      context.conditionAwait(o, true)
+      context.conditionAwait(o, canInterrupt, timed)
     } finally {
       entered.set(false)
       onSkipMethod("Condition.await")
+    }
+    return false
+  }
+
+  fun onConditionAwaitDoneImpl(o: Condition, canInterrupt: Boolean): Boolean {
+    if (!onSkipMethodDone("Condition.await")) {
+      return true
+    }
+    if (checkEntered()) return true
+    try {
+      return context.conditionAwaitDone(o, canInterrupt)
+    } finally {
+      entered.set(false)
     }
   }
 
   override fun onConditionAwaitUninterruptibly(o: Condition) {
-    if (checkEntered()) {
-      onSkipMethod("Condition.await")
-      return
-    }
-    try {
-      context.conditionAwait(o, false)
-    } finally {
-      entered.set(false)
-      onSkipMethod("Condition.await")
-    }
+    onConditionAwaitImpl(o, false, false)
   }
 
   override fun onConditionAwaitDone(o: Condition) {
-    if (!onSkipMethodDone("Condition.await")) {
-      return
-    }
-    if (checkEntered()) return
-    try {
-      context.conditionAwaitDone(o, true)
-    } finally {
-      entered.set(false)
-    }
+    onConditionAwaitDoneImpl(o, true)
   }
 
   override fun onConditionAwaitUninterruptiblyDone(o: Condition) {
-    if (!onSkipMethodDone("Condition.await")) {
-      return
-    }
-    if (checkEntered()) return
-    try {
-      context.conditionAwaitDone(o, false)
-    } finally {
-      entered.set(false)
-    }
+    onConditionAwaitDoneImpl(o, false)
   }
 
   override fun onConditionSignal(o: Condition) {
@@ -425,22 +417,38 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     return true
   }
 
-  override fun onThreadPark() {
-    if (checkEntered()) return
+  fun onThreadParkImpl(): Boolean {
+    if (checkEntered()) {
+      onSkipMethod("Thread.park")
+      return true
+    }
     try {
       context.threadPark()
+    } finally {
+      entered.set(false)
+      onSkipMethod("Thread.park")
+    }
+    return false
+  }
+
+  override fun onThreadPark() {
+    onThreadParkImpl()
+  }
+
+  fun onThreadParkDoneImpl(timed: Boolean) {
+    if (!onSkipMethodDone("Thread.park")) {
+      return
+    }
+    if (checkEntered()) return
+    try {
+      context.threadParkDone(timed)
     } finally {
       entered.set(false)
     }
   }
 
   override fun onThreadParkDone() {
-    if (checkEntered()) return
-    try {
-      context.threadParkDone()
-    } finally {
-      entered.set(false)
-    }
+    onThreadParkDoneImpl(false)
   }
 
   override fun onThreadUnpark(t: Thread?) {
@@ -578,34 +586,49 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     onSkipMethodDone("Semaphore.reducePermits")
   }
 
-  override fun onLatchAwait(latch: CountDownLatch) {
+  fun onLatchAwaitImpl(latch: CountDownLatch, timed: Boolean): Boolean {
     if (checkEntered()) {
       onSkipMethod("Latch.await")
-      return
+      return true
     }
     try {
-      context.latchAwait(latch)
+      context.latchAwait(latch, timed)
     } finally {
       entered.set(false)
       onSkipMethod("Latch.await")
     }
+    return false
   }
 
-  override fun onLatchAwaitTimeout(latch: CountDownLatch, timeout: Long, unit: TimeUnit): Boolean {
-    if (context.config.executionInfo.timedOpAsYield) {
-      onYield()
-      return false
-    } else {
-      latch.await()
-      return true
+  override fun onLatchAwait(latch: CountDownLatch) {
+    onLatchAwaitImpl(latch, false)
+  }
+
+  fun onLatchAwaitDoneImpl(latch: CountDownLatch): Boolean {
+    onSkipMethodDone("Latch.await")
+    if (checkEntered()) return true
+    try {
+      return context.latchAwaitDone(latch)
+    } finally {
+      entered.set(false)
     }
   }
 
+  override fun onLatchAwaitTimeout(latch: CountDownLatch, timeout: Long, unit: TimeUnit): Boolean {
+    if (onLatchAwaitImpl(latch, true)) {
+      onSkipMethodDone("Latch.await")
+      return latch.await(timeout, unit)
+    }
+    try {
+      latch.await()
+    } catch (e: InterruptedException) {
+      // Do nothing
+    }
+    return onLatchAwaitDoneImpl(latch)
+  }
+
   override fun onLatchAwaitDone(latch: CountDownLatch) {
-    onSkipMethodDone("Latch.await")
-    if (checkEntered()) return
-    context.latchAwaitDone(latch)
-    entered.set(false)
+    onLatchAwaitDoneImpl(latch)
   }
 
   override fun onLatchCountDown(latch: CountDownLatch) {
@@ -664,81 +687,77 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onThreadParkNanos(nanos: Long) {
-    if (context.config.executionInfo.timedOpAsYield) {
-      onYield()
-    } else {
-      LockSupport.park()
+    if (onThreadParkImpl()) {
+      onSkipMethodDone("Thread.park")
+      LockSupport.parkNanos(nanos)
+      return
     }
+    LockSupport.park()
+    onThreadParkDoneImpl(true)
   }
 
-  override fun onThreadParkUntil(nanos: Long) {
-    if (context.config.executionInfo.timedOpAsYield) {
-      onYield()
-    } else {
-      LockSupport.park()
+  override fun onThreadParkUntil(deadline: Long) {
+    if (onThreadParkImpl()) {
+      onSkipMethodDone("Thread.park")
+      LockSupport.parkUntil(deadline)
+      return
     }
+    LockSupport.park()
+    onThreadParkDoneImpl(true)
   }
 
   override fun onThreadParkNanosWithBlocker(blocker: Any?, nanos: Long) {
-    if (checkEntered()) {
-      try {
-        LockSupport.parkNanos(nanos)
-      } finally {
-        entered.set(false)
-      }
+    if (onThreadParkImpl()) {
+      onSkipMethodDone("Thread.park")
+      LockSupport.parkNanos(blocker, nanos)
+      return
     }
-    entered.set(false)
-    if (context.config.executionInfo.timedOpAsYield) {
-      onYield()
-    } else {
-      LockSupport.park(blocker)
-    }
+    LockSupport.park()
+    onThreadParkDoneImpl(true)
   }
 
-  override fun onThreadParkUntilWithBlocker(blocker: Any?, nanos: Long) {
-    if (context.config.executionInfo.timedOpAsYield) {
-      onYield()
-    } else {
-      LockSupport.park(blocker)
+  override fun onThreadParkUntilWithBlocker(blocker: Any?, deadline: Long) {
+    if (onThreadParkImpl()) {
+      onSkipMethodDone("Thread.park")
+      LockSupport.parkUntil(blocker, deadline)
+      return
     }
+    LockSupport.park()
+    onThreadParkDoneImpl(true)
   }
 
   override fun onConditionAwaitTime(o: Condition, time: Long, unit: TimeUnit): Boolean {
-    if (context.config.executionInfo.timedOpAsYield) {
-      onYield()
-      return false
-    } else {
-      o.await()
-      return true
+    if (onConditionAwaitImpl(o, true, true)) {
+      val result = o.await(time, unit)
+      onSkipMethodDone("Condition.await")
+      return result
     }
+    o.await()
+    return onConditionAwaitDoneImpl(o, true)
   }
 
   override fun onConditionAwaitNanos(o: Condition, nanos: Long): Long {
-    if (checkEntered()) {
-      try {
-        return o.awaitNanos(nanos)
-      } finally {
-        entered.set(false)
-      }
+    if (onConditionAwaitImpl(o, true, true)) {
+      val result = o.awaitNanos(nanos)
+      onSkipMethodDone("Condition.await")
+      return result
     }
-    entered.set(false)
-    if (context.config.executionInfo.timedOpAsYield) {
-      onYield()
+    o.await()
+    if (onConditionAwaitDoneImpl(o, true)) {
       return 0
     } else {
-      o.await()
-      return nanos
+      return nanos - 1
     }
   }
 
   override fun onConditionAwaitUntil(o: Condition, deadline: Date): Boolean {
-    if (context.config.executionInfo.timedOpAsYield) {
-      onYield()
-      return false
-    } else {
-      o.await()
-      return true
+    if (onConditionAwaitImpl(o, true, true)) {
+      val result = o.awaitUntil(deadline)
+      onSkipMethodDone("Condition.await")
+      return result
     }
+    o.await()
+    return onConditionAwaitDoneImpl(o, true)
   }
 
   override fun onThreadIsInterrupted(result: Boolean, t: Thread): Boolean {

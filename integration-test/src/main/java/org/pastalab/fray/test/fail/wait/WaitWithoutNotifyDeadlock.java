@@ -1,6 +1,6 @@
 package org.pastalab.fray.test.fail.wait;
 
-public class WaitWithoutNotify {
+public class WaitWithoutNotifyDeadlock {
     public static void main(String[] args) {
         Object o = new Object();
         try {

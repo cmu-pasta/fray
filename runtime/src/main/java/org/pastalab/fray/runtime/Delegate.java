@@ -22,7 +22,7 @@ public class Delegate {
     public void onThreadEnd() {
     }
 
-    public void onObjectWait(Object o) {
+    public void onObjectWait(Object o, long timeout) {
     }
 
     public void onObjectWaitDone(Object o) {
