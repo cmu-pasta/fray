@@ -6,8 +6,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.ThreadState
-import org.pastalab.fray.core.concurrency.operations.ConditionWakeBlocking
-import org.pastalab.fray.core.concurrency.operations.ObjectWakeBlocking
+import org.pastalab.fray.core.concurrency.operations.ConditionWakeBlocked
+import org.pastalab.fray.core.concurrency.operations.ObjectWakeBlocked
 
 class LockManager {
   val lockContextManager = ReferencedContextManager<LockContext> { ReentrantLockContext() }
@@ -70,10 +70,11 @@ class LockManager {
   }
 
   // TODO(aoli): can we merge this logic with `objectNotifyImply`?
-  fun threadInterruptDuringObjectWait(
+  fun objectWaitUnblockedWithoutNotify(
       waitingObject: Any,
       lockObject: Any,
-      context: ThreadContext
+      context: ThreadContext,
+      isTimeout: Boolean
   ): Boolean {
     val id = System.identityHashCode(waitingObject)
     val lockContext = getLockContext(lockObject)
@@ -84,9 +85,9 @@ class LockManager {
     }
     addWakingThread(lockObject, context)
     if (waitingObject == lockObject) {
-      context.pendingOperation = ObjectWakeBlocking(waitingObject)
+      context.pendingOperation = ObjectWakeBlocked(waitingObject, !isTimeout)
     } else {
-      context.pendingOperation = ConditionWakeBlocking(waitingObject as Condition)
+      context.pendingOperation = ConditionWakeBlocked(waitingObject as Condition, !isTimeout)
     }
     if (lockContext.canLock(context.thread.id)) {
       context.state = ThreadState.Enabled

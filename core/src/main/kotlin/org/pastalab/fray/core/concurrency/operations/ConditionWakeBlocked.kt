@@ -2,5 +2,5 @@ package org.pastalab.fray.core.concurrency.operations
 
 import java.util.concurrent.locks.Condition
 
-class ConditionAwaitBlocking(val condition: Condition, val canInterrupt: Boolean) :
+class ConditionWakeBlocked(val condition: Condition, val noTimeout: Boolean) :
     NonRacingOperation() {}

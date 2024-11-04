@@ -25,7 +25,7 @@ class ObjectInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Object::class.
               name,
               descriptor,
               true,
-              false)
+              true)
       // We cannot use MethodExitVisitor here because `onObjectWaitDone` may throw an
       // `InterruptedException`
       // So we cannot catch that exception twice.

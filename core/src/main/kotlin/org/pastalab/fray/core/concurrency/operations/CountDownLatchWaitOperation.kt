@@ -2,4 +2,5 @@ package org.pastalab.fray.core.concurrency.operations
 
 import java.util.concurrent.CountDownLatch
 
-class CountDownLatchAwaitBlocking(val latch: CountDownLatch) : NonRacingOperation() {}
+class CountDownLatchAwaitBlocking(val latch: CountDownLatch, timed: Boolean) :
+    TimedBlockingOperation(timed) {}
