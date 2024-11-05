@@ -2,21 +2,25 @@ package org.pastalab.fray.test;
 
 import io.github.classgraph.ClassGraph;
 import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 import org.pastalab.fray.core.TestRunner;
 import org.pastalab.fray.core.command.Configuration;
 import org.pastalab.fray.core.command.ExecutionInfo;
+import org.pastalab.fray.core.command.LambdaExecutor;
 import org.pastalab.fray.core.command.MethodExecutor;
+import org.pastalab.fray.core.observers.ScheduleRecording;
+import org.pastalab.fray.core.observers.ScheduleVerifier;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.FifoScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.runtime.TargetTerminateException;
+import org.pastalab.fray.test.success.condition.ConditionAwaitTimeoutInterrupt;
+import org.pastalab.fray.test.success.condition.ConditionAwaitTimeoutNotifyInterrupt;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.io.File;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
@@ -58,6 +62,45 @@ public class FrayTestCase {
                 assertEquals(null, result);
             }
         });
+    }
+
+    @Test
+    public void testOne() throws Throwable {
+        System.setProperty("fray.recordSchedule", "true");
+        Configuration config = new Configuration(
+                new ExecutionInfo(
+                        new LambdaExecutor(() -> {
+                            ConditionAwaitTimeoutNotifyInterrupt.main(new String[]{});
+                            return null;
+                        }),
+                        false,
+                        true,
+                        false,
+                        -1
+                ),
+                "/tmp/report2",
+                100,
+                60,
+                new RandomScheduler(new ControlledRandom(
+                        new ArrayList<>(List.of(1, 1, 1, 0)),
+                        new ArrayList<>(),
+                        new Random()
+                )),
+                new ControlledRandom(
+                        new ArrayList<>(List.of(0, 0, 0, 0, 0, 0)),
+                        new ArrayList<>(),
+                        new Random()
+                ),
+                true,
+                false,
+                true,
+                false,
+                false,
+                false
+        );
+//        config.getScheduleObservers().add(new ScheduleVerifier("/tmp/report/recording_0/recording.json"));
+        TestRunner runner = new TestRunner(config);
+        runner.run();
     }
 
     @TestFactory

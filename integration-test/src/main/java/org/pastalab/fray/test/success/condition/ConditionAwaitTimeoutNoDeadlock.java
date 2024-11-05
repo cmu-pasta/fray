@@ -11,7 +11,7 @@ public class ConditionAwaitTimeoutNoDeadlock {
         l.lock();
         try {
             boolean result = c.await(1000, java.util.concurrent.TimeUnit.MILLISECONDS);
-            assert(!result);
+            assert(result == false);
 
             boolean result2 = c.awaitUntil(new java.util.Date(System.currentTimeMillis() + 1000));
             assert(!result2);

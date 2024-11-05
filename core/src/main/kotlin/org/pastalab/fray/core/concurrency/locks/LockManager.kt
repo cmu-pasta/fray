@@ -6,6 +6,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.ThreadState
+import org.pastalab.fray.core.concurrency.operations.ConditionAwaitBlocked
 import org.pastalab.fray.core.concurrency.operations.ConditionWakeBlocked
 import org.pastalab.fray.core.concurrency.operations.ObjectWakeBlocked
 
@@ -87,7 +88,11 @@ class LockManager {
     if (waitingObject == lockObject) {
       context.pendingOperation = ObjectWakeBlocked(waitingObject, !isTimeout)
     } else {
-      context.pendingOperation = ConditionWakeBlocked(waitingObject as Condition, !isTimeout)
+      context.pendingOperation =
+          ConditionWakeBlocked(
+              waitingObject as Condition,
+              (context.pendingOperation as ConditionAwaitBlocked).canInterrupt,
+              !isTimeout)
     }
     if (lockContext.canLock(context.thread.id)) {
       context.state = ThreadState.Enabled

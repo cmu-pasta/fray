@@ -1,8 +1,14 @@
 package org.pastalab.fray.core.observers
 
+import java.io.File
+import kotlinx.serialization.json.Json
 import org.pastalab.fray.core.ThreadContext
 
 class ScheduleVerifier(val schedules: List<ScheduleRecording>) : ScheduleObserver {
+  constructor(
+      path: String
+  ) : this(Json.decodeFromString<List<ScheduleRecording>>(File(path).readText()))
+
   var index = 0
 
   override fun onExecutionStart() {
