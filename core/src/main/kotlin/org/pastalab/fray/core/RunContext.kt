@@ -987,7 +987,7 @@ class RunContext(val config: Configuration) {
   }
 
   fun nanoTime(): Long {
-    nanoTime += 1000L
+    nanoTime += TimeUnit.MILLISECONDS.convert(100, TimeUnit.NANOSECONDS)
     return nanoTime
   }
 
