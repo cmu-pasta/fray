@@ -801,9 +801,15 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     return probe
   }
 
-  override fun onThreadSleepDuration(duration: Duration?) {}
+  override fun onThreadSleepDuration(duration: Duration?) {
+    Thread.yield()
+  }
 
-  override fun onThreadSleepMillis(millis: Long) {}
+  override fun onThreadSleepMillis(millis: Long) {
+    Thread.yield()
+  }
 
-  override fun onThreadSleepMillisNanos(millis: Long, nanos: Int) {}
+  override fun onThreadSleepMillisNanos(millis: Long, nanos: Int) {
+    Thread.yield()
+  }
 }
