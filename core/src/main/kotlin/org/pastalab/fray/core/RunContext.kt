@@ -123,10 +123,11 @@ class RunContext(val config: Configuration) {
               thread.pendingOperation =
                   when (pendingOperation) {
                     is ObjectWaitBlock -> {
-                      ObjectWakeBlocked(pendingOperation.o, false)
+                      ObjectWakeBlocked(pendingOperation.o, true)
                     }
                     is ConditionAwaitBlocked -> {
-                      ConditionWakeBlocked(pendingOperation.condition, false)
+                      ConditionWakeBlocked(
+                          pendingOperation.condition, pendingOperation.canInterrupt, true)
                     }
                     is ObjectWakeBlocked -> {
                       pendingOperation
@@ -311,6 +312,7 @@ class RunContext(val config: Configuration) {
     context.state = ThreadState.Enabled
     scheduleNextOperation(true)
 
+    context.pendingOperation = ThreadResumeOperation(true)
     // First we need to check if current thread is interrupted.
     if (canInterrupt) {
       context.checkInterrupt()
@@ -379,11 +381,11 @@ class RunContext(val config: Configuration) {
     // We will unblock here only if the scheduler
     // decides to run it.
     while (context.state != ThreadState.Running) {
-      syncManager.signal(lockObject)
       try {
         if (context.interruptSignaled) {
           Thread.interrupted()
         }
+        syncManager.signal(lockObject)
         if (waitingObject is Condition) {
           // TODO(aoli): Is this necessary?
           if (canInterrupt) {
@@ -400,11 +402,11 @@ class RunContext(val config: Configuration) {
     }
     // If a thread is enabled, the lock must be available.
     assert(lockManager.lock(lockObject, context, false, true, false))
+    val pendingOperation = context.pendingOperation
+    assert(pendingOperation is ThreadResumeOperation)
     if (canInterrupt) {
       context.checkInterrupt()
     }
-    val pendingOperation = context.pendingOperation
-    assert(pendingOperation is ThreadResumeOperation)
     return (pendingOperation as ThreadResumeOperation).noTimeout
   }
 
@@ -412,7 +414,7 @@ class RunContext(val config: Configuration) {
     val context = registeredThreads[t.id]!!
     context.interruptSignaled = true
 
-    if (context.state == ThreadState.Running || context.state == ThreadState.Enabled) {
+    if (context.state == ThreadState.Running) {
       return
     }
 
@@ -422,8 +424,17 @@ class RunContext(val config: Configuration) {
       is ObjectWaitBlock -> {
         if (lockManager.objectWaitUnblockedWithoutNotify(
             pendingOperation.o, pendingOperation.o, context, false)) {
-          syncManager.createWait(pendingOperation.o, 1)
           waitingObject = pendingOperation.o
+        }
+      }
+      is ObjectWakeBlocked -> {
+        if (context.state == ThreadState.Enabled) {
+          waitingObject = pendingOperation.o
+        }
+      }
+      is ConditionWakeBlocked -> {
+        if (pendingOperation.canInterrupt && context.state == ThreadState.Enabled) {
+          waitingObject = lockManager.lockFromCondition(pendingOperation.condition)
         }
       }
       is ConditionAwaitBlocked -> {
@@ -431,7 +442,6 @@ class RunContext(val config: Configuration) {
           val lock = lockManager.lockFromCondition(pendingOperation.condition)
           if (lockManager.objectWaitUnblockedWithoutNotify(
               pendingOperation.condition, lock, context, false)) {
-            syncManager.createWait(lock, 1)
             waitingObject = lock
           }
         }
@@ -439,7 +449,6 @@ class RunContext(val config: Configuration) {
       is CountDownLatchAwaitBlocking -> {
         context.pendingOperation = ThreadResumeOperation(true)
         context.state = ThreadState.Enabled
-        syncManager.createWait(pendingOperation.latch, 1)
         waitingObject = pendingOperation.latch
       }
       is ParkBlocked -> {
@@ -452,6 +461,7 @@ class RunContext(val config: Configuration) {
     }
 
     if (waitingObject != null) {
+      syncManager.createWait(waitingObject, 1)
       registeredThreads[Thread.currentThread().id]!!.pendingOperation =
           InterruptPendingOperation(waitingObject)
     }
@@ -524,9 +534,13 @@ class RunContext(val config: Configuration) {
         val context = registeredThreads[t]!!
         lockManager.addWakingThread(lockObject, context)
         if (waitingObject == lockObject) {
-          context.pendingOperation = ObjectWakeBlocked(waitingObject, false)
+          context.pendingOperation = ObjectWakeBlocked(waitingObject, true)
         } else {
-          context.pendingOperation = ConditionWakeBlocked(waitingObject as Condition, false)
+          context.pendingOperation =
+              ConditionWakeBlocked(
+                  waitingObject as Condition,
+                  (context.pendingOperation as ConditionAwaitBlocked).canInterrupt,
+                  true)
         }
         it.remove(t)
         if (it.size == 0) {
@@ -554,9 +568,13 @@ class RunContext(val config: Configuration) {
           // We cannot enable the thread immediately because
           // the thread is still waiting for the monitor lock.
           if (waitingObject == lockObject) {
-            context.pendingOperation = ObjectWakeBlocked(waitingObject, false)
+            context.pendingOperation = ObjectWakeBlocked(waitingObject, true)
           } else {
-            context.pendingOperation = ConditionWakeBlocked(waitingObject as Condition, false)
+            context.pendingOperation =
+                ConditionWakeBlocked(
+                    waitingObject as Condition,
+                    (context.pendingOperation as ConditionAwaitBlocked).canInterrupt,
+                    true)
           }
           lockManager.addWakingThread(lockObject, context)
         }
@@ -828,10 +846,12 @@ class RunContext(val config: Configuration) {
           val pendingOperation = thread.pendingOperation
           when (pendingOperation) {
             is ObjectWaitBlock -> {
-              thread.pendingOperation = ObjectWakeBlocked(pendingOperation.o, false)
+              thread.pendingOperation = ObjectWakeBlocked(pendingOperation.o, true)
             }
             is ConditionAwaitBlocked -> {
-              thread.pendingOperation = ConditionWakeBlocked(pendingOperation.condition, false)
+              thread.pendingOperation =
+                  ConditionWakeBlocked(
+                      pendingOperation.condition, pendingOperation.canInterrupt, true)
             }
             is CountDownLatchAwaitBlocking -> {
               val releasedThreads = latchManager.release(pendingOperation.latch)
@@ -917,6 +937,9 @@ class RunContext(val config: Configuration) {
               .toList()
               .filter { it.state == ThreadState.Enabled }
               .sortedBy { it.thread.id }
+      if (mainExiting && (currentThreadId == mainThreadId || enabledOperations.size > 1)) {
+        enabledOperations = enabledOperations.filter { it.thread.id != mainThreadId }
+      }
     }
 
     if (enabledOperations.isEmpty()) {

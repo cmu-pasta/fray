@@ -615,11 +615,11 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onLatchAwaitTimeout(latch: CountDownLatch, timeout: Long, unit: TimeUnit): Boolean {
-    if (onLatchAwaitImpl(latch, true)) {
-      onSkipMethodDone("Latch.await")
-      return latch.await(timeout, unit)
-    }
     try {
+      if (onLatchAwaitImpl(latch, true)) {
+        onSkipMethodDone("Latch.await")
+        return latch.await(timeout, unit)
+      }
       latch.await()
     } catch (e: InterruptedException) {
       // Do nothing
@@ -692,8 +692,11 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       LockSupport.parkNanos(nanos)
       return
     }
-    LockSupport.park()
-    onThreadParkDoneImpl(true)
+    try {
+      LockSupport.park()
+    } finally {
+      onThreadParkDoneImpl(true)
+    }
   }
 
   override fun onThreadParkUntil(deadline: Long) {
@@ -702,8 +705,11 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       LockSupport.parkUntil(deadline)
       return
     }
-    LockSupport.park()
-    onThreadParkDoneImpl(true)
+    try {
+      LockSupport.park()
+    } finally {
+      onThreadParkDoneImpl(true)
+    }
   }
 
   override fun onThreadParkNanosWithBlocker(blocker: Any?, nanos: Long) {
@@ -712,51 +718,81 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       LockSupport.parkNanos(blocker, nanos)
       return
     }
-    LockSupport.park()
-    onThreadParkDoneImpl(true)
+    try {
+      LockSupport.park()
+    } finally {
+      onThreadParkDoneImpl(true)
+    }
   }
 
   override fun onThreadParkUntilWithBlocker(blocker: Any?, deadline: Long) {
     if (onThreadParkImpl()) {
-      onSkipMethodDone("Thread.park")
-      LockSupport.parkUntil(blocker, deadline)
+      try {
+        LockSupport.parkUntil(blocker, deadline)
+      } finally {
+        onSkipMethodDone("Thread.park")
+      }
       return
     }
-    LockSupport.park()
-    onThreadParkDoneImpl(true)
+    try {
+      LockSupport.park()
+    } finally {
+      onThreadParkDoneImpl(true)
+    }
   }
 
   override fun onConditionAwaitTime(o: Condition, time: Long, unit: TimeUnit): Boolean {
-    if (onConditionAwaitImpl(o, true, true)) {
-      val result = o.await(time, unit)
-      onSkipMethodDone("Condition.await")
-      return result
+    try {
+      if (onConditionAwaitImpl(o, true, true)) {
+        try {
+          return o.await(time, unit)
+        } finally {
+          onSkipMethodDone("Condition.await")
+        }
+      }
+      o.await()
+    } catch (e: Throwable) {
+      onConditionAwaitDoneImpl(o, true)
+      throw e
     }
-    o.await()
     return onConditionAwaitDoneImpl(o, true)
   }
 
   override fun onConditionAwaitNanos(o: Condition, nanos: Long): Long {
-    if (onConditionAwaitImpl(o, true, true)) {
-      val result = o.awaitNanos(nanos)
-      onSkipMethodDone("Condition.await")
-      return result
+    try {
+      if (onConditionAwaitImpl(o, true, true)) {
+        try {
+          return o.awaitNanos(nanos)
+        } finally {
+          onSkipMethodDone("Condition.await")
+        }
+      }
+      o.await()
+    } catch (e: Throwable) {
+      onConditionAwaitDoneImpl(o, true)
+      throw e
     }
-    o.await()
-    if (onConditionAwaitDoneImpl(o, true)) {
-      return 0
+    return if (onConditionAwaitDoneImpl(o, true)) {
+      0
     } else {
-      return nanos - 1
+      nanos - 1
     }
   }
 
   override fun onConditionAwaitUntil(o: Condition, deadline: Date): Boolean {
-    if (onConditionAwaitImpl(o, true, true)) {
-      val result = o.awaitUntil(deadline)
-      onSkipMethodDone("Condition.await")
-      return result
+    try {
+      if (onConditionAwaitImpl(o, true, true)) {
+        try {
+          return o.awaitUntil(deadline)
+        } finally {
+          onSkipMethodDone("Condition.await")
+        }
+      }
+      o.await()
+    } catch (e: Throwable) {
+      onConditionAwaitDoneImpl(o, true)
+      throw e
     }
-    o.await()
     return onConditionAwaitDoneImpl(o, true)
   }
 
