@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.success.wait;
+package org.pastalab.fray.test.success.cdl;
 
 import java.util.concurrent.CountDownLatch;
 

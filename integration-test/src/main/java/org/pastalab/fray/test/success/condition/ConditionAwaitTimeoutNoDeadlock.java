@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.success.wait;
+package org.pastalab.fray.test.success.condition;
 
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;

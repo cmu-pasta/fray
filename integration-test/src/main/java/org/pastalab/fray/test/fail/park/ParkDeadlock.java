@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.fail.wait;
+package org.pastalab.fray.test.fail.park;
 
 import java.util.concurrent.locks.LockSupport;
 
