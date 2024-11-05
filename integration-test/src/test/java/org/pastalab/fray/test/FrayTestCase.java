@@ -10,6 +10,7 @@ import org.pastalab.fray.core.command.MethodExecutor;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.FifoScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
+import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.runtime.TargetTerminateException;
 
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ public class FrayTestCase {
                 "/tmp/report",
                 10000,
                 60,
-                new POSScheduler(),
+                new RandomScheduler(),
                 new ControlledRandom(),
                 true,
                 false,

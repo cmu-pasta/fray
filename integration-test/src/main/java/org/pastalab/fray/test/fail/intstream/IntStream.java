@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.fail.wait;
+package org.pastalab.fray.test.fail.intstream;
 
 import org.pastalab.fray.test.ExpectedException;
 
