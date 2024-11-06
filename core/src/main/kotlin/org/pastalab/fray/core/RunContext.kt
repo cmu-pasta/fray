@@ -25,6 +25,7 @@ import org.pastalab.fray.core.concurrency.locks.ReferencedContextManager
 import org.pastalab.fray.core.concurrency.locks.SemaphoreManager
 import org.pastalab.fray.core.concurrency.operations.*
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
+import org.pastalab.fray.runtime.LivenessException
 
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 class RunContext(val config: Configuration) {
@@ -64,6 +65,10 @@ class RunContext(val config: Configuration) {
   }
 
   fun reportError(e: Throwable) {
+    if (e is LivenessException) {
+      // Let's do not report liveness exceptions.
+      return
+    }
     if (bugFound == null && !config.executionInfo.ignoreUnhandledExceptions) {
       bugFound = e
       val sw = StringWriter()
@@ -89,6 +94,7 @@ class RunContext(val config: Configuration) {
         config.frayLogger.error(
             "Error found, the recording is saved to ${config.report}/recording_0/")
         println("Error found, you may find the error report in ${config.report}")
+        config.frayLogger.error("Error found with step: $step")
         config.saveToReportFolder(0)
       }
       exitProcess(0)
@@ -963,7 +969,7 @@ class RunContext(val config: Configuration) {
         Thread.currentThread() !is HelperThread &&
         !(mainExiting && currentThreadId == mainThreadId)) {
       currentThread.state = ThreadState.Running
-      val e = org.pastalab.fray.runtime.LivenessException()
+      val e = LivenessException()
       reportError(e)
       throw e
     }
