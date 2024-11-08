@@ -16,6 +16,10 @@ class CountDownLatchManager {
     return latchStore.getContext(latch).await(canInterrupt, thread)
   }
 
+  fun unblockThread(latch: CountDownLatch, tid: Long, isTimeout: Boolean, isInterrupt: Boolean) {
+    latchStore.getContext(latch).unblockThread(tid, isTimeout, isInterrupt)
+  }
+
   /*
    * Returns number of unblocked threads.
    */
