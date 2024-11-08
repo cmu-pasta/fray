@@ -16,6 +16,7 @@ import org.pastalab.fray.core.scheduler.FifoScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.runtime.TargetTerminateException;
+import org.pastalab.fray.test.success.cdl.CountDownLatchNormalNotify;
 import org.pastalab.fray.test.success.condition.ConditionAwaitTimeoutInterrupt;
 import org.pastalab.fray.test.success.condition.ConditionAwaitTimeoutNotifyInterrupt;
 
@@ -70,7 +71,11 @@ public class FrayTestCase {
         Configuration config = new Configuration(
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
-                            ConditionAwaitTimeoutNotifyInterrupt.main(new String[]{});
+                            try {
+                                CountDownLatchNormalNotify.main(new String[]{});
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
                             return null;
                         }),
                         false,
@@ -79,13 +84,9 @@ public class FrayTestCase {
                         -1
                 ),
                 "/tmp/report2",
-                100,
+                1000,
                 60,
-                new RandomScheduler(new ControlledRandom(
-                        new ArrayList<>(List.of(1, 1, 1, 0)),
-                        new ArrayList<>(),
-                        new Random()
-                )),
+                new POSScheduler(),
                 new ControlledRandom(
                         new ArrayList<>(List.of(0, 0, 0, 0, 0, 0)),
                         new ArrayList<>(),

@@ -19,13 +19,18 @@ class CountDownLatchContext(var count: Long) : Interruptible {
     return false
   }
 
-  override fun interrupt(tid: Long) {
+  fun unblockThread(tid: Long, isTimeout: Boolean, isInterrupt: Boolean) {
     val lockWaiter = latchWaiters[tid] ?: return
-    if (lockWaiter.canInterrupt) {
-      lockWaiter.thread.pendingOperation = ThreadResumeOperation(false)
-      lockWaiter.thread.state = ThreadState.Enabled
-      latchWaiters.remove(tid)
+    if (isInterrupt && !lockWaiter.canInterrupt) {
+      return
     }
+    lockWaiter.thread.pendingOperation = ThreadResumeOperation(!isTimeout)
+    lockWaiter.thread.state = ThreadState.Enabled
+    latchWaiters.remove(tid)
+  }
+
+  override fun interrupt(tid: Long) {
+    unblockThread(tid, false, true)
   }
 
   fun release(): Int {
@@ -35,8 +40,7 @@ class CountDownLatchContext(var count: Long) : Interruptible {
     count = 0
     var threads = 0
     for (lockWaiter in latchWaiters.values) {
-      lockWaiter.thread.pendingOperation = ThreadResumeOperation(true)
-      lockWaiter.thread.state = ThreadState.Enabled
+      unblockThread(lockWaiter.thread.thread.id, false, false)
       threads += 1
     }
     return threads
@@ -55,8 +59,7 @@ class CountDownLatchContext(var count: Long) : Interruptible {
     if (count == 0L) {
       var threads = 0
       for (lockWaiter in latchWaiters.values) {
-        lockWaiter.thread.pendingOperation = ThreadResumeOperation(true)
-        lockWaiter.thread.state = ThreadState.Enabled
+        unblockThread(lockWaiter.thread.thread.id, false, false)
         threads += 1
       }
       return threads

@@ -517,8 +517,7 @@ class RunContext(val config: Configuration) {
         context.state = ThreadState.Enabled
       }
       is CountDownLatchAwaitBlocking -> {
-        context.pendingOperation = ThreadResumeOperation(false)
-        context.state = ThreadState.Enabled
+        latchManager.unblockThread(pendingOperation.latch, context.thread.id, true, false)
         if (context.thread != Thread.currentThread()) {
           syncManager.createWait(pendingOperation.latch, 1)
           context.thread.interrupt()
@@ -795,10 +794,7 @@ class RunContext(val config: Configuration) {
     if (latchManager.await(latch, true, context)) {
       context.pendingOperation = CountDownLatchAwaitBlocking(latch, timed)
       context.state = ThreadState.Paused
-      checkDeadlock {
-        context.state = ThreadState.Running
-        context.pendingOperation = ThreadResumeOperation(true)
-      }
+      checkDeadlock { latchManager.unblockThread(latch, t, false, false) }
       executor.submit {
         while (registeredThreads[t]!!.thread.state == Thread.State.RUNNABLE) {
           Thread.yield()
