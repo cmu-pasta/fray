@@ -151,7 +151,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       return
     }
     try {
-      context.lockTryLock(l, false)
+      context.lockTryLock(l, false, false)
     } finally {
       entered.set(false)
       onSkipMethod("Lock.tryLock")
@@ -168,7 +168,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       return timeout
     }
     try {
-      context.lockTryLock(l, true)
+      context.lockTryLock(l, true, true)
     } finally {
       entered.set(false)
       onSkipMethod("Lock.tryLock")
@@ -801,15 +801,6 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     val isInterrupted = context.threadIsInterrupted(t, result)
     entered.set(false)
     return isInterrupted
-  }
-
-  override fun onLockTryLockTimeout(l: Lock, timeout: Long, unit: TimeUnit): Boolean {
-    if (context.config.executionInfo.timedOpAsYield) {
-      onYield()
-      return false
-    } else {
-      return l.tryLock()
-    }
   }
 
   override fun onNanoTime(): Long {

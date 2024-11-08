@@ -70,6 +70,10 @@ class LockManager {
     threadWaitsFor[t.id] = id
   }
 
+  fun tryLockUnblocked(lock: Any, tid: Long) {
+    getLockContext(lock).tryLockUnblocked(lock, tid)
+  }
+
   // TODO(aoli): can we merge this logic with `objectNotifyImply`?
   fun objectWaitUnblockedWithoutNotify(
       waitingObject: Any,

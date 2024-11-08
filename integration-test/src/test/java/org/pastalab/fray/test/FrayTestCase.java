@@ -19,6 +19,7 @@ import org.pastalab.fray.runtime.TargetTerminateException;
 import org.pastalab.fray.test.success.cdl.CountDownLatchNormalNotify;
 import org.pastalab.fray.test.success.condition.ConditionAwaitTimeoutInterrupt;
 import org.pastalab.fray.test.success.condition.ConditionAwaitTimeoutNotifyInterrupt;
+import org.pastalab.fray.test.success.lock.ReentrantLockTryLock;
 
 import java.io.File;
 import java.util.*;
@@ -72,7 +73,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                CountDownLatchNormalNotify.main(new String[]{});
+                                ReentrantLockTryLock.main(new String[]{});
                             } catch (InterruptedException e) {
                                 throw new RuntimeException(e);
                             }

@@ -193,4 +193,12 @@ class ReentrantReadWriteLockContext : LockContext {
       writeLockHolder == tid
     }
   }
+
+  override fun tryLockUnblocked(lock: Any, tid: Long) {
+    if (lock is ReadLock) {
+      readLockWaiters.remove(tid)
+    } else {
+      writeLockWaiters.remove(tid)
+    }
+  }
 }
