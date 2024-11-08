@@ -39,7 +39,7 @@ class CountDownLatchContext(var count: Long) : Interruptible {
     }
     count = 0
     var threads = 0
-    for (lockWaiter in latchWaiters.values) {
+    for (lockWaiter in latchWaiters.values.toList()) {
       unblockThread(lockWaiter.thread.thread.id, false, false)
       threads += 1
     }
@@ -58,7 +58,7 @@ class CountDownLatchContext(var count: Long) : Interruptible {
     count -= 1
     if (count == 0L) {
       var threads = 0
-      for (lockWaiter in latchWaiters.values) {
+      for (lockWaiter in latchWaiters.values.toList()) {
         unblockThread(lockWaiter.thread.thread.id, false, false)
         threads += 1
       }
