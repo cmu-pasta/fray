@@ -16,6 +16,7 @@ class Sync(val goal: Int) : Any() {
       return
     }
     isBlocked = true
+    val threadInterrupted = Thread.currentThread().isInterrupted
     // We don't need synchronized here because
     // it is already inside a synchronized method
     while (count < goal) {
@@ -30,6 +31,9 @@ class Sync(val goal: Int) : Any() {
     // At this point no concurrency.
     count = 0
     signaler.clear()
+    if (threadInterrupted) {
+      Thread.currentThread().interrupt()
+    }
   }
 
   @Synchronized
