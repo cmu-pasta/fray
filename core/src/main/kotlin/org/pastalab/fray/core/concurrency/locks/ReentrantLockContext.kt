@@ -106,4 +106,8 @@ class ReentrantLockContext : LockContext {
   override fun isLockHolder(lock: Any, tid: Long): Boolean {
     return lockHolder == tid
   }
+
+  override fun tryLockUnblocked(lock: Any, tid: Long) {
+    lockWaiters.remove(tid)
+  }
 }

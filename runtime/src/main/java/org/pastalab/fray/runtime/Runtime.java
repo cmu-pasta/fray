@@ -49,10 +49,6 @@ public class Runtime {
         DELEGATE.onLockTryLockDone(l);
     }
 
-    public static boolean onLockTryLockTimeout(Lock l, long timeout, TimeUnit unit) throws InterruptedException {
-        return DELEGATE.onLockTryLockTimeout(l, timeout, unit);
-    }
-
     public static void onLockLock(Lock l) {
         DELEGATE.onLockLock(l);
     }

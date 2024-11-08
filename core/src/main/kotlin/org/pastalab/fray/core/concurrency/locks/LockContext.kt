@@ -26,4 +26,6 @@ interface LockContext : Interruptible {
   fun isEmpty(): Boolean
 
   fun isLockHolder(lock: Any, tid: Long): Boolean
+
+  fun tryLockUnblocked(lock: Any, tid: Long)
 }

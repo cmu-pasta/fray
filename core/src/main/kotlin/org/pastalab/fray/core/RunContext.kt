@@ -596,11 +596,17 @@ class RunContext(val config: Configuration) {
     objectNotifyAllImpl(o, lockManager.lockFromCondition(o))
   }
 
-  fun lockTryLock(lock: Any, canInterrupt: Boolean) {
-    lockImpl(lock, false, false, canInterrupt)
+  fun lockTryLock(lock: Any, canInterrupt: Boolean, timed: Boolean) {
+    lockImpl(lock, false, false, canInterrupt, timed)
   }
 
-  fun lockImpl(lock: Any, isMonitorLock: Boolean, shouldBlock: Boolean, canInterrupt: Boolean) {
+  fun lockImpl(
+      lock: Any,
+      isMonitorLock: Boolean,
+      shouldBlock: Boolean,
+      canInterrupt: Boolean,
+      timed: Boolean
+  ) {
     val t = Thread.currentThread().id
     val objId = System.identityHashCode(lock)
     val context = registeredThreads[t]!!
@@ -611,6 +617,8 @@ class RunContext(val config: Configuration) {
     if (canInterrupt) {
       context.checkInterrupt()
     }
+
+    val blockingWait = shouldBlock || timed
 
     /**
      * We need a while loop here because even a thread unlock this thread and makes this thread
@@ -629,9 +637,9 @@ class RunContext(val config: Configuration) {
     // synchronized(lock) {
     //   lock.unlock();
     // }
-    while (!lockManager.lock(lock, context, shouldBlock, false, canInterrupt) && shouldBlock) {
+    while (!lockManager.lock(lock, context, blockingWait, false, canInterrupt) && blockingWait) {
       context.state = ThreadState.Paused
-      context.pendingOperation = LockBlocking(lock)
+      context.pendingOperation = LockBlocking(lock, timed)
       // We want to block current thread because we do
       // not want to rely on ReentrantLock. This allows
       // us to pick which Thread to run next if multiple
@@ -640,15 +648,21 @@ class RunContext(val config: Configuration) {
       if (canInterrupt) {
         context.checkInterrupt()
       }
+      val pendingOperation = context.pendingOperation
+      assert(pendingOperation is ThreadResumeOperation)
+      if (!(pendingOperation as ThreadResumeOperation).noTimeout) {
+        lockManager.tryLockUnblocked(lock, t)
+        break
+      }
     }
   }
 
   fun monitorEnter(lock: Any) {
-    lockImpl(lock, true, true, false)
+    lockImpl(lock, true, true, false, false)
   }
 
   fun lockLock(lock: Any, canInterrupt: Boolean) {
-    lockImpl(lock, false, true, canInterrupt)
+    lockImpl(lock, false, true, canInterrupt, false)
   }
 
   fun reentrantReadWriteLockInit(readLock: ReadLock, writeLock: WriteLock) {
