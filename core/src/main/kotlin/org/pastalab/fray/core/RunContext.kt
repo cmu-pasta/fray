@@ -97,10 +97,12 @@ class RunContext(val config: Configuration) {
       } else {
         config.frayLogger.info(sw.toString())
       }
-      val recordingIndex = config.nextSavedIndex++
-      config.saveToReportFolder(recordingIndex)
-      config.frayLogger.info(
-          "The recording is saved to ${config.report}/recording_$recordingIndex/")
+      if (!config.exploreMode) {
+        val recordingIndex = config.nextSavedIndex++
+        config.saveToReportFolder(recordingIndex)
+        config.frayLogger.info(
+            "The recording is saved to ${config.report}/recording_$recordingIndex/")
+      }
       if (config.exploreMode || config.noExitWhenBugFound || e is FrayInternalError) {
         return
       }
