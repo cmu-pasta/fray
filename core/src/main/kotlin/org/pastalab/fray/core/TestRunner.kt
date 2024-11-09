@@ -79,7 +79,8 @@ class TestRunner(val config: Configuration) {
           Runtime.onReportError(e)
           Runtime.onMainExit()
         }
-        if (config.isReplay || (context.bugFound != null && !config.exploreMode)) break
+        if (config.isReplay || ((context.bugFound != null && context.bugFound !is FrayInternalError)
+              && !config.exploreMode)) break
         config.currentIteration++
       }
       context.shutDown()
