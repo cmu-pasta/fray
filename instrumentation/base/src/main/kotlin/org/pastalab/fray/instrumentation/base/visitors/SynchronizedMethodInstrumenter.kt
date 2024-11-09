@@ -20,7 +20,8 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
     super.visit(version, access, name, signature, superName, interfaces)
     className = name
     if (instrumentingJdk) {
-      shouldInstrument = name.startsWith("java/util/Observable")
+      shouldInstrument =
+          name.startsWith("java/util/Observable") || name.startsWith("java/util/Vector")
     }
   }
 
