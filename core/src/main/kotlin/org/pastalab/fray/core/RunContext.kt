@@ -823,7 +823,7 @@ class RunContext(val config: Configuration) {
   fun latchAwaitDone(latch: CountDownLatch): Boolean {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
-    if (context.state != ThreadState.Running) {
+    while (context.state != ThreadState.Running) {
       syncManager.signal(latch)
       context.block()
     }
