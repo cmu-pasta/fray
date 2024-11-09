@@ -648,7 +648,10 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onReportError(e: Throwable) {
+    val originEntered = entered.get()
+    entered.set(true)
     context.reportError(e)
+    entered.set(originEntered)
   }
 
   override fun onArrayLoad(o: Any?, index: Int) {
