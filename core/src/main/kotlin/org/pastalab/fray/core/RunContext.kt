@@ -88,6 +88,11 @@ class RunContext(val config: Configuration) {
       } else {
         e.printStackTrace(PrintWriter(sw))
       }
+
+      if (config.exploreMode && config.nextSavedIndex > 0) {
+        config.nextSavedIndex++
+        return
+      }
       config.frayLogger.info(
           "Error found at iter: ${config.currentIteration}, step: $step, " +
               "Elapsed time: ${config.elapsedTime()}ms",
@@ -96,8 +101,6 @@ class RunContext(val config: Configuration) {
         config.frayLogger.error(sw.toString())
       } else {
         config.frayLogger.info(sw.toString())
-      }
-      if (!config.exploreMode) {
         val recordingIndex = config.nextSavedIndex++
         config.saveToReportFolder(recordingIndex)
         config.frayLogger.info(
