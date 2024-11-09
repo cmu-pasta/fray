@@ -2,9 +2,10 @@ package org.pastalab.fray.core.concurrency.locks
 
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.ThreadState
+import org.pastalab.fray.core.concurrency.operations.CountDownLatchAwaitBlocking
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
 
-class CountDownLatchContext(var count: Long) : Interruptible {
+class CountDownLatchContext(var count: Long) {
   val latchWaiters = mutableMapOf<Long, LockWaiter>()
 
   fun await(canInterrupt: Boolean, thread: ThreadContext): Boolean {
@@ -19,18 +20,21 @@ class CountDownLatchContext(var count: Long) : Interruptible {
     return false
   }
 
-  fun unblockThread(tid: Long, isTimeout: Boolean, isInterrupt: Boolean) {
-    val lockWaiter = latchWaiters[tid] ?: return
+  fun unblockThread(tid: Long, isTimeout: Boolean, isInterrupt: Boolean): Boolean {
+    val lockWaiter = latchWaiters[tid] ?: return false
     if (isInterrupt && !lockWaiter.canInterrupt) {
-      return
+      return false
     }
+    val pendingOperation = lockWaiter.thread.pendingOperation
+    assert(pendingOperation is CountDownLatchAwaitBlocking)
     lockWaiter.thread.pendingOperation = ThreadResumeOperation(!isTimeout)
     lockWaiter.thread.state = ThreadState.Enabled
     latchWaiters.remove(tid)
-  }
-
-  override fun interrupt(tid: Long) {
-    unblockThread(tid, false, true)
+    if ((pendingOperation as CountDownLatchAwaitBlocking).timed) {
+      return false
+    } else {
+      return true
+    }
   }
 
   fun release(): Int {
@@ -40,8 +44,9 @@ class CountDownLatchContext(var count: Long) : Interruptible {
     count = 0
     var threads = 0
     for (lockWaiter in latchWaiters.values.toList()) {
-      unblockThread(lockWaiter.thread.thread.id, false, false)
-      threads += 1
+      if (unblockThread(lockWaiter.thread.thread.id, false, false)) {
+        threads += 1
+      }
     }
     return threads
   }
@@ -59,8 +64,9 @@ class CountDownLatchContext(var count: Long) : Interruptible {
     if (count == 0L) {
       var threads = 0
       for (lockWaiter in latchWaiters.values.toList()) {
-        unblockThread(lockWaiter.thread.thread.id, false, false)
-        threads += 1
+        if (unblockThread(lockWaiter.thread.thread.id, false, false)) {
+          threads += 1
+        }
       }
       return threads
     }

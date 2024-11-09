@@ -620,7 +620,6 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
         onSkipMethodDone("Latch.await")
         return latch.await(timeout, unit)
       }
-      latch.await()
     } catch (e: InterruptedException) {
       // Do nothing
     }

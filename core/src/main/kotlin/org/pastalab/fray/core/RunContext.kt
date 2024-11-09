@@ -453,8 +453,7 @@ class RunContext(val config: Configuration) {
         }
       }
       is CountDownLatchAwaitBlocking -> {
-        context.pendingOperation = ThreadResumeOperation(true)
-        context.state = ThreadState.Enabled
+        latchManager.unblockThread(pendingOperation.latch, t.id, false, true)
         waitingObject = pendingOperation.latch
       }
       is ParkBlocked -> {
@@ -518,13 +517,6 @@ class RunContext(val config: Configuration) {
       }
       is CountDownLatchAwaitBlocking -> {
         latchManager.unblockThread(pendingOperation.latch, context.thread.id, true, false)
-        if (context.thread != Thread.currentThread()) {
-          syncManager.createWait(pendingOperation.latch, 1)
-          context.thread.interrupt()
-          syncManager.wait(pendingOperation.latch)
-        } else {
-          context.thread.interrupt()
-        }
       }
     }
   }
@@ -831,7 +823,7 @@ class RunContext(val config: Configuration) {
   fun latchAwaitDone(latch: CountDownLatch): Boolean {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
-    if (context.state != ThreadState.Running) {
+    while (context.state != ThreadState.Running) {
       syncManager.signal(latch)
       context.block()
     }
