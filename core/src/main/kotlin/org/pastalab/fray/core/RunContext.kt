@@ -24,8 +24,10 @@ import org.pastalab.fray.core.concurrency.locks.LockManager
 import org.pastalab.fray.core.concurrency.locks.ReferencedContextManager
 import org.pastalab.fray.core.concurrency.locks.SemaphoreManager
 import org.pastalab.fray.core.concurrency.operations.*
+import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
 import org.pastalab.fray.runtime.LivenessException
+import org.pastalab.fray.runtime.Runtime.onReportError
 
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 class RunContext(val config: Configuration) {
@@ -72,7 +74,7 @@ class RunContext(val config: Configuration) {
     if (bugFound == null && !config.executionInfo.ignoreUnhandledExceptions) {
       bugFound = e
       val sw = StringWriter()
-      sw.append("Error found: ${e}\n")
+      sw.append("Error: ${e}\n")
       if (e is org.pastalab.fray.runtime.DeadlockException) {
         for (registeredThread in registeredThreads.values) {
           if (registeredThread.state == ThreadState.Paused) {
@@ -86,16 +88,21 @@ class RunContext(val config: Configuration) {
       } else {
         e.printStackTrace(PrintWriter(sw))
       }
-      config.frayLogger.error(sw.toString())
-      if (config.exploreMode || config.noExitWhenBugFound) {
-        return
+      config.frayLogger.info(
+          "Error found at iter: ${config.currentIteration}, step: $step, " +
+              "Elapsed time: ${config.elapsedTime()}ms",
+      )
+      if (e is FrayInternalError) {
+        config.frayLogger.error(sw.toString())
+      } else {
+        config.frayLogger.info(sw.toString())
       }
-      if (!config.isReplay) {
-        config.frayLogger.error(
-            "Error found, the recording is saved to ${config.report}/recording_0/")
-        println("Error found, you may find the error report in ${config.report}")
-        config.frayLogger.error("Error found with step: $step")
-        config.saveToReportFolder(0)
+      val recordingIndex = config.nextSavedIndex++
+      config.saveToReportFolder(recordingIndex)
+      config.frayLogger.info(
+          "The recording is saved to ${config.report}/recording_$recordingIndex/")
+      if (config.exploreMode || config.noExitWhenBugFound || e is FrayInternalError) {
+        return
       }
       exitProcess(0)
     }
@@ -175,8 +182,8 @@ class RunContext(val config: Configuration) {
   }
 
   fun done() {
-    assert(lockManager.waitingThreads.isEmpty())
-    assert(syncManager.synchronizationPoints.isEmpty())
+    verifyOrReport(lockManager.waitingThreads.isEmpty())
+    verifyOrReport(syncManager.synchronizationPoints.isEmpty())
     lockManager.done()
     registeredThreads.clear()
     config.scheduleObservers.forEach { it.onExecutionDone() }
@@ -191,7 +198,7 @@ class RunContext(val config: Configuration) {
   fun threadStart(t: Thread) {
     val originalHanlder = t.uncaughtExceptionHandler
     val handler = UncaughtExceptionHandler { t, e ->
-      org.pastalab.fray.runtime.Runtime.onReportError(e)
+      onReportError(e)
       originalHanlder?.uncaughtException(t, e)
     }
     t.setUncaughtExceptionHandler(handler)
@@ -353,7 +360,7 @@ class RunContext(val config: Configuration) {
     if (!spuriousWakeup) {
       checkDeadlock {
         context.pendingOperation = ThreadResumeOperation(true)
-        assert(lockManager.lock(lockObject, context, false, true, false))
+        verifyOrReport(lockManager.lock(lockObject, context, false, true, false))
         syncManager.removeWait(lockObject)
         context.state = ThreadState.Running
       }
@@ -407,9 +414,9 @@ class RunContext(val config: Configuration) {
       }
     }
     // If a thread is enabled, the lock must be available.
-    assert(lockManager.lock(lockObject, context, false, true, false))
+    verifyOrReport(lockManager.lock(lockObject, context, false, true, false))
     val pendingOperation = context.pendingOperation
-    assert(pendingOperation is ThreadResumeOperation)
+    verifyOrReport(pendingOperation is ThreadResumeOperation)
     if (canInterrupt) {
       context.checkInterrupt()
     }
@@ -498,7 +505,7 @@ class RunContext(val config: Configuration) {
 
   fun timedOperationUnblocked(context: ThreadContext) {
     val pendingOperation = context.pendingOperation
-    assert(pendingOperation is TimedBlockingOperation && pendingOperation.timed)
+    verifyOrReport(pendingOperation is TimedBlockingOperation && pendingOperation.timed)
     when (pendingOperation) {
       is ObjectWaitBlock -> {
         lockManager.objectWaitUnblockedWithoutNotify(
@@ -641,7 +648,7 @@ class RunContext(val config: Configuration) {
         context.checkInterrupt()
       }
       val pendingOperation = context.pendingOperation
-      assert(pendingOperation is ThreadResumeOperation)
+      verifyOrReport(pendingOperation is ThreadResumeOperation)
       if (!(pendingOperation as ThreadResumeOperation).noTimeout) {
         lockManager.tryLockUnblocked(lock, t)
         break
@@ -680,7 +687,7 @@ class RunContext(val config: Configuration) {
     if (unlockBecauseOfWait) {
       waitingThreads -= 1
     }
-    assert(waitingThreads >= 0)
+    verifyOrReport(waitingThreads >= 0)
     if (waitingThreads > 0) {
       if (sendNotifyAll) {
         if (isMonitorLock) {
@@ -828,7 +835,7 @@ class RunContext(val config: Configuration) {
       context.block()
     }
     val pendingOperation = context.pendingOperation
-    assert(pendingOperation is ThreadResumeOperation)
+    verifyOrReport(pendingOperation is ThreadResumeOperation)
     return (pendingOperation as ThreadResumeOperation).noTimeout
   }
 
@@ -914,12 +921,12 @@ class RunContext(val config: Configuration) {
     // Our current design makes sure that reschedule is only called
     // by scheduled thread.
     val currentThread = registeredThreads[currentThreadId]!!
-    assert(
+    verifyOrReport(
         Thread.currentThread() is HelperThread ||
             currentThreadId == Thread.currentThread().id ||
             currentThread.state == ThreadState.Enabled ||
             currentThread.state == ThreadState.Completed)
-    assert(registeredThreads.none { it.value.state == ThreadState.Running })
+    verifyOrReport(registeredThreads.none { it.value.state == ThreadState.Running })
 
     if (bugFound != null &&
         !currentThread.isExiting &&

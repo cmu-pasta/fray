@@ -4,6 +4,7 @@ import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.ThreadState
 import org.pastalab.fray.core.concurrency.operations.CountDownLatchAwaitBlocking
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
+import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
 class CountDownLatchContext(var count: Long) {
   val latchWaiters = mutableMapOf<Long, LockWaiter>()
@@ -16,7 +17,7 @@ class CountDownLatchContext(var count: Long) {
       latchWaiters[Thread.currentThread().id] = LockWaiter(canInterrupt, thread)
       return true
     }
-    assert(count == 0L)
+    verifyOrReport(count == 0L)
     return false
   }
 
@@ -26,7 +27,7 @@ class CountDownLatchContext(var count: Long) {
       return false
     }
     val pendingOperation = lockWaiter.thread.pendingOperation
-    assert(pendingOperation is CountDownLatchAwaitBlocking)
+    verifyOrReport(pendingOperation is CountDownLatchAwaitBlocking)
     lockWaiter.thread.pendingOperation = ThreadResumeOperation(!isTimeout)
     lockWaiter.thread.state = ThreadState.Enabled
     latchWaiters.remove(tid)

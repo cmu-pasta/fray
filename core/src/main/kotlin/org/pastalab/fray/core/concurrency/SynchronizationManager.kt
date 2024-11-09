@@ -1,5 +1,7 @@
 package org.pastalab.fray.core.concurrency
 
+import org.pastalab.fray.core.utils.Utils.verifyOrReport
+
 class SynchronizationManager {
   val synchronizationPoints = mutableMapOf<Int, Sync>()
 
@@ -10,7 +12,7 @@ class SynchronizationManager {
 
   fun createWait(obj: Any, times: Int) {
     val id = System.identityHashCode(obj)
-    assert(!synchronizationPoints.contains(id))
+    verifyOrReport(!synchronizationPoints.contains(id))
     synchronizationPoints[id] = Sync(times)
   }
 

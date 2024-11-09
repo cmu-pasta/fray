@@ -4,6 +4,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.ThreadState
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
+import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
 class ReentrantReadWriteLockContext : LockContext {
   private val readLockHolder = mutableSetOf<Long>()
@@ -89,7 +90,7 @@ class ReentrantReadWriteLockContext : LockContext {
       lockBecauseOfWait: Boolean,
       canInterrupt: Boolean
   ): Boolean {
-    assert(!lockBecauseOfWait) // Read lock does not have `Condition`
+    verifyOrReport(!lockBecauseOfWait) // Read lock does not have `Condition`
     val tid = lockThread.thread.id
     if (writeLockHolder != null && writeLockHolder != tid) {
       if (canInterrupt) {
@@ -129,8 +130,8 @@ class ReentrantReadWriteLockContext : LockContext {
   }
 
   fun readLockUnlock(tid: Long, unlockBecauseOfWait: Boolean): Boolean {
-    assert(readLockHolder.contains(tid))
-    assert(!unlockBecauseOfWait) // Read lock does not have `Condition`
+    verifyOrReport(readLockHolder.contains(tid))
+    verifyOrReport(!unlockBecauseOfWait) // Read lock does not have `Condition`
     readLockTimes[tid] = readLockTimes[tid]!! - 1
     if (readLockTimes[tid] == 0) {
       readLockTimes.remove(tid)
@@ -144,7 +145,7 @@ class ReentrantReadWriteLockContext : LockContext {
   }
 
   fun writeLockUnlock(tid: Long, unlockBecauseOfWait: Boolean): Boolean {
-    assert(writeLockHolder == tid)
+    verifyOrReport(writeLockHolder == tid)
     if (!unlockBecauseOfWait) {
       writeLockTimes[tid] = writeLockTimes[tid]!! - 1
     }
