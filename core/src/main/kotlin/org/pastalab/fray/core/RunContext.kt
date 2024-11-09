@@ -913,7 +913,7 @@ class RunContext(val config: Configuration) {
   fun unblockTimedOperations() {
     registeredThreads.values.forEach {
       val op = it.pendingOperation
-      if (op is TimedBlockingOperation && op.timed) {
+      if (op is TimedBlockingOperation && op.timed && !it.thread.isDaemon) {
         timedOperationUnblocked(it)
       }
     }
