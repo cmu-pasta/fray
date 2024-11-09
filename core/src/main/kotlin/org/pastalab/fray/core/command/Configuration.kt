@@ -260,7 +260,7 @@ data class Configuration(
   }
 
   fun shouldRun(): Boolean {
-    return elapsedTime() / 1000 <= timeout && currentIteration < iter
+    return elapsedTime() / 1000 <= timeout && currentIteration != iter
   }
 
   @OptIn(ExperimentalPathApi::class)
