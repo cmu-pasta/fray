@@ -6,8 +6,8 @@ import java.util.regex.Pattern
 
 plugins {
   kotlin("jvm") version "2.0.0"
-  id("com.ncorti.ktfmt.gradle") version "0.17.0"
   id("maven-publish")
+  id("com.ncorti.ktfmt.gradle") version "0.17.0"
   id("org.jetbrains.dokka") version "1.9.20"
 }
 
@@ -21,13 +21,6 @@ repositories {
   mavenCentral()
 }
 
-dependencies {
-  testImplementation("org.jetbrains.kotlin:kotlin-test")
-}
-
-tasks.test {
-  useJUnitPlatform()
-}
 kotlin {
   jvmToolchain(21)
 }

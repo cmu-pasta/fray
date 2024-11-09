@@ -1,7 +1,6 @@
 package org.pastalab.fray.core
 
 import java.util.*
-import kotlin.time.TimeSource
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.RandomScheduler
@@ -38,9 +37,6 @@ class TestRunner(val config: Configuration) {
     if (config.noFray) {
       config.executionInfo.executor.execute()
     } else {
-      val timeSource = TimeSource.Monotonic
-      val start = timeSource.markNow()
-      var i = 0
       config.frayLogger.info("Fray started.")
       var bugsFound = 0
       if (config.dummyRun) {
@@ -68,11 +64,10 @@ class TestRunner(val config: Configuration) {
         config.randomnessProvider = randomnessProvider
         config.scheduleObservers = observers
       }
-      while (((timeSource.markNow() - start).inWholeSeconds < config.timeout) &&
-          (i != config.iter)) {
-        reportProgress(i, bugsFound)
+      while (config.shouldRun()) {
+        reportProgress(config.currentIteration, bugsFound)
         try {
-          if (i != 0) {
+          if (config.currentIteration != 0) {
             config.scheduler = config.scheduler.nextIteration()
             config.randomnessProvider = ControlledRandom()
           }
@@ -84,28 +79,15 @@ class TestRunner(val config: Configuration) {
           Runtime.onReportError(e)
           Runtime.onMainExit()
         }
-        if (context.bugFound != null) {
-          bugsFound += 1
-          println(
-              "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms",
-          )
-          if (config.isReplay) {
+        if (config.isReplay ||
+            ((context.bugFound != null && context.bugFound !is FrayInternalError) &&
+                !config.exploreMode))
             break
-          }
-          config.frayLogger.info(
-              "Error found at iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms",
-          )
-          config.frayLogger.info("The recording is saved to ${config.report}/recording_$i/")
-          if (!config.exploreMode) {
-            config.saveToReportFolder(i)
-            break
-          }
-        }
-        i++
+        config.currentIteration++
       }
       context.shutDown()
       config.frayLogger.info(
-          "Run finished. Total iter: $i, Elapsed time: ${(timeSource.markNow() - start).inWholeMilliseconds}ms",
+          "Run finished. Total iter: ${config.currentIteration}, Elapsed time: ${config.elapsedTime()}ms",
       )
     }
     config.executionInfo.executor.afterExecution()

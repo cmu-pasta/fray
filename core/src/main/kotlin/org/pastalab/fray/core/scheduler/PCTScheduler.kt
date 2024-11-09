@@ -3,8 +3,8 @@ package org.pastalab.fray.core.scheduler
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.core.math.Utils
 import org.pastalab.fray.core.randomness.ControlledRandom
+import org.pastalab.fray.core.utils.Utils
 
 @Serializable
 class PCTScheduler(val rand: ControlledRandom, val numSwitchPoints: Int, var maxStep: Int) :

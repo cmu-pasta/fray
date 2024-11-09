@@ -12,6 +12,7 @@ import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
+import kotlin.time.TimeSource
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -232,6 +233,9 @@ data class Configuration(
     val dummyRun: Boolean,
 ) {
   var scheduleObservers = mutableListOf<ScheduleObserver>()
+  var nextSavedIndex = 0
+  var currentIteration = 0
+  val startTime = TimeSource.Monotonic.markNow()
 
   fun saveToReportFolder(index: Int) {
     Paths.get("$report/recording_$index").createDirectories()
@@ -249,6 +253,14 @@ data class Configuration(
     if (System.getProperty("fray.recordSchedule", "false").toBoolean()) {
       scheduleObservers.add(ScheduleRecorder())
     }
+  }
+
+  fun elapsedTime(): Long {
+    return (TimeSource.Monotonic.markNow() - startTime).inWholeMilliseconds
+  }
+
+  fun shouldRun(): Boolean {
+    return elapsedTime() / 1000 <= timeout && currentIteration != iter
   }
 
   @OptIn(ExperimentalPathApi::class)

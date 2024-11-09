@@ -9,6 +9,7 @@ import org.pastalab.fray.core.ThreadState
 import org.pastalab.fray.core.concurrency.operations.ConditionAwaitBlocked
 import org.pastalab.fray.core.concurrency.operations.ConditionWakeBlocked
 import org.pastalab.fray.core.concurrency.operations.ObjectWakeBlocked
+import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
 class LockManager {
   val lockContextManager = ReferencedContextManager<LockContext> { ReentrantLockContext() }
@@ -65,7 +66,7 @@ class LockManager {
     if (id !in waitingThreads) {
       waitingThreads[id] = mutableListOf()
     }
-    assert(t.id !in waitingThreads[id]!!)
+    verifyOrReport(t.id !in waitingThreads[id]!!)
     waitingThreads[id]!!.add(t.id)
     threadWaitsFor[t.id] = id
   }
@@ -138,8 +139,8 @@ class LockManager {
   }
 
   fun done() {
-    assert(waitingThreads.isEmpty())
-    assert(threadWaitsFor.isEmpty())
+    verifyOrReport(waitingThreads.isEmpty())
+    verifyOrReport(threadWaitsFor.isEmpty())
     conditionToLock.clear()
     lockToConditions.clear()
     lockContextManager.done()

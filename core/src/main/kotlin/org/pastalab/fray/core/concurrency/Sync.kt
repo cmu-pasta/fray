@@ -1,5 +1,7 @@
 package org.pastalab.fray.core.concurrency
 
+import org.pastalab.fray.core.utils.Utils.verifyOrReport
+
 // Simple sync structure to block a thread and wait
 // for signals.
 class Sync(val goal: Int) : Any() {
@@ -40,7 +42,7 @@ class Sync(val goal: Int) : Any() {
   fun unblock() {
     count += 1
     signaler.add(Thread.currentThread().name)
-    assert(count <= goal)
+    verifyOrReport(count <= goal)
     if (count == goal) {
       (this as Object).notify()
     }

@@ -3,6 +3,7 @@ package org.pastalab.fray.core.concurrency.locks
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.ThreadState
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
+import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
 class ReentrantLockContext : LockContext {
   var lockHolder: Long? = null
@@ -64,7 +65,7 @@ class ReentrantLockContext : LockContext {
       unlockBecauseOfWait: Boolean,
       earlyExit: Boolean
   ): Boolean {
-    assert(lockHolder == tid || earlyExit)
+    verifyOrReport(lockHolder == tid || earlyExit)
     if (lockHolder != tid && earlyExit) {
       return false
     }
