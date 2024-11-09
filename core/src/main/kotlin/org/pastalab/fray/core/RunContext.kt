@@ -507,6 +507,9 @@ class RunContext(val config: Configuration) {
 
   fun timedOperationUnblocked(context: ThreadContext) {
     val pendingOperation = context.pendingOperation
+    if (context.maybeLiveLock()) {
+      return
+    }
     verifyOrReport(pendingOperation is TimedBlockingOperation && pendingOperation.timed)
     when (pendingOperation) {
       is ObjectWaitBlock -> {
@@ -913,7 +916,7 @@ class RunContext(val config: Configuration) {
   fun unblockTimedOperations() {
     registeredThreads.values.forEach {
       val op = it.pendingOperation
-      if (op is TimedBlockingOperation && op.timed && !it.thread.isDaemon) {
+      if (op is TimedBlockingOperation && op.timed) {
         timedOperationUnblocked(it)
       }
     }
