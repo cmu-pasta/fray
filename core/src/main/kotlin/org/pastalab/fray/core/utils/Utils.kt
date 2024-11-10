@@ -14,7 +14,6 @@ object Utils {
     if (!condition) {
       val e = FrayInternalError("Internal error")
       Runtime.onReportError(e)
-      throw e
     }
   }
 }
