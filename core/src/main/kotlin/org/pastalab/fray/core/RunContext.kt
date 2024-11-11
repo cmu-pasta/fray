@@ -88,22 +88,27 @@ class RunContext(val config: Configuration) {
       } else {
         e.printStackTrace(PrintWriter(sw))
       }
+
+      if (e is FrayInternalError) {
+        config.frayLogger.error(sw.toString())
+        return
+      }
+
+      if (config.exploreMode && config.nextSavedIndex > 0) {
+        config.nextSavedIndex++
+        return
+      }
+
       config.frayLogger.info(
           "Error found at iter: ${config.currentIteration}, step: $step, " +
               "Elapsed time: ${config.elapsedTime()}ms",
       )
-      if (e is FrayInternalError) {
-        config.frayLogger.error(sw.toString())
-      } else {
-        config.frayLogger.info(sw.toString())
-      }
-      if (!config.exploreMode) {
-        val recordingIndex = config.nextSavedIndex++
-        config.saveToReportFolder(recordingIndex)
-        config.frayLogger.info(
-            "The recording is saved to ${config.report}/recording_$recordingIndex/")
-      }
-      if (config.exploreMode || config.noExitWhenBugFound || e is FrayInternalError) {
+      config.frayLogger.info(sw.toString())
+      val recordingIndex = config.nextSavedIndex++
+      config.saveToReportFolder(recordingIndex)
+      config.frayLogger.info(
+          "The recording is saved to ${config.report}/recording_$recordingIndex/")
+      if (config.exploreMode || config.noExitWhenBugFound) {
         return
       }
       exitProcess(0)
