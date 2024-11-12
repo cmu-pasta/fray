@@ -42,6 +42,7 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
     }
   }
 
+  // Used to detect live locks.
   var lastBlockedOp = -1
   var blockedTime = 0
 
