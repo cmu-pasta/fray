@@ -829,9 +829,9 @@ class RunContext(val config: Configuration) {
           while (registeredThreads[t]!!.thread.state != Thread.State.WAITING) {
             Thread.yield()
           }
+          verifyOrReport(registeredThreads[t]!!.thread.state != Thread.State.RUNNABLE)
         }
 
-        verifyOrReport(registeredThreads[t]!!.thread.state != Thread.State.RUNNABLE)
         scheduleNextOperationAndCheckDeadlock(false)
       }
     } else {
