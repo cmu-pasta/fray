@@ -143,7 +143,8 @@ class RunContext(val config: Configuration) {
               val pendingOperation = thread.pendingOperation
               when (pendingOperation) {
                 is ObjectWaitBlock -> {
-                  lockManager.objectWaitUnblockedWithoutNotify(pendingOperation.o, pendingOperation.o, thread, false)
+                  lockManager.objectWaitUnblockedWithoutNotify(
+                      pendingOperation.o, pendingOperation.o, thread, false)
                 }
                 is ConditionAwaitBlocked -> {
                   lockManager.objectWaitUnblockedWithoutNotify(
@@ -507,9 +508,7 @@ class RunContext(val config: Configuration) {
     return objectWaitDoneImpl(o, lockManager.lockFromCondition(o), canInterrupt)
   }
 
-  /**
-   * Unblock the operation because of timeout or deadlock.
-   */
+  /** Unblock the operation because of timeout or deadlock. */
   fun unblockThread(context: ThreadContext, becauseOfTimeout: Boolean) {
     val pendingOperation = context.pendingOperation
     if (context.maybeLiveLock() && becauseOfTimeout) {
@@ -533,7 +532,8 @@ class RunContext(val config: Configuration) {
         context.state = ThreadState.Enabled
       }
       is CountDownLatchAwaitBlocking -> {
-        latchManager.unblockThread(pendingOperation.latch, context.thread.id, becauseOfTimeout, false)
+        latchManager.unblockThread(
+            pendingOperation.latch, context.thread.id, becauseOfTimeout, false)
       }
     }
   }
@@ -853,7 +853,7 @@ class RunContext(val config: Configuration) {
     if (context.state != ThreadState.Running) {
       syncManager.signal(latch)
       context.sync.blockCheck()
-//      context.block()
+      //      context.block()
     }
     val pendingOperation = context.pendingOperation
     verifyOrReport(pendingOperation is ThreadResumeOperation)

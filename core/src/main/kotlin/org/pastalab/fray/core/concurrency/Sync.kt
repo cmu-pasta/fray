@@ -17,7 +17,6 @@ class Sync(val goal: Int) : Any() {
     block()
   }
 
-
   @Synchronized
   fun block() {
     if (count == goal) {
