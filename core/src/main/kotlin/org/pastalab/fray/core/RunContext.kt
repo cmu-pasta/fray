@@ -826,10 +826,9 @@ class RunContext(val config: Configuration) {
           }
         } else {
           // this thread is blocked by CDL
-          while (registeredThreads[t]!!.thread.state == Thread.State.RUNNABLE) {
+          while (context.thread.state == Thread.State.RUNNABLE) {
             Thread.yield()
           }
-          verifyOrReport(registeredThreads[t]!!.thread.state != Thread.State.RUNNABLE)
         }
 
         scheduleNextOperationAndCheckDeadlock(false)
