@@ -852,8 +852,7 @@ class RunContext(val config: Configuration) {
     val context = registeredThreads[t]!!
     if (context.state != ThreadState.Running) {
       syncManager.signal(latch)
-      context.sync.blockCheck()
-      //      context.block()
+      context.block()
     }
     val pendingOperation = context.pendingOperation
     verifyOrReport(pendingOperation is ThreadResumeOperation)
