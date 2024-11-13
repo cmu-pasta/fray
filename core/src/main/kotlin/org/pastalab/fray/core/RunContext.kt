@@ -79,7 +79,7 @@ class RunContext(val config: Configuration) {
       if (e is org.pastalab.fray.runtime.DeadlockException) {
         for (registeredThread in registeredThreads.values) {
           if (registeredThread.state == ThreadState.Paused) {
-            sw.append("Thread: ${registeredThread.index}\n")
+            sw.append("Thread: ${registeredThread.thread}\n")
             sw.append("Stacktrace: \n")
             for (stackTraceElement in registeredThread.thread.stackTrace) {
               sw.append("\tat $stackTraceElement\n")
@@ -87,6 +87,7 @@ class RunContext(val config: Configuration) {
           }
         }
       } else {
+        sw.append("Thread: ${Thread.currentThread()}\n")
         e.printStackTrace(PrintWriter(sw))
       }
 
