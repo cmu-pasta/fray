@@ -9,19 +9,9 @@ import org.pastalab.fray.core.command.Configuration;
 import org.pastalab.fray.core.command.ExecutionInfo;
 import org.pastalab.fray.core.command.LambdaExecutor;
 import org.pastalab.fray.core.command.MethodExecutor;
-import org.pastalab.fray.core.observers.ScheduleRecording;
-import org.pastalab.fray.core.observers.ScheduleVerifier;
 import org.pastalab.fray.core.randomness.ControlledRandom;
-import org.pastalab.fray.core.scheduler.FifoScheduler;
-import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
-import org.pastalab.fray.runtime.TargetTerminateException;
 import org.pastalab.fray.test.success.cdl.CountDownLatchAwaitTimeoutNoDeadlock;
-import org.pastalab.fray.test.success.cdl.CountDownLatchCountDownBeforeAwait;
-import org.pastalab.fray.test.success.cdl.CountDownLatchNormalNotify;
-import org.pastalab.fray.test.success.condition.ConditionAwaitTimeoutInterrupt;
-import org.pastalab.fray.test.success.condition.ConditionAwaitTimeoutNotifyInterrupt;
-import org.pastalab.fray.test.success.lock.ReentrantLockTryLock;
 
 import java.io.File;
 import java.util.*;
@@ -70,41 +60,36 @@ public class FrayTestCase {
 
     @Test
     public void testOne() throws Throwable {
-        System.setProperty("fray.recordSchedule", "true");
-        Configuration config = new Configuration(
-                new ExecutionInfo(
-                        new LambdaExecutor(() -> {
-                            try {
-                                CountDownLatchCountDownBeforeAwait.main(new String[]{});
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
-                            }
-                            return null;
-                        }),
-                        false,
-                        true,
-                        false,
-                        -1
-                ),
-                "/tmp/report2",
-                1000,
-                60,
-                new POSScheduler(),
-                new ControlledRandom(
-                        new ArrayList<>(List.of(0, 0, 0, 0, 0, 0)),
-                        new ArrayList<>(),
-                        new Random()
-                ),
-                true,
-                false,
-                true,
-                false,
-                false,
-                false
-        );
+            System.setProperty("fray.recordSchedule", "true");
+            Configuration config = new Configuration(
+                    new ExecutionInfo(
+                            new LambdaExecutor(() -> {
+                                try {
+                                    CountDownLatchAwaitTimeoutNoDeadlock.main(new String[]{});
+                                } catch (InterruptedException e) {
+                                }
+                                return null;
+                            }),
+                            false,
+                            true,
+                            false,
+                            -1
+                    ),
+                    "/tmp/report2",
+                    10,
+                    60,
+                    new RandomScheduler(),
+                    new ControlledRandom(),
+                    true,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false
+            );
 //        config.getScheduleObservers().add(new ScheduleVerifier("/tmp/report/recording_0/recording.json"));
-        TestRunner runner = new TestRunner(config);
-        runner.run();
+            TestRunner runner = new TestRunner(config);
+            runner.run();
     }
 
     @TestFactory
