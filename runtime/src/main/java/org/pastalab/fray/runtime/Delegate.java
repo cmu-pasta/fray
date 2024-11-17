@@ -2,6 +2,7 @@ package org.pastalab.fray.runtime;
 
 import java.time.Duration;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Semaphore;
@@ -9,6 +10,47 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.*;
 
 public class Delegate {
+    public HashMap<Integer, ReentrantLock> locks = new HashMap<>();
+    public HashMap<Integer, Condition> conditions = new HashMap<>();
+
+    public void MONITORLOCKLOCK(Object o) {
+        Integer id = System.identityHashCode(o);
+        ReentrantLock lock = locks.get(id);
+        if (lock == null) {
+            lock = new ReentrantLock();
+            locks.put(id, lock);
+            conditions.put(id, lock.newCondition());
+        }
+        lock.lock();
+    }
+
+    public void MONITORLOCKUNLOCK(Object o) {
+        Integer id = System.identityHashCode(o);
+        ReentrantLock lock = locks.get(id);
+        lock.unlock();
+    }
+
+    public void OBJECTWAIT(Object o, long timeoutMillis) throws InterruptedException {
+        Integer id = System.identityHashCode(o);
+        Condition condition = conditions.get(id);
+        if (timeoutMillis == 0) {
+            condition.await();
+        } else {
+            condition.await(timeoutMillis, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    public void OBJECTNOTIFY(Object o) {
+        Integer id = System.identityHashCode(o);
+        Condition condition = conditions.get(id);
+        condition.signal();
+    }
+
+    public void OBJECTNOTIFYALL(Object o) {
+        Integer id = System.identityHashCode(o);
+        Condition condition = conditions.get(id);
+        condition.signalAll();
+    }
 
     public void onThreadStart(Thread t) {
     }

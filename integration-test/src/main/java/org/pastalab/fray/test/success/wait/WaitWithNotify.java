@@ -3,7 +3,7 @@ package org.pastalab.fray.test.success.wait;
 import java.util.concurrent.CountDownLatch;
 
 public class WaitWithNotify {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         Object o = new Object();
         CountDownLatch latch = new CountDownLatch(1);
         Thread t = new Thread(() -> {
@@ -11,6 +11,7 @@ public class WaitWithNotify {
                 try {
                     latch.countDown();
                     o.wait();
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -25,5 +26,6 @@ public class WaitWithNotify {
         synchronized (o) {
             o.notify();
         }
+        t.join();
     }
 }

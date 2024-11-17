@@ -29,6 +29,27 @@ public class Runtime {
         DELEGATE.onThreadEnd();
     }
 
+    public static void MONITORLOCKLOCK(Object o) {
+        DELEGATE.MONITORLOCKLOCK(o);
+    }
+
+    public static void MONITORLOCKUNLOCK(Object o) {
+        DELEGATE.MONITORLOCKUNLOCK(o);
+    }
+
+    public static void OBJECTWAIT(Object o, long timeoutMillis) throws InterruptedException {
+        DELEGATE.OBJECTWAIT(o, timeoutMillis);
+    }
+
+    public static void OBJECTNOTIFY(Object o) {
+        DELEGATE.OBJECTNOTIFY(o);
+    }
+
+    public static void OBJECTNOTIFYALL(Object o) {
+        DELEGATE.OBJECTNOTIFYALL(o);
+    }
+
+
     public static void onThreadRun() {
         DELEGATE.onThreadRun();
     }

@@ -25,12 +25,17 @@ class MonitorInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
-    if (className.startsWith("jdk/internal/loader/") ||
-        className.startsWith("java/util/zip/") ||
-        className.startsWith("java/net/URL") ||
-        className.startsWith("jdk/internal/ref") ||
-        (className.startsWith("java/lang") && className != "java/lang/Thread") ||
+    if (className.startsWith("java") &&
+        (!className.startsWith("java/util/concurrent") || (className != "java/lang/Thread")) ||
         access and Opcodes.ACC_NATIVE != 0) {
+      return super.visitMethod(access, name, descriptor, signature, exceptions)
+    }
+    if (className.startsWith("jdk") ||
+        className.startsWith("apple") ||
+        className.startsWith("com/sun") ||
+        className.startsWith("com/apple") ||
+        className.startsWith("org/w3c") ||
+        className.startsWith("sun")) {
       return super.visitMethod(access, name, descriptor, signature, exceptions)
     }
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
@@ -38,33 +43,33 @@ class MonitorInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       override fun visitInsn(opcode: Int) {
         if (opcode == Opcodes.MONITORENTER || opcode == Opcodes.MONITOREXIT) {
           if (opcode == Opcodes.MONITORENTER) {
-            super.visitInsn(Opcodes.DUP)
+            //            super.visitInsn(Opcodes.DUP)
             super.visitMethodInsn(
                 Opcodes.INVOKESTATIC,
                 org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-                org.pastalab.fray.runtime.Runtime::onMonitorEnter.name,
+                org.pastalab.fray.runtime.Runtime::MONITORLOCKLOCK.name,
                 Utils.kFunctionToJvmMethodDescriptor(
                     org.pastalab.fray.runtime.Runtime::onMonitorEnter),
                 false)
-            super.visitInsn(opcode)
+            //            super.visitInsn(opcode)
           } else {
-            super.visitInsn(Opcodes.DUP)
-            super.visitInsn(Opcodes.DUP)
+            //            super.visitInsn(Opcodes.DUP)
+            //            super.visitInsn(Opcodes.DUP)
             super.visitMethodInsn(
                 Opcodes.INVOKESTATIC,
                 org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-                org.pastalab.fray.runtime.Runtime::onMonitorExit.name,
+                org.pastalab.fray.runtime.Runtime::MONITORLOCKUNLOCK.name,
                 Utils.kFunctionToJvmMethodDescriptor(
                     org.pastalab.fray.runtime.Runtime::onMonitorExit),
                 false)
-            super.visitInsn(opcode)
-            super.visitMethodInsn(
-                Opcodes.INVOKESTATIC,
-                org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-                org.pastalab.fray.runtime.Runtime::onMonitorExitDone.name,
-                Utils.kFunctionToJvmMethodDescriptor(
-                    org.pastalab.fray.runtime.Runtime::onMonitorExitDone),
-                false)
+            //            super.visitInsn(opcode)
+            //            super.visitMethodInsn(
+            //                Opcodes.INVOKESTATIC,
+            //                org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+            //                org.pastalab.fray.runtime.Runtime::onMonitorExitDone.name,
+            //                Utils.kFunctionToJvmMethodDescriptor(
+            //                    org.pastalab.fray.runtime.Runtime::onMonitorExitDone),
+            //                false)
           }
         } else {
           super.visitInsn(opcode)
