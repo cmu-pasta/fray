@@ -67,7 +67,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = ObjectNotifyInstrumenter(cv)
       cv = MonitorInstrumenter(cv)
       cv = ConditionInstrumenter(cv)
-      cv = SynchronizedMethodInstrumenter(cv, false)
+      cv = SynchronizedMethodInstrumenter(cv)
       cv = ClassConstructorInstrumenter(cv)
       cv = SleepInstrumenter(cv)
       cv = TimeInstrumenter(cv)

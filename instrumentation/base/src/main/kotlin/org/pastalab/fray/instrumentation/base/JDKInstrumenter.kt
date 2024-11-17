@@ -51,7 +51,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = MonitorInstrumenter(cv)
     // SynchronizedMethodEmbeddingInstrumenter should come before MonitorInstrumenter because
     // it inlines monitors for synchronized methods.
-    cv = SynchronizedMethodInstrumenter(cv, true)
+    cv = SynchronizedMethodInstrumenter(cv)
     classReader.accept(cv, ClassReader.EXPAND_FRAMES)
     if (shouldSkipChecking) {
       cn.accept(classWriter)

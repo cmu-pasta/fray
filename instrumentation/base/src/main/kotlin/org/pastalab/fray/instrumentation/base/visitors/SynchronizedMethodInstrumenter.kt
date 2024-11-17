@@ -4,10 +4,8 @@ import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.commons.AdviceAdapter
 
-class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumentingJdk: Boolean) :
-    ClassVisitor(ASM9, cv) {
+class SynchronizedMethodInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   var className = ""
-  var shouldInstrument = !instrumentingJdk
 
   override fun visit(
       version: Int,
@@ -19,10 +17,6 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
   ) {
     super.visit(version, access, name, signature, superName, interfaces)
     className = name
-    if (instrumentingJdk) {
-      shouldInstrument =
-          name.startsWith("java/util/Observable") || name.startsWith("java/util/Vector")
-    }
   }
 
   override fun visitMethod(
@@ -32,52 +26,64 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
-
-    if (access and Opcodes.ACC_NATIVE != 0 ||
-        access and Opcodes.ACC_SYNCHRONIZED == 0 ||
-        !shouldInstrument) {
+    if (access and Opcodes.ACC_NATIVE != 0 || access and Opcodes.ACC_SYNCHRONIZED == 0) {
       return super.visitMethod(access, name, descriptor, signature, exceptions)
     }
     val newAccess = access and Opcodes.ACC_SYNCHRONIZED.inv()
     val mv = super.visitMethod(newAccess, name, descriptor, signature, exceptions)
     return object : AdviceAdapter(ASM9, mv, newAccess, name, descriptor) {
+      var shouldInstrument = true
+
+      override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor {
+        if (descriptor == "Ljdk/internal/vm/annotation/IntrinsicCandidate;") {
+          shouldInstrument = false
+        }
+        return super.visitAnnotation(descriptor, visible)
+      }
+
       val enterLabel = Label()
 
       override fun onMethodEnter() {
         super.onMethodEnter()
-        visitLabel(enterLabel)
-        if (access and Opcodes.ACC_STATIC != 0) {
-          push(Type.getObjectType(className))
-        } else {
-          loadThis()
+        if (shouldInstrument) {
+          visitLabel(enterLabel)
+          if (access and Opcodes.ACC_STATIC != 0) {
+            push(Type.getObjectType(className))
+          } else {
+            loadThis()
+          }
+          visitInsn(MONITORENTER)
         }
-        visitInsn(MONITORENTER)
       }
 
       override fun onMethodExit(opcode: Int) {
-        if (opcode != ATHROW) {
+        if (shouldInstrument) {
+          if (opcode != ATHROW) {
+            if (access and Opcodes.ACC_STATIC != 0) {
+              push(Type.getObjectType(className))
+            } else {
+              loadThis()
+            }
+            visitInsn(MONITOREXIT)
+          }
+        }
+        super.onMethodExit(opcode)
+      }
+
+      override fun visitMaxs(maxStack: Int, maxLocals: Int) {
+        if (shouldInstrument) {
+          val label = mark()
+          catchException(enterLabel, label, Type.getObjectType("java/lang/Throwable"))
+          val locals = getLocals()
+          visitFrame(Opcodes.F_NEW, locals.size, getLocals(), 1, arrayOf("java/lang/Throwable"))
           if (access and Opcodes.ACC_STATIC != 0) {
             push(Type.getObjectType(className))
           } else {
             loadThis()
           }
           visitInsn(MONITOREXIT)
+          visitInsn(ATHROW)
         }
-        super.onMethodExit(opcode)
-      }
-
-      override fun visitMaxs(maxStack: Int, maxLocals: Int) {
-        val label = mark()
-        catchException(enterLabel, label, Type.getObjectType("java/lang/Throwable"))
-        val locals = getLocals()
-        visitFrame(Opcodes.F_NEW, locals.size, getLocals(), 1, arrayOf("java/lang/Throwable"))
-        if (access and Opcodes.ACC_STATIC != 0) {
-          push(Type.getObjectType(className))
-        } else {
-          loadThis()
-        }
-        visitInsn(MONITOREXIT)
-        visitInsn(ATHROW)
         super.visitMaxs(maxStack, maxLocals)
       }
     }
