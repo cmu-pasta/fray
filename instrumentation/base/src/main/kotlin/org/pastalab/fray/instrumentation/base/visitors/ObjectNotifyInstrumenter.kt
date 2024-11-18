@@ -28,15 +28,6 @@ class ObjectNotifyInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
-    // TODO(aoli): we should make it more generic.
-    if (className == "java/lang/ref/NativeReferenceQueue" ||
-        className == "java/lang/Object" ||
-        className.startsWith("jdk/internal") ||
-        className.startsWith("java/lang/ref")) {
-      // Let's skip this class because it does not guard `wait`
-      // https://github.com/openjdk/jdk/blob/jdk-21-ga/src/java.base/share/classes/java/lang/ref/NativeReferenceQueue.java#L48
-      return super.visitMethod(access, name, descriptor, signature, exceptions)
-    }
     return object :
         MethodVisitor(ASM9, super.visitMethod(access, name, descriptor, signature, exceptions)) {
       override fun visitFrame(

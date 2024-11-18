@@ -65,6 +65,8 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     return out
   } catch (e: Throwable) {
     println(path)
+    println(e)
+    e.printStackTrace()
     throw e
   }
 }

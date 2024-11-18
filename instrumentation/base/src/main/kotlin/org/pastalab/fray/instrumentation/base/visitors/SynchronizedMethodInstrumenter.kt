@@ -3,6 +3,7 @@ package org.pastalab.fray.instrumentation.base.visitors
 import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.commons.AdviceAdapter
+import org.objectweb.asm.tree.MethodNode
 
 class SynchronizedMethodInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   var className = ""
@@ -26,12 +27,11 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) 
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
+    val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
     if (access and Opcodes.ACC_NATIVE != 0 || access and Opcodes.ACC_SYNCHRONIZED == 0) {
-      return super.visitMethod(access, name, descriptor, signature, exceptions)
+      return mv
     }
-    val newAccess = access and Opcodes.ACC_SYNCHRONIZED.inv()
-    val mv = super.visitMethod(newAccess, name, descriptor, signature, exceptions)
-    return object : AdviceAdapter(ASM9, mv, newAccess, name, descriptor) {
+    return object : MethodNode(ASM9, access, name, descriptor, signature, exceptions) {
       var shouldInstrument = true
 
       override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor {
@@ -41,50 +41,57 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) 
         return super.visitAnnotation(descriptor, visible)
       }
 
-      val enterLabel = Label()
+      override fun visitEnd() {
+        super.visitEnd()
+        if (!shouldInstrument) {
+          accept(mv)
+        } else {
+          val newAccess = access and Opcodes.ACC_SYNCHRONIZED.inv()
+          val newMv =
+              object : AdviceAdapter(ASM9, mv, newAccess, name, descriptor) {
+                val enterLabel = Label()
 
-      override fun onMethodEnter() {
-        super.onMethodEnter()
-        if (shouldInstrument) {
-          visitLabel(enterLabel)
-          if (access and Opcodes.ACC_STATIC != 0) {
-            push(Type.getObjectType(className))
-          } else {
-            loadThis()
-          }
-          visitInsn(MONITORENTER)
-        }
-      }
+                override fun onMethodEnter() {
+                  super.onMethodEnter()
+                  visitLabel(enterLabel)
+                  if (access and Opcodes.ACC_STATIC != 0) {
+                    push(Type.getObjectType(className))
+                  } else {
+                    loadThis()
+                  }
+                  visitInsn(MONITORENTER)
+                }
 
-      override fun onMethodExit(opcode: Int) {
-        if (shouldInstrument) {
-          if (opcode != ATHROW) {
-            if (access and Opcodes.ACC_STATIC != 0) {
-              push(Type.getObjectType(className))
-            } else {
-              loadThis()
-            }
-            visitInsn(MONITOREXIT)
-          }
-        }
-        super.onMethodExit(opcode)
-      }
+                override fun onMethodExit(opcode: Int) {
+                  if (opcode != ATHROW) {
+                    if (access and Opcodes.ACC_STATIC != 0) {
+                      push(Type.getObjectType(className))
+                    } else {
+                      loadThis()
+                    }
+                    visitInsn(MONITOREXIT)
+                  }
+                  super.onMethodExit(opcode)
+                }
 
-      override fun visitMaxs(maxStack: Int, maxLocals: Int) {
-        if (shouldInstrument) {
-          val label = mark()
-          catchException(enterLabel, label, Type.getObjectType("java/lang/Throwable"))
-          val locals = getLocals()
-          visitFrame(Opcodes.F_NEW, locals.size, getLocals(), 1, arrayOf("java/lang/Throwable"))
-          if (access and Opcodes.ACC_STATIC != 0) {
-            push(Type.getObjectType(className))
-          } else {
-            loadThis()
-          }
-          visitInsn(MONITOREXIT)
-          visitInsn(ATHROW)
+                override fun visitMaxs(maxStack: Int, maxLocals: Int) {
+                  val label = mark()
+                  catchException(enterLabel, label, Type.getObjectType("java/lang/Throwable"))
+                  val locals = getLocals()
+                  visitFrame(
+                      Opcodes.F_NEW, locals.size, getLocals(), 1, arrayOf("java/lang/Throwable"))
+                  if (access and Opcodes.ACC_STATIC != 0) {
+                    push(Type.getObjectType(className))
+                  } else {
+                    loadThis()
+                  }
+                  visitInsn(MONITOREXIT)
+                  visitInsn(ATHROW)
+                  super.visitMaxs(maxStack, maxLocals)
+                }
+              }
+          accept(newMv)
         }
-        super.visitMaxs(maxStack, maxLocals)
       }
     }
   }
