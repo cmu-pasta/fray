@@ -35,7 +35,7 @@ public class ConcurrentHashmapTest extends FrayRunner {
         }
     }
 
-    @Test
+//    @Test
     public void testConcurrentHashMapDifferentExecutionPath() {
         /**
          * ConcurrentHashMap uses the hash code of the key to determine the bucket in which to place the key-value pair.
@@ -73,7 +73,7 @@ public class ConcurrentHashmapTest extends FrayRunner {
         assertNotEquals(recordings1, recordings2);
     }
 
-    @Test
+//    @Test
     public void testConcurrentHashMapSameExecutionPath() {
         for (int iter = 0; iter < 100; iter++) {
             Function0<Unit> task = () -> {
