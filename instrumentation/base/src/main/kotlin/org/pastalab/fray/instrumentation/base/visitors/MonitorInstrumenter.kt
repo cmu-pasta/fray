@@ -25,12 +25,7 @@ class MonitorInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
-    if (className.startsWith("jdk/internal/loader/") ||
-        className.startsWith("java/util/zip/") ||
-        className.startsWith("java/net/URL") ||
-        className.startsWith("jdk/internal/ref") ||
-        (className.startsWith("java/lang") && className != "java/lang/Thread") ||
-        access and Opcodes.ACC_NATIVE != 0) {
+    if (className.startsWith("jdk/internal/") || access and Opcodes.ACC_NATIVE != 0) {
       return super.visitMethod(access, name, descriptor, signature, exceptions)
     }
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
