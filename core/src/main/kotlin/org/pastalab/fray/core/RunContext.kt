@@ -158,7 +158,7 @@ class RunContext(val config: Configuration) {
                   latchManager.unblockThread(pendingOperation.latch, thread.thread.id, false, false)
                 }
                 else -> {
-                  ThreadResumeOperation(true)
+                  thread.pendingOperation = ThreadResumeOperation(true)
                 }
               }
               terminatingThread.add(thread.index)
@@ -297,7 +297,7 @@ class RunContext(val config: Configuration) {
     monitorEnter(t)
     objectNotifyAll(t)
     context.state = ThreadState.Completed
-    lockManager.threadUnblockedDueToDeadlock(t)
+    //    lockManager.threadUnblockedDueToDeadlock(t)
     // We do not want to send notify all because
     // we don't have monitor lock here.
     var size = 0
@@ -369,6 +369,7 @@ class RunContext(val config: Configuration) {
       lockManager.objectWaitUnblockedWithoutNotify(waitingObject, lockObject, context, false)
       verifyOrReport(lockManager.lock(lockObject, context, false, true, false))
       syncManager.removeWait(lockObject)
+      context.pendingOperation = ThreadResumeOperation(true)
       context.state = ThreadState.Running
     }
 

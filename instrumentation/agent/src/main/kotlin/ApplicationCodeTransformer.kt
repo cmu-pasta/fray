@@ -65,9 +65,13 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = TimedWaitInstrumenter(cv)
       cv = VolatileFieldsInstrumenter(cv, false)
       cv = ObjectNotifyInstrumenter(cv)
+
+      cv =
+          SynchronizedMethodInstrumenter(
+              cv, false) // Synchronized Method Instrumenter should be before Monitor Instrumenter
       cv = MonitorInstrumenter(cv)
+
       cv = ConditionInstrumenter(cv)
-      cv = SynchronizedMethodInstrumenter(cv, false)
       cv = ClassConstructorInstrumenter(cv)
       cv = SleepInstrumenter(cv)
       cv = TimeInstrumenter(cv)

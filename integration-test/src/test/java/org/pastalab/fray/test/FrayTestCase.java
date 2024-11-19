@@ -11,6 +11,8 @@ import org.pastalab.fray.core.command.LambdaExecutor;
 import org.pastalab.fray.core.command.MethodExecutor;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
+import org.pastalab.fray.test.fail.monitor.MonitorDeadlock;
+import org.pastalab.fray.test.fail.monitor.SynchronizedMethodDeadlock;
 import org.pastalab.fray.test.success.cdl.CountDownLatchAwaitTimeoutNoDeadlock;
 
 import java.io.File;
@@ -65,8 +67,8 @@ public class FrayTestCase {
                     new ExecutionInfo(
                             new LambdaExecutor(() -> {
                                 try {
-                                    CountDownLatchAwaitTimeoutNoDeadlock.main(new String[]{});
-                                } catch (InterruptedException e) {
+                                    SynchronizedMethodDeadlock.main(new String[]{});
+                                } catch (Exception e) {
                                 }
                                 return null;
                             }),

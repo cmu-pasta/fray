@@ -45,23 +45,49 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
 
       override fun onMethodEnter() {
         super.onMethodEnter()
-        visitLabel(enterLabel)
         if (access and Opcodes.ACC_STATIC != 0) {
           push(Type.getObjectType(className))
         } else {
           loadThis()
         }
+        dup()
+        super.visitMethodInsn(
+            Opcodes.INVOKESTATIC,
+            org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+            org.pastalab.fray.runtime.Runtime::onMonitorEnter.name,
+            Utils.kFunctionToJvmMethodDescriptor(org.pastalab.fray.runtime.Runtime::onMonitorEnter),
+            false)
+        visitLabel(enterLabel)
         visitInsn(MONITORENTER)
+      }
+
+      fun insertMonitorExit() {
+        if (access and Opcodes.ACC_STATIC != 0) {
+          push(Type.getObjectType(className))
+        } else {
+          loadThis()
+        }
+        dup()
+        dup()
+        super.visitMethodInsn(
+            Opcodes.INVOKESTATIC,
+            org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+            org.pastalab.fray.runtime.Runtime::onMonitorExit.name,
+            Utils.kFunctionToJvmMethodDescriptor(org.pastalab.fray.runtime.Runtime::onMonitorExit),
+            false)
+        visitInsn(MONITOREXIT)
+        super.visitMethodInsn(
+            Opcodes.INVOKESTATIC,
+            org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+            org.pastalab.fray.runtime.Runtime::onMonitorExitDone.name,
+            Utils.kFunctionToJvmMethodDescriptor(
+                org.pastalab.fray.runtime.Runtime::onMonitorExitDone),
+            false)
       }
 
       override fun onMethodExit(opcode: Int) {
         if (opcode != ATHROW) {
-          if (access and Opcodes.ACC_STATIC != 0) {
-            push(Type.getObjectType(className))
-          } else {
-            loadThis()
-          }
-          visitInsn(MONITOREXIT)
+          insertMonitorExit()
         }
         super.onMethodExit(opcode)
       }
@@ -71,12 +97,7 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
         catchException(enterLabel, label, Type.getObjectType("java/lang/Throwable"))
         val locals = getLocals()
         visitFrame(Opcodes.F_NEW, locals.size, getLocals(), 1, arrayOf("java/lang/Throwable"))
-        if (access and Opcodes.ACC_STATIC != 0) {
-          push(Type.getObjectType(className))
-        } else {
-          loadThis()
-        }
-        visitInsn(MONITOREXIT)
+        insertMonitorExit()
         visitInsn(ATHROW)
         super.visitMaxs(maxStack, maxLocals)
       }

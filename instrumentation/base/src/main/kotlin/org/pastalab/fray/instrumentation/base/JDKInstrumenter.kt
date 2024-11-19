@@ -46,12 +46,10 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = MethodHandleNativesInstrumenter(cv)
     cv = TimedWaitInstrumenter(cv)
     cv = ThreadLocalRandomInstrumenter(cv)
-    // MonitorInstrumenter should come second because ObjectInstrumenter will insert more
-    // monitors.
+    cv =
+        SynchronizedMethodInstrumenter(
+            cv, true) // Synchronized Method Instrumenter should be before Monitor Instrumenter
     cv = MonitorInstrumenter(cv)
-    // SynchronizedMethodEmbeddingInstrumenter should come before MonitorInstrumenter because
-    // it inlines monitors for synchronized methods.
-    cv = SynchronizedMethodInstrumenter(cv, true)
     classReader.accept(cv, ClassReader.EXPAND_FRAMES)
     if (shouldSkipChecking) {
       cn.accept(classWriter)
