@@ -3,7 +3,6 @@ package org.pastalab.fray.core
 import java.util.*
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.randomness.ControlledRandom
-import org.pastalab.fray.core.scheduler.RandomScheduler
 import org.pastalab.fray.runtime.Runtime
 
 class TestRunner(val config: Configuration) {
@@ -34,38 +33,15 @@ class TestRunner(val config: Configuration) {
 
   fun run(): Throwable? {
     config.executionInfo.executor.beforeExecution()
-    if (config.noFray) {
-      config.executionInfo.executor.execute()
-    } else {
-      config.frayLogger.info("Fray started.")
-      var bugsFound = 0
-      if (config.dummyRun) {
-        // We want to do a dummy-run first to make sure all variables are initialized
-        val noExitWhenBugFound = config.noExitWhenBugFound
-        val scheduler = config.scheduler
-        val randomnessProvider = config.randomnessProvider
-        val observers = config.scheduleObservers
-        Runtime.DELEGATE = RuntimeDelegate(context)
-        config.noExitWhenBugFound = true
-        config.scheduler = RandomScheduler(ControlledRandom())
-        config.randomnessProvider = ControlledRandom(mutableListOf(), mutableListOf(), Random(0))
-        config.scheduleObservers = mutableListOf()
-        Runtime.start()
+    config.frayLogger.info("Fray started.")
+    var bugsFound = 0
+    while (config.shouldRun()) {
+      reportProgress(config.currentIteration, bugsFound)
+      if (config.noFray) {
         try {
-          config.executionInfo.executor.beforeExecution()
           config.executionInfo.executor.execute()
-          Runtime.onMainExit()
-        } catch (e: Throwable) {
-          Runtime.onMainExit()
-        }
-        config.executionInfo.executor.afterExecution()
-        config.noExitWhenBugFound = noExitWhenBugFound
-        config.scheduler = scheduler
-        config.randomnessProvider = randomnessProvider
-        config.scheduleObservers = observers
-      }
-      while (config.shouldRun()) {
-        reportProgress(config.currentIteration, bugsFound)
+        } catch (e: Throwable) {}
+      } else {
         try {
           if (config.currentIteration != 0) {
             config.scheduler = config.scheduler.nextIteration()
@@ -79,17 +55,17 @@ class TestRunner(val config: Configuration) {
           Runtime.onReportError(e)
           Runtime.onMainExit()
         }
-        if (config.isReplay ||
-            ((context.bugFound != null && context.bugFound !is FrayInternalError) &&
-                !config.exploreMode))
-            break
-        config.currentIteration++
       }
-      context.shutDown()
-      config.frayLogger.info(
-          "Run finished. Total iter: ${config.currentIteration}, Elapsed time: ${config.elapsedTime()}ms",
-      )
+      if (config.isReplay ||
+          ((context.bugFound != null && context.bugFound !is FrayInternalError) &&
+              !config.exploreMode))
+          break
+      config.currentIteration++
     }
+    context.shutDown()
+    config.frayLogger.info(
+        "Run finished. Total iter: ${config.currentIteration}, Elapsed time: ${config.elapsedTime()}ms",
+    )
     config.executionInfo.executor.afterExecution()
     return context.bugFound
   }
