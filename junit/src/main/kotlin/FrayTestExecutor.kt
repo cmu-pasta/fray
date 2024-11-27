@@ -35,7 +35,8 @@ class FrayTestExecutor {
         Configuration(
             ExecutionInfo(
                 LambdaExecutor {
-                  val testInstance = descriptor.parent.testClass.getDeclaredConstructor().newInstance()
+                  val testInstance =
+                      descriptor.parent.testClass.getDeclaredConstructor().newInstance()
                   val testMethod = descriptor.testMethod
                   testMethod.invoke(testInstance)
                 },
