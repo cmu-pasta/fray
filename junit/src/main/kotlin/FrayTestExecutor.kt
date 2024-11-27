@@ -29,14 +29,16 @@ class FrayTestExecutor {
 
   fun executeTest(request: ExecutionRequest, descriptor: MethodTestDescriptor) {
     request.engineExecutionListener.executionStarted(descriptor)
-    val testInstance = descriptor.parent.testClass.getDeclaredConstructor().newInstance()
-    val testMethod = descriptor.testMethod
     val workDir = createTempDirectory(WORK_DIR).absolutePathString()
     val schedulerInfo = descriptor.getScheduler()
     val config =
         Configuration(
             ExecutionInfo(
-                LambdaExecutor { testMethod.invoke(testInstance) },
+                LambdaExecutor {
+                  val testInstance = descriptor.parent.testClass.getDeclaredConstructor().newInstance()
+                  val testMethod = descriptor.testMethod
+                  testMethod.invoke(testInstance)
+                },
                 false,
                 true,
                 false,
