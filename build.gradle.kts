@@ -14,7 +14,7 @@ plugins {
 
 allprojects {
   group = "org.pastalab.fray"
-  version = "0.1.4-SNAPSHOT"
+  version = "0.1.6-SNAPSHOT"
 }
 
 repositories {
