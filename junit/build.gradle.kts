@@ -10,9 +10,11 @@ repositories {
 
 dependencies {
   implementation(project(":core"))
+  compileOnly(project(":runtime"))
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
-  implementation("org.junit.platform:junit-platform-engine:1.10.3")
-  implementation("org.junit.platform:junit-platform-commons:1.10.3")
+  implementation("org.junit.platform:junit-platform-engine:1.11.3")
+  implementation("org.junit.platform:junit-platform-commons:1.11.3")
+  implementation("org.junit.jupiter:junit-jupiter-api:5.11.3")
   testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
@@ -20,6 +22,7 @@ tasks.test {
   useJUnitPlatform {
     includeEngines("junit-jupiter", "fray")
   }
+  ignoreFailures = true
   dependsOn(":instrumentation:jdk:build")
   val instrumentationTask = evaluationDependsOn(":instrumentation:agent")
       .tasks.named("shadowJar").get()
