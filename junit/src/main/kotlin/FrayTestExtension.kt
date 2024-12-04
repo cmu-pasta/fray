@@ -20,7 +20,7 @@ import org.pastalab.fray.core.scheduler.POSScheduler
 import org.pastalab.fray.junit.annotations.ConcurrencyTest
 
 class FrayTestExtension : TestTemplateInvocationContextProvider {
-  val workDir = Paths.get(System.getProperty("fray.workDir", "fray/fray-report"))
+  val workDir = Paths.get(System.getProperty("fray.workDir", "build/fray/fray-report"))
 
   override fun supportsTestTemplate(context: ExtensionContext): Boolean {
     return isAnnotated(context.testMethod, ConcurrencyTest::class.java)
@@ -37,6 +37,9 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
                 ConcurrencyTest::class.java,
             )
             .get()
+    if (!workDir.toFile().exists()) {
+      workDir.toFile().mkdirs()
+    }
     val workDir = createTempDirectory(this.workDir).absolutePathString()
     val schedulerInfo = concurrencyTest.scheduler
     val config =
