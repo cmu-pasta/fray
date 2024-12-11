@@ -22,7 +22,7 @@ class FrayExtension(
       extensionContext: ExtensionContext
   ): T {
     frayContext.config.currentIteration = index
-    if (frayContext.config.currentIteration != 0) {
+    if (frayContext.config.currentIteration != 1) {
       frayContext.config.scheduler = frayContext.config.scheduler.nextIteration()
       frayContext.config.randomnessProvider = ControlledRandom()
     }
@@ -50,6 +50,7 @@ class FrayExtension(
 
   override fun testFailed(context: ExtensionContext, cause: Throwable) {
     frayJupiterContext.bugFound = true
+    frayContext.reportError(cause)
   }
 
   override fun evaluateExecutionCondition(context: ExtensionContext?): ConditionEvaluationResult {
