@@ -24,36 +24,41 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           false,
           false)
     }
-    if ((name == "acquire" || name == "acquireUninterruptibly" || name == "tryAcquire") &&
-        descriptor.startsWith("()")) {
-      val eMv =
+    if ((name == "acquire" || name == "acquireUninterruptibly" || name == "tryAcquire")) {
+      val method =
           if (name == "acquire") {
-            MethodEnterVisitor(
-                mv,
-                org.pastalab.fray.runtime.Runtime::onSemaphoreAcquire,
-                access,
-                name,
-                descriptor,
-                true,
-                true)
+            if (descriptor.startsWith("()")) {
+              org.pastalab.fray.runtime.Runtime::onSemaphoreAcquire
+            } else {
+              org.pastalab.fray.runtime.Runtime::onSemaphoreAcquirePermits
+            }
           } else if (name == "acquireUninterruptibly") {
-            MethodEnterVisitor(
-                mv,
-                org.pastalab.fray.runtime.Runtime::onSemaphoreAcquireUninterruptibly,
-                access,
-                name,
-                descriptor,
-                true,
-                true)
+            if (descriptor.startsWith("()")) {
+              org.pastalab.fray.runtime.Runtime::onSemaphoreAcquireUninterruptibly
+            } else {
+              org.pastalab.fray.runtime.Runtime::onSemaphoreAcquirePermitsUninterruptibly
+            }
           } else {
-            MethodEnterVisitor(
-                mv,
-                org.pastalab.fray.runtime.Runtime::onSemaphoreTryAcquire,
-                access,
-                name,
-                descriptor,
-                true,
-                true)
+            if (descriptor.startsWith("()")) {
+              org.pastalab.fray.runtime.Runtime::onSemaphoreTryAcquire
+            } else if (descriptor.startsWith("(I)")) {
+              org.pastalab.fray.runtime.Runtime::onSemaphoreTryAcquirePermits
+            } else if (descriptor.startsWith("(J")) {
+              org.pastalab.fray.runtime.Runtime::onSemaphoreTryAcquireTimeout
+            } else {
+              org.pastalab.fray.runtime.Runtime::onSemaphoreTryAcquirePermitsTimeout
+            }
+          }
+      val eMv =
+          MethodEnterVisitor(mv, method, access, name, descriptor, true, true) {
+            if (name == "tryAcquire") {
+              // We need to override the timeout value for controlled concurrency.
+              if (descriptor.startsWith("(IJ")) {
+                storeArg(1)
+              } else if (descriptor.startsWith("(J")) {
+                storeArg(0)
+              }
+            }
           }
       return MethodExitVisitor(
           eMv,
@@ -65,50 +70,6 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           false,
           true)
     }
-    if ((name == "acquire" || name == "acquireUninterruptibly" || name == "tryAcquire") &&
-        descriptor.startsWith("(I)V")) {
-      val eMv =
-          if (name == "acquire") {
-            MethodEnterVisitor(
-                mv,
-                org.pastalab.fray.runtime.Runtime::onSemaphoreAcquirePermits,
-                access,
-                name,
-                descriptor,
-                true,
-                true)
-          } else if (name == "acquireUninterruptibly") {
-            MethodEnterVisitor(
-                mv,
-                org.pastalab.fray.runtime.Runtime::onSemaphoreAcquirePermitsUninterruptibly,
-                access,
-                name,
-                descriptor,
-                true,
-                true)
-          } else {
-            MethodEnterVisitor(
-                mv,
-                org.pastalab.fray.runtime.Runtime::onSemaphoreTryAcquirePermits,
-                access,
-                name,
-                descriptor,
-                true,
-                true)
-          }
-
-      return MethodExitVisitor(
-          eMv,
-          org.pastalab.fray.runtime.Runtime::onSemaphoreAcquireDone,
-          access,
-          name,
-          descriptor,
-          false,
-          false,
-          true)
-    }
-    //    if (name == "tryAcquire") {
-    //    }
     if (name == "release" && descriptor == "()V") {
       val eMv =
           MethodEnterVisitor(

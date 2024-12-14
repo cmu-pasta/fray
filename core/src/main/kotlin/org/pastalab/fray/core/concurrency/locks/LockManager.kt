@@ -18,16 +18,6 @@ class LockManager {
   val conditionToLock = mutableMapOf<Condition, Lock>()
   val lockToConditions = mutableMapOf<Lock, MutableList<Condition>>()
 
-  fun threadUnblockedDueToDeadlock(t: Thread) {
-    val id = threadWaitsFor[t.id]
-    waitingThreads[id]?.remove(t.id)
-    if (waitingThreads[id]?.isEmpty() == true) {
-      waitingThreads.remove(id)
-    }
-    threadWaitsFor.remove(t.id)
-    //    val pendingOperation = registerNewCondition
-  }
-
   fun getLockContext(lock: Any): LockContext {
     return lockContextManager.getContext(lock)
   }
@@ -69,10 +59,6 @@ class LockManager {
     verifyOrReport(t.id !in waitingThreads[id]!!)
     waitingThreads[id]!!.add(t.id)
     threadWaitsFor[t.id] = id
-  }
-
-  fun tryLockUnblocked(lock: Any, tid: Long) {
-    getLockContext(lock).tryLockUnblocked(lock, tid)
   }
 
   // TODO(aoli): can we merge this logic with `objectNotifyImply`?

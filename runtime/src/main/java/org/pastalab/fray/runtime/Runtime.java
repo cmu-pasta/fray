@@ -5,11 +5,11 @@ import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.StampedLock;
 
 // No recursion is allowed in Runtime
 public class Runtime {
@@ -229,6 +229,14 @@ public class Runtime {
         DELEGATE.onSemaphoreTryAcquire(sem, permits);
     }
 
+    public static long onSemaphoreTryAcquirePermitsTimeout(Semaphore sem, int permits, long timeout, TimeUnit unit) {
+        return DELEGATE.onSemaphoreTryAcquirePermitsTimeout(sem, permits, timeout, unit);
+    }
+
+    public static long onSemaphoreTryAcquireTimeout(Semaphore sem, long timeout, TimeUnit unit) {
+        return DELEGATE.onSemaphoreTryAcquirePermitsTimeout(sem, 1, timeout, unit);
+    }
+
     public static void onSemaphoreAcquireUninterruptibly(Semaphore sem) {
         DELEGATE.onSemaphoreAcquireUninterruptibly(sem, 1);
     }
@@ -379,5 +387,73 @@ public class Runtime {
 
     public static void onThreadSleepMillisNanos(long millis, int nanos) throws InterruptedException {
         DELEGATE.onThreadSleepMillisNanos(millis, nanos);
+    }
+
+    public static void onStampedLockReadLock(StampedLock lock) {
+        DELEGATE.onStampedLockReadLock(lock);
+    }
+
+    public static void onStampedLockSkipDone() {
+        DELEGATE.onStampedLockSkipDone();
+    }
+
+    public static void onStampedLockWriteLock(StampedLock lock) {
+        DELEGATE.onStampedLockWriteLock(lock);
+    }
+
+    public static void onStampedLockReadLockInterruptibly(StampedLock lock) {
+        DELEGATE.onStampedLockReadLockInterruptibly(lock);
+    }
+
+    public static void onStampedLockWriteLockInterruptibly(StampedLock lock) {
+        DELEGATE.onStampedLockWriteLockInterruptibly(lock);
+    }
+
+    public static void onStampedLockReadLockTryLock(StampedLock lock) {
+        DELEGATE.onStampedLockReadLockTryLock(lock);
+    }
+
+    public static void onStampedLockWriteLockTryLock(StampedLock lock) {
+        DELEGATE.onStampedLockWriteLockTryLock(lock);
+    }
+
+    public static long onStampedLockReadLockTryLockTimeout(StampedLock lock, long timeout, TimeUnit unit) {
+        return DELEGATE.onStampedLockReadLockTryLockTimeout(lock, timeout, unit);
+    }
+
+    public static long onStampedLockWriteLockTryLockTimeout(StampedLock lock, long timeout, TimeUnit unit) {
+        return DELEGATE.onStampedLockWriteLockTryLockTimeout(lock, timeout, unit);
+    }
+
+    public static void onStampedLockUnlockReadDone(StampedLock lock) {
+        DELEGATE.onStampedLockUnlockReadDone(lock);
+    }
+
+    public static void onStampedLockUnlockWriteDone(StampedLock lock) {
+        DELEGATE.onStampedLockUnlockWriteDone(lock);
+    }
+
+    public static void onStampedLockTryConvertToReadLockDone(StampedLock lock, long stamp, long newStamp) {
+        DELEGATE.onStampedLockTryConvertToReadLockDone(lock, stamp, newStamp);
+    }
+
+    public static void onStampedLockTryConvertToWriteLockDone(StampedLock lock, long stamp, long newStamp) {
+        DELEGATE.onStampedLockTryConvertToWriteLockDone(lock, stamp, newStamp);
+    }
+
+    public static void onStampedLockTryConvertToOptimisticReadLockDone(StampedLock lock, long stamp, long newStamp) {
+        DELEGATE.onStampedLockTryConvertToOptimisticReadLockDone(lock, stamp, newStamp);
+    }
+
+    public static void onStampedLockTryUnlockWriteDone(StampedLock lock, boolean success) {
+        DELEGATE.onStampedLockTryUnlockWriteDone(lock, success);
+    }
+
+    public static void onStampedLockTryUnlockReadDone(StampedLock lock, boolean success) {
+        DELEGATE.onStampedLockTryUnlockReadDone(lock, success);
+    }
+
+    public static void onStampedLockSkip() {
+        DELEGATE.onStampedLockSkip();
     }
 }

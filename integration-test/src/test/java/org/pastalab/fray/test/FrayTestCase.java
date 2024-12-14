@@ -11,11 +11,9 @@ import org.pastalab.fray.core.command.LambdaExecutor;
 import org.pastalab.fray.core.command.MethodExecutor;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
-import org.pastalab.fray.test.fail.monitor.MonitorDeadlock;
-import org.pastalab.fray.test.fail.monitor.SynchronizedMethodDeadlock;
-import org.pastalab.fray.test.success.cdl.CountDownLatchAwaitTimeoutNoDeadlock;
+import org.pastalab.fray.test.fail.stampedlock.StampedLockConversionDeadlock;
+import org.pastalab.fray.test.success.stampedlock.StampedLockConversionNoDeadlock;
 
-import java.io.File;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -67,7 +65,7 @@ public class FrayTestCase {
                     new ExecutionInfo(
                             new LambdaExecutor(() -> {
                                 try {
-                                    SynchronizedMethodDeadlock.main(new String[]{});
+                                    StampedLockConversionDeadlock.main(new String[]{});
                                 } catch (Exception e) {
                                 }
                                 return null;
@@ -89,7 +87,6 @@ public class FrayTestCase {
                     false,
                     false
             );
-//        config.getScheduleObservers().add(new ScheduleVerifier("/tmp/report/recording_0/recording.json"));
             TestRunner runner = new TestRunner(config);
             runner.run();
     }

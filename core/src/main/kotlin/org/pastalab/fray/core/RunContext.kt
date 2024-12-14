@@ -15,14 +15,16 @@ import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
+import java.util.concurrent.locks.StampedLock
 import kotlin.system.exitProcess
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.concurrency.HelperThread
 import org.pastalab.fray.core.concurrency.SynchronizationManager
-import org.pastalab.fray.core.concurrency.locks.CountDownLatchManager
+import org.pastalab.fray.core.concurrency.locks.CountDownLatchContext
 import org.pastalab.fray.core.concurrency.locks.LockManager
 import org.pastalab.fray.core.concurrency.locks.ReferencedContextManager
-import org.pastalab.fray.core.concurrency.locks.SemaphoreManager
+import org.pastalab.fray.core.concurrency.locks.SemaphoreContext
+import org.pastalab.fray.core.concurrency.locks.StampedLockContext
 import org.pastalab.fray.core.concurrency.operations.*
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
@@ -42,9 +44,22 @@ class RunContext(val config: Configuration) {
   val hashCodeMapper = ReferencedContextManager<Int>({ config.randomnessProvider.nextInt() })
   var forkJoinPool: ForkJoinPool? = null
   private val lockManager = LockManager()
-  private val semaphoreManager = SemaphoreManager()
+  private val semaphoreManager = ReferencedContextManager {
+    verifyOrReport(it is Semaphore) { "SemaphoreManager can only manage Semaphore objects" }
+    SemaphoreContext(0)
+  }
   private val volatileManager = VolatileManager(true)
-  private val latchManager = CountDownLatchManager()
+  private val latchManager = ReferencedContextManager {
+    verifyOrReport(it is CountDownLatch) { "CDL Manager only accepts CountDownLatch objects" }
+    CountDownLatchContext((it as CountDownLatch?)?.count ?: 0)
+  }
+  private val stampedLockManager =
+      ReferencedContextManager<StampedLockContext> {
+        verifyOrReport(it is StampedLock) {
+          "StampedLockManager can only manage StampedLock objects"
+        }
+        StampedLockContext()
+      }
   private var step = 0
   val syncManager = SynchronizationManager()
   var executor: ExecutorService =
@@ -155,7 +170,9 @@ class RunContext(val config: Configuration) {
                       false)
                 }
                 is CountDownLatchAwaitBlocking -> {
-                  latchManager.unblockThread(pendingOperation.latch, thread.thread.id, false, false)
+                  latchManager
+                      .getContext(pendingOperation.latch)
+                      .unblockThread(thread.thread.id, false, false)
                 }
                 else -> {
                   thread.pendingOperation = ThreadResumeOperation(true)
@@ -467,7 +484,7 @@ class RunContext(val config: Configuration) {
         }
       }
       is CountDownLatchAwaitBlocking -> {
-        latchManager.unblockThread(pendingOperation.latch, t.id, false, true)
+        latchManager.getContext(pendingOperation.latch).unblockThread(t.id, false, true)
         waitingObject = pendingOperation.latch
       }
       is ParkBlocked -> {
@@ -475,7 +492,7 @@ class RunContext(val config: Configuration) {
         context.state = ThreadState.Enabled
       }
       is LockBlocking -> {
-        lockManager.getLockContext(pendingOperation.lock).interrupt(t.id)
+        pendingOperation.interruptible.interrupt(t.id, true)
       }
     }
 
@@ -534,8 +551,12 @@ class RunContext(val config: Configuration) {
         context.state = ThreadState.Enabled
       }
       is CountDownLatchAwaitBlocking -> {
-        latchManager.unblockThread(
-            pendingOperation.latch, context.thread.id, becauseOfTimeout, false)
+        latchManager
+            .getContext(pendingOperation.latch)
+            .unblockThread(context.thread.id, becauseOfTimeout, false)
+      }
+      is LockBlocking -> {
+        pendingOperation.interruptible.interrupt(context.thread.id, !becauseOfTimeout)
       }
     }
   }
@@ -650,7 +671,7 @@ class RunContext(val config: Configuration) {
     // }
     while (!lockManager.lock(lock, context, blockingWait, false, canInterrupt) && blockingWait) {
       context.state = ThreadState.Paused
-      context.pendingOperation = LockBlocking(lock, timed)
+      context.pendingOperation = LockBlocking(lockManager.getLockContext(lock), timed)
       // We want to block current thread because we do
       // not want to rely on ReentrantLock. This allows
       // us to pick which Thread to run next if multiple
@@ -661,8 +682,7 @@ class RunContext(val config: Configuration) {
       }
       val pendingOperation = context.pendingOperation
       verifyOrReport(pendingOperation is ThreadResumeOperation)
-      if (!(pendingOperation as ThreadResumeOperation).noTimeout) {
-        lockManager.tryLockUnblocked(lock, t)
+      if (!(pendingOperation as ThreadResumeOperation).noTimeout && timed) {
         break
       }
     }
@@ -738,20 +758,25 @@ class RunContext(val config: Configuration) {
     lockManager.registerNewCondition(condition, lock)
   }
 
-  fun semaphoreInit(sem: Semaphore) {
-    semaphoreManager.init(sem)
-  }
-
-  fun semaphoreAcquire(sem: Semaphore, permits: Int, shouldBlock: Boolean, canInterrupt: Boolean) {
+  fun stampedLockLock(
+      lock: StampedLock,
+      shouldBlock: Boolean,
+      canInterrupt: Boolean,
+      timed: Boolean,
+      isReadLock: Boolean
+  ) {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
-    context.pendingOperation = LockLockOperation(sem)
+    context.pendingOperation = LockLockOperation(lock)
     context.state = ThreadState.Enabled
     scheduleNextOperation(true)
 
-    while (!semaphoreManager.acquire(sem, permits, shouldBlock, canInterrupt, context) &&
-        shouldBlock) {
+    val stampedLockContext = stampedLockManager.getContext(lock)
+    val lockFun = if (isReadLock) stampedLockContext::readLock else stampedLockContext::writeLock
+
+    while (!lockFun(context, shouldBlock, canInterrupt) && shouldBlock) {
       context.state = ThreadState.Paused
+      context.pendingOperation = LockBlocking(stampedLockContext, timed)
 
       scheduleNextOperation(true)
       if (canInterrupt) {
@@ -760,16 +785,80 @@ class RunContext(val config: Configuration) {
     }
   }
 
+  fun stampedLockUnlock(lock: StampedLock, isReadLock: Boolean) {
+    val stampedLockContext = stampedLockManager.getContext(lock)
+    if (isReadLock) {
+      stampedLockContext.unlockReadLock()
+    } else {
+      stampedLockContext.unlockWriteLock()
+    }
+  }
+
+  fun stampedLockConvertToReadLock(lock: StampedLock, stamp: Long, newStamp: Long) {
+    if (newStamp == 0L) {
+      return
+    }
+    val stampedLockContext = stampedLockManager.getContext(lock)
+    stampedLockContext.convertToReadLock(stamp)
+  }
+
+  fun stampedLockConvertToWriteLock(lock: StampedLock, stamp: Long, newStamp: Long) {
+    if (newStamp == 0L) {
+      return
+    }
+    val stampedLockContext = stampedLockManager.getContext(lock)
+    stampedLockContext.convertToWriteLock(stamp)
+  }
+
+  fun stampedLockConvertToOptimisticReadLock(lock: StampedLock, stamp: Long, newStamp: Long) {
+    val stampedLockContext = stampedLockManager.getContext(lock)
+    stampedLockContext.convertToOptimisticReadLock(stamp)
+  }
+
+  fun semaphoreInit(sem: Semaphore) {
+    val context = SemaphoreContext(sem.availablePermits())
+    semaphoreManager.addContext(sem, context)
+  }
+
+  fun semaphoreAcquire(
+      sem: Semaphore,
+      permits: Int,
+      shouldBlock: Boolean,
+      canInterrupt: Boolean,
+      timed: Boolean
+  ) {
+    val t = Thread.currentThread().id
+    val context = registeredThreads[t]!!
+    context.pendingOperation = LockLockOperation(sem)
+    context.state = ThreadState.Enabled
+    scheduleNextOperation(true)
+
+    while (!semaphoreManager.getContext(sem).acquire(permits, shouldBlock, canInterrupt, context) &&
+        shouldBlock) {
+      context.pendingOperation = LockBlocking(semaphoreManager.getContext(sem), timed)
+      context.state = ThreadState.Paused
+
+      scheduleNextOperation(true)
+      if (canInterrupt) {
+        context.checkInterrupt()
+      }
+      val pendingOperation = context.pendingOperation
+      if (!(pendingOperation as ThreadResumeOperation).noTimeout && timed) {
+        break
+      }
+    }
+  }
+
   fun semaphoreRelease(sem: Semaphore, permits: Int) {
-    semaphoreManager.release(sem, permits)
+    semaphoreManager.getContext(sem).release(permits)
   }
 
   fun semaphoreDrainPermits(sem: Semaphore): Int {
-    return semaphoreManager.drainPermits(sem)
+    return semaphoreManager.getContext(sem).drainPermits()
   }
 
   fun semaphoreReducePermits(sem: Semaphore, permits: Int) {
-    semaphoreManager.reducePermits(sem, permits)
+    semaphoreManager.getContext(sem).reducePermits(permits)
   }
 
   fun fieldOperation(
@@ -816,10 +905,11 @@ class RunContext(val config: Configuration) {
   fun latchAwait(latch: CountDownLatch, timed: Boolean) {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
-    if (latchManager.await(latch, true, context)) {
+    val latchContext = latchManager.getContext(latch)
+    if (latchContext.await(true, context)) {
       context.pendingOperation = CountDownLatchAwaitBlocking(latch, timed)
       context.state = ThreadState.Paused
-      checkDeadlock { latchManager.unblockThread(latch, t, false, false) }
+      checkDeadlock { latchContext.unblockThread(t, false, false) }
       executor.submit {
         if (timed) {
           // this thread is blocked by Sync
@@ -861,7 +951,7 @@ class RunContext(val config: Configuration) {
   }
 
   fun latchCountDown(latch: CountDownLatch) {
-    val unblockedThreads = latchManager.countDown(latch)
+    val unblockedThreads = latchManager.getContext(latch).countDown()
     if (unblockedThreads > 0) {
       syncManager.createWait(latch, unblockedThreads)
     }

@@ -56,16 +56,16 @@ class ReentrantReadWriteLockContext : LockContext {
     }
   }
 
-  override fun interrupt(tid: Long) {
+  override fun interrupt(tid: Long, noTimeout: Boolean) {
     val writeLockWaiter = writeLockWaiters[tid]
     if (writeLockWaiter != null && writeLockWaiter.canInterrupt) {
-      writeLockWaiter.thread.pendingOperation = ThreadResumeOperation(false)
+      writeLockWaiter.thread.pendingOperation = ThreadResumeOperation(noTimeout)
       writeLockWaiter.thread.state = ThreadState.Enabled
       writeLockWaiters.remove(tid)
     }
     val readLockWaiter = readLockWaiters[tid]
     if (readLockWaiter != null && readLockWaiter.canInterrupt) {
-      readLockWaiter.thread.pendingOperation = ThreadResumeOperation(false)
+      readLockWaiter.thread.pendingOperation = ThreadResumeOperation(noTimeout)
       readLockWaiter.thread.state = ThreadState.Enabled
       readLockWaiters.remove(tid)
     }
@@ -192,14 +192,6 @@ class ReentrantReadWriteLockContext : LockContext {
       readLockHolder.contains(tid)
     } else {
       writeLockHolder == tid
-    }
-  }
-
-  override fun tryLockUnblocked(lock: Any, tid: Long) {
-    if (lock is ReadLock) {
-      readLockWaiters.remove(tid)
-    } else {
-      writeLockWaiters.remove(tid)
     }
   }
 }

@@ -52,10 +52,10 @@ class SemaphoreContext(var totalPermits: Int) : Interruptible {
     totalPermits -= permits
   }
 
-  override fun interrupt(tid: Long) {
+  override fun interrupt(tid: Long, noTimeout: Boolean) {
     val lockWaiter = lockWaiters[tid] ?: return
     if (lockWaiter.second.canInterrupt) {
-      lockWaiter.second.thread.pendingOperation = ThreadResumeOperation(false)
+      lockWaiter.second.thread.pendingOperation = ThreadResumeOperation(noTimeout)
       lockWaiter.second.thread.state = ThreadState.Enabled
       lockWaiters.remove(tid)
     }
