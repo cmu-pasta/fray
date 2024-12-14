@@ -16,9 +16,10 @@ import org.pastalab.fray.core.scheduler.Scheduler
 )
 @TestTemplate
 annotation class ConcurrencyTest(
-    val value: Int,
+    val value: Int = 1,
     val scheduler: KClass<out Scheduler> = POSScheduler::class,
     val name: String = SHORT_DISPLAY_NAME,
+    val replay: String = ""
 ) {
   companion object {
 

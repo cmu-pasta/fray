@@ -1,10 +1,11 @@
 package org.pastalab.fray.junit
 
+import java.io.File
 import java.lang.reflect.Method
 import java.nio.file.Paths
 import java.util.stream.Stream
 import kotlin.io.path.absolutePathString
-import kotlin.io.path.createTempDirectory
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.TestTemplateInvocationContext
 import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider
@@ -17,6 +18,7 @@ import org.pastalab.fray.core.command.ExecutionInfo
 import org.pastalab.fray.core.command.LambdaExecutor
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.POSScheduler
+import org.pastalab.fray.core.scheduler.Scheduler
 import org.pastalab.fray.junit.annotations.ConcurrencyTest
 
 class FrayTestExtension : TestTemplateInvocationContextProvider {
@@ -40,8 +42,18 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
     if (!workDir.toFile().exists()) {
       workDir.toFile().mkdirs()
     }
-    val workDir = createTempDirectory(this.workDir).absolutePathString()
-    val schedulerInfo = concurrencyTest.scheduler
+    val (scheduler, random) =
+        if (concurrencyTest.replay.isNotEmpty()) {
+          val path = concurrencyTest.replay
+          val randomPath = "${path}/random.json"
+          val schedulerPath = "${path}/schedule.json"
+          val randomnessProvider =
+              Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
+          val scheduler = Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
+          Pair(scheduler, randomnessProvider)
+        } else {
+          Pair(POSScheduler(), ControlledRandom())
+        }
     val config =
         Configuration(
             ExecutionInfo(
@@ -51,11 +63,11 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
                 false,
                 -1,
             ),
-            workDir,
+            workDir.absolutePathString(),
             totalRepetition(concurrencyTest, testMethod),
             60,
-            POSScheduler(),
-            ControlledRandom(),
+            scheduler,
+            random,
             false,
             false,
             true,
