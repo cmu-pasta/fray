@@ -95,10 +95,10 @@ class ReentrantLockContext : LockContext {
     return false
   }
 
-  override fun interrupt(tid: Long) {
+  override fun interrupt(tid: Long, noTimeout: Boolean) {
     val lockWaiter = lockWaiters[tid] ?: return
     if (lockWaiter.canInterrupt) {
-      lockWaiter.thread.pendingOperation = ThreadResumeOperation(false)
+      lockWaiter.thread.pendingOperation = ThreadResumeOperation(noTimeout)
       lockWaiter.thread.state = ThreadState.Enabled
       lockWaiters.remove(tid)
     }
@@ -106,9 +106,5 @@ class ReentrantLockContext : LockContext {
 
   override fun isLockHolder(lock: Any, tid: Long): Boolean {
     return lockHolder == tid
-  }
-
-  override fun tryLockUnblocked(lock: Any, tid: Long) {
-    lockWaiters.remove(tid)
   }
 }

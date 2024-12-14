@@ -154,6 +154,10 @@ public class Delegate {
     public void onReentrantReadWriteLockInit(ReentrantReadWriteLock lock) {
     }
 
+    public long onSemaphoreTryAcquirePermitsTimeout(Semaphore sem, int permits, long timeout, TimeUnit unit) {
+        return timeout;
+    }
+
     public void onSemaphoreInit(Semaphore sem) {
     }
 
@@ -289,6 +293,46 @@ public class Delegate {
 
     public void onThreadSleepMillisNanos(long millis, int nanos) throws InterruptedException {
         Thread.sleep(millis, nanos);
+    }
+
+    public void onStampedLockReadLock(StampedLock lock) {}
+
+    public void onStampedLockWriteLock(StampedLock lock) {}
+
+    public void onStampedLockReadLockInterruptibly(StampedLock lock) {}
+
+    public void onStampedLockWriteLockInterruptibly(StampedLock lock) {}
+
+    public void onStampedLockReadLockTryLock(StampedLock lock) {}
+
+    public void onStampedLockWriteLockTryLock(StampedLock lock) {}
+
+    public long onStampedLockReadLockTryLockTimeout(StampedLock lock, long timeout, TimeUnit unit) {
+        return timeout;
+    }
+
+    public long onStampedLockWriteLockTryLockTimeout(StampedLock lock, long timeout, TimeUnit unit) {
+        return timeout;
+    }
+
+    public void onStampedLockUnlockReadDone(StampedLock lock) {}
+
+    public void onStampedLockUnlockWriteDone(StampedLock lock) {}
+
+    public void onStampedLockTryConvertToReadLockDone(StampedLock lock, long stamp, long newStamp) {}
+
+    public void onStampedLockTryConvertToWriteLockDone(StampedLock lock, long stamp, long newStamp) {}
+
+    public void onStampedLockTryConvertToOptimisticReadLockDone(StampedLock lock, long stamp, long newStamp) {}
+
+    public void onStampedLockTryUnlockWriteDone(StampedLock lock, boolean success) {}
+
+    public void onStampedLockTryUnlockReadDone(StampedLock lock, boolean success) {}
+
+    public void onStampedLockSkipDone() {
+    }
+
+    public void onStampedLockSkip() {
     }
 }
 

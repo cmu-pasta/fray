@@ -10,6 +10,7 @@ import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.concurrent.locks.StampedLock
 import org.pastalab.fray.core.concurrency.HelperThread
 
 class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Delegate() {
@@ -507,11 +508,30 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       return
     }
     try {
-      context.semaphoreAcquire(sem, permits, false, true)
+      context.semaphoreAcquire(sem, permits, false, true, false)
     } finally {
       onSkipMethod("Semaphore.acquire")
       entered.set(false)
     }
+  }
+
+  override fun onSemaphoreTryAcquirePermitsTimeout(
+      sem: Semaphore,
+      permits: Int,
+      timeout: Long,
+      unit: TimeUnit
+  ): Long {
+    if (checkEntered()) {
+      onSkipMethod("Semaphore.acquire")
+      return timeout
+    }
+    try {
+      context.semaphoreAcquire(sem, permits, true, true, true)
+    } finally {
+      onSkipMethod("Semaphore.acquire")
+      entered.set(false)
+    }
+    return 0
   }
 
   override fun onSemaphoreAcquire(sem: Semaphore, permits: Int) {
@@ -520,7 +540,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       return
     }
     try {
-      context.semaphoreAcquire(sem, permits, true, true)
+      context.semaphoreAcquire(sem, permits, true, true, false)
     } finally {
       onSkipMethod("Semaphore.acquire")
       entered.set(false)
@@ -533,7 +553,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       return
     }
     try {
-      context.semaphoreAcquire(sem, permits, true, false)
+      context.semaphoreAcquire(sem, permits, true, false, false)
     } finally {
       entered.set(false)
       onSkipMethod("Semaphore.acquire")
@@ -838,5 +858,186 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
 
   override fun onThreadSleepMillisNanos(millis: Long, nanos: Int) {
     Thread.yield()
+  }
+
+  override fun onStampedLockReadLock(lock: StampedLock) {
+    if (checkEntered()) {
+      onSkipMethod("StampedLock")
+      return
+    }
+    context.stampedLockLock(lock, true, false, false, true)
+    entered.set(false)
+  }
+
+  override fun onStampedLockWriteLock(lock: StampedLock) {
+    if (checkEntered()) {
+      onSkipMethod("StampedLock")
+      return
+    }
+    context.stampedLockLock(lock, true, false, false, false)
+    entered.set(false)
+  }
+
+  override fun onStampedLockSkipDone() {
+    onSkipMethodDone("StampedLock")
+  }
+
+  override fun onStampedLockSkip() {
+    onSkipMethod("StampedLock")
+  }
+
+  override fun onStampedLockReadLockInterruptibly(lock: StampedLock) {
+    if (checkEntered()) {
+      onSkipMethod("StampedLock")
+      return
+    }
+    try {
+      context.stampedLockLock(lock, true, true, false, true)
+    } finally {
+      entered.set(false)
+    }
+  }
+
+  override fun onStampedLockWriteLockInterruptibly(lock: StampedLock) {
+    if (checkEntered()) {
+      onSkipMethod("StampedLock")
+      return
+    }
+    try {
+      context.stampedLockLock(lock, true, true, false, false)
+    } finally {
+      entered.set(false)
+    }
+  }
+
+  override fun onStampedLockUnlockReadDone(lock: StampedLock) {
+    onSkipMethodDone("StampedLock")
+    if (checkEntered()) {
+      return
+    }
+    context.stampedLockUnlock(lock, true)
+    entered.set(false)
+  }
+
+  override fun onStampedLockUnlockWriteDone(lock: StampedLock) {
+    onSkipMethodDone("StampedLock")
+    if (checkEntered()) {
+      return
+    }
+    context.stampedLockUnlock(lock, false)
+    entered.set(false)
+  }
+
+  override fun onStampedLockTryUnlockWriteDone(lock: StampedLock, success: Boolean) {
+    onSkipMethodDone("StampedLock")
+    if (checkEntered()) {
+      return
+    }
+    if (success) {
+      context.stampedLockUnlock(lock, false)
+    }
+    entered.set(false)
+  }
+
+  override fun onStampedLockTryUnlockReadDone(lock: StampedLock, success: Boolean) {
+    onSkipMethodDone("StampedLock")
+    if (checkEntered()) {
+      return
+    }
+    if (success) {
+      context.stampedLockUnlock(lock, true)
+    }
+    entered.set(false)
+  }
+
+  override fun onStampedLockTryConvertToWriteLockDone(
+      lock: StampedLock,
+      stamp: Long,
+      newStamp: Long
+  ) {
+    onSkipMethodDone("StampedLock")
+    if (checkEntered()) {
+      return
+    }
+    context.stampedLockConvertToWriteLock(lock, stamp, newStamp)
+    entered.set(false)
+  }
+
+  override fun onStampedLockTryConvertToReadLockDone(
+      lock: StampedLock,
+      stamp: Long,
+      newStamp: Long
+  ) {
+    onSkipMethodDone("StampedLock")
+    if (checkEntered()) {
+      return
+    }
+    context.stampedLockConvertToReadLock(lock, stamp, newStamp)
+    entered.set(false)
+  }
+
+  override fun onStampedLockTryConvertToOptimisticReadLockDone(
+      lock: StampedLock,
+      stamp: Long,
+      newStamp: Long
+  ) {
+    onSkipMethodDone("StampedLock")
+    if (checkEntered()) {
+      return
+    }
+    context.stampedLockConvertToOptimisticReadLock(lock, stamp, newStamp)
+    entered.set(false)
+  }
+
+  override fun onStampedLockReadLockTryLock(lock: StampedLock) {
+    if (checkEntered()) {
+      onSkipMethod("StampedLock")
+      return
+    }
+    context.stampedLockLock(lock, false, false, false, true)
+    entered.set(false)
+  }
+
+  override fun onStampedLockWriteLockTryLock(lock: StampedLock) {
+    if (checkEntered()) {
+      onSkipMethod("StampedLock")
+      return
+    }
+    context.stampedLockLock(lock, false, false, false, false)
+    entered.set(false)
+  }
+
+  override fun onStampedLockReadLockTryLockTimeout(
+      lock: StampedLock,
+      timeout: Long,
+      unit: TimeUnit
+  ): Long {
+    if (checkEntered()) {
+      onSkipMethod("StampedLock")
+      return timeout
+    }
+    try {
+      context.stampedLockLock(lock, true, true, true, true)
+    } finally {
+      entered.set(false)
+    }
+    return 0
+  }
+
+  override fun onStampedLockWriteLockTryLockTimeout(
+      lock: StampedLock,
+      timeout: Long,
+      unit: TimeUnit
+  ): Long {
+    if (checkEntered()) {
+      onSkipMethod("StampedLock")
+      return timeout
+    }
+    try {
+      context.stampedLockLock(lock, true, true, true, false)
+    } finally {
+      entered.set(false)
+    }
+    return 0
   }
 }
