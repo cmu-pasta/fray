@@ -1,4 +1,4 @@
-package org.pastalab.fray.core.concurrency.locks
+package org.pastalab.fray.core.concurrency.primitives
 
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.ThreadState
@@ -11,8 +11,9 @@ class ReentrantLockContext : LockContext {
   // Mapping from thread id to whether the thread is interruptible.
   private val lockWaiters = mutableMapOf<Long, LockWaiter>()
   override val wakingThreads = mutableMapOf<Long, ThreadContext>()
+  override val signalContexts = mutableSetOf<SignalContext>()
 
-  override fun addWakingThread(lockObject: Any, t: ThreadContext) {
+  override fun addWakingThread(t: ThreadContext) {
     wakingThreads[t.thread.id] = t
   }
 
@@ -30,7 +31,6 @@ class ReentrantLockContext : LockContext {
   }
 
   override fun lock(
-      lock: Any,
       lockThread: ThreadContext,
       shouldBlock: Boolean,
       lockBecauseOfWait: Boolean,
@@ -59,12 +59,7 @@ class ReentrantLockContext : LockContext {
     return false
   }
 
-  override fun unlock(
-      lock: Any,
-      tid: Long,
-      unlockBecauseOfWait: Boolean,
-      earlyExit: Boolean
-  ): Boolean {
+  override fun unlock(tid: Long, unlockBecauseOfWait: Boolean, earlyExit: Boolean): Boolean {
     verifyOrReport(lockHolder == tid || earlyExit)
     if (lockHolder != tid && earlyExit) {
       return false
@@ -95,16 +90,23 @@ class ReentrantLockContext : LockContext {
     return false
   }
 
-  override fun interrupt(tid: Long, noTimeout: Boolean) {
-    val lockWaiter = lockWaiters[tid] ?: return
-    if (lockWaiter.canInterrupt) {
-      lockWaiter.thread.pendingOperation = ThreadResumeOperation(noTimeout)
+  override fun isLockHolder(tid: Long): Boolean {
+    return lockHolder == tid
+  }
+
+  override fun unblockThread(tid: Long, type: InterruptionType): Boolean {
+    val lockWaiter = lockWaiters[tid] ?: return false
+    if ((lockWaiter.canInterrupt && type == InterruptionType.INTERRUPT) ||
+        (type == InterruptionType.FORCE) ||
+        (type == InterruptionType.TIMEOUT)) {
+      lockWaiter.thread.pendingOperation = ThreadResumeOperation(type != InterruptionType.TIMEOUT)
       lockWaiter.thread.state = ThreadState.Enabled
       lockWaiters.remove(tid)
     }
+    return false
   }
 
-  override fun isLockHolder(lock: Any, tid: Long): Boolean {
-    return lockHolder == tid
+  override fun getNumThreadsWaitingForLockDueToSignal(): Int {
+    return signalContexts.sumOf { it.waitingThreads.size } + wakingThreads.size
   }
 }

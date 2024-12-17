@@ -1,3 +1,5 @@
 package org.pastalab.fray.core.concurrency.operations
 
-open class TimedBlockingOperation(val timed: Boolean) : NonRacingOperation() {}
+import org.pastalab.fray.core.concurrency.primitives.Interruptible
+
+abstract class TimedBlockingOperation(val timed: Boolean) : NonRacingOperation(), Interruptible {}

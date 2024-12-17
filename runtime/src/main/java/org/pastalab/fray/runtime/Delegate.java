@@ -319,15 +319,25 @@ public class Delegate {
 
     public void onStampedLockUnlockWriteDone(StampedLock lock) {}
 
-    public void onStampedLockTryConvertToReadLockDone(StampedLock lock, long stamp, long newStamp) {}
+    public long onStampedLockTryConvertToReadLockDone(long newStamp, StampedLock lock, long stamp) {
+        return newStamp;
+    }
 
-    public void onStampedLockTryConvertToWriteLockDone(StampedLock lock, long stamp, long newStamp) {}
+    public long onStampedLockTryConvertToWriteLockDone(long newStamp, StampedLock lock, long stamp) {
+        return newStamp;
+    }
 
-    public void onStampedLockTryConvertToOptimisticReadLockDone(StampedLock lock, long stamp, long newStamp) {}
+    public long onStampedLockTryConvertToOptimisticReadLockDone(long newStamp, StampedLock lock, long stamp) {
+        return newStamp;
+    }
 
-    public void onStampedLockTryUnlockWriteDone(StampedLock lock, boolean success) {}
+    public boolean onStampedLockTryUnlockWriteDone(boolean success, StampedLock lock) {
+        return success;
+    }
 
-    public void onStampedLockTryUnlockReadDone(StampedLock lock, boolean success) {}
+    public boolean onStampedLockTryUnlockReadDone(boolean success, StampedLock lock) {
+        return success;
+    }
 
     public void onStampedLockSkipDone() {
     }

@@ -1,10 +1,10 @@
-package org.pastalab.fray.core.concurrency.locks
+package org.pastalab.fray.core.concurrency.primitives
 
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.ThreadState
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
 
-class SemaphoreContext(var totalPermits: Int) : Interruptible {
+class SemaphoreContext(var totalPermits: Int) : InterruptibleContext {
   private val lockWaiters = mutableMapOf<Long, Pair<Int, LockWaiter>>()
 
   fun acquire(
@@ -52,12 +52,14 @@ class SemaphoreContext(var totalPermits: Int) : Interruptible {
     totalPermits -= permits
   }
 
-  override fun interrupt(tid: Long, noTimeout: Boolean) {
-    val lockWaiter = lockWaiters[tid] ?: return
+  override fun unblockThread(tid: Long, type: InterruptionType): Boolean {
+    val lockWaiter = lockWaiters[tid] ?: return false
+    val noTimeout = type != InterruptionType.TIMEOUT
     if (lockWaiter.second.canInterrupt) {
       lockWaiter.second.thread.pendingOperation = ThreadResumeOperation(noTimeout)
       lockWaiter.second.thread.state = ThreadState.Enabled
       lockWaiters.remove(tid)
     }
+    return false
   }
 }

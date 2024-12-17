@@ -111,8 +111,17 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           eMv, Runtime::onStampedLockSkipDone, access, name, descriptor, false, false, false)
     }
     if (name == "writeLockInterruptibly") {
+      val eMv =
+          MethodEnterVisitor(
+              mv,
+              Runtime::onStampedLockWriteLockInterruptibly,
+              access,
+              name,
+              descriptor,
+              true,
+              false)
       return MethodExitVisitor(
-          skipMv, Runtime::onStampedLockSkipDone, access, name, descriptor, false, false, false)
+          eMv, Runtime::onStampedLockSkipDone, access, name, descriptor, false, false, false)
     }
     if (name == "unlockWrite") {
       return MethodExitVisitor(
@@ -145,9 +154,7 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           true,
-          false) {
-            dup2()
-          }
+          false)
     }
     if (name == "tryConvertToReadLock") {
       return MethodExitVisitor(
@@ -158,9 +165,7 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           true,
-          false) {
-            dup2()
-          }
+          false)
     }
     if (name == "tryConvertToOptimisticRead") {
       return MethodExitVisitor(
@@ -171,9 +176,7 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           true,
-          false) {
-            dup2()
-          }
+          false)
     }
     if (name == "tryUnlockRead") {
       return MethodExitVisitor(
@@ -184,9 +187,7 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          false) {
-            dup2()
-          }
+          false)
     }
     if (name == "tryUnlockWrite") {
       return MethodExitVisitor(
@@ -197,9 +198,7 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          false) {
-            dup2()
-          }
+          false)
     }
     return super.instrumentMethod(mv, access, name, descriptor, signature, exceptions)
   }

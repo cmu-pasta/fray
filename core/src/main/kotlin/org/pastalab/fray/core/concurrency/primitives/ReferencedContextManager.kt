@@ -1,4 +1,4 @@
-package org.pastalab.fray.core.concurrency.locks
+package org.pastalab.fray.core.concurrency.primitives
 
 import java.lang.ref.PhantomReference
 import java.lang.ref.ReferenceQueue

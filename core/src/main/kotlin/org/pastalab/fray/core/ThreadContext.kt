@@ -1,8 +1,6 @@
 package org.pastalab.fray.core
 
 import org.pastalab.fray.core.concurrency.Sync
-import org.pastalab.fray.core.concurrency.operations.ConditionAwaitBlocked
-import org.pastalab.fray.core.concurrency.operations.ObjectWaitBlock
 import org.pastalab.fray.core.concurrency.operations.Operation
 import org.pastalab.fray.core.concurrency.operations.ThreadStartOperation
 
@@ -40,32 +38,5 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
       Thread.interrupted()
       throw InterruptedException()
     }
-  }
-
-  // Used to detect live locks.
-  var lastBlockedOp = -1
-  var blockedTime = 0
-
-  fun maybeLiveLock(): Boolean {
-    val op = pendingOperation
-    when (op) {
-      is ObjectWaitBlock -> {
-        if (System.identityHashCode(op.o) == lastBlockedOp) {
-          blockedTime += 1
-        } else {
-          blockedTime = 1
-          lastBlockedOp = System.identityHashCode(op.o)
-        }
-      }
-      is ConditionAwaitBlocked -> {
-        if (System.identityHashCode(op.condition) == lastBlockedOp) {
-          blockedTime += 1
-        } else {
-          blockedTime = 1
-          lastBlockedOp = System.identityHashCode(op.condition)
-        }
-      }
-    }
-    return blockedTime > 1000
   }
 }

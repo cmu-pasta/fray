@@ -433,24 +433,24 @@ public class Runtime {
         DELEGATE.onStampedLockUnlockWriteDone(lock);
     }
 
-    public static void onStampedLockTryConvertToReadLockDone(StampedLock lock, long stamp, long newStamp) {
-        DELEGATE.onStampedLockTryConvertToReadLockDone(lock, stamp, newStamp);
+    public static long onStampedLockTryConvertToReadLockDone(long newStamp, StampedLock lock, long stamp) {
+        return DELEGATE.onStampedLockTryConvertToReadLockDone(newStamp, lock, stamp);
     }
 
-    public static void onStampedLockTryConvertToWriteLockDone(StampedLock lock, long stamp, long newStamp) {
-        DELEGATE.onStampedLockTryConvertToWriteLockDone(lock, stamp, newStamp);
+    public static long onStampedLockTryConvertToWriteLockDone(long newStamp, StampedLock lock, long stamp) {
+        return DELEGATE.onStampedLockTryConvertToWriteLockDone(newStamp, lock, stamp);
     }
 
-    public static void onStampedLockTryConvertToOptimisticReadLockDone(StampedLock lock, long stamp, long newStamp) {
-        DELEGATE.onStampedLockTryConvertToOptimisticReadLockDone(lock, stamp, newStamp);
+    public static long onStampedLockTryConvertToOptimisticReadLockDone(long newStamp, StampedLock lock, long stamp) {
+        return DELEGATE.onStampedLockTryConvertToOptimisticReadLockDone(newStamp, lock, stamp);
     }
 
-    public static void onStampedLockTryUnlockWriteDone(StampedLock lock, boolean success) {
-        DELEGATE.onStampedLockTryUnlockWriteDone(lock, success);
+    public static boolean onStampedLockTryUnlockWriteDone(boolean success, StampedLock lock) {
+        return DELEGATE.onStampedLockTryUnlockWriteDone(success, lock);
     }
 
-    public static void onStampedLockTryUnlockReadDone(StampedLock lock, boolean success) {
-        DELEGATE.onStampedLockTryUnlockReadDone(lock, success);
+    public static boolean onStampedLockTryUnlockReadDone(boolean success, StampedLock lock) {
+        return DELEGATE.onStampedLockTryUnlockReadDone(success, lock);
     }
 
     public static void onStampedLockSkip() {
