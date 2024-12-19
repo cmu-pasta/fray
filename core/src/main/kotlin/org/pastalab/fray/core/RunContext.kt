@@ -58,7 +58,7 @@ class RunContext(val config: Configuration) {
   private val volatileManager = VolatileManager(true)
   private val latchManager = ReferencedContextManager {
     verifyOrReport(it is CountDownLatch) { "CDL Manager only accepts CountDownLatch objects" }
-    CountDownLatchContext((it as CountDownLatch?)?.count ?: 0)
+    CountDownLatchContext(it as CountDownLatch, syncManager)
   }
   private val lockManager =
       ReferencedContextManager<LockContext> {
@@ -659,6 +659,10 @@ class RunContext(val config: Configuration) {
       if (canInterrupt) {
         context.checkInterrupt()
       }
+      val pendingOperation = context.pendingOperation
+      if (!(pendingOperation as ThreadResumeOperation).noTimeout && timed) {
+        break
+      }
     }
   }
 
@@ -786,7 +790,12 @@ class RunContext(val config: Configuration) {
     if (latchContext.await(true, context)) {
       context.pendingOperation = CountDownLatchAwaitBlocking(timed, latchContext)
       context.state = ThreadState.Paused
-      checkDeadlock { latchContext.unblockThread(t, InterruptionType.FORCE) }
+      checkDeadlock {
+        // We should not use [InterruptionType.FORCE] here because
+        // The thread is not blocked by the latch yet.
+        latchContext.unblockThread(t, InterruptionType.RESOURCE_AVAILABLE)
+        context.state = ThreadState.Running
+      }
       executor.submit {
         if (timed) {
           // this thread is blocked by Sync

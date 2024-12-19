@@ -1,12 +1,20 @@
 package org.pastalab.fray.core.concurrency.primitives
 
+import java.util.concurrent.CountDownLatch
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.ThreadState
+import org.pastalab.fray.core.concurrency.SynchronizationManager
 import org.pastalab.fray.core.concurrency.operations.CountDownLatchAwaitBlocking
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
-class CountDownLatchContext(var count: Long) : InterruptibleContext {
+/**
+ * Context for a [CountDownLatch]. We have to pass syncManager here because we need to create a
+ * synchronization point when we unblock a thread forcefully.
+ */
+class CountDownLatchContext(val latch: CountDownLatch, val syncManager: SynchronizationManager) :
+    InterruptibleContext {
+  var count = latch.count
   val latchWaiters = mutableMapOf<Long, LockWaiter>()
 
   fun await(canInterrupt: Boolean, thread: ThreadContext): Boolean {
@@ -46,6 +54,19 @@ class CountDownLatchContext(var count: Long) : InterruptibleContext {
   override fun unblockThread(tid: Long, type: InterruptionType): Boolean {
     val lockWaiter = latchWaiters[tid] ?: return false
     if (type == InterruptionType.INTERRUPT && !lockWaiter.canInterrupt) {
+      return false
+    }
+    if (type == InterruptionType.FORCE) {
+      while (count != 0L) {
+        val unblockedThreads = countDown()
+        if (unblockedThreads > 0) {
+          syncManager.createWait(latch, unblockedThreads)
+          latch.countDown()
+          syncManager.wait(latch)
+        } else {
+          latch.countDown()
+        }
+      }
       return false
     }
     val pendingOperation = lockWaiter.thread.pendingOperation
