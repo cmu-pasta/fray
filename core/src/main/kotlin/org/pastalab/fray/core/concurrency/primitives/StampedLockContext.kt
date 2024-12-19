@@ -1,4 +1,4 @@
-package org.pastalab.fray.core.concurrency.locks
+package org.pastalab.fray.core.concurrency.primitives
 
 import java.util.concurrent.locks.StampedLock.isOptimisticReadStamp
 import java.util.concurrent.locks.StampedLock.isReadLockStamp
@@ -7,14 +7,14 @@ import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.ThreadState
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
 
-class StampedLockContext : Interruptible {
+class StampedLockContext : InterruptibleContext {
   var readHolders = 0
   var writeLockAcquired = false
   val readLockWaiters = mutableMapOf<Long, LockWaiter>()
   val writeLockWaiters = mutableMapOf<Long, LockWaiter>()
 
   fun readLock(lockThread: ThreadContext, shouldBlock: Boolean, canInterrupt: Boolean): Boolean {
-    if (!writeLockAcquired) {
+    if (writeLockAcquired) {
       if (canInterrupt) {
         lockThread.checkInterrupt()
       }
@@ -92,7 +92,8 @@ class StampedLockContext : Interruptible {
     }
   }
 
-  override fun interrupt(tid: Long, noTimeout: Boolean) {
+  override fun unblockThread(tid: Long, type: InterruptionType): Boolean {
+    val noTimeout = type != InterruptionType.TIMEOUT
     readLockWaiters[tid]?.let {
       if (it.canInterrupt) {
         it.thread.pendingOperation = ThreadResumeOperation(noTimeout)
@@ -107,5 +108,6 @@ class StampedLockContext : Interruptible {
         writeLockWaiters.remove(tid)
       }
     }
+    return false
   }
 }

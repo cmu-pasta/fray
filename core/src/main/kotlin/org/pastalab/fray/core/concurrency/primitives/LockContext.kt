@@ -1,23 +1,23 @@
-package org.pastalab.fray.core.concurrency.locks
+package org.pastalab.fray.core.concurrency.primitives
 
 import org.pastalab.fray.core.ThreadContext
 
-interface LockContext : Interruptible {
+interface LockContext : InterruptibleContext {
   val wakingThreads: MutableMap<Long, ThreadContext>
+  val signalContexts: MutableSet<SignalContext>
 
-  fun addWakingThread(lockObject: Any, t: ThreadContext)
+  fun addWakingThread(t: ThreadContext)
 
   fun canLock(tid: Long): Boolean
 
   fun lock(
-      lock: Any,
       lockThread: ThreadContext,
       shouldBlock: Boolean,
       lockBecauseOfWait: Boolean,
       canInterrupt: Boolean
   ): Boolean
 
-  fun unlock(lock: Any, tid: Long, unlockBecauseOfWait: Boolean, earlyExit: Boolean): Boolean
+  fun unlock(tid: Long, unlockBecauseOfWait: Boolean, earlyExit: Boolean): Boolean
 
   fun hasQueuedThreads(): Boolean
 
@@ -25,5 +25,7 @@ interface LockContext : Interruptible {
 
   fun isEmpty(): Boolean
 
-  fun isLockHolder(lock: Any, tid: Long): Boolean
+  fun isLockHolder(tid: Long): Boolean
+
+  fun getNumThreadsWaitingForLockDueToSignal(): Int
 }

@@ -20,12 +20,20 @@ import kotlin.system.exitProcess
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.concurrency.HelperThread
 import org.pastalab.fray.core.concurrency.SynchronizationManager
-import org.pastalab.fray.core.concurrency.locks.CountDownLatchContext
-import org.pastalab.fray.core.concurrency.locks.LockManager
-import org.pastalab.fray.core.concurrency.locks.ReferencedContextManager
-import org.pastalab.fray.core.concurrency.locks.SemaphoreContext
-import org.pastalab.fray.core.concurrency.locks.StampedLockContext
 import org.pastalab.fray.core.concurrency.operations.*
+import org.pastalab.fray.core.concurrency.primitives.ConditionSignalContext
+import org.pastalab.fray.core.concurrency.primitives.CountDownLatchContext
+import org.pastalab.fray.core.concurrency.primitives.Interruptible
+import org.pastalab.fray.core.concurrency.primitives.InterruptionType
+import org.pastalab.fray.core.concurrency.primitives.LockContext
+import org.pastalab.fray.core.concurrency.primitives.ObjectNotifyContext
+import org.pastalab.fray.core.concurrency.primitives.ReadLockContext
+import org.pastalab.fray.core.concurrency.primitives.ReentrantLockContext
+import org.pastalab.fray.core.concurrency.primitives.ReferencedContextManager
+import org.pastalab.fray.core.concurrency.primitives.SemaphoreContext
+import org.pastalab.fray.core.concurrency.primitives.SignalContext
+import org.pastalab.fray.core.concurrency.primitives.StampedLockContext
+import org.pastalab.fray.core.concurrency.primitives.WriteLockContext
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
 import org.pastalab.fray.runtime.DeadlockException
@@ -43,7 +51,6 @@ class RunContext(val config: Configuration) {
   val terminatingThread = mutableSetOf<Int>()
   val hashCodeMapper = ReferencedContextManager<Int>({ config.randomnessProvider.nextInt() })
   var forkJoinPool: ForkJoinPool? = null
-  private val lockManager = LockManager()
   private val semaphoreManager = ReferencedContextManager {
     verifyOrReport(it is Semaphore) { "SemaphoreManager can only manage Semaphore objects" }
     SemaphoreContext(0)
@@ -51,8 +58,28 @@ class RunContext(val config: Configuration) {
   private val volatileManager = VolatileManager(true)
   private val latchManager = ReferencedContextManager {
     verifyOrReport(it is CountDownLatch) { "CDL Manager only accepts CountDownLatch objects" }
-    CountDownLatchContext((it as CountDownLatch?)?.count ?: 0)
+    CountDownLatchContext(it as CountDownLatch, syncManager)
   }
+  private val lockManager =
+      ReferencedContextManager<LockContext> {
+        when (it) {
+          is ReentrantLock -> ReentrantLockContext()
+          is ReadLock -> {
+            throw RuntimeException("ReadLock should not be created here")
+          }
+          is WriteLock -> {
+            throw RuntimeException("WriteLock should not be created here")
+          }
+          else -> ReentrantLockContext()
+        }
+      }
+  private val signalManager =
+      ReferencedContextManager<SignalContext> {
+        val lockContext = lockManager.getContext(it)
+        val obj = ObjectNotifyContext(lockContext, it)
+        lockContext.signalContexts.add(obj)
+        obj
+      }
   private val stampedLockManager =
       ReferencedContextManager<StampedLockContext> {
         verifyOrReport(it is StampedLock) {
@@ -155,31 +182,10 @@ class RunContext(val config: Configuration) {
         if (e is org.pastalab.fray.runtime.DeadlockException) {
           for (thread in registeredThreads.values) {
             if (thread.state == ThreadState.Paused) {
-              thread.state = ThreadState.Enabled
               val pendingOperation = thread.pendingOperation
-              when (pendingOperation) {
-                is ObjectWaitBlock -> {
-                  lockManager.objectWaitUnblockedWithoutNotify(
-                      pendingOperation.o, pendingOperation.o, thread, false)
-                }
-                is ConditionAwaitBlocked -> {
-                  lockManager.objectWaitUnblockedWithoutNotify(
-                      pendingOperation.condition,
-                      lockManager.lockFromCondition(pendingOperation.condition),
-                      thread,
-                      false)
-                }
-                is CountDownLatchAwaitBlocking -> {
-                  latchManager
-                      .getContext(pendingOperation.latch)
-                      .unblockThread(thread.thread.id, false, false)
-                }
-                else -> {
-                  thread.pendingOperation = ThreadResumeOperation(true)
-                }
+              if (pendingOperation is Interruptible) {
+                pendingOperation.unblockThread(thread.thread.id, InterruptionType.FORCE)
               }
-              terminatingThread.add(thread.index)
-              break
             }
           }
         }
@@ -207,7 +213,6 @@ class RunContext(val config: Configuration) {
   }
 
   fun done() {
-    verifyOrReport(lockManager.waitingThreads.isEmpty())
     verifyOrReport(syncManager.synchronizationPoints.isEmpty())
     lockManager.done()
     registeredThreads.clear()
@@ -263,7 +268,7 @@ class RunContext(val config: Configuration) {
         context.pendingOperation = ThreadResumeOperation(true)
         context.state = ThreadState.Enabled
       } else {
-        context.pendingOperation = ParkBlocked(timed)
+        context.pendingOperation = ParkBlocked(timed, context)
         context.state = ThreadState.Paused
         scheduleNextOperation(true)
       }
@@ -318,33 +323,31 @@ class RunContext(val config: Configuration) {
     // We do not want to send notify all because
     // we don't have monitor lock here.
     var size = 0
-    lockManager.getLockContext(t).wakingThreads.let {
+    val lockContext = lockManager.getContext(t)
+    lockContext.wakingThreads.let {
       for (thread in it) {
         thread.value.state = ThreadState.Enabled
       }
       size = it.size
     }
-    syncManager.createWait(t, size)
+    syncManager.createWait(lockContext, size)
     executor.submit {
       while (t.isAlive) {
         Thread.yield()
       }
       context.isExiting = false
       lockUnlockDone(t)
-      unlockImpl(t, t.id, false, false, true)
-      syncManager.synchronizationPoints.remove(System.identityHashCode(t))
+      unlockImpl(lockContext, t.id, false, false, true)
+      syncManager.synchronizationPoints.remove(System.identityHashCode(lockContext))
       scheduleNextOperationAndCheckDeadlock(false)
     }
   }
 
-  private fun objectWaitImpl(
-      waitingObject: Any,
-      lockObject: Any,
-      canInterrupt: Boolean,
-      timed: Boolean
-  ) {
+  private fun objectWaitImpl(waitingObject: Any, canInterrupt: Boolean, timed: Boolean) {
     val t = Thread.currentThread().id
     val objId = System.identityHashCode(waitingObject)
+    val signalContext = signalManager.getContext(waitingObject)
+    val lockContext = signalContext.lockContext
     val context = registeredThreads[t]!!
     context.pendingOperation = ObjectWaitOperation(objId)
     context.state = ThreadState.Enabled
@@ -357,35 +360,27 @@ class RunContext(val config: Configuration) {
     }
 
     // We also need to check if current thread holds the monitor lock.
-    if (!lockManager.getLockContext(lockObject).isLockHolder(lockObject, t)) {
+    if (!lockContext.isLockHolder(t)) {
       // If current thread is not lock holder, we should just continue because
       // JVM will throw IllegalMonitorStateException.
       return
     }
 
-    if (lockObject == waitingObject) {
-      context.pendingOperation = ObjectWaitBlock(waitingObject, timed)
-    } else {
-      context.pendingOperation =
-          ConditionAwaitBlocked(waitingObject as Condition, canInterrupt, timed)
-    }
-    lockManager.addWaitingThread(waitingObject, Thread.currentThread())
-    context.state = ThreadState.Paused
+    signalContext.addWaitingThread(context, timed, canInterrupt)
 
-    unlockImpl(lockObject, t, true, true, lockObject == waitingObject)
+    unlockImpl(lockContext, t, true, true, signalContext is ObjectNotifyContext)
 
+    val spuriousWakeup = config.randomnessProvider.nextInt() % 2 == 0
     // This is a spurious wakeup.
     // https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html#wait(long,int)
-    val spuriousWakeup = config.randomnessProvider.nextInt() % 2 == 0
-
     if (spuriousWakeup) {
-      lockManager.objectWaitUnblockedWithoutNotify(waitingObject, lockObject, context, true)
+      signalContext.unblockThread(t, InterruptionType.TIMEOUT)
     }
 
     checkDeadlock {
-      lockManager.objectWaitUnblockedWithoutNotify(waitingObject, lockObject, context, false)
-      verifyOrReport(lockManager.lock(lockObject, context, false, true, false))
-      syncManager.removeWait(lockObject)
+      signalContext.unblockThread(t, InterruptionType.FORCE)
+      verifyOrReport(lockContext.lock(context, false, true, false))
+      syncManager.removeWait(signalContext.getSyncObject())
       context.pendingOperation = ThreadResumeOperation(true)
       context.state = ThreadState.Running
     }
@@ -398,23 +393,23 @@ class RunContext(val config: Configuration) {
       while (registeredThreads[t]!!.thread.state == Thread.State.RUNNABLE) {
         Thread.yield()
       }
-      lockUnlockDone(lockObject)
+      syncManager.wait(signalContext.getSyncObject())
       scheduleNextOperationAndCheckDeadlock(false)
     }
   }
 
   fun objectWait(o: Any, timed: Boolean) {
-    objectWaitImpl(o, o, true, timed)
+    objectWaitImpl(o, true, timed)
   }
 
   fun conditionAwait(o: Condition, canInterrupt: Boolean, timed: Boolean) {
-    val lock = lockManager.lockFromCondition(o)
-    objectWaitImpl(o, lock, canInterrupt, timed)
+    objectWaitImpl(o, canInterrupt, timed)
   }
 
-  fun objectWaitDoneImpl(waitingObject: Any, lockObject: Any, canInterrupt: Boolean): Boolean {
+  fun objectWaitDoneImpl(waitingObject: Any, canInterrupt: Boolean): Boolean {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
+    val signalContext = signalManager.getContext(waitingObject)
     // We will unblock here only if the scheduler
     // decides to run it.
     while (context.state != ThreadState.Running) {
@@ -422,7 +417,7 @@ class RunContext(val config: Configuration) {
         if (context.interruptSignaled) {
           Thread.interrupted()
         }
-        syncManager.signal(lockObject)
+        syncManager.signal(signalContext.getSyncObject())
         if (waitingObject is Condition) {
           // TODO(aoli): Is this necessary?
           if (canInterrupt) {
@@ -438,7 +433,7 @@ class RunContext(val config: Configuration) {
       }
     }
     // If a thread is enabled, the lock must be available.
-    verifyOrReport(lockManager.lock(lockObject, context, false, true, false))
+    verifyOrReport(signalContext.lockContext.lock(context, false, true, false))
     val pendingOperation = context.pendingOperation
     verifyOrReport(pendingOperation is ThreadResumeOperation)
     if (canInterrupt) {
@@ -450,56 +445,19 @@ class RunContext(val config: Configuration) {
   fun threadInterrupt(t: Thread) {
     val context = registeredThreads[t.id]!!
     context.interruptSignaled = true
+    val pendingOperation = context.pendingOperation
 
     if (context.state == ThreadState.Running) {
       return
     }
 
-    val pendingOperation = context.pendingOperation
-    var waitingObject: Any? = null
-    when (pendingOperation) {
-      is ObjectWaitBlock -> {
-        if (lockManager.objectWaitUnblockedWithoutNotify(
-            pendingOperation.o, pendingOperation.o, context, false)) {
-          waitingObject = pendingOperation.o
-        }
+    if (pendingOperation is Interruptible) {
+      val result = pendingOperation.unblockThread(t.id, InterruptionType.INTERRUPT)
+      if (result != null) {
+        syncManager.createWait(result, 1)
+        registeredThreads[Thread.currentThread().id]!!.pendingOperation =
+            InterruptPendingOperation(result)
       }
-      is ObjectWakeBlocked -> {
-        if (context.state == ThreadState.Enabled) {
-          waitingObject = pendingOperation.o
-        }
-      }
-      is ConditionWakeBlocked -> {
-        if (pendingOperation.canInterrupt && context.state == ThreadState.Enabled) {
-          waitingObject = lockManager.lockFromCondition(pendingOperation.condition)
-        }
-      }
-      is ConditionAwaitBlocked -> {
-        if (pendingOperation.canInterrupt) {
-          val lock = lockManager.lockFromCondition(pendingOperation.condition)
-          if (lockManager.objectWaitUnblockedWithoutNotify(
-              pendingOperation.condition, lock, context, false)) {
-            waitingObject = lock
-          }
-        }
-      }
-      is CountDownLatchAwaitBlocking -> {
-        latchManager.getContext(pendingOperation.latch).unblockThread(t.id, false, true)
-        waitingObject = pendingOperation.latch
-      }
-      is ParkBlocked -> {
-        context.pendingOperation = ThreadResumeOperation(true)
-        context.state = ThreadState.Enabled
-      }
-      is LockBlocking -> {
-        pendingOperation.interruptible.interrupt(t.id, true)
-      }
-    }
-
-    if (waitingObject != null) {
-      syncManager.createWait(waitingObject, 1)
-      registeredThreads[Thread.currentThread().id]!!.pendingOperation =
-          InterruptPendingOperation(waitingObject)
     }
   }
 
@@ -520,112 +478,37 @@ class RunContext(val config: Configuration) {
   }
 
   fun objectWaitDone(o: Any) {
-    objectWaitDoneImpl(o, o, true)
+    objectWaitDoneImpl(o, true)
   }
 
   fun conditionAwaitDone(o: Condition, canInterrupt: Boolean): Boolean {
-    return objectWaitDoneImpl(o, lockManager.lockFromCondition(o), canInterrupt)
+    return objectWaitDoneImpl(o, canInterrupt)
   }
 
-  /** Unblock the operation because of timeout or deadlock. */
-  fun unblockThread(context: ThreadContext, becauseOfTimeout: Boolean) {
-    val pendingOperation = context.pendingOperation
-    if (context.maybeLiveLock() && becauseOfTimeout) {
-      return
-    }
-    verifyOrReport(pendingOperation is TimedBlockingOperation && pendingOperation.timed)
-    when (pendingOperation) {
-      is ObjectWaitBlock -> {
-        lockManager.objectWaitUnblockedWithoutNotify(
-            pendingOperation.o, pendingOperation.o, context, becauseOfTimeout)
-      }
-      is ConditionAwaitBlocked -> {
-        lockManager.objectWaitUnblockedWithoutNotify(
-            pendingOperation.condition,
-            lockManager.lockFromCondition(pendingOperation.condition),
-            context,
-            becauseOfTimeout)
-      }
-      is ParkBlocked -> {
-        context.pendingOperation = ThreadResumeOperation(becauseOfTimeout)
-        context.state = ThreadState.Enabled
-      }
-      is CountDownLatchAwaitBlocking -> {
-        latchManager
-            .getContext(pendingOperation.latch)
-            .unblockThread(context.thread.id, becauseOfTimeout, false)
-      }
-      is LockBlocking -> {
-        pendingOperation.interruptible.interrupt(context.thread.id, !becauseOfTimeout)
-      }
-    }
-  }
-
-  fun objectNotifyImpl(waitingObject: Any, lockObject: Any) {
-    val id = System.identityHashCode(waitingObject)
-    lockManager.waitingThreads[id]?.let {
-      if (it.size > 0) {
-        val index = config.randomnessProvider.nextInt() % it.size
-        val t = it.removeAt(index)
-        lockManager.threadWaitsFor.remove(t)
-        val context = registeredThreads[t]!!
-        lockManager.addWakingThread(lockObject, context)
-        if (waitingObject == lockObject) {
-          context.pendingOperation = ObjectWakeBlocked(waitingObject, true)
-        } else {
-          context.pendingOperation =
-              ConditionWakeBlocked(
-                  waitingObject as Condition,
-                  (context.pendingOperation as ConditionAwaitBlocked).canInterrupt,
-                  true)
-        }
-        it.remove(t)
-        if (it.size == 0) {
-          lockManager.waitingThreads.remove(id)
-        }
-      }
-    }
+  fun objectNotifyImpl(waitingObject: Any) {
+    val waitingContext = signalManager.getContext(waitingObject)
+    waitingContext.signal(config.randomnessProvider, false)
   }
 
   fun objectNotify(o: Any) {
-    objectNotifyImpl(o, o)
+    objectNotifyImpl(o)
   }
 
   fun conditionSignal(o: Condition) {
-    objectNotifyImpl(o, lockManager.lockFromCondition(o))
+    objectNotifyImpl(o)
   }
 
-  fun objectNotifyAllImpl(waitingObject: Any, lockObject: Any) {
-    val id = System.identityHashCode(waitingObject)
-    lockManager.waitingThreads[id]?.let {
-      if (it.size > 0) {
-        for (t in it) {
-          val context = registeredThreads[t]!!
-          lockManager.threadWaitsFor.remove(t)
-          // We cannot enable the thread immediately because
-          // the thread is still waiting for the monitor lock.
-          if (waitingObject == lockObject) {
-            context.pendingOperation = ObjectWakeBlocked(waitingObject, true)
-          } else {
-            context.pendingOperation =
-                ConditionWakeBlocked(
-                    waitingObject as Condition,
-                    (context.pendingOperation as ConditionAwaitBlocked).canInterrupt,
-                    true)
-          }
-          lockManager.addWakingThread(lockObject, context)
-        }
-        lockManager.waitingThreads.remove(id)
-      }
-    }
+  fun objectNotifyAllImpl(waitingObject: Any) {
+    val waitingContext = signalManager.getContext(waitingObject)
+    waitingContext.signal(config.randomnessProvider, true)
   }
 
   fun objectNotifyAll(o: Any) {
-    objectNotifyAllImpl(o, o)
+    objectNotifyAllImpl(o)
   }
 
   fun conditionSignalAll(o: Condition) {
-    objectNotifyAllImpl(o, lockManager.lockFromCondition(o))
+    objectNotifyAllImpl(o)
   }
 
   fun lockTryLock(lock: Any, canInterrupt: Boolean, timed: Boolean) {
@@ -640,8 +523,8 @@ class RunContext(val config: Configuration) {
       timed: Boolean
   ) {
     val t = Thread.currentThread().id
-    val objId = System.identityHashCode(lock)
     val context = registeredThreads[t]!!
+    val lockContext = lockManager.getContext(lock)
     context.pendingOperation = LockLockOperation(lock)
     context.state = ThreadState.Enabled
     scheduleNextOperation(true)
@@ -669,9 +552,9 @@ class RunContext(val config: Configuration) {
     // synchronized(lock) {
     //   lock.unlock();
     // }
-    while (!lockManager.lock(lock, context, blockingWait, false, canInterrupt) && blockingWait) {
+    while (!lockContext.lock(context, blockingWait, false, canInterrupt) && blockingWait) {
       context.state = ThreadState.Paused
-      context.pendingOperation = LockBlocking(lockManager.getLockContext(lock), timed)
+      context.pendingOperation = LockBlocking(timed, lockContext)
       // We want to block current thread because we do
       // not want to rely on ReentrantLock. This allows
       // us to pick which Thread to run next if multiple
@@ -697,19 +580,24 @@ class RunContext(val config: Configuration) {
   }
 
   fun reentrantReadWriteLockInit(readLock: ReadLock, writeLock: WriteLock) {
-    lockManager.reentrantReadWriteLockInit(readLock, writeLock)
+    val writeLockContext = WriteLockContext()
+    val readLockContext = ReadLockContext()
+    readLockContext.writeLockContext = writeLockContext
+    writeLockContext.readLockContext = readLockContext
+    lockManager.addContext(readLock, readLockContext)
+    lockManager.addContext(writeLock, writeLockContext)
   }
 
   fun unlockImpl(
-      lock: Any,
+      lockContext: LockContext,
       tid: Long,
       sendNotifyAll: Boolean,
       unlockBecauseOfWait: Boolean,
       isMonitorLock: Boolean
   ) {
     var waitingThreads =
-        if (lockManager.unlock(lock, tid, unlockBecauseOfWait, bugFound != null)) {
-          lockManager.getNumThreadsBlockBy(lock, isMonitorLock)
+        if (lockContext.unlock(tid, unlockBecauseOfWait, bugFound != null)) {
+          lockContext.getNumThreadsWaitingForLockDueToSignal()
         } else {
           0
         }
@@ -722,40 +610,29 @@ class RunContext(val config: Configuration) {
     verifyOrReport(waitingThreads >= 0)
     if (waitingThreads > 0) {
       if (sendNotifyAll) {
-        if (isMonitorLock) {
-          synchronized(lock) {
-            // Make some noise to wake up all waiting threads.
-            // This also ensure that the previous `notify` `notifyAll`
-            // are treated as no-ops.
-            (lock as Object).notifyAll()
-          }
-        } else {
-          val reentrantLock = lock as ReentrantLock
-          reentrantLock.lock()
-          for (condition in lockManager.conditionFromLock(reentrantLock)) {
-            condition.signalAll()
-          }
-          reentrantLock.unlock()
-        }
+        lockContext.signalContexts.forEach { it.sendSignalToObject() }
       }
-      syncManager.createWait(lock, waitingThreads)
+      syncManager.createWait(lockContext, waitingThreads)
     }
   }
 
   fun lockUnlock(lock: Any) {
-    unlockImpl(lock, Thread.currentThread().id, true, false, false)
+    unlockImpl(lockManager.getContext(lock), Thread.currentThread().id, true, false, false)
   }
 
   fun monitorExit(lock: Any) {
-    unlockImpl(lock, Thread.currentThread().id, true, false, true)
+    unlockImpl(lockManager.getContext(lock), Thread.currentThread().id, true, false, true)
   }
 
   fun lockUnlockDone(lock: Any) {
-    syncManager.wait(lock)
+    syncManager.wait(lockManager.getContext(lock))
   }
 
   fun lockNewCondition(condition: Condition, lock: Lock) {
-    lockManager.registerNewCondition(condition, lock)
+    val lockContext = lockManager.getContext(lock)
+    val conditionContext = ConditionSignalContext(lockContext, lock, condition)
+    lockContext.signalContexts.add(conditionContext)
+    signalManager.addContext(condition, conditionContext)
   }
 
   fun stampedLockLock(
@@ -776,11 +653,15 @@ class RunContext(val config: Configuration) {
 
     while (!lockFun(context, shouldBlock, canInterrupt) && shouldBlock) {
       context.state = ThreadState.Paused
-      context.pendingOperation = LockBlocking(stampedLockContext, timed)
+      context.pendingOperation = LockBlocking(timed, stampedLockContext)
 
       scheduleNextOperation(true)
       if (canInterrupt) {
         context.checkInterrupt()
+      }
+      val pendingOperation = context.pendingOperation
+      if (!(pendingOperation as ThreadResumeOperation).noTimeout && timed) {
+        break
       }
     }
   }
@@ -835,7 +716,7 @@ class RunContext(val config: Configuration) {
 
     while (!semaphoreManager.getContext(sem).acquire(permits, shouldBlock, canInterrupt, context) &&
         shouldBlock) {
-      context.pendingOperation = LockBlocking(semaphoreManager.getContext(sem), timed)
+      context.pendingOperation = LockBlocking(timed, semaphoreManager.getContext(sem))
       context.state = ThreadState.Paused
 
       scheduleNextOperation(true)
@@ -907,9 +788,14 @@ class RunContext(val config: Configuration) {
     val context = registeredThreads[t]!!
     val latchContext = latchManager.getContext(latch)
     if (latchContext.await(true, context)) {
-      context.pendingOperation = CountDownLatchAwaitBlocking(latch, timed)
+      context.pendingOperation = CountDownLatchAwaitBlocking(timed, latchContext)
       context.state = ThreadState.Paused
-      checkDeadlock { latchContext.unblockThread(t, false, false) }
+      checkDeadlock {
+        // We should not use [InterruptionType.FORCE] here because
+        // The thread is not blocked by the latch yet.
+        latchContext.unblockThread(t, InterruptionType.RESOURCE_AVAILABLE)
+        context.state = ThreadState.Running
+      }
       executor.submit {
         if (timed) {
           // this thread is blocked by Sync
@@ -931,11 +817,11 @@ class RunContext(val config: Configuration) {
   }
 
   fun lockHasQueuedThreads(lock: Lock): Boolean {
-    return lockManager.hasQueuedThreads(lock)
+    return lockManager.getContext(lock).hasQueuedThreads()
   }
 
   fun lockHasQueuedThread(lock: Lock, thread: Thread): Boolean {
-    return lockManager.hasQueuedThread(lock, thread)
+    return lockManager.getContext(lock).hasQueuedThread(thread.id)
   }
 
   fun latchAwaitDone(latch: CountDownLatch): Boolean {
@@ -967,7 +853,10 @@ class RunContext(val config: Configuration) {
     } catch (e: DeadlockException) {
       for (thread in registeredThreads.values) {
         if (thread.state == ThreadState.Paused) {
-          unblockThread(thread, false)
+          val pendingOperation = thread.pendingOperation
+          if (pendingOperation is Interruptible) {
+            pendingOperation.unblockThread(thread.thread.id, InterruptionType.FORCE)
+          }
         }
       }
       scheduleNextOperation(shouldBlockCurrentThread)
@@ -1000,7 +889,7 @@ class RunContext(val config: Configuration) {
     registeredThreads.values.forEach {
       val op = it.pendingOperation
       if (op is TimedBlockingOperation && op.timed) {
-        unblockThread(it, true)
+        op.unblockThread(it.thread.id, InterruptionType.TIMEOUT)
       }
     }
   }
@@ -1086,15 +975,12 @@ class RunContext(val config: Configuration) {
     when (pendingOperation) {
       is ConditionWakeBlocked -> {
         nextThread.pendingOperation = ThreadResumeOperation(pendingOperation.noTimeout)
-        val lock = lockManager.lockFromCondition(pendingOperation.condition)
-        lock.lock()
-        pendingOperation.condition.signalAll()
-        lock.unlock()
+        pendingOperation.conditionContext.sendSignalToObject()
         return
       }
       is ObjectWakeBlocked -> {
         nextThread.pendingOperation = ThreadResumeOperation(pendingOperation.noTimeout)
-        synchronized(pendingOperation.o) { (pendingOperation.o as Object).notifyAll() }
+        pendingOperation.objectContext.sendSignalToObject()
         return
       }
     }

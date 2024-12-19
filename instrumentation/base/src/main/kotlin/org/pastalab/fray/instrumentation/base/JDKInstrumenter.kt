@@ -42,6 +42,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = ForkJoinPoolInstrumenter(cv)
     //    cv = ObjectHashCodeInstrumenter(cv, true)
     cv = SemaphoreInstrumenter(cv)
+    cv = StampedLockInstrumenter(cv)
     cv = CountDownLatchInstrumenter(cv)
     cv = MethodHandleNativesInstrumenter(cv)
     cv = TimedWaitInstrumenter(cv)

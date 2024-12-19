@@ -244,7 +244,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
 
   override fun onMonitorExitDone(o: Any) {
     if (checkEntered()) return
-    context.monitorEnterDone(o)
+    context.lockUnlockDone(o)
     entered.set(false)
   }
 
@@ -928,65 +928,70 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     entered.set(false)
   }
 
-  override fun onStampedLockTryUnlockWriteDone(lock: StampedLock, success: Boolean) {
+  override fun onStampedLockTryUnlockWriteDone(success: Boolean, lock: StampedLock): Boolean {
     onSkipMethodDone("StampedLock")
     if (checkEntered()) {
-      return
+      return success
     }
     if (success) {
       context.stampedLockUnlock(lock, false)
     }
     entered.set(false)
+    return success
   }
 
-  override fun onStampedLockTryUnlockReadDone(lock: StampedLock, success: Boolean) {
+  override fun onStampedLockTryUnlockReadDone(success: Boolean, lock: StampedLock): Boolean {
     onSkipMethodDone("StampedLock")
     if (checkEntered()) {
-      return
+      return success
     }
     if (success) {
       context.stampedLockUnlock(lock, true)
     }
     entered.set(false)
+    return success
   }
 
   override fun onStampedLockTryConvertToWriteLockDone(
+      newStamp: Long,
       lock: StampedLock,
       stamp: Long,
-      newStamp: Long
-  ) {
+  ): Long {
     onSkipMethodDone("StampedLock")
     if (checkEntered()) {
-      return
+      return newStamp
     }
     context.stampedLockConvertToWriteLock(lock, stamp, newStamp)
     entered.set(false)
+    return newStamp
   }
 
   override fun onStampedLockTryConvertToReadLockDone(
+      newStamp: Long,
       lock: StampedLock,
       stamp: Long,
-      newStamp: Long
-  ) {
+  ): Long {
     onSkipMethodDone("StampedLock")
     if (checkEntered()) {
-      return
+      return newStamp
     }
     context.stampedLockConvertToReadLock(lock, stamp, newStamp)
     entered.set(false)
+    return newStamp
   }
 
   override fun onStampedLockTryConvertToOptimisticReadLockDone(
+      newStamp: Long,
       lock: StampedLock,
       stamp: Long,
-      newStamp: Long
-  ) {
+  ): Long {
     onSkipMethodDone("StampedLock")
     if (checkEntered()) {
-      return
+      return newStamp
     }
     context.stampedLockConvertToOptimisticReadLock(lock, stamp, newStamp)
     entered.set(false)
+    return newStamp
   }
 
   override fun onStampedLockReadLockTryLock(lock: StampedLock) {
