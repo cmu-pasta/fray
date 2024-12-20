@@ -17,7 +17,6 @@ import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.command.ExecutionInfo
 import org.pastalab.fray.core.command.LambdaExecutor
 import org.pastalab.fray.core.randomness.ControlledRandom
-import org.pastalab.fray.core.scheduler.POSScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
 import org.pastalab.fray.junit.annotations.ConcurrencyTest
 
@@ -52,7 +51,8 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
           val scheduler = Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
           Pair(scheduler, randomnessProvider)
         } else {
-          Pair(POSScheduler(), ControlledRandom())
+          val scheduler = concurrencyTest.scheduler.java.getConstructor().newInstance()
+          Pair(scheduler, ControlledRandom())
         }
     val config =
         Configuration(
@@ -84,7 +84,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
   }
 
   private fun totalRepetition(concurrencyTest: ConcurrencyTest, method: Method): Int {
-    val repetition = concurrencyTest.value
+    val repetition = concurrencyTest.iterations
     Preconditions.condition(repetition > 0) {
       "Configuration error: @ConcurrencyTest on method [$method] must be declared with a positive 'value'."
     }
