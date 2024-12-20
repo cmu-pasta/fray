@@ -51,6 +51,9 @@ class FrayExtension(
   override fun testFailed(context: ExtensionContext, cause: Throwable) {
     frayJupiterContext.bugFound = true
     frayContext.reportError(cause)
+    println(
+        "Bug found in iteration test ${context.displayName}, you may find detailed report and replay files " +
+            "in ${frayContext.config.report}")
   }
 
   override fun evaluateExecutionCondition(context: ExtensionContext?): ConditionEvaluationResult {

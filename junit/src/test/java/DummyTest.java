@@ -1,6 +1,5 @@
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.pastalab.fray.junit.FrayExtension;
 import org.pastalab.fray.junit.FrayTestExtension;
 import org.pastalab.fray.junit.annotations.ConcurrencyTest;
 
@@ -16,13 +15,13 @@ public class DummyTest {
         System.out.println("1");
     }
 
-    @ConcurrencyTest(100)
+    @ConcurrencyTest(iterations = 100)
     public void test2() {
         System.out.println("2");
     }
 
     @ConcurrencyTest(
-            value = 100
+            iterations = 100
     )
     public void test3() {
         assert(false);
