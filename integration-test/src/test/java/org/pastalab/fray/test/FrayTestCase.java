@@ -12,6 +12,9 @@ import org.pastalab.fray.core.command.MethodExecutor;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.test.fail.cdl.CountDownLatchDeadlockUnblockMultiThread;
+import org.pastalab.fray.test.fail.rwlock.ReentrantReadWriteLockDeadlock;
+import org.pastalab.fray.test.success.rwlock.ReentrantReadWriteLockDowngradingNoDeadlock;
+import org.pastalab.fray.test.success.rwlock.ReentrantReadWriteLockNoDeadlock;
 import org.pastalab.fray.test.success.stampedlock.StampedLockTryLockNoDeadlock;
 
 import java.util.*;
@@ -65,7 +68,7 @@ public class FrayTestCase {
                     new ExecutionInfo(
                             new LambdaExecutor(() -> {
                                 try {
-                                    StampedLockTryLockNoDeadlock.main(new String[]{});
+                                    ReentrantReadWriteLockDowngradingNoDeadlock.main(new String[]{});
                                 } catch (Exception e) {
                                 }
                                 return null;
@@ -76,7 +79,7 @@ public class FrayTestCase {
                             -1
                     ),
                     "/tmp/report2",
-                    100000,
+                    1000,
                     60,
                     new RandomScheduler(),
                     new ControlledRandom(),
