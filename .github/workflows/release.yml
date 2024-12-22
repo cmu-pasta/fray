@@ -1,24 +1,85 @@
 name: Publish package to GitHub Packages
 on:
-  release:
-    types: [created]
+  schedule:
+    - cron: '0 10 * * *'
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'staging/snapshot, default is snapshot'
+        required: true
+        default: 'snapshot'
+
+
 jobs:
-  publish:
+  check_date:
     runs-on: ubuntu-latest
+    name: Check latest commit
+    outputs:
+      should_run: ${{ steps.should_run.outputs.should_run }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: print latest_commit
+        run: echo ${{ github.sha }}
+
+      - id: should_run
+        continue-on-error: true
+        name: check latest commit is less than a day
+        if: ${{ github.event_name == 'schedule' }}
+        run: test -z $(git rev-list  --after="24 hours"  ${{ github.sha }}) && echo "::set-output name=should_run::false"
+  publish:
+    needs: check_date
+    if: github.repository == 'cmu-pasta/fray' && needs.check_date.outputs.should_run != 'false'
+    runs-on: ${{ matrix.operating-system }}
     permissions:
       contents: read
       packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        operating-system: [ macos-latest, ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
+          distribution: 'temurin'
           java-version: '21'
-          distribution: 'corretto'
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@dbbdc275be76ac10734476cc723d82dfe7ec6eda # v3.4.2
-
-      - name: Publish package
-        run: ./gradlew publish
+          cache: 'gradle'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('*/build.gradle.kts', 'engines/**/build.gradle.kts', 'extensions/**/build.gradle.kts') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - name: Read and update version
+        run: |
+          BASE_VERSION=$(grep "^version=" gradle.properties | cut -d'=' -f2)
+          if [[ "${{ github.event.inputs.mode }}" == "staging" ]]; then
+            BASE_VERSION=${BASE_VERSION/-SNAPSHOT/}
+          fi
+          echo "VERSION=${BASE_VERSION}" >> $GITHUB_ENV
+          echo "Version: $BASE_VERSION"
+      - name: build the repository
+        run: ./gradlew build
+      - name: publish to github package repository (macOS)
+        if: runner.os == 'macOS'
+        run: ./gradlew :jvmti:publish -Pversion=$VERSION
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: publish to github package repository (Linux)
+        if: runner.os == 'Linux'
+        run: ./gradlew publish -Pversion=$VERSION
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/create-release@v1
+        if: runner.os == 'Linux'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VERSION }}
+          release_name: "Release ${{ env.VERSION }}"
+          body: |
+            This release includes the following:
+            - Version: `${{ env.VERSION }}`
+            - Published packages are available in [GitHub Packages](https://github.com/orgs/cmu-pasta/packages?repo_name=fray).
+          draft: false
+          prerelease: true
