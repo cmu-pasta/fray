@@ -63,19 +63,3 @@ jobs:
         run: ./gradlew publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  release:
-    needs: publish
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.VERSION }}
-          release_name: "Release ${{ env.VERSION }}"
-          body: |
-            This release includes the following:
-            - Version: `${{ env.VERSION }}`
-            - Published packages are available in [GitHub Packages](https://github.com/orgs/cmu-pasta/packages?repo_name=fray).
-          draft: false
-          prerelease: true
