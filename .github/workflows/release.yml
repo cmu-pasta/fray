@@ -3,6 +3,12 @@ on:
   schedule:
     - cron: '0 10 * * *'
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'staging/snapshot, default is snapshot'
+        required: true
+        default: 'snapshot'
+
 
 jobs:
   check_date:
@@ -47,19 +53,33 @@ jobs:
       - name: Read and update version
         run: |
           BASE_VERSION=$(grep "^version=" gradle.properties | cut -d'=' -f2)
-          TIMESTAMP=$(date +"%Y%m%d-%H%M")
-          NIGHTLY_VERSION="${BASE_VERSION}-nightly-${TIMESTAMP}"
-          echo "VERSION=${NIGHTLY_VERSION}" >> $GITHUB_ENV
-          echo "Nightly version: $NIGHTLY_VERSION"
+          if [[ "${{ github.event.inputs.mode }}" == "staging" ]]; then
+            BASE_VERSION=${BASE_VERSION/-SNAPSHOT/}
+          fi
+          echo "VERSION=${BASE_VERSION}" >> $GITHUB_ENV
+          echo "Version: $BASE_VERSION"
       - name: build the repository
         run: ./gradlew build
       - name: publish to github package repository (macOS)
         if: runner.os == 'macOS'
-        run: ./gradlew :jvmti:publish
+        run: ./gradlew :jvmti:publish -Pversion=$VERSION
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: publish to github package repository (Linux)
         if: runner.os == 'Linux'
-        run: ./gradlew publish
+        run: ./gradlew publish -Pversion=$VERSION
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/create-release@v1
+        if: runner.os == 'Linux'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VERSION }}
+          release_name: "Release ${{ env.VERSION }}"
+          body: |
+            This release includes the following:
+            - Version: `${{ env.VERSION }}`
+            - Published packages are available in [GitHub Packages](https://github.com/orgs/cmu-pasta/packages?repo_name=fray).
+          draft: false
+          prerelease: true
