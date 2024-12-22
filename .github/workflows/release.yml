@@ -24,6 +24,9 @@ jobs:
     needs: check_date
     if: github.repository == 'cmu-pasta/fray' && needs.check_date.outputs.should_run != 'false'
     runs-on: ${{ matrix.operating-system }}
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -52,12 +55,12 @@ jobs:
         run: ./gradlew build
       - name: publish to github package repository (macOS)
         if: runner.os == 'macOS'
-        run: ./gradlew :jvmti:publish -Pversion=$VERSION
+        run: ./gradlew :jvmti:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: publish to github package repository (Linux)
         if: runner.os == 'Linux'
-        run: ./gradlew publish -Pversion=$VERSION
+        run: ./gradlew publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   release:
