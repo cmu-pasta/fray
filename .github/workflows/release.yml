@@ -50,12 +50,12 @@ jobs:
           echo "Nightly version: $NIGHTLY_VERSION"
       - name: build the repository
         run: ./gradlew build
-      - name: publish to github package repository
+      - name: publish to github package repository (macOS)
         if: runner.os == 'macOS'
         run: ./gradlew :jvmti:publish -Pversion=$VERSION
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: publish to github package repository
+      - name: publish to github package repository (Linux)
         if: runner.os == 'Linux'
         run: ./gradlew publish -Pversion=$VERSION
         env:
