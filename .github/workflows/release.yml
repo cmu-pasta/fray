@@ -57,7 +57,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: publish to github package repository
         if: runner.os == 'Linux'
-        run: ./gradlew -Pversion=$VERSION
+        run: ./gradlew publish -Pversion=$VERSION
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     release:
