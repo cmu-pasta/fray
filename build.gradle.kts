@@ -1,20 +1,10 @@
-import groovy.namespace.QName
-import groovy.util.Node
-import groovy.util.NodeList
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
-import java.util.regex.Pattern
 
 plugins {
   kotlin("jvm") version "2.0.0"
   id("maven-publish")
   id("com.ncorti.ktfmt.gradle") version "0.17.0"
   id("org.jetbrains.dokka") version "1.9.20"
-}
-
-
-allprojects {
-  group = "org.pastalab.fray"
-  version = "0.1.6-SNAPSHOT"
 }
 
 repositories {
