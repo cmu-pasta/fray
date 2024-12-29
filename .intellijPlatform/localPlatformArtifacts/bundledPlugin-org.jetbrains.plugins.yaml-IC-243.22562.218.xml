@@ -1,0 +1,13 @@
+<ivy-module version="2.0">
+  <info organisation="bundledPlugin" module="org.jetbrains.plugins.yaml" revision="IC-243.22562.218"/>
+  <configurations>
+    <conf name="default" visibility="public"/>
+  </configurations>
+  <publications>
+    <artifact name="yaml-editing" ext="jar" conf="default" url="plugins/yaml/lib"/>
+    <artifact name="yaml" ext="jar" conf="default" url="plugins/yaml/lib"/>
+  </publications>
+  <dependencies>
+    <dependency org="bundledPlugin" name="com.intellij.modules.json" rev="IC-243.22562.218"/>
+  </dependencies>
+</ivy-module>

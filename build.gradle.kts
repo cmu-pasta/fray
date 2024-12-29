@@ -15,7 +15,14 @@ kotlin {
   jvmToolchain(21)
 }
 
-configure(allprojects - project(":jvmti") - project(":instrumentation")) {
+tasks {
+  wrapper {
+    gradleVersion = "8.10.2"
+  }
+
+}
+
+configure(allprojects - project(":jvmti") - project(":instrumentation") - project(":plugins").subprojects) {
   plugins.apply("com.ncorti.ktfmt.gradle")
   afterEvaluate {
     tasks.register<Jar>("dokkaJavadocJar") {
@@ -26,7 +33,7 @@ configure(allprojects - project(":jvmti") - project(":instrumentation")) {
   }
 }
 
-configure(allprojects - rootProject - project(":instrumentation")) {
+configure(allprojects - rootProject - project(":instrumentation") - project(":plugins").subprojects) {
   plugins.apply("maven-publish")
   plugins.apply("org.jetbrains.dokka")
 

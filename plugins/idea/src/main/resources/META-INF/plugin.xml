@@ -1,0 +1,22 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>org.pastalab.fray.idea</id>
+    <name>fray-idea</name>
+    <vendor>aoli-al</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+
+    <projectListeners>
+        <listener class="org.pastalab.fray.idea.FrayDebuggerManagerListener"
+                  topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
+    </projectListeners>
+
+
+    <extensions defaultExtensionNs="com.intellij">
+        <java.programPatcher implementation="org.pastalab.fray.idea.FrayProgramPatcher"/>
+        <executor implementation="org.pastalab.fray.idea.FrayDebugExecutor"/>
+        <programRunner implementation="org.pastalab.fray.idea.FrayDebuggerRunner"/>
+        <programRunner implementation="org.pastalab.fray.idea.FrayJunitDebuggerRunner"/>
+    </extensions>
+</idea-plugin>
