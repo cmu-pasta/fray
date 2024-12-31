@@ -22,12 +22,9 @@ class RunConfigurationExtension: RunConfigurationExtension() {
     if (executor.id == FrayDebugExecutor.EXECUTOR_ID) {
       when (configuration) {
         is FrayGradleRunConfiguration -> {
-          configuration.settings.env.getOrDefault("GRADLE_OPTS", "").let {
-            configuration.settings.env["GRADLE_OPTS"] = "$it -Dfray.debugger=true"
+          if ("-Pfray.debugger=true" !in configuration.settings.taskNames) {
+            configuration.settings.taskNames.add("-Pfray.debugger=true")
           }
-//          params.env.getOrDefault("GRADLE_OPTS", "").let {
-//            params.env["GRADLE_OPTS"] = "$it -Dfray.debugger=true"
-//          }
         }
         else -> {
           params.vmParametersList.add("-Dfray.debugger=true")

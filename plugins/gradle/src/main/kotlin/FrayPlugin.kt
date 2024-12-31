@@ -50,6 +50,9 @@ class FrayPlugin : Plugin<Project> {
         it.jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
         it.jvmArgs(
             "-Dfray.workDir=${target.layout.buildDirectory.get().asFile}/${Commons.TEST_WORK_DIR}")
+        if (target.hasProperty("fray.debugger")) {
+          it.jvmArgs("-Dfray.debugger=true")
+        }
         it.dependsOn(jlink)
       }
     }

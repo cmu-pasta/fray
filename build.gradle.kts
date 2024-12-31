@@ -19,7 +19,6 @@ tasks {
   wrapper {
     gradleVersion = "8.10.2"
   }
-
 }
 
 configure(allprojects - project(":jvmti") - project(":instrumentation") - project(":plugins").subprojects) {
