@@ -43,3 +43,4 @@ scratch
 fray-report/
 gradle.properties
 .kotlin
+.intellijPlatform

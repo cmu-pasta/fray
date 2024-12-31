@@ -1,9 +1,9 @@
-package org.pastalab.fray.idea
+package org.pastalab.fray.idea.execute
 
 import com.intellij.execution.Executor
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.util.IconLoader
-import com.intellij.openapi.wm.ToolWindowId
+import org.pastalab.fray.idea.FrayBundle
 import javax.swing.Icon
 
 class FrayDebugExecutor: Executor() {

@@ -1,7 +1,5 @@
-package org.pastalab.fray.idea
+package org.pastalab.fray.idea.debugger
 
-import com.intellij.openapi.project.Project
-import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebugSessionListener
 

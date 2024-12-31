@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea
+package org.pastalab.fray.idea.debugger
 
 import org.pastalab.fray.rmi.RemoteScheduler
 
