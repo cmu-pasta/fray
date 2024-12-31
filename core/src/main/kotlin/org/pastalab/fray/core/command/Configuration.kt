@@ -253,6 +253,10 @@ data class Configuration(
     if (System.getProperty("fray.recordSchedule", "false").toBoolean()) {
       scheduleObservers.add(ScheduleRecorder())
     }
+
+    if (System.getProperty("fray.debugger", "false").toBoolean()) {
+      scheduler = FrayIdeaPluginScheduler()
+    }
   }
 
   fun elapsedTime(): Long {

@@ -11,6 +11,7 @@ repositories {
 
 dependencies {
   compileOnly(project(":runtime"))
+  implementation(project(":rmi"))
   compileOnly(project(":instrumentation:base"))
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
   implementation("com.github.ajalt.clikt:clikt:4.2.2")
@@ -57,11 +58,6 @@ tasks.withType<JavaExec> {
   jvmArgs("--add-opens", "java.base/java.io=ALL-UNNAMED")
   jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
   jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
-//  jvmArgs("-Dfray.recordSchedule=true")
-  doFirst {
-    // Printing the full command
-    println("Executing command: ${executable} ${jvmArgs!!.joinToString(" ")} -cp ${classpath.asPath} ${mainClass.get()} ${args!!.joinToString(" ")}")
-  }
 }
 
 tasks.register<JavaExec>("runFray") {

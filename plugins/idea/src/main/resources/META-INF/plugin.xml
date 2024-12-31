@@ -1,0 +1,27 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>org.pastalab.fray.idea</id>
+    <name>fray-idea</name>
+    <vendor>aoli-al</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+    <depends>JUnit</depends>
+    <depends>org.jetbrains.plugins.gradle</depends>
+
+    <projectListeners>
+        <listener class="org.pastalab.fray.idea.debugger.FrayDebuggerManagerListener"
+                  topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
+    </projectListeners>
+
+
+    <extensions defaultExtensionNs="com.intellij">
+        <runConfigurationExtension implementation="org.pastalab.fray.idea.execute.RunConfigurationExtension"/>
+        <programRunner implementation="org.pastalab.fray.idea.execute.FrayGenericDebuggerRunner"/>
+        <programRunner implementation="org.pastalab.fray.idea.execute.FrayGradleDebugRunner"/>
+        <executor implementation="org.pastalab.fray.idea.execute.FrayDebugExecutor"/>
+        <configurationType implementation="org.pastalab.fray.idea.execute.FrayGradleRunConfigurationType" />
+        <runConfigurationProducer implementation="org.pastalab.fray.idea.execute.FrayGradleRunConfigurationProducer"/>
+    </extensions>
+
+</idea-plugin>

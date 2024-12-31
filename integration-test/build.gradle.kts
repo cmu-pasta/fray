@@ -3,7 +3,6 @@ plugins {
 }
 
 group = "org.pastalab.fray.test"
-version = "0.1.4-SNAPSHOT"
 
 repositories {
     mavenCentral()

@@ -10,6 +10,7 @@ import org.pastalab.fray.core.command.ExecutionInfo;
 import org.pastalab.fray.core.command.LambdaExecutor;
 import org.pastalab.fray.core.command.MethodExecutor;
 import org.pastalab.fray.core.randomness.ControlledRandom;
+import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.test.fail.cdl.CountDownLatchDeadlockUnblockMultiThread;
 import org.pastalab.fray.test.fail.rwlock.ReentrantReadWriteLockDeadlock;
@@ -79,7 +80,7 @@ public class FrayTestCase {
                             -1
                     ),
                     "/tmp/report2",
-                    1000,
+                    10000,
                     60,
                     new RandomScheduler(),
                     new ControlledRandom(),

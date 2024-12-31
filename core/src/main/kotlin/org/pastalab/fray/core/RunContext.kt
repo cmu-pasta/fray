@@ -215,6 +215,11 @@ class RunContext(val config: Configuration) {
   fun done() {
     verifyOrReport(syncManager.synchronizationPoints.isEmpty())
     lockManager.done()
+    signalManager.done()
+    stampedLockManager.done()
+    semaphoreManager.done()
+    latchManager.done()
+
     registeredThreads.clear()
     config.scheduleObservers.forEach { it.onExecutionDone() }
     hashCodeMapper.done(false)
@@ -390,10 +395,10 @@ class RunContext(val config: Configuration) {
     // Therefore, we need to call `reentrantLockUnlockDone`
     // manually.
     executor.submit {
+      syncManager.wait(signalContext.getSyncObject())
       while (registeredThreads[t]!!.thread.state == Thread.State.RUNNABLE) {
         Thread.yield()
       }
-      syncManager.wait(signalContext.getSyncObject())
       scheduleNextOperationAndCheckDeadlock(false)
     }
   }
