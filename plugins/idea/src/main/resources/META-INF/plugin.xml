@@ -9,10 +9,10 @@
     <depends>JUnit</depends>
     <depends>org.jetbrains.plugins.gradle</depends>
 
-<!--    <projectListeners>-->
-<!--        <listener class="org.pastalab.fray.idea.debugger.FrayDebuggerManagerListener"-->
-<!--                  topic="com.intellij.xdebugger.XDebuggerManagerListener"/>-->
-<!--    </projectListeners>-->
+    <projectListeners>
+        <listener class="org.pastalab.fray.idea.debugger.FrayDebuggerManagerListener"
+                  topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
+    </projectListeners>
 
 
     <extensions defaultExtensionNs="com.intellij">
@@ -23,8 +23,5 @@
         <configurationType implementation="org.pastalab.fray.idea.execute.FrayGradleRunConfigurationType" />
         <runConfigurationProducer implementation="org.pastalab.fray.idea.execute.FrayGradleRunConfigurationProducer"/>
     </extensions>
-<!--    <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">-->
-<!--        <taskManager implementation="org.pastalab.fray.idea.execute.FrayGradleDebuggerRunner" />-->
-<!--    </extensions>-->
 
 </idea-plugin>

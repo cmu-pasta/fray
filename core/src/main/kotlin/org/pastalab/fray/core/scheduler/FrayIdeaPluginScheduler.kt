@@ -3,9 +3,10 @@ package org.pastalab.fray.core.scheduler
 import java.rmi.registry.LocateRegistry
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.rmi.RemoteScheduler
+import java.rmi.registry.Registry
 
 class FrayIdeaPluginScheduler : Scheduler {
-  val registry = LocateRegistry.getRegistry()
+  val registry = LocateRegistry.getRegistry("localhost", Registry.REGISTRY_PORT)
 
   val remoteScheduler = registry.lookup("RemoteScheduler") as RemoteScheduler
 
