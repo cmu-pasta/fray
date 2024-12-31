@@ -41,6 +41,5 @@ bin/
 scratch
 ./bin/fray
 fray-report/
-gradle.properties
 .kotlin
 .intellijPlatform
