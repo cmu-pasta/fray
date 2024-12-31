@@ -6,13 +6,14 @@ import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.util.ui.UIUtil
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebugSessionListener
-import org.pastalab.fray.idea.ui.SchedulerPanel
-import org.pastalab.fray.rmi.RemoteScheduler
 import java.rmi.registry.LocateRegistry
 import java.rmi.registry.Registry
 import java.rmi.server.UnicastRemoteObject
+import org.pastalab.fray.idea.ui.SchedulerPanel
+import org.pastalab.fray.rmi.RemoteScheduler
 
-class FrayDebuggerManager(val debugSession: XDebugSession): XDebugSessionListener, ProcessListener {
+class FrayDebuggerManager(val debugSession: XDebugSession) :
+    XDebugSessionListener, ProcessListener {
   val schedulerPanel: SchedulerPanel = SchedulerPanel()
   val scheduler = FrayDebuggerScheduler(schedulerPanel)
 
@@ -24,16 +25,10 @@ class FrayDebuggerManager(val debugSession: XDebugSession): XDebugSessionListene
   override fun startNotified(event: ProcessEvent) {
     val container = SimpleToolWindowPanel(false, true)
     container.setContent(schedulerPanel)
-    val content = debugSession.ui.createContent(
-        "Fray Scheduler",
-        container,
-        "Fray Scheduler",
-        null,
-        null
-    )
+    val content =
+        debugSession.ui.createContent("Fray Scheduler", container, "Fray Scheduler", null, null)
     UIUtil.invokeLaterIfNeeded { debugSession.ui.addContent(content) }
   }
-
 
   override fun sessionPaused() {
     val sc = debugSession.suspendContext

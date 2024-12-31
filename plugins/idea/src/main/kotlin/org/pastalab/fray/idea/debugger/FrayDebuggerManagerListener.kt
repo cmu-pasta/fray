@@ -2,12 +2,8 @@ package org.pastalab.fray.idea.debugger
 
 import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebuggerManagerListener
-import org.pastalab.fray.rmi.RemoteScheduler
-import java.rmi.registry.LocateRegistry
-import java.rmi.registry.Registry
-import java.rmi.server.UnicastRemoteObject
 
-class FrayDebuggerManagerListener: XDebuggerManagerListener {
+class FrayDebuggerManagerListener : XDebuggerManagerListener {
   var debuggerManager: FrayDebuggerManager? = null
 
   override fun processStarted(debugProcess: XDebugProcess) {

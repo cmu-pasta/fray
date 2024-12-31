@@ -1,6 +1,11 @@
 package org.pastalab.fray.gradle.tasks
 
 import java.io.File
+import kotlin.io.path.Path
+import kotlin.io.path.createFile
+import kotlin.io.path.exists
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.provider.Property
@@ -8,11 +13,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.pastalab.fray.gradle.Commons
-import kotlin.io.path.Path
-import kotlin.io.path.createFile
-import kotlin.io.path.exists
-import kotlin.io.path.readText
-import kotlin.io.path.writeText
 
 abstract class PrepareWorkspaceTask : DefaultTask() {
 

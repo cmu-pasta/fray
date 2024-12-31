@@ -8,13 +8,13 @@ import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
 import org.pastalab.fray.idea.FrayConstants
 
-
-class FrayGradleRunConfigurationType: AbstractExternalSystemTaskConfigurationType(FrayConstants.FRAY_GRADLE_ID) {
+class FrayGradleRunConfigurationType :
+    AbstractExternalSystemTaskConfigurationType(FrayConstants.FRAY_GRADLE_ID) {
   override fun doCreateConfiguration(
-    externalSystemId: ProjectSystemId,
-    project: Project,
-    factory: ConfigurationFactory,
-    name: String
+      externalSystemId: ProjectSystemId,
+      project: Project,
+      factory: ConfigurationFactory,
+      name: String
   ): ExternalSystemRunConfiguration {
     return FrayGradleRunConfiguration(project, factory, name)
   }
@@ -23,8 +23,9 @@ class FrayGradleRunConfigurationType: AbstractExternalSystemTaskConfigurationTyp
     return FrayConstants.FRAY_GRADLE_ID.readableName
   }
 
-
   companion object {
-    fun getInstance() = ExternalSystemUtil.findConfigurationType(FrayConstants.FRAY_GRADLE_ID) as FrayGradleRunConfigurationType
+    fun getInstance() =
+        ExternalSystemUtil.findConfigurationType(FrayConstants.FRAY_GRADLE_ID)
+            as FrayGradleRunConfigurationType
   }
 }

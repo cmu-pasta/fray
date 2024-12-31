@@ -3,10 +3,10 @@ package org.pastalab.fray.idea.execute
 import com.intellij.execution.Executor
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.util.IconLoader
-import org.pastalab.fray.idea.FrayBundle
 import javax.swing.Icon
+import org.pastalab.fray.idea.FrayBundle
 
-class FrayDebugExecutor: Executor() {
+class FrayDebugExecutor : Executor() {
   override fun getToolWindowId(): String {
     return EXECUTOR_ID
   }
@@ -34,7 +34,6 @@ class FrayDebugExecutor: Executor() {
   override fun getStartActionText(): String {
     return FrayBundle.INSTANCE.getMessage("fray.debugger.startActionText")
   }
-
 
   override fun getId(): String {
     return EXECUTOR_ID

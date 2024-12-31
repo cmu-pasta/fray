@@ -7,8 +7,7 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 
-
-class SchedulerPanel: JPanel() {
+class SchedulerPanel : JPanel() {
   val placeholderLabel: JLabel
   private val comboBox: JComboBox<Long>
   private val scheduleButton: JButton

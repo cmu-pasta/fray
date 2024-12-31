@@ -21,22 +21,19 @@ tasks {
   }
 }
 
-configure(allprojects - project(":jvmti") - project(":instrumentation") - project(":plugins").subprojects) {
+allprojects {
   plugins.apply("com.ncorti.ktfmt.gradle")
+}
+
+configure(allprojects - rootProject - project(":instrumentation") - project(":plugins").subprojects) {
+  plugins.apply("maven-publish")
+  plugins.apply("org.jetbrains.dokka")
   afterEvaluate {
     tasks.register<Jar>("dokkaJavadocJar") {
       dependsOn(tasks.dokkaJavadoc)
       from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
       archiveClassifier.set("javadoc")
     }
-  }
-}
-
-configure(allprojects - rootProject - project(":instrumentation") - project(":plugins").subprojects) {
-  plugins.apply("maven-publish")
-  plugins.apply("org.jetbrains.dokka")
-
-  afterEvaluate {
     java {
       withSourcesJar()
     }
