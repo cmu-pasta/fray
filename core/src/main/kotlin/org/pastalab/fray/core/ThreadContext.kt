@@ -43,7 +43,13 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
   }
 
   fun toStackInfo(): ThreadInfo {
+    val stackTraces = when (pendingOperation) {
+      is ThreadStartOperation -> {
+        listOf(StackTraceElement("ThreadStartOperation", "ThreadStartOperation", "ThreadStartOperation", 0))
+      }
+      else -> thread.stackTrace.toList().drop(1).filter { !it.isFrayInternals }
+    }
     return ThreadInfo(
-        thread.name, index.toLong(), thread.stackTrace.toList().filter { !it.isFrayInternals })
+        thread.name, index.toLong(), stackTraces)
   }
 }
