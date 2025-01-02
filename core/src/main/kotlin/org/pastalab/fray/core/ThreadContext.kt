@@ -3,6 +3,8 @@ package org.pastalab.fray.core
 import org.pastalab.fray.core.concurrency.Sync
 import org.pastalab.fray.core.concurrency.operations.Operation
 import org.pastalab.fray.core.concurrency.operations.ThreadStartOperation
+import org.pastalab.fray.core.utils.isFrayInternals
+import org.pastalab.fray.rmi.ThreadInfo
 
 enum class ThreadState {
   Enabled,
@@ -38,5 +40,10 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
       Thread.interrupted()
       throw InterruptedException()
     }
+  }
+
+  fun toStackInfo(): ThreadInfo {
+    return ThreadInfo(
+        thread.name, index.toLong(), thread.stackTrace.toList().filter { !it.isFrayInternals })
   }
 }

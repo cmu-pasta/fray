@@ -14,8 +14,8 @@ import org.pastalab.fray.rmi.RemoteScheduler
 
 class FrayDebuggerManager(val debugSession: XDebugSession) :
     XDebugSessionListener, ProcessListener {
-  val schedulerPanel: SchedulerPanel = SchedulerPanel()
-  val scheduler = FrayDebuggerScheduler(schedulerPanel)
+  val schedulerPanel: SchedulerPanel = SchedulerPanel(debugSession.project)
+  val scheduler = FrayDebuggerScheduler(schedulerPanel, debugSession)
 
   init {
     val stub = UnicastRemoteObject.exportObject(scheduler, 15214) as RemoteScheduler
@@ -26,7 +26,9 @@ class FrayDebuggerManager(val debugSession: XDebugSession) :
     val container = SimpleToolWindowPanel(false, true)
     container.setContent(schedulerPanel)
     val content =
-        debugSession.ui.createContent("Fray Scheduler", container, "Fray Scheduler", null, null)
+        debugSession.ui.createContent(
+            SchedulerPanel.CONTENT_ID, container, "Fray Scheduler", null, null)
+    content.isCloseable = false
     UIUtil.invokeLaterIfNeeded { debugSession.ui.addContent(content) }
   }
 
