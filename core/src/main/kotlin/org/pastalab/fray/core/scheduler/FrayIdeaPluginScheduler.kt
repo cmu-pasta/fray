@@ -11,7 +11,7 @@ class FrayIdeaPluginScheduler : Scheduler {
   val remoteScheduler = registry.lookup("RemoteScheduler") as RemoteScheduler
 
   override fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext {
-    val index = remoteScheduler.scheduleNextOperation(threads.map { it.thread.threadId() })
+    val index = remoteScheduler.scheduleNextOperation(threads.map { it.toStackInfo() })
     return threads[index]
   }
 

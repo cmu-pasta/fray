@@ -31,3 +31,8 @@ object Utils {
     }
   }
 }
+
+val StackTraceElement.isFrayInternals
+  get() =
+      this.className.startsWith("org.pastalab.fray.core") ||
+          this.className.startsWith("org.pastalab.fray.runtime")
