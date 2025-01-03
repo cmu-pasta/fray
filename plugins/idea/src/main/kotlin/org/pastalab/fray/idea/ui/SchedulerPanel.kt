@@ -11,10 +11,12 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import org.pastalab.fray.rmi.ThreadInfo
+import org.pastalab.fray.rmi.ThreadState
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Component
@@ -58,7 +60,7 @@ class SchedulerPanel(val project: Project) : JPanel() {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
                     as JLabel
             if (value is ThreadInfo) {
-              label.text = "Thread-${value.threadName}"
+              label.text = "Thread-${value.threadName} (${value.state})"
             }
             return label
           }
@@ -66,7 +68,7 @@ class SchedulerPanel(val project: Project) : JPanel() {
     comboBox.addActionListener {
       val selectedThread = comboBox.selectedItem as? ThreadInfo
       if (selectedThread != null) {
-        displayThreadInfo(selectedThread)
+        comboBoxSelected(selectedThread)
       }
     }
     add(comboBox, BorderLayout.NORTH)
@@ -84,27 +86,39 @@ class SchedulerPanel(val project: Project) : JPanel() {
     // Button to confirm selection
     scheduleButton = JButton("Schedule")
     scheduleButton.addActionListener {
-      val newSelected = comboBox.selectedItem as? ThreadInfo
-      ApplicationManager.getApplication().invokeAndWait {
-        comboBoxModel.removeAllElements()
-        currentRangeHighlighters.forEach { it.first.removeHighlighter(it.second) }
-      }
-      if (newSelected != null) {
-        selected = newSelected
-        callback?.invoke(newSelected) // Notify callback with selected thread ID
-      }
+      scheduleButtonPressed()
     }
     add(scheduleButton, BorderLayout.SOUTH)
   }
 
-  fun displayThreadInfo(threadInfo: ThreadInfo) {
+  fun scheduleButtonPressed() {
+    val newSelected = comboBox.selectedItem as? ThreadInfo
+    ApplicationManager.getApplication().invokeAndWait {
+      comboBoxModel.removeAllElements()
+      currentRangeHighlighters.forEach { it.first.removeHighlighter(it.second) }
+    }
+    if (newSelected != null) {
+      selected = newSelected
+      callback?.invoke(newSelected) // Notify callback with selected thread ID
+    }
+  }
+
+  fun comboBoxSelected(threadInfo: ThreadInfo) {
     myFrameListModel.clear()
-    threadInfo.stackTraces.forEach { myFrameListModel.addElement(it) }
+    ApplicationManager.getApplication().invokeAndWait {
+      threadInfo.stackTraces.forEach { myFrameListModel.addElement(it) }
+      if (threadInfo.state == ThreadState.Enabled) {
+        scheduleButton.isEnabled = true
+      } else {
+        scheduleButton.isEnabled = false
+      }
+    }
   }
 
   fun schedule(enabledThreads: List<ThreadInfo>, onThreadSelected: (ThreadInfo) -> Unit) {
     enabledThreads.forEach { threadInfo ->
       comboBoxModel.addElement(threadInfo)
+      if (threadInfo.state == ThreadState.Completed) return@forEach
       for (stack in threadInfo.stackTraces) {
         if (stack.className == "ThreadStartOperation") continue
         if (runReadAction {
@@ -113,9 +127,10 @@ class SchedulerPanel(val project: Project) : JPanel() {
             val document = psiFile.fileDocument
             val start = document.getLineStartOffset(stack.lineNumber - 1)
             val end = document.getLineEndOffset(stack.lineNumber - 1)
+            val color  = if (threadInfo.state == ThreadState.Paused) JBColor.LIGHT_GRAY else JBColor(Color(228, 251, 233), Color(228, 251, 233))
             val highlightAttributes = TextAttributes(
                 null,  // foreground color
-                Color.LIGHT_GRAY,  // background color
+                color,  // background color
                 null,  // effect color
                 null,  // effect type
                 Font.PLAIN,
@@ -131,7 +146,7 @@ class SchedulerPanel(val project: Project) : JPanel() {
                       highlightAttributes,
                       com.intellij.openapi.editor.markup.HighlighterTargetArea.LINES_IN_RANGE
                   )
-                  highlighter.errorStripeTooltip = "Thread-${threadInfo.threadName}"
+                  highlighter.errorStripeTooltip = "Thread-${threadInfo.threadName} (${threadInfo.state})"
                   currentRangeHighlighters.add(Pair(fileEditor.editor.markupModel, highlighter))
                 }
               }

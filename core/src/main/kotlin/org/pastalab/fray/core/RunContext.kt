@@ -36,6 +36,7 @@ import org.pastalab.fray.core.concurrency.primitives.StampedLockContext
 import org.pastalab.fray.core.concurrency.primitives.WriteLockContext
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
+import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.runtime.DeadlockException
 import org.pastalab.fray.runtime.LivenessException
 import org.pastalab.fray.runtime.Runtime.onReportError
@@ -913,7 +914,7 @@ class RunContext(val config: Configuration) {
     if (bugFound != null &&
         !currentThread.isExiting &&
         currentThreadId != mainThreadId &&
-        !(Thread.currentThread() is HelperThread)) {
+        Thread.currentThread() !is HelperThread) {
       currentThread.state = ThreadState.Running
       throw RuntimeException()
     }
@@ -955,7 +956,7 @@ class RunContext(val config: Configuration) {
     }
 
     step += 1
-    if (config.executionInfo.maxScheduledStep in 1 ..< step &&
+    if (config.executionInfo.maxScheduledStep in 1..<step &&
         !currentThread.isExiting &&
         Thread.currentThread() !is HelperThread &&
         !(mainExiting && currentThreadId == mainThreadId)) {
@@ -965,7 +966,7 @@ class RunContext(val config: Configuration) {
       throw e
     }
 
-    val nextThread = config.scheduler.scheduleNextOperation(enabledOperations)
+    val nextThread = config.scheduler.scheduleNextOperation(enabledOperations, registeredThreads.values.toList())
     config.scheduleObservers.forEach { it.onNewSchedule(enabledOperations, nextThread) }
     currentThreadId = nextThread.thread.id
     nextThread.state = ThreadState.Running

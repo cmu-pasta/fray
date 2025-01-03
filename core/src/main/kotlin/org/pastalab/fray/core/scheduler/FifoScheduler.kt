@@ -5,7 +5,7 @@ import org.pastalab.fray.core.ThreadContext
 
 @Serializable
 class FifoScheduler : Scheduler {
-  override fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext {
+  override fun scheduleNextOperation(threads: List<ThreadContext>, allThreads: List<ThreadContext>): ThreadContext {
     return threads.first()
   }
 

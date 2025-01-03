@@ -5,13 +5,7 @@ import org.pastalab.fray.core.concurrency.operations.Operation
 import org.pastalab.fray.core.concurrency.operations.ThreadStartOperation
 import org.pastalab.fray.core.utils.isFrayInternals
 import org.pastalab.fray.rmi.ThreadInfo
-
-enum class ThreadState {
-  Enabled,
-  Running,
-  Paused,
-  Completed,
-}
+import org.pastalab.fray.rmi.ThreadState
 
 class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
   val localRandomProbe = context.config.randomnessProvider.nextInt()
@@ -50,6 +44,6 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
       else -> thread.stackTrace.toList().drop(1).filter { !it.isFrayInternals }
     }
     return ThreadInfo(
-        thread.name, index.toLong(), stackTraces)
+        thread.name, index.toLong(), state, stackTraces)
   }
 }

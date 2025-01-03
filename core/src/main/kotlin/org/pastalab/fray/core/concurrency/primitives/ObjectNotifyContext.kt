@@ -1,7 +1,7 @@
 package org.pastalab.fray.core.concurrency.primitives
 
 import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.core.ThreadState
+import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.core.concurrency.operations.ObjectWaitBlock
 import org.pastalab.fray.core.concurrency.operations.ObjectWakeBlocked
 

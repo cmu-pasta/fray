@@ -1,7 +1,7 @@
 package org.pastalab.fray.core.concurrency.primitives
 
 import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.core.ThreadState
+import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
