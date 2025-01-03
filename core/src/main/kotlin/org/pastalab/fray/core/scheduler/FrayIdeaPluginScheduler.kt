@@ -14,6 +14,9 @@ class FrayIdeaPluginScheduler : Scheduler {
       threads: List<ThreadContext>,
       allThreads: List<ThreadContext>
   ): ThreadContext {
+    if (threads.size == 1) {
+      return threads.first()
+    }
     val index = remoteScheduler.scheduleNextOperation(allThreads.map { it.toStackInfo() })
     return allThreads[index]
   }
