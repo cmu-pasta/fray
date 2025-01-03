@@ -3,9 +3,9 @@ package org.pastalab.fray.core.concurrency.primitives
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.core.concurrency.operations.ConditionAwaitBlocked
 import org.pastalab.fray.core.concurrency.operations.ConditionWakeBlocked
+import org.pastalab.fray.rmi.ThreadState
 
 class ConditionSignalContext(lockContext: LockContext, val lock: Lock, val condition: Condition) :
     SignalContext(lockContext) {

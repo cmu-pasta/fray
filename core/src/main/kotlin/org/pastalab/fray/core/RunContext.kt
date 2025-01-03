@@ -956,7 +956,7 @@ class RunContext(val config: Configuration) {
     }
 
     step += 1
-    if (config.executionInfo.maxScheduledStep in 1..<step &&
+    if (config.executionInfo.maxScheduledStep in 1 ..< step &&
         !currentThread.isExiting &&
         Thread.currentThread() !is HelperThread &&
         !(mainExiting && currentThreadId == mainThreadId)) {
@@ -966,7 +966,8 @@ class RunContext(val config: Configuration) {
       throw e
     }
 
-    val nextThread = config.scheduler.scheduleNextOperation(enabledOperations, registeredThreads.values.toList())
+    val nextThread =
+        config.scheduler.scheduleNextOperation(enabledOperations, registeredThreads.values.toList())
     config.scheduleObservers.forEach { it.onNewSchedule(enabledOperations, nextThread) }
     currentThreadId = nextThread.thread.id
     nextThread.state = ThreadState.Running

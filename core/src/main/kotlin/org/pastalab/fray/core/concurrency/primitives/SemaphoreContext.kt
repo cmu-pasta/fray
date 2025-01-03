@@ -1,8 +1,8 @@
 package org.pastalab.fray.core.concurrency.primitives
 
 import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
+import org.pastalab.fray.rmi.ThreadState
 
 class SemaphoreContext(var totalPermits: Int) : InterruptibleContext {
   private val lockWaiters = mutableMapOf<Long, Pair<Int, LockWaiter>>()

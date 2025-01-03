@@ -4,8 +4,8 @@ import java.util.concurrent.locks.StampedLock.isOptimisticReadStamp
 import java.util.concurrent.locks.StampedLock.isReadLockStamp
 import java.util.concurrent.locks.StampedLock.isWriteLockStamp
 import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
+import org.pastalab.fray.rmi.ThreadState
 
 class StampedLockContext : InterruptibleContext {
   var readHolders = 0

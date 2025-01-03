@@ -1,9 +1,9 @@
 package org.pastalab.fray.core.concurrency.primitives
 
 import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
+import org.pastalab.fray.rmi.ThreadState
 
 class ReentrantLockContext : LockContext {
   var lockHolder: Long? = null

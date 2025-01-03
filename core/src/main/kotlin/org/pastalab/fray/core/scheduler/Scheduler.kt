@@ -5,7 +5,10 @@ import org.pastalab.fray.core.ThreadContext
 
 @Serializable
 sealed interface Scheduler {
-  fun scheduleNextOperation(threads: List<ThreadContext>, allThreads: List<ThreadContext>): ThreadContext
+  fun scheduleNextOperation(
+      threads: List<ThreadContext>,
+      allThreads: List<ThreadContext>
+  ): ThreadContext
 
   fun nextIteration(): Scheduler
 }

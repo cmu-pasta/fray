@@ -15,8 +15,6 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
-import org.pastalab.fray.rmi.ThreadInfo
-import org.pastalab.fray.rmi.ThreadState
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Component
@@ -29,7 +27,8 @@ import javax.swing.JLabel
 import javax.swing.JList
 import javax.swing.JPanel
 import javax.swing.ListCellRenderer
-
+import org.pastalab.fray.rmi.ThreadInfo
+import org.pastalab.fray.rmi.ThreadState
 
 class SchedulerPanel(val project: Project) : JPanel() {
   private val comboBoxModel = DefaultComboBoxModel<ThreadInfo>()
@@ -76,18 +75,15 @@ class SchedulerPanel(val project: Project) : JPanel() {
     // Table to display stack trace
     myFrameListModel = DefaultListModel()
     myFrameList = JBList(myFrameListModel)
-    myFrameList.cellRenderer =
-        ListCellRenderer { list, value, index, isSelected, cellHasFocus ->
-          JBLabel("\t\t$value")
-        }
+    myFrameList.cellRenderer = ListCellRenderer { list, value, index, isSelected, cellHasFocus ->
+      JBLabel("\t\t$value")
+    }
     val scrollPane = JBScrollPane(myFrameList)
     add(scrollPane, BorderLayout.CENTER)
 
     // Button to confirm selection
     scheduleButton = JButton("Schedule")
-    scheduleButton.addActionListener {
-      scheduleButtonPressed()
-    }
+    scheduleButton.addActionListener { scheduleButtonPressed() }
     add(scheduleButton, BorderLayout.SOUTH)
   }
 
@@ -122,43 +118,49 @@ class SchedulerPanel(val project: Project) : JPanel() {
       for (stack in threadInfo.stackTraces) {
         if (stack.className == "ThreadStartOperation") continue
         if (runReadAction {
-            val psiClass = JavaPsiFacade.getInstance(project).findClass(stack.className, GlobalSearchScope.projectScope(project)) ?: return@runReadAction false
-            val psiFile = psiClass.containingFile
-            val document = psiFile.fileDocument
-            val start = document.getLineStartOffset(stack.lineNumber - 1)
-            val end = document.getLineEndOffset(stack.lineNumber - 1)
-            val color  = if (threadInfo.state == ThreadState.Paused) JBColor.LIGHT_GRAY else JBColor(Color(228, 251, 233), Color(228, 251, 233))
-            val highlightAttributes = TextAttributes(
-                null,  // foreground color
-                color,  // background color
-                null,  // effect color
-                null,  // effect type
-                Font.PLAIN,
-            )
-            val vFile = psiFile.virtualFile
-            ApplicationManager.getApplication().invokeLater {
-              FileEditorManager.getInstance(project).openFile(vFile).forEach { fileEditor ->
-                if (fileEditor is TextEditor) {
-                  val highlighter = fileEditor.editor.markupModel.addRangeHighlighter(
-                      start,
-                      end,
-                      0,
-                      highlightAttributes,
-                      com.intellij.openapi.editor.markup.HighlighterTargetArea.LINES_IN_RANGE
-                  )
-                  highlighter.errorStripeTooltip = "Thread-${threadInfo.threadName} (${threadInfo.state})"
-                  currentRangeHighlighters.add(Pair(fileEditor.editor.markupModel, highlighter))
-                }
+          val psiClass =
+              JavaPsiFacade.getInstance(project)
+                  .findClass(stack.className, GlobalSearchScope.projectScope(project))
+                  ?: return@runReadAction false
+          val psiFile = psiClass.containingFile
+          val document = psiFile.fileDocument
+          val start = document.getLineStartOffset(stack.lineNumber - 1)
+          val end = document.getLineEndOffset(stack.lineNumber - 1)
+          val color =
+              if (threadInfo.state == ThreadState.Paused) JBColor.LIGHT_GRAY
+              else JBColor(Color(228, 251, 233), Color(228, 251, 233))
+          val highlightAttributes =
+              TextAttributes(
+                  null, // foreground color
+                  color, // background color
+                  null, // effect color
+                  null, // effect type
+                  Font.PLAIN,
+              )
+          val vFile = psiFile.virtualFile
+          ApplicationManager.getApplication().invokeLater {
+            FileEditorManager.getInstance(project).openFile(vFile).forEach { fileEditor ->
+              if (fileEditor is TextEditor) {
+                val highlighter =
+                    fileEditor.editor.markupModel.addRangeHighlighter(
+                        start,
+                        end,
+                        0,
+                        highlightAttributes,
+                        com.intellij.openapi.editor.markup.HighlighterTargetArea.LINES_IN_RANGE)
+                highlighter.errorStripeTooltip =
+                    "Thread-${threadInfo.threadName} (${threadInfo.state})"
+                currentRangeHighlighters.add(Pair(fileEditor.editor.markupModel, highlighter))
               }
             }
-            true
-          }) break
+          }
+          true
+        })
+            break
       }
     }
     try {
-      enabledThreads.first { it.index == selected?.index }.let {
-        comboBoxModel.selectedItem = it
-      }
+      enabledThreads.first { it.index == selected?.index }.let { comboBoxModel.selectedItem = it }
     } catch (e: NoSuchElementException) {
       comboBoxModel.selectedItem = enabledThreads.first()
     }
