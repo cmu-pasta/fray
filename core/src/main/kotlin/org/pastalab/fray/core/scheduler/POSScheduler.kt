@@ -13,7 +13,10 @@ class POSScheduler(val rand: ControlledRandom) : Scheduler {
 
   @Transient val threadPriority = mutableMapOf<ThreadContext, Double>()
 
-  override fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext {
+  override fun scheduleNextOperation(
+      threads: List<ThreadContext>,
+      allThread: List<ThreadContext>
+  ): ThreadContext {
     if (threads.size == 1) {
       return threads[0]
     }

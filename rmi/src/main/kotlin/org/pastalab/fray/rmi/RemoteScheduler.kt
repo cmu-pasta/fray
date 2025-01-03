@@ -5,10 +5,18 @@ import java.rmi.Remote
 import java.rmi.RemoteException
 import kotlin.jvm.Throws
 
+enum class ThreadState {
+  Enabled,
+  Running,
+  Paused,
+  Completed,
+}
+
 data class ThreadInfo(
     val threadName: String,
     val index: Long,
-    val stackTraces: List<StackTraceElement>
+    val state: ThreadState,
+    val stackTraces: List<StackTraceElement>,
 ) : Serializable
 
 interface RemoteScheduler : Remote {

@@ -1,9 +1,9 @@
 package org.pastalab.fray.core.concurrency.primitives
 
 import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.core.ThreadState
 import org.pastalab.fray.core.concurrency.operations.ObjectWaitBlock
 import org.pastalab.fray.core.concurrency.operations.ObjectWakeBlocked
+import org.pastalab.fray.rmi.ThreadState
 
 class ObjectNotifyContext(lockContext: LockContext, val obj: Any) : SignalContext(lockContext) {
   override fun sendSignalToObject() {

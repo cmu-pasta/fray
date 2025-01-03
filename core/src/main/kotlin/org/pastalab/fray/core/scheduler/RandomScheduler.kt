@@ -8,7 +8,10 @@ import org.pastalab.fray.core.randomness.ControlledRandom
 class RandomScheduler(val rand: ControlledRandom) : Scheduler {
   constructor() : this(ControlledRandom())
 
-  override fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext {
+  override fun scheduleNextOperation(
+      threads: List<ThreadContext>,
+      allThreads: List<ThreadContext>
+  ): ThreadContext {
 
     if (threads.size == 1) {
       return threads[0]

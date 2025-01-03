@@ -2,8 +2,8 @@ package org.pastalab.fray.idea.debugger
 
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessListener
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.ui.SimpleToolWindowPanel
-import com.intellij.util.ui.UIUtil
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebugSessionListener
 import java.rmi.registry.LocateRegistry
@@ -29,7 +29,8 @@ class FrayDebuggerManager(val debugSession: XDebugSession) :
         debugSession.ui.createContent(
             SchedulerPanel.CONTENT_ID, container, "Fray Scheduler", null, null)
     content.isCloseable = false
-    UIUtil.invokeLaterIfNeeded { debugSession.ui.addContent(content) }
+
+    ApplicationManager.getApplication().invokeLater { debugSession.ui.addContent(content) }
   }
 
   override fun sessionPaused() {

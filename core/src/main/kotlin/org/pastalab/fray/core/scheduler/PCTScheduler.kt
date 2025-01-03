@@ -28,7 +28,10 @@ class PCTScheduler(val rand: ControlledRandom, val numSwitchPoints: Int, var max
     nextSwitchPoint += Utils.sampleGeometric(switchPointProbability, rand.nextDouble())
   }
 
-  override fun scheduleNextOperation(threads: List<ThreadContext>): ThreadContext {
+  override fun scheduleNextOperation(
+      threads: List<ThreadContext>,
+      allThreads: List<ThreadContext>
+  ): ThreadContext {
     currentStep += 1
     for (thread in threads) {
       if (!threadPriorityQueue.contains(thread)) {
