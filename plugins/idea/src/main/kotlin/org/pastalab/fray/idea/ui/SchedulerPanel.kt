@@ -44,7 +44,6 @@ class SchedulerPanel(val project: Project) : JPanel() {
 
   init {
     layout = BorderLayout()
-
     comboBox = ComboBox<ThreadInfo>(comboBoxModel)
     comboBox.renderer =
         object : DefaultListCellRenderer() {
@@ -97,6 +96,10 @@ class SchedulerPanel(val project: Project) : JPanel() {
       selected = newSelected
       callback?.invoke(newSelected) // Notify callback with selected thread ID
     }
+  }
+
+  fun stop() {
+    currentRangeHighlighters.forEach { it.first.removeHighlighter(it.second) }
   }
 
   fun comboBoxSelected(threadInfo: ThreadInfo) {
@@ -159,12 +162,8 @@ class SchedulerPanel(val project: Project) : JPanel() {
             break
       }
     }
-    try {
-      enabledThreads.first { it.index == selected?.index }.let { comboBoxModel.selectedItem = it }
-    } catch (e: NoSuchElementException) {
-      comboBoxModel.selectedItem = enabledThreads.first()
-    }
-
+    comboBoxModel.selectedItem =
+        enabledThreads.find { it.index == selected?.index } ?: enabledThreads.first()
     callback = onThreadSelected
   }
 

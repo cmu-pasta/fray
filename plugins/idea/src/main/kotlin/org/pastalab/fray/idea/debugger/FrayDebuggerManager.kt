@@ -38,6 +38,7 @@ class FrayDebuggerManager(val debugSession: XDebugSession) :
   }
 
   fun stop() {
+    schedulerPanel.stop()
     registry.unbind("RemoteScheduler")
     UnicastRemoteObject.unexportObject(scheduler, true)
   }

@@ -791,8 +791,14 @@ class RunContext(val config: Configuration) {
 
   fun latchAwait(latch: CountDownLatch, timed: Boolean) {
     val t = Thread.currentThread().id
+    val objId = System.identityHashCode(latch)
     val context = registeredThreads[t]!!
     val latchContext = latchManager.getContext(latch)
+
+    context.pendingOperation = ObjectWaitOperation(objId)
+    context.state = ThreadState.Enabled
+    scheduleNextOperation(true)
+
     if (latchContext.await(true, context)) {
       context.pendingOperation = CountDownLatchAwaitBlocking(timed, latchContext)
       context.state = ThreadState.Paused
