@@ -20,15 +20,26 @@ class RunConfigurationExtension : RunConfigurationExtension() {
       runnerSettings: RunnerSettings?,
       executor: Executor,
   ) {
+    val frayPropertyKey = "fray.debugger"
+    val frayGradleString = "-P${frayPropertyKey}=true"
     if (executor.id == FrayDebugExecutor.EXECUTOR_ID) {
       when (configuration) {
         is FrayGradleRunConfiguration -> {
-          if ("-Pfray.debugger=true" !in configuration.settings.taskNames) {
-            configuration.settings.taskNames.add("-Pfray.debugger=true")
+          if (frayGradleString !in configuration.settings.taskNames) {
+            configuration.settings.taskNames.add(frayGradleString)
           }
         }
         else -> {
-          params.vmParametersList.add("-Dfray.debugger=true")
+          params.vmParametersList.addProperty(frayPropertyKey, "true")
+        }
+      }
+    } else {
+      when (configuration) {
+        is FrayGradleRunConfiguration -> {
+          configuration.settings.taskNames.remove(frayGradleString)
+        }
+        else -> {
+          params.vmParametersList.addProperty(frayPropertyKey, "false")
         }
       }
     }
