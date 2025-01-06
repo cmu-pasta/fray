@@ -10,14 +10,14 @@ class FrayGradleRunConfigurationProducer : TestMethodGradleConfigurationProducer
       self: ConfigurationFromContext,
       other: ConfigurationFromContext
   ): Boolean {
-    return true
+    return super.isPreferredConfiguration(self, other)
   }
 
   override fun shouldReplace(
       self: ConfigurationFromContext,
       other: ConfigurationFromContext
   ): Boolean {
-    return true
+    return super.shouldReplace(self, other)
   }
 
   override fun getConfigurationFactory(): ConfigurationFactory {
