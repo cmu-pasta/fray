@@ -1,13 +1,16 @@
 package org.pastalab.fray.core.concurrency.primitives
 
+import java.lang.ref.WeakReference
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.ObjectWaitBlock
 import org.pastalab.fray.core.concurrency.operations.ObjectWakeBlocked
 import org.pastalab.fray.rmi.ThreadState
 
-class ObjectNotifyContext(lockContext: LockContext, val obj: Any) : SignalContext(lockContext) {
+class ObjectNotifyContext(lockContext: LockContext, obj: Any) : SignalContext(lockContext) {
+  val objReference = WeakReference(obj)
+
   override fun sendSignalToObject() {
-    synchronized(obj) { (obj as Object).notifyAll() }
+    objReference.get()?.let { obj -> synchronized(obj) { (obj as Object).notifyAll() } }
   }
 
   override fun updatedThreadContextDueToUnblock(

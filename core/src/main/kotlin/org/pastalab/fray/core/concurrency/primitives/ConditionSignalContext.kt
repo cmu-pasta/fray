@@ -1,5 +1,6 @@
 package org.pastalab.fray.core.concurrency.primitives
 
+import java.lang.ref.WeakReference
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import org.pastalab.fray.core.ThreadContext
@@ -7,14 +8,16 @@ import org.pastalab.fray.core.concurrency.operations.ConditionAwaitBlocked
 import org.pastalab.fray.core.concurrency.operations.ConditionWakeBlocked
 import org.pastalab.fray.rmi.ThreadState
 
-class ConditionSignalContext(lockContext: LockContext, val lock: Lock, val condition: Condition) :
+class ConditionSignalContext(lockContext: LockContext, lock: Lock, val condition: Condition) :
     SignalContext(lockContext) {
+  val lockReference = WeakReference(lock)
+
   override fun sendSignalToObject() {
-    lock.lock()
+    lockReference.get()?.lock()
     try {
       condition.signalAll()
     } finally {
-      lock.unlock()
+      lockReference.get()?.unlock()
     }
   }
 
