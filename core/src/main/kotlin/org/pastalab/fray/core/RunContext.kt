@@ -49,7 +49,6 @@ class RunContext(val config: Configuration) {
   var bugFound: Throwable? = null
   var mainExiting = false
   var nanoTime = System.nanoTime()
-  val terminatingThread = mutableSetOf<Int>()
   val hashCodeMapper = ReferencedContextManager<Int>({ config.randomnessProvider.nextInt() })
   var forkJoinPool: ForkJoinPool? = null
   private val semaphoreManager = ReferencedContextManager {
@@ -215,7 +214,7 @@ class RunContext(val config: Configuration) {
 
   fun done() {
     verifyOrReport(syncManager.synchronizationPoints.isEmpty())
-    lockManager.done()
+    lockManager.done(false)
     signalManager.done()
     stampedLockManager.done()
     semaphoreManager.done()
@@ -1012,7 +1011,7 @@ class RunContext(val config: Configuration) {
   }
 
   fun nanoTime(): Long {
-    nanoTime += TimeUnit.MILLISECONDS.convert(100, TimeUnit.NANOSECONDS)
+    nanoTime += TimeUnit.MILLISECONDS.convert(10000, TimeUnit.NANOSECONDS)
     return nanoTime
   }
 

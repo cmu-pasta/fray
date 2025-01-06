@@ -491,9 +491,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onReentrantReadWriteLockInit(lock: ReentrantReadWriteLock) {
-    if (checkEntered()) return
     context.reentrantReadWriteLockInit(lock.readLock(), lock.writeLock())
-    entered.set(false)
   }
 
   override fun onSemaphoreInit(sem: Semaphore) {

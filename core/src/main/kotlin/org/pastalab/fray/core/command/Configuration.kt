@@ -12,6 +12,7 @@ import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
+import kotlin.io.path.exists
 import kotlin.time.TimeSource
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
@@ -247,7 +248,7 @@ data class Configuration(
   val frayLogger = FrayLogger("$report/fray.log")
 
   init {
-    if (!isReplay) {
+    if (!isReplay || !Paths.get(report).exists()) {
       prepareReportPath(report)
     }
     if (System.getProperty("fray.recordSchedule", "false").toBoolean()) {

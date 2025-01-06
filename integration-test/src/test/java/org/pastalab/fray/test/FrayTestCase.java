@@ -80,7 +80,7 @@ public class FrayTestCase {
                             -1
                     ),
                     "/tmp/report2",
-                    10000,
+                    1000000,
                     60,
                     new RandomScheduler(),
                     new ControlledRandom(),
