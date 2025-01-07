@@ -157,7 +157,7 @@ The easist way to use Fray is through gradle plugin.
 
 ```kotlin
 plugins {
-    id("org.pastalab.fray.gradle") version "0.1.6-SNAPSHOT"
+    id("org.pastalab.fray.gradle") version "0.1"
 }
 
 fray {
