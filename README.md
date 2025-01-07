@@ -143,8 +143,7 @@ Debugging the test failure is easy! You can replay the schedule that causes the 
 
 ## Requirements
 
-Fray currently requires Java 21. We are working on supporting more versions of Java.
-
+Fray is a concurrency testing framework that runs on Java 21, but can test Java programs written in any version up to Java 21
 
 ## HowTo
 
@@ -152,9 +151,17 @@ Fray currently requires Java 21. We are working on supporting more versions of J
 
 The easist way to use Fray is through gradle plugin.
 
+> [!WARNING]
+> We are actively working on Fray so to get the latest version of Fray, you may use the [Github packages](https://docs.github.com/en/packages/learn-github-packages/introduction-to-github-packages). 
+
+
 ```kotlin
 plugins {
-    id("org.pastalab.fray.gradle") version "0.1"
+    id("org.pastalab.fray.gradle") version "0.1.6-SNAPSHOT"
+}
+
+fray {
+  version = "0.1.6-SNAPSHOT"
 }
 
 tasks.test {
