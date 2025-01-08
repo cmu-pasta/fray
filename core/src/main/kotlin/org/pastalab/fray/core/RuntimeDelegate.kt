@@ -846,16 +846,40 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     return probe
   }
 
-  override fun onThreadSleepDuration(duration: Duration?) {
-    Thread.yield()
+  override fun onThreadSleepDuration(duration: Duration) {
+    if (checkEntered()) {
+      Thread.sleep(duration)
+      return
+    }
+    try {
+      context.threadSleepOperation()
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onThreadSleepMillis(millis: Long) {
-    Thread.yield()
+    if (checkEntered()) {
+      Thread.sleep(millis)
+      return
+    }
+    try {
+      context.threadSleepOperation()
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onThreadSleepMillisNanos(millis: Long, nanos: Int) {
-    Thread.yield()
+    if (checkEntered()) {
+      Thread.sleep(millis, nanos)
+      return
+    }
+    try {
+      context.threadSleepOperation()
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onStampedLockReadLock(lock: StampedLock) {
