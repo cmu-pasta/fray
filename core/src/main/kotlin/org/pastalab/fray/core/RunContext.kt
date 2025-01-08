@@ -858,6 +858,15 @@ class RunContext(val config: Configuration) {
     syncManager.wait(latch)
   }
 
+  fun threadSleepOperation() {
+    val t = Thread.currentThread().threadId()
+    val context = registeredThreads[t]!!
+    context.checkInterrupt()
+    context.pendingOperation = ThreadSleepBlocking(context)
+    context.state = ThreadState.Paused
+    scheduleNextOperation(true)
+  }
+
   fun scheduleNextOperationAndCheckDeadlock(shouldBlockCurrentThread: Boolean) {
     try {
       scheduleNextOperation(shouldBlockCurrentThread)
