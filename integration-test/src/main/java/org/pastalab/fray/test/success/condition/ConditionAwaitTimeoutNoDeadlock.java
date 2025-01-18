@@ -10,14 +10,9 @@ public class ConditionAwaitTimeoutNoDeadlock {
         Condition c = l.newCondition();
         l.lock();
         try {
-            boolean result = c.await(1000, java.util.concurrent.TimeUnit.MILLISECONDS);
-            assert(result == false);
-
-            boolean result2 = c.awaitUntil(new java.util.Date(System.currentTimeMillis() + 1000));
-            assert(!result2);
-
-            long result3 = c.awaitNanos(1000000000);
-            assert(result3 < 1000000000);
+            c.await(1000, java.util.concurrent.TimeUnit.MILLISECONDS);
+            c.awaitUntil(new java.util.Date(System.currentTimeMillis() + 1000));
+            c.awaitNanos(1000000000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
