@@ -379,7 +379,7 @@ class RunContext(val config: Configuration) {
     // This is a spurious wakeup.
     // https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html#wait(long,int)
     if (spuriousWakeup) {
-      signalContext.unblockThread(t, InterruptionType.TIMEOUT)
+      signalContext.unblockThread(t, InterruptionType.RESOURCE_AVAILABLE)
     }
 
     checkDeadlock {
@@ -861,10 +861,18 @@ class RunContext(val config: Configuration) {
   fun threadSleepOperation() {
     val t = Thread.currentThread().threadId()
     val context = registeredThreads[t]!!
-    context.checkInterrupt()
-    context.pendingOperation = ThreadSleepBlocking(context)
-    context.state = ThreadState.Paused
-    scheduleNextOperation(true)
+    // Let's disable the delaying for the sleep operation for now.
+    // We may want to make this configurable in the future.
+    if (false) {
+      context.checkInterrupt()
+      context.pendingOperation = ThreadSleepBlocking(context)
+      context.state = ThreadState.Paused
+      scheduleNextOperation(true)
+    } else {
+      context.pendingOperation = ThreadResumeOperation(true)
+      context.state = ThreadState.Enabled
+      scheduleNextOperation(true)
+    }
   }
 
   fun scheduleNextOperationAndCheckDeadlock(shouldBlockCurrentThread: Boolean) {

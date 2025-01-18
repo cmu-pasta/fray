@@ -791,9 +791,9 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       throw e
     }
     return if (onConditionAwaitDoneImpl(o, true)) {
-      0
-    } else {
       (nanos - 10000000).coerceAtLeast(0)
+    } else {
+      0
     }
   }
 
