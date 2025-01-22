@@ -17,6 +17,7 @@ import org.pastalab.fray.test.fail.rwlock.ReentrantReadWriteLockDeadlock;
 import org.pastalab.fray.test.success.rwlock.ReentrantReadWriteLockDowngradingNoDeadlock;
 import org.pastalab.fray.test.success.rwlock.ReentrantReadWriteLockNoDeadlock;
 import org.pastalab.fray.test.success.stampedlock.StampedLockTryLockNoDeadlock;
+import org.pastalab.fray.test.success.thread.ThreadInterruptionWithoutStart;
 
 import java.util.*;
 
@@ -69,8 +70,9 @@ public class FrayTestCase {
                     new ExecutionInfo(
                             new LambdaExecutor(() -> {
                                 try {
-                                    ReentrantReadWriteLockDowngradingNoDeadlock.main(new String[]{});
+                                    ThreadInterruptionWithoutStart.main(new String[]{});
                                 } catch (Exception e) {
+                                    throw new RuntimeException(e);
                                 }
                                 return null;
                             }),
