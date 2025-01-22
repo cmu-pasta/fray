@@ -172,7 +172,9 @@ class RunContext(val config: Configuration) {
     val context = registeredThreads[t.id]!!
     mainExiting = true
     while (registeredThreads.any {
-      it.value.state != ThreadState.Completed && it.value != context
+      it.value.state != ThreadState.Completed &&
+          it.value.state != ThreadState.Created &&
+          it.value != context
     }) {
       try {
         context.state = ThreadState.Enabled
@@ -230,24 +232,23 @@ class RunContext(val config: Configuration) {
     executor.shutdown()
   }
 
-  fun threadStart(t: Thread) {
+  fun threadCreateDone(t: Thread) {
     val originalHanlder = t.uncaughtExceptionHandler
     val handler = UncaughtExceptionHandler { t, e ->
       onReportError(e)
       originalHanlder?.uncaughtException(t, e)
     }
     t.setUncaughtExceptionHandler(handler)
-    registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this)
+    registeredThreads[t.threadId()] = ThreadContext(t, registeredThreads.size, this)
+  }
+
+  fun threadStart(t: Thread) {
     syncManager.createWait(t, 1)
   }
 
   fun threadStartDone(t: Thread) {
     // Wait for the new thread runs.
     syncManager.wait(t)
-  }
-
-  fun monitorEnterDone(lock: Any) {
-    syncManager.wait(lock)
   }
 
   fun threadPark() {

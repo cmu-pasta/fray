@@ -10,6 +10,7 @@ enum class ThreadState {
   Running,
   Paused,
   Completed,
+  Created,
 }
 
 data class ThreadInfo(

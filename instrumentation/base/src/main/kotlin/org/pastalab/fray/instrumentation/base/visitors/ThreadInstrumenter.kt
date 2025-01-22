@@ -16,6 +16,19 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
+    if (name == "<init>" &&
+        descriptor ==
+            "(Ljava/lang/ThreadGroup;Ljava/lang/String;ILjava/lang/Runnable;JLjava/security/AccessControlContext;)V") {
+      return MethodExitVisitor(
+          mv,
+          org.pastalab.fray.runtime.Runtime::onThreadCreateDone,
+          access,
+          name,
+          descriptor,
+          true,
+          false,
+          false)
+    }
     if (name == "start") {
       val eMv =
           MethodExitVisitor(

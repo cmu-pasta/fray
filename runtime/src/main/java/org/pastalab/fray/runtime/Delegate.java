@@ -10,6 +10,9 @@ import java.util.concurrent.locks.*;
 
 public class Delegate {
 
+    public void onThreadCreateDone(Thread t) {
+    }
+
     public void onThreadStart(Thread t) {
     }
 

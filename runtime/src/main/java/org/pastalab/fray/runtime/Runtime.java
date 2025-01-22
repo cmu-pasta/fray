@@ -15,6 +15,10 @@ import java.util.concurrent.locks.StampedLock;
 public class Runtime {
     public static Delegate DELEGATE = new Delegate();
 
+    public static void onThreadCreateDone(Thread t) {
+        DELEGATE.onThreadCreateDone(t);
+    }
+
     public static void onThreadStart(Thread t) {
         DELEGATE.onThreadStart(t);
     }

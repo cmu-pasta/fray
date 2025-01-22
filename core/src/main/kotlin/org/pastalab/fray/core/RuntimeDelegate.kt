@@ -47,6 +47,12 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     entered.set(false)
   }
 
+  override fun onThreadCreateDone(t: Thread) {
+    if (checkEntered()) return
+    context.threadCreateDone(t)
+    entered.set(false)
+  }
+
   override fun onThreadStart(t: Thread) {
     if (checkEntered()) {
       onSkipMethod("thread.start")
