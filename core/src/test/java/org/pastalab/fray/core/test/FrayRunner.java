@@ -33,7 +33,6 @@ public class FrayRunner {
                             return null;
                         }),
                         false,
-                        true,
                         false,
                         -1
                 ),

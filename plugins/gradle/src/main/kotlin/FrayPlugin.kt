@@ -37,7 +37,6 @@ class FrayPlugin : Plugin<Project> {
             this.frayVersion.set(frayVersion)
           }
       target.tasks.register("frayTest", Test::class.java) {
-        it.useJUnitPlatform()
         it.executable(javaPath)
         it.jvmArgs("-agentpath:$jvmtiPath/libjvmti.so")
         it.jvmArgs(

@@ -12,10 +12,13 @@ dependencies {
   implementation(project(":core"))
   compileOnly(project(":runtime"))
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
-  implementation("org.junit.platform:junit-platform-engine:1.11.3")
-  implementation("org.junit.platform:junit-platform-commons:1.11.3")
-  implementation("org.junit.jupiter:junit-jupiter-api:5.11.3")
-  testImplementation("org.junit.jupiter:junit-jupiter")
+  compileOnly("org.junit.platform:junit-platform-engine:1.11.3")
+  compileOnly("org.junit.platform:junit-platform-commons:1.11.3")
+  compileOnly("org.junit.jupiter:junit-jupiter-api:5.11.3")
+  compileOnly("junit:junit:4.13.2")
+  compileOnly("com.carrotsearch.randomizedtesting:randomizedtesting-runner:2.8.2")
+  testCompileOnly("org.junit.jupiter:junit-jupiter-api:5.11.3")
+  testImplementation("org.junit.jupiter:junit-jupiter-engine:5.11.3")
 }
 
 tasks.test {

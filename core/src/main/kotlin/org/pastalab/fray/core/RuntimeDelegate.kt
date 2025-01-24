@@ -401,15 +401,26 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     }
   }
 
+  val onSkipRecursion = ThreadLocal.withInitial { false }
+
   override fun onSkipMethod(signature: String) {
+    if (onSkipRecursion.get()) {
+      return
+    }
+    onSkipRecursion.set(true)
     if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
+      onSkipRecursion.set(false)
       return
     }
     stackTrace.get().add(signature)
     skipFunctionEntered.set(1 + skipFunctionEntered.get())
+    onSkipRecursion.set(false)
   }
 
   override fun onSkipMethodDone(signature: String): Boolean {
+    if (onSkipRecursion.get()) {
+      return false
+    }
     if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
       return false
     }

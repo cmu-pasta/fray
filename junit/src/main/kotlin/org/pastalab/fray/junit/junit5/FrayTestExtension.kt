@@ -1,8 +1,7 @@
-package org.pastalab.fray.junit
+package org.pastalab.fray.junit.junit5
 
 import java.io.File
 import java.lang.reflect.Method
-import java.nio.file.Paths
 import java.util.stream.Stream
 import kotlin.io.path.absolutePathString
 import kotlinx.serialization.json.Json
@@ -18,10 +17,10 @@ import org.pastalab.fray.core.command.ExecutionInfo
 import org.pastalab.fray.core.command.LambdaExecutor
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.Scheduler
-import org.pastalab.fray.junit.annotations.ConcurrencyTest
+import org.pastalab.fray.junit.Common.WORK_DIR
+import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest
 
 class FrayTestExtension : TestTemplateInvocationContextProvider {
-  val workDir = Paths.get(System.getProperty("fray.workDir", "build/fray/fray-report"))
 
   override fun supportsTestTemplate(context: ExtensionContext): Boolean {
     return isAnnotated(context.testMethod, ConcurrencyTest::class.java)
@@ -38,8 +37,8 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
                 ConcurrencyTest::class.java,
             )
             .get()
-    if (!workDir.toFile().exists()) {
-      workDir.toFile().mkdirs()
+    if (!WORK_DIR.toFile().exists()) {
+      WORK_DIR.toFile().mkdirs()
     }
     val (scheduler, random) =
         if (concurrencyTest.replay.isNotEmpty()) {
@@ -59,11 +58,10 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             ExecutionInfo(
                 LambdaExecutor {},
                 false,
-                true,
                 false,
                 -1,
             ),
-            workDir.absolutePathString(),
+            WORK_DIR.absolutePathString(),
             totalRepetition(concurrencyTest, testMethod),
             60,
             scheduler,

@@ -1,11 +1,11 @@
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.pastalab.fray.junit.FrayTestExtension;
-import org.pastalab.fray.junit.annotations.ConcurrencyTest;
+import org.pastalab.fray.junit.junit5.FrayTestExtension;
+import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
 
 @ExtendWith(FrayTestExtension.class)
 public class DeadlockTest {
 
-    @ConcurrencyTest(iterations = 100)
+    @org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest(iterations = 100)
     public void deadlockInMainThread() throws InterruptedException {
         Object o = new Object();
         synchronized (o) {
