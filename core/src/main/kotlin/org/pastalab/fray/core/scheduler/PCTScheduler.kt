@@ -10,15 +10,15 @@ class PCTScheduler(val rand: ControlledRandom, val numSwitchPoints: Int, var max
     Scheduler {
   constructor() : this(ControlledRandom(), 3, 0) {}
 
+  @Transient var currentStep = 0
+  @Transient val threadPriorityQueue = mutableListOf<ThreadContext>()
+  @Transient val priorityChangePoints = mutableSetOf<Int>()
+
   init {
     if (maxStep != 0) {
       preparePriorityChangePoints()
     }
   }
-
-  @Transient var currentStep = 0
-  @Transient val threadPriorityQueue = mutableListOf<ThreadContext>()
-  @Transient val priorityChangePoints = mutableSetOf<Int>()
 
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,
@@ -53,6 +53,7 @@ class PCTScheduler(val rand: ControlledRandom, val numSwitchPoints: Int, var max
       val index = rand.nextInt() % (listOfInts.size)
       priorityChangePoints.add(listOfInts[index])
       listOfInts.removeAt(index)
+      if (listOfInts.isEmpty()) break
     }
   }
 }

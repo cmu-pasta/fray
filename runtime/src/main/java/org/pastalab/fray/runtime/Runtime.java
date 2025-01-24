@@ -1,6 +1,7 @@
 package org.pastalab.fray.runtime;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
@@ -367,6 +368,14 @@ public class Runtime {
 
     public static long onNanoTime() {
         return DELEGATE.onNanoTime();
+    }
+
+    public static long onCurrentTimeMillis() {
+        return DELEGATE.onCurrentTimeMillis();
+    }
+
+    public static Instant onInstantNow() {
+        return DELEGATE.onInstantNow();
     }
 
     public static int onObjectHashCode(Object t) {

@@ -3,6 +3,7 @@ package org.pastalab.fray.instrumentation.base.visitors
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes.ASM9
+import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
 import org.pastalab.fray.runtime.Runtime
 
@@ -25,8 +26,20 @@ class TimeInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           isInterface: Boolean
       ) {
         if (owner == "java/lang/System" && name == "nanoTime") {
-          visitMethodInsn(
-              INVOKESTATIC, Runtime::class.java.name.replace(".", "/"), "onNanoTime", "()J", false)
+          invokeStatic(
+              Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+              Utils.kFunctionToASMMethod(Runtime::onNanoTime),
+          )
+        } else if (owner == "java/lang/System" && name == "currentTimeMillis") {
+          invokeStatic(
+              Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+              Utils.kFunctionToASMMethod(Runtime::onCurrentTimeMillis),
+          )
+        } else if (owner == "java/time/Instant" && name == "now") {
+          invokeStatic(
+              Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+              Utils.kFunctionToASMMethod(Runtime::onInstantNow),
+          )
         } else {
           super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
         }

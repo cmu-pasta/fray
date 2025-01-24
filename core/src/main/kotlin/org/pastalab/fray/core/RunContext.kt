@@ -3,6 +3,7 @@ package org.pastalab.fray.core
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.Thread.UncaughtExceptionHandler
+import java.time.Instant
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -48,7 +49,7 @@ class RunContext(val config: Configuration) {
   var mainThreadId: Long = -1
   var bugFound: Throwable? = null
   var mainExiting = false
-  var nanoTime = System.nanoTime()
+  var nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
   val hashCodeMapper = ReferencedContextManager<Int>({ config.randomnessProvider.nextInt() })
   var forkJoinPool: ForkJoinPool? = null
   private val semaphoreManager = ReferencedContextManager {
@@ -225,6 +226,7 @@ class RunContext(val config: Configuration) {
     registeredThreads.clear()
     config.scheduleObservers.forEach { it.onExecutionDone() }
     hashCodeMapper.done(false)
+    nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
   }
 
   fun shutDown() {
@@ -990,8 +992,14 @@ class RunContext(val config: Configuration) {
     }
 
     val nextThread =
-        config.scheduler.scheduleNextOperation(enabledOperations, registeredThreads.values.toList())
-    config.scheduleObservers.forEach { it.onNewSchedule(enabledOperations, nextThread) }
+        if (enabledOperations.size == 1) {
+          enabledOperations.first()
+        } else {
+          val thread = config.scheduler.scheduleNextOperation(enabledOperations, enabledOperations)
+          config.scheduleObservers.forEach { it.onNewSchedule(enabledOperations, thread) }
+          thread
+        }
+
     currentThreadId = nextThread.thread.id
     nextThread.state = ThreadState.Running
     runThread(currentThread, nextThread)
@@ -1029,8 +1037,16 @@ class RunContext(val config: Configuration) {
   }
 
   fun nanoTime(): Long {
-    nanoTime += TimeUnit.MILLISECONDS.convert(10000, TimeUnit.NANOSECONDS)
+    nanoTime += TimeUnit.MILLISECONDS.toNanos(10000)
     return nanoTime
+  }
+
+  fun currentTimeMillis(): Long {
+    return nanoTime() / 1000000
+  }
+
+  fun instantNow(): Instant {
+    return Instant.ofEpochMilli(currentTimeMillis())
   }
 
   fun getForkJoinPoolCommon(): ForkJoinPool {

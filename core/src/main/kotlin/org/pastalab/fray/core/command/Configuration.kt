@@ -230,7 +230,7 @@ data class Configuration(
     val noFray: Boolean,
     val dummyRun: Boolean,
 ) {
-  var scheduleObservers = mutableListOf<ScheduleObserver>()
+  val scheduleObservers = mutableListOf<ScheduleObserver>()
   var nextSavedIndex = 0
   var currentIteration = 0
   val startTime = TimeSource.Monotonic.markNow()
@@ -248,7 +248,7 @@ data class Configuration(
     if (!isReplay || !Paths.get(report).exists()) {
       prepareReportPath(report)
     }
-    if (System.getProperty("fray.recordSchedule", "false").toBoolean()) {
+    if (System.getProperty("fray.recordSchedule", "true").toBoolean()) {
       scheduleObservers.add(ScheduleRecorder())
     }
 
