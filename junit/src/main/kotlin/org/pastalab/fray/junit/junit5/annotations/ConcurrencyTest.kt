@@ -1,4 +1,4 @@
-package org.pastalab.fray.junit.annotations
+package org.pastalab.fray.junit.junit5.annotations
 
 import kotlin.reflect.KClass
 import org.junit.jupiter.api.TestTemplate

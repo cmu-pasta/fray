@@ -1,4 +1,4 @@
-package org.pastalab.fray.junit
+package org.pastalab.fray.junit.junit5
 
 import java.lang.reflect.Constructor
 import org.junit.jupiter.api.extension.*

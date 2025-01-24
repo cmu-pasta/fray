@@ -119,7 +119,18 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
     }
 
     if (name == "interrupt") {
-      return object : GeneratorAdapter(ASM9, mv, access, name, descriptor) {
+      val eMv =
+          MethodEnterVisitor(
+              mv,
+              org.pastalab.fray.runtime.Runtime::onThreadInterrupt,
+              access,
+              name,
+              descriptor,
+              true,
+              false)
+
+      return object : GeneratorAdapter(ASM9, eMv, access, name, descriptor) {
+
         override fun visitMethodInsn(
             opcode: Int,
             owner: String,
@@ -127,14 +138,6 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
             descriptor: String,
             isInterface: Boolean
         ) {
-          if (name == "interrupt0") {
-            loadThis()
-            invokeStatic(
-                Type.getObjectType(
-                    org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
-                Utils.kFunctionToASMMethod(org.pastalab.fray.runtime.Runtime::onThreadInterrupt),
-            )
-          }
           super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
           if (name == "interrupt0") {
             loadThis()

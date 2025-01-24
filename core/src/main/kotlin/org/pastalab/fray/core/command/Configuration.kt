@@ -34,7 +34,6 @@ import org.pastalab.fray.core.scheduler.*
 data class ExecutionInfo(
     @Polymorphic val executor: Executor,
     val ignoreUnhandledExceptions: Boolean,
-    val timedOpAsYield: Boolean,
     val interleaveMemoryOps: Boolean,
     val maxScheduledStep: Int,
 )
@@ -42,7 +41,7 @@ data class ExecutionInfo(
 sealed class ExecutionConfig(name: String) : OptionGroup(name) {
   open fun getExecutionInfo(): ExecutionInfo {
     return ExecutionInfo(
-        MethodExecutor("", "", emptyList(), emptyList(), emptyMap()), false, false, false, 10000000)
+        MethodExecutor("", "", emptyList(), emptyList(), emptyMap()), false, false, 10000000)
   }
 }
 
@@ -57,7 +56,6 @@ class CliExecutionConfig : ExecutionConfig("cli") {
       option("-cp", "--classpath", help = "Arguments passed to target application")
           .split(":")
           .default(emptyList())
-  val timedOpAsYield by option("-y", "--timed-op-as-yield").flag()
   val ignoreUnhandledExceptions by option("-e", "--ignore-unhandled-exceptions").flag()
   val interleaveMemoryOps by option("-m", "--memory").flag()
   val maxScheduledStep by option("-s", "--max-scheduled-step").int().default(10000)
@@ -68,7 +66,6 @@ class CliExecutionConfig : ExecutionConfig("cli") {
     return ExecutionInfo(
         MethodExecutor(clazz, method, targetArgs, classpaths, propertyMap),
         ignoreUnhandledExceptions,
-        timedOpAsYield,
         interleaveMemoryOps,
         maxScheduledStep)
   }
