@@ -13,7 +13,16 @@ class ScheduleRecorder : ScheduleObserver {
   }
 
   override fun onNewSchedule(enabledSchedules: List<ThreadContext>, scheduled: ThreadContext) {
-    val operation = scheduled.pendingOperation.toString()
+    var operation = scheduled.pendingOperation.toString()
+    var count = 0
+    for (st in Thread.currentThread().stackTrace.drop(1)) {
+      if (st.className.startsWith("org.pastalab.fray")) {
+        continue
+      }
+      operation += "@${st.className}.${st.methodName},"
+      count += 1
+      if (count == 3) break
+    }
     val enabled = enabledSchedules.map { it.index }.toList()
     val scheduledIndex = scheduled.index
     val recording = ScheduleRecording(scheduledIndex, enabled, operation)

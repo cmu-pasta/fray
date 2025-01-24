@@ -1,6 +1,7 @@
 package org.pastalab.fray.core
 
 import java.time.Duration
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ForkJoinPool
@@ -839,7 +840,24 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onNanoTime(): Long {
-    return context.nanoTime()
+    if (checkEntered()) return System.nanoTime()
+    val value = context.nanoTime()
+    entered.set(false)
+    return value
+  }
+
+  override fun onCurrentTimeMillis(): Long {
+    if (checkEntered()) return System.currentTimeMillis()
+    val value = context.currentTimeMillis()
+    entered.set(false)
+    return value
+  }
+
+  override fun onInstantNow(): Instant {
+    if (checkEntered()) return Instant.now()
+    val instant = context.instantNow()
+    entered.set(false)
+    return instant
   }
 
   override fun onObjectHashCode(t: Any): Int {

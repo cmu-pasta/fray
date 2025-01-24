@@ -22,7 +22,16 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) : ScheduleObserve
     val recording = schedules[index]
     val scheduledIndex = scheduled.index
     val enabled = enabledSchedules.map { it.index }.toList()
-    val operation = scheduled.pendingOperation.toString()
+    var operation = scheduled.pendingOperation.toString()
+    var count = 0
+    for (st in Thread.currentThread().stackTrace.drop(1)) {
+      if (st.className.startsWith("org.pastalab.fray")) {
+        continue
+      }
+      operation += "@${st.className}.${st.methodName},"
+      count += 1
+      if (count == 3) break
+    }
     if (recording.scheduled != scheduledIndex) {
       throw IllegalStateException(
           "Scheduled index mismatch: expected ${recording.scheduled}, got $scheduledIndex")
