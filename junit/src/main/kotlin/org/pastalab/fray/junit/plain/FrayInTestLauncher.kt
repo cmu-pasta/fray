@@ -23,6 +23,7 @@ object FrayInTestLauncher {
       randomnessProvider: ControlledRandom,
       iteration: Int,
       timeout: Int,
+      isReplay: Boolean,
       additionalConfigs: (Configuration) -> Unit = { _ -> }
   ) {
     val config =
@@ -42,7 +43,7 @@ object FrayInTestLauncher {
             true,
             false,
             true,
-            false,
+            isReplay,
             false,
             false,
         )
@@ -52,7 +53,7 @@ object FrayInTestLauncher {
   }
 
   fun launchFrayTest(test: Runnable) {
-    launchFray(test, PCTScheduler(ControlledRandom(), 15, 0), ControlledRandom(), 10000, 120)
+    launchFray(test, PCTScheduler(ControlledRandom(), 15, 0), ControlledRandom(), 10000, 120, false)
   }
 
   fun launchFrayReplay(test: Runnable, path: String) {
@@ -60,7 +61,7 @@ object FrayInTestLauncher {
     val schedulerPath = "${path}/schedule.json"
     val randomnessProvider = Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
     val scheduler = Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
-    launchFray(test, scheduler, randomnessProvider, 1, 10000) {
+    launchFray(test, scheduler, randomnessProvider, 1, 10000, true) {
       val recording = Path("${path}/recording.json")
       if (recording.exists()) {
         val verifier = ScheduleVerifier(recording.absolutePathString())
