@@ -1,10 +1,13 @@
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+import org.jreleaser.model.Active
+import org.jreleaser.model.api.deploy.maven.MavenCentralMavenDeployer.Stage
 
 plugins {
   kotlin("jvm") version "2.0.0"
   id("maven-publish")
   id("com.ncorti.ktfmt.gradle") version "0.17.0"
   id("org.jetbrains.dokka") version "1.9.20"
+  id("org.jreleaser") version "1.16.0"
 }
 
 repositories {
@@ -27,7 +30,30 @@ allprojects {
   base.archivesName = "${rootProject.name}-$name"
 }
 
-configure(allprojects - rootProject - project(":instrumentation") - project(":plugins").subprojects) {
+jreleaser {
+  signing {
+    active.set(Active.ALWAYS)
+    armored.set(true)
+  }
+  deploy {
+    maven {
+      mavenCentral {
+        active.set(Active.ALWAYS)
+        create("sonatype") {
+          snapshotSupported = true
+          stage = Stage.UPLOAD
+          active = Active.ALWAYS
+          url = "https://central.sonatype.com/api/v1/publisher"
+          stagingRepository("build/staging-deploy")
+        }
+      }
+    }
+  }
+}
+
+configure(allprojects - rootProject -
+    project(":instrumentation") - project(":plugins").subprojects - project(":plugins")
+    - project(":instrumentation:base") - project(":integration-test")) {
   plugins.apply("maven-publish")
   plugins.apply("org.jetbrains.dokka")
   afterEvaluate {
@@ -54,6 +80,18 @@ configure(allprojects - rootProject - project(":instrumentation") - project(":pl
                 url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
               }
             }
+            developers {
+              developer {
+                id = "aoli-al"
+                name = "Ao Li"
+                email = "aoli.al@hotmail.com"
+              }
+            }
+            scm {
+              connection = "scm:git:https://github.com/cmu-pasta/fray.git"
+              developerConnection = "scm:git:ssh://github.com/cmu-pasta/fray.git"
+              url = "https://github.com/cmu-pasta/fray"
+            }
           }
           afterEvaluate {
             val shadowJar = tasks.findByName("shadowJar")
@@ -70,12 +108,7 @@ configure(allprojects - rootProject - project(":instrumentation") - project(":pl
       }
       repositories {
         maven {
-          name = "GitHubPackages"
-          url = uri("https://maven.pkg.github.com/cmu-pasta/fray")
-          credentials {
-            username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
-            password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
-          }
+          url = rootProject.layout.buildDirectory.dir("staging-deploy").get().asFile.toURI()
         }
       }
     }

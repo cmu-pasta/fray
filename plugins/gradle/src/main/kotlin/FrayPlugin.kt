@@ -23,7 +23,8 @@ class FrayPlugin : Plugin<Project> {
               "testImplementation", "org.pastalab.fray:fray-jvmti-$os-$arch:$frayVersion")
       val frayInstrumentation =
           target.dependencies.add(
-              "testImplementation", "org.pastalab.fray.instrumentation:fray-agent:$frayVersion:shadow")
+              "testImplementation",
+              "org.pastalab.fray.instrumentation:fray-agent:$frayVersion:shadow")
       val javaPath = "${target.rootProject.layout.buildDirectory.get().asFile}/${Commons.JAVA_PATH}"
       val jvmtiPath =
           "${target.rootProject.layout.buildDirectory.get().asFile}/${Commons.JVMTI_BASE}"
