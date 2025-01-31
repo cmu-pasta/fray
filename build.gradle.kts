@@ -23,6 +23,8 @@ tasks {
 
 allprojects {
   plugins.apply("com.ncorti.ktfmt.gradle")
+  plugins.apply("base")
+  base.archivesName = "${rootProject.name}-$name"
 }
 
 configure(allprojects - rootProject - project(":instrumentation") - project(":plugins").subprojects) {
@@ -48,8 +50,8 @@ configure(allprojects - rootProject - project(":instrumentation") - project(":pl
             url = "github.com/cmu-pasta/fray"
             licenses {
               license {
-                name = "GPL-3.0"
-                url = "https://www.gnu.org/licenses/gpl-3.0.html"
+                name = "Apache-2.0"
+                url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
               }
             }
           }
@@ -60,8 +62,9 @@ configure(allprojects - rootProject - project(":instrumentation") - project(":pl
           }
           if (project.name != "jvmti") {
             artifact(tasks["dokkaJavadocJar"])
+            artifactId = project.base.archivesName.get()
           } else {
-            artifactId = "jvmti-$os-$arch"
+            artifactId = project.base.archivesName.get() + "-$os-$arch"
           }
         }
       }
