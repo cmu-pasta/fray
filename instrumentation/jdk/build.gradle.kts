@@ -43,7 +43,7 @@ tasks.build {
         if (File(jdkPath).exists()) {
           delete(file(jdkPath))
         }
-        var runtimeJar = "$path/../libs/${project.name}-$version.jar"
+        var runtimeJar = "$path/../libs/${base.archivesName.get()}-$version.jar"
         val jarDir = file(path)
 
         val jars = jarDir.listFiles { file -> file.extension == "jar" }

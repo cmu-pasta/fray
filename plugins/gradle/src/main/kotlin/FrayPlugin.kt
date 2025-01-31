@@ -17,19 +17,20 @@ class FrayPlugin : Plugin<Project> {
       val arch = DefaultNativePlatform.getCurrentArchitecture().name
       val frayJdk =
           target.dependencies.add(
-              "testImplementation", "org.pastalab.fray.instrumentation:jdk:$frayVersion")
+              "testImplementation", "org.pastalab.fray.instrumentation:fray-jdk:$frayVersion")
       val frayJvmti =
           target.dependencies.add(
-              "testImplementation", "org.pastalab.fray:jvmti-$os-$arch:$frayVersion")
+              "testImplementation", "org.pastalab.fray:fray-jvmti-$os-$arch:$frayVersion")
       val frayInstrumentation =
           target.dependencies.add(
-              "testImplementation", "org.pastalab.fray.instrumentation:agent:$frayVersion:shadow")
+              "testImplementation",
+              "org.pastalab.fray.instrumentation:fray-agent:$frayVersion:shadow")
       val javaPath = "${target.rootProject.layout.buildDirectory.get().asFile}/${Commons.JAVA_PATH}"
       val jvmtiPath =
           "${target.rootProject.layout.buildDirectory.get().asFile}/${Commons.JVMTI_BASE}"
-      target.dependencies.add("testImplementation", "org.pastalab.fray:core:$frayVersion")
-      target.dependencies.add("testImplementation", "org.pastalab.fray:junit:$frayVersion")
-      target.dependencies.add("testCompileOnly", "org.pastalab.fray:runtime:$frayVersion")
+      target.dependencies.add("testImplementation", "org.pastalab.fray:fray-core:$frayVersion")
+      target.dependencies.add("testImplementation", "org.pastalab.fray:fray-junit:$frayVersion")
+      target.dependencies.add("testCompileOnly", "org.pastalab.fray:fray-runtime:$frayVersion")
       val jlink =
           target.tasks.register("jlink", PrepareWorkspaceTask::class.java).get().apply {
             this.frayJdk.set(frayJdk)
