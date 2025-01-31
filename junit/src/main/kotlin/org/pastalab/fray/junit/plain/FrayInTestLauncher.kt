@@ -11,7 +11,7 @@ import org.pastalab.fray.core.command.ExecutionInfo
 import org.pastalab.fray.core.command.LambdaExecutor
 import org.pastalab.fray.core.observers.ScheduleVerifier
 import org.pastalab.fray.core.randomness.ControlledRandom
-import org.pastalab.fray.core.scheduler.PCTScheduler
+import org.pastalab.fray.core.scheduler.POSScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
 import org.pastalab.fray.junit.Common.WORK_DIR
 
@@ -53,7 +53,7 @@ object FrayInTestLauncher {
   }
 
   fun launchFrayTest(test: Runnable) {
-    launchFray(test, PCTScheduler(ControlledRandom(), 15, 0), ControlledRandom(), 10000, 120, false)
+    launchFray(test, POSScheduler(), ControlledRandom(), 10000, 120, false)
   }
 
   fun launchFrayReplay(test: Runnable, path: String) {
