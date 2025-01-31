@@ -17,14 +17,15 @@ class FrayPlugin : Plugin<Project> {
       val arch = DefaultNativePlatform.getCurrentArchitecture().name
       val frayJdk =
           target.dependencies.add(
-              "testImplementation", "org.pastalab.fray.instrumentation:fray-jdk:$frayVersion")
+              "testImplementation",
+              "org.pastalab.fray.instrumentation:fray-instrumentation-jdk:$frayVersion")
       val frayJvmti =
           target.dependencies.add(
               "testImplementation", "org.pastalab.fray:fray-jvmti-$os-$arch:$frayVersion")
       val frayInstrumentation =
           target.dependencies.add(
               "testImplementation",
-              "org.pastalab.fray.instrumentation:fray-agent:$frayVersion:shadow")
+              "org.pastalab.fray.instrumentation:fray-instrumentation-agent:$frayVersion:shadow")
       val javaPath = "${target.rootProject.layout.buildDirectory.get().asFile}/${Commons.JAVA_PATH}"
       val jvmtiPath =
           "${target.rootProject.layout.buildDirectory.get().asFile}/${Commons.JVMTI_BASE}"

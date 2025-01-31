@@ -27,7 +27,7 @@ tasks {
 allprojects {
   plugins.apply("com.ncorti.ktfmt.gradle")
   plugins.apply("base")
-  base.archivesName = "${rootProject.name}-$name"
+  base.archivesName = "${rootProject.name}-" + project.path.replaceFirst("^:".toRegex(), "").replace(':', '-')
 }
 
 jreleaser {
@@ -53,7 +53,7 @@ jreleaser {
 
 configure(allprojects - rootProject -
     project(":instrumentation") - project(":plugins").subprojects - project(":plugins")
-    - project(":instrumentation:base") - project(":integration-test")) {
+    - project(":integration-test")) {
   plugins.apply("maven-publish")
   plugins.apply("org.jetbrains.dokka")
   afterEvaluate {
