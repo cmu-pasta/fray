@@ -4,6 +4,12 @@ plugins {
   id("java")
 }
 
+version = "0.1.10-SNAPSHOT"
+
+dependencies {
+  implementation("org.apache.commons:commons-compress:1.27.1")
+}
+
 repositories {
   mavenCentral()
 }
