@@ -14,10 +14,6 @@ repositories {
   mavenCentral()
 }
 
-kotlin {
-  jvmToolchain(11)
-}
-
 tasks {
   wrapper {
     gradleVersion = "8.10.2"
@@ -28,6 +24,18 @@ allprojects {
   plugins.apply("com.ncorti.ktfmt.gradle")
   plugins.apply("base")
   base.archivesName = "${rootProject.name}-" + project.path.replaceFirst("^:".toRegex(), "").replace(':', '-')
+  plugins.withId("org.jetbrains.kotlin.jvm") {
+    kotlin {
+      jvmToolchain(11)
+    }
+  }
+  plugins.withType<JavaPlugin> {
+    java {
+      toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+      }
+    }
+  }
 }
 
 jreleaser {

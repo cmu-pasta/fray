@@ -17,7 +17,7 @@ class ControlledRandom(
 
   fun nextInt(): Int {
     if (integerIndex >= integers.size) {
-      val value = random.nextInt(0, Int.MAX_VALUE)
+      val value = random.nextInt(Int.MAX_VALUE)
       integers.add(value)
       integerIndex += 1
       return value
@@ -37,7 +37,7 @@ class ControlledRandom(
 
   fun nextDouble(origin: Double, bound: Double): Double {
     if (doubleIndex >= doubles.size) {
-      val value = random.nextDouble(origin, bound)
+      val value = origin + random.nextDouble() * (bound - origin)
       doubles.add(value)
       doubleIndex += 1
       return value
