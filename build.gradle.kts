@@ -15,7 +15,7 @@ repositories {
 }
 
 kotlin {
-  jvmToolchain(21)
+  jvmToolchain(11)
 }
 
 tasks {
