@@ -883,7 +883,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
 
   override fun onThreadSleepDuration(duration: Duration) {
     if (checkEntered()) {
-      Thread.sleep(duration)
+      Thread.sleep(duration.toMillis())
       return
     }
     try {

@@ -300,7 +300,7 @@ public class Delegate {
     }
 
     public void onThreadSleepDuration(Duration duration) throws InterruptedException {
-        Thread.sleep(duration);
+        Thread.sleep(duration.toMillis());
     }
 
     public void onThreadSleepMillisNanos(long millis, int nanos) throws InterruptedException {

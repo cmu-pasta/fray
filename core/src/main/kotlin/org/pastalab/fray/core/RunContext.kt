@@ -241,7 +241,7 @@ class RunContext(val config: Configuration) {
       originalHanlder?.uncaughtException(t, e)
     }
     t.setUncaughtExceptionHandler(handler)
-    registeredThreads[t.threadId()] = ThreadContext(t, registeredThreads.size, this)
+    registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this)
   }
 
   fun threadStart(t: Thread) {
@@ -862,7 +862,7 @@ class RunContext(val config: Configuration) {
   }
 
   fun threadSleepOperation() {
-    val t = Thread.currentThread().threadId()
+    val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
     // Let's disable the delaying for the sleep operation for now.
     // We may want to make this configurable in the future.
