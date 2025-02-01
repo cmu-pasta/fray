@@ -4,6 +4,10 @@ plugins {
   id("java")
 }
 
+kotlin {
+  jvmToolchain(11)
+}
+
 version = "0.1.10-SNAPSHOT"
 
 dependencies {
