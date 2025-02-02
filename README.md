@@ -13,8 +13,8 @@ Fray is designed to be easy to use and can be integrated into existing testing f
 ## Getting Started
 
 
-Consider you have a bank account application (you may find the complete example in 
-https://github.com/cmu-pasta/fray-examples/blob/main/fray-maven-example/src/test/java/BankAccountTest.java):
+Consider you have a bank account application (you may find the complete example in
+https://github.com/cmu-pasta/fray-examples/blob/main/fray-gradle-example/src/test/java/BankAccountTest.java):
 
 ```java
 public static class BankAccount {
@@ -77,11 +77,11 @@ If Thread 1 and Thread 2 run concurrently, they might both pass the check `if (t
 
 
 Unfortunately, traditional testing frameworks such as JUnit does not test the application under different thread 
-interleavings. In order to find bugs in the application, developers usually implement *hammer* tests, which run the application with a large number of threads and hope to find bugs. 
+interleavings. In order to find bugs in the application, developers usually implement *stress* tests, which run the application with a large number of threads and hope to find bugs. 
 
 ```java 
 @Test 
-public void MyHammerTest() {
+public void myStressTest() {
     for (int i = 0; i < 1000; i++) {
         testBankAccount();
     }
@@ -157,21 +157,14 @@ The easist way to use Fray is through gradle plugin.
 
 ```kotlin
 plugins {
-    id("org.pastalab.fray.gradle") version "0.1"
-}
-
-fray {
-  version = "0.1.6-SNAPSHOT"
-}
-
-tasks.test {
-  dependsOn("frayTest")
+    id("org.pastalab.fray.gradle") version "0.1.10"
 }
 ```
 
 The gradle plugin will configure your project to use Fray. You can write Fray tests similar to JUnit tests. 
 
 ```java 
+@ExtendWith(FrayTestExtension.class)
 public class TestClass {
   ...
     @ConcurrencyTest
