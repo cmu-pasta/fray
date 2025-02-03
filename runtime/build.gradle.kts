@@ -1,14 +1,15 @@
 plugins {
-    java
+  java
+  kotlin("jvm")
 }
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
 }
 
 tasks.test {
-    useJUnitPlatform()
+  useJUnitPlatform()
 }

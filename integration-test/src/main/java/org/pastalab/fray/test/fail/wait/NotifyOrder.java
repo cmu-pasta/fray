@@ -57,4 +57,8 @@ public class NotifyOrder {
     public static void main(String[] args) throws InterruptedException {
         notifyOrder();
     }
+
+    public static void test() throws InterruptedException {
+        notifyOrder();
+    }
 }
