@@ -8,6 +8,8 @@ dependencies {
   implementation("org.apache.commons:commons-compress:1.27.1")
 }
 
+version = "0.1.11"
+
 repositories {
   mavenCentral()
 }
