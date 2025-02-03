@@ -3,6 +3,9 @@ package org.pastalab.fray.gradle
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.testing.junit.JUnitOptions
+import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions
+import org.gradle.api.tasks.testing.testng.TestNGOptions
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.pastalab.fray.gradle.tasks.PrepareWorkspaceTask
 
@@ -40,6 +43,19 @@ class FrayPlugin : Plugin<Project> {
           }
       target.tasks.register("frayTest", Test::class.java) {
         it.executable(javaPath)
+        val testFramework = target.tasks.named("test", Test::class.java).get().testFramework.options
+        when (testFramework) {
+          is JUnitPlatformOptions ->
+              it.useJUnitPlatform { options ->
+                options.includeTags(*testFramework.includeTags.toTypedArray())
+                options.excludeTags(*testFramework.excludeTags.toTypedArray())
+                options.includeEngines(*testFramework.includeEngines.toTypedArray())
+                options.excludeEngines(*testFramework.excludeEngines.toTypedArray())
+              }
+          is JUnitOptions -> it.useJUnit()
+          is TestNGOptions -> it.useTestNG()
+          else -> throw IllegalArgumentException("Unsupported test framework $testFramework")
+        }
         it.jvmArgs("-agentpath:$jvmtiPath/libjvmti.so")
         it.jvmArgs(
             "-javaagent:${it.project.configurations.detachedConfiguration(frayInstrumentation).resolve().first()}")
