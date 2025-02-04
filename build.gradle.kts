@@ -50,7 +50,7 @@ jreleaser {
         active.set(Active.ALWAYS)
         create("sonatype") {
           snapshotSupported = true
-          stage = Stage.UPLOAD
+          stage = Stage.FULL
           active = Active.ALWAYS
           url = "https://central.sonatype.com/api/v1/publisher"
           stagingRepository("build/staging-deploy")
