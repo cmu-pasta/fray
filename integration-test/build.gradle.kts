@@ -1,11 +1,11 @@
 plugins {
-    id("java")
+  id("java")
 }
 
 group = "org.pastalab.fray.test"
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {

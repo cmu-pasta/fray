@@ -5,8 +5,6 @@ import java.io.StringWriter
 import java.lang.Thread.UncaughtExceptionHandler
 import java.time.Instant
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
@@ -14,12 +12,14 @@ import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 import java.util.concurrent.locks.StampedLock
 import kotlin.system.exitProcess
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.concurrency.HelperThread
+import org.pastalab.fray.core.concurrency.ReentrantReadWriteLockCache
 import org.pastalab.fray.core.concurrency.SynchronizationManager
 import org.pastalab.fray.core.concurrency.operations.*
 import org.pastalab.fray.core.concurrency.primitives.ConditionSignalContext
@@ -66,10 +66,32 @@ class RunContext(val config: Configuration) {
         when (it) {
           is ReentrantLock -> ReentrantLockContext()
           is ReadLock -> {
-            throw RuntimeException("ReadLock should not be created here")
+            val result =
+                ReentrantReadWriteLockCache.getLock(it)?.let { lock ->
+                  reentrantReadWriteLockInit(lock).first
+                }
+            if (result != null) {
+              result
+            } else {
+              val context = ReadLockContext()
+              context.writeLockContext = WriteLockContext()
+              context.writeLockContext.readLockContext = context
+              context
+            }
           }
           is WriteLock -> {
-            throw RuntimeException("WriteLock should not be created here")
+            val result =
+                ReentrantReadWriteLockCache.getLock(it)?.let { lock ->
+                  reentrantReadWriteLockInit(lock).second
+                }
+            if (result != null) {
+              result
+            } else {
+              val context = WriteLockContext()
+              context.readLockContext = ReadLockContext()
+              context.readLockContext.writeLockContext = context
+              context
+            }
           }
           else -> ReentrantLockContext()
         }
@@ -90,24 +112,10 @@ class RunContext(val config: Configuration) {
       }
   private var step = 0
   val syncManager = SynchronizationManager()
-  var executor: ExecutorService =
-      Executors.newSingleThreadExecutor { r ->
-        object : HelperThread() {
-          override fun run() {
-            r.run()
-          }
-        }
-      }
+  var executor = HelperThread()
 
-  fun bootstrap() {
-    executor =
-        Executors.newSingleThreadExecutor { r ->
-          object : HelperThread() {
-            override fun run() {
-              r.run()
-            }
-          }
-        }
+  init {
+    executor.start()
   }
 
   fun reportError(e: Throwable) {
@@ -201,9 +209,6 @@ class RunContext(val config: Configuration) {
 
   fun start() {
     val t = Thread.currentThread()
-    // We need to submit a dummy task to trigger the executor
-    // thread creation
-    executor.submit {}
     config.scheduleObservers.forEach { it.onExecutionStart() }
     step = 0
     bugFound = null
@@ -231,7 +236,7 @@ class RunContext(val config: Configuration) {
 
   fun shutDown() {
     org.pastalab.fray.runtime.Runtime.DELEGATE = org.pastalab.fray.runtime.Delegate()
-    executor.shutdown()
+    executor.stopHelperThread()
   }
 
   fun threadCreateDone(t: Thread) {
@@ -587,13 +592,19 @@ class RunContext(val config: Configuration) {
     lockImpl(lock, false, true, canInterrupt, false)
   }
 
-  fun reentrantReadWriteLockInit(readLock: ReadLock, writeLock: WriteLock) {
+  fun reentrantReadWriteLockInit(
+      lock: ReentrantReadWriteLock
+  ): Pair<ReadLockContext, WriteLockContext> {
+    val readLock = lock.readLock()
+    val writeLock = lock.writeLock()
     val writeLockContext = WriteLockContext()
     val readLockContext = ReadLockContext()
     readLockContext.writeLockContext = writeLockContext
     writeLockContext.readLockContext = readLockContext
     lockManager.addContext(readLock, readLockContext)
     lockManager.addContext(writeLock, writeLockContext)
+    ReentrantReadWriteLockCache.registerLock(lock)
+    return Pair(readLockContext, writeLockContext)
   }
 
   fun unlockImpl(
