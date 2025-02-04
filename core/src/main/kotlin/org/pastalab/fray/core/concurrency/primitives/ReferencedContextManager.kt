@@ -14,11 +14,16 @@ class ReferencedContextManager<T>(val contextProducer: (Any) -> T) {
 
   fun getContext(obj: Any): T {
     val id = System.identityHashCode(obj)
-    if (!objMap.containsKey(id)) {
+    if (!hasContext(obj)) {
       objMap[id] = Pair(contextProducer(obj), IdentityPhantomReference(obj, queue))
       gc()
     }
     return objMap[id]!!.first
+  }
+
+  fun hasContext(obj: Any): Boolean {
+    val id = System.identityHashCode(obj)
+    return objMap.containsKey(id)
   }
 
   fun addContext(lock: Any, context: T) {

@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
   id("java")
   kotlin("jvm")
-  id("io.github.goooler.shadow") version "8.1.7"
+  id("com.gradleup.shadow")
 }
 
 repositories {

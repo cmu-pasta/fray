@@ -1,5 +1,5 @@
 package org.pastalab.fray.gradle
 
 open class FrayExtension {
-  var version = "0.1.10"
+  var version = "0.2.0"
 }

@@ -422,18 +422,23 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     if (onSkipRecursion.get()) {
       return false
     }
-    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
-      return false
+    onSkipRecursion.set(true)
+    try {
+      if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
+        return false
+      }
+      if (stackTrace.get().isEmpty()) {
+        return false
+      }
+      val last = stackTrace.get().removeLast()
+      if (last != signature) {
+        return false
+      }
+      skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+      return true
+    } finally {
+      onSkipRecursion.set(false)
     }
-    if (stackTrace.get().isEmpty()) {
-      return false
-    }
-    val last = stackTrace.get().removeLast()
-    if (last != signature) {
-      return false
-    }
-    skipFunctionEntered.set(skipFunctionEntered.get() - 1)
-    return true
   }
 
   fun onThreadParkImpl(): Boolean {
@@ -509,7 +514,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onReentrantReadWriteLockInit(lock: ReentrantReadWriteLock) {
-    context.reentrantReadWriteLockInit(lock.readLock(), lock.writeLock())
+    context.reentrantReadWriteLockInit(lock)
   }
 
   override fun onSemaphoreInit(sem: Semaphore) {

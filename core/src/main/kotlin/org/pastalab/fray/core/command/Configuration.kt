@@ -236,10 +236,16 @@ data class Configuration(
   val startTime = TimeSource.Monotonic.markNow()
 
   fun saveToReportFolder(index: Int) {
-    Paths.get("$report/recording_$index").createDirectories()
-    File("$report/recording_$index/schedule.json").writeText(Json.encodeToString(scheduler))
-    File("$report/recording_$index/random.json").writeText(Json.encodeToString(randomnessProvider))
-    scheduleObservers.forEach { it.saveToReportFolder("$report/recording_$index") }
+    val path =
+        if (exploreMode) {
+          "$report/recording_$index"
+        } else {
+          "$report/recording"
+        }
+    Paths.get(path).createDirectories()
+    File("$path/schedule.json").writeText(Json.encodeToString(scheduler))
+    File("$path/random.json").writeText(Json.encodeToString(randomnessProvider))
+    scheduleObservers.forEach { it.saveToReportFolder(path) }
   }
 
   val frayLogger = FrayLogger("$report/fray.log")

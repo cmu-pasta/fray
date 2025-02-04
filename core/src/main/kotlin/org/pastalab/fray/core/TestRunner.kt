@@ -10,10 +10,6 @@ class TestRunner(val config: Configuration) {
   val context = RunContext(config)
   var currentDivision = 1
 
-  init {
-    context.bootstrap()
-  }
-
   fun reportProgress(iteration: Int, bugsFound: Int) {
     if (config.isReplay) return
     if (iteration % currentDivision == 0) {
