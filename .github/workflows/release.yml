@@ -42,6 +42,7 @@ jobs:
         if: runner.os == 'Linux'
         run: ./gradlew publish -Pversion=$VERSION
       - name: Publish to Maven Central
+        continue-on-error: true
         run: ./gradlew jreleaserFullRelease -Pversion=$VERSION
         env:
           JRELEASER_MAVENCENTRAL_USERNAME: ${{secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
