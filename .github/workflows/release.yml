@@ -33,27 +33,30 @@ jobs:
           echo "Version: $BASE_VERSION"
       - name: Create jreleaser work directory
         run: mkdir -p ./build/jreleaser
-      - name: build the repository
+      - name: Build the repository
         run: ./gradlew build
-      - name: publish to github package repository (macOS)
+      - name: Create stage deploy (macOS)
         if: runner.os == 'macOS'
         run: ./gradlew :jvmti:publish -Pversion=$VERSION
-      - name: create stage (Linux)
+      - name: Create stage deploy (Linux)
         if: runner.os == 'Linux'
         run: ./gradlew publish -Pversion=$VERSION
-      - name: publish to Maven Central
+      - name: Publish to Maven Central
+        continue-on-error: true
         run: ./gradlew jreleaserFullRelease -Pversion=$VERSION
         env:
           JRELEASER_MAVENCENTRAL_USERNAME: ${{secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
           JRELEASER_MAVENCENTRAL_PASSWORD: ${{secrets.JRELEASER_MAVENCENTRAL_PASSWORD}}
-          JRELEASER_GPG_PASSPHRASE: ${{secrets.JRELEASER_MAVENCENTRAL_PASSWORD}}
+          JRELEASER_GPG_PASSPHRASE: ${{secrets.JRELEASER_GPG_PASSPHRASE}}
           JRELEASER_GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           JRELEASER_GPG_PUBLIC_KEY: ${{secrets.JRELEASER_GPG_PUBLIC_KEY}}
           JRELEASER_GPG_SECRET_KEY: ${{secrets.JRELEASER_GPG_SECRET_KEY}}
-      - name: publish to Gradle Plugins Portal
+      - name: Publish to Gradle Plugins Portal
+        if: runner.os == 'Linux'
         run: ./gradlew publishPlugins
         env:
-          GRADLE_PUBLISH_KEY: ${{secrets.GRADLE_PUBLISH_SECRET}}
+          GRADLE_PUBLISH_KEY: ${{secrets.GRADLE_PUBLISH_KEY}}
+          GRADLE_PUBLISH_SECRET: ${{secrets.GRADLE_PUBLISH_SECRET}}
       - uses: actions/create-release@v1
         if: runner.os == 'Linux' && github.event.inputs.mode == 'staging'
         env:
