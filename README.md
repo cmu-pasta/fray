@@ -75,7 +75,10 @@ Fray can be used with other testing frameworks as well. You may use the `FrayInT
 
 ```java
 import org.pastalab.fray.junit.plain.FrayInTestLauncher;
-FrayInTestLauncher.INSTANCE.launchFrayTest(() -> {
+
+public void test() {
+    FrayInTestLauncher.INSTANCE.launchFrayTest(() -> {
     ...
-});
+    });
+}
 ```
