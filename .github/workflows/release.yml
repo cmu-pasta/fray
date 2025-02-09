@@ -2,8 +2,8 @@ name: Publish package to Maven Central and Gradle Plugin Portal
 on:
   workflow_dispatch:
     inputs:
-      mode:
-        description: 'version'
+      version:
+        description: 'Release version'
         default: ''
 jobs:
   publish:
@@ -68,12 +68,14 @@ jobs:
           draft: false
           prerelease: true
       - name: Update README version
+        if: runner.os == 'Linux'
         run: |
           LATEST_VERSION=${{ env.VERSION }}
           sed -i "s/id(\"org.pastalab.fray.gradle\") version \".*\"/id(\"org.pastalab.fray.gradle\") version \"$LATEST_VERSION\"/" README.md
           sed -i "s|<version>.*</version>|<version>$LATEST_VERSION</version>|" README.md
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
+        if: runner.os == 'Linux'
         with:
           token: ${{ secrets.GITHUB_TOKEN }} # You need to create your own token with pull request rights
           commit-message: update readme
