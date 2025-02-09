@@ -3,9 +3,8 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'staging/snapshot, default is snapshot'
-        required: true
-        default: 'snapshot'
+        description: 'version'
+        default: ''
 jobs:
   publish:
     runs-on: ${{ matrix.operating-system }}
@@ -24,9 +23,10 @@ jobs:
           cache: 'gradle'
       - name: Read and update version
         run: |
-          BASE_VERSION=$(grep "^version=" gradle.properties | cut -d'=' -f2)
-          if [[ "${{ github.event.inputs.mode }}" == "staging" ]]; then
-            BASE_VERSION=${BASE_VERSION/-SNAPSHOT/}
+          if [[ -n "${{ github.event.inputs.version }}" ]]; then
+            BASE_VERSION="${{ github.event.inputs.version }}"
+          else
+            BASE_VERSION=$(grep "^version=" gradle.properties | cut -d'=' -f2)
           fi
           echo "VERSION=${BASE_VERSION}" >> $GITHUB_ENV
           echo "Version: $BASE_VERSION"
@@ -57,7 +57,7 @@ jobs:
           GRADLE_PUBLISH_KEY: ${{secrets.GRADLE_PUBLISH_KEY}}
           GRADLE_PUBLISH_SECRET: ${{secrets.GRADLE_PUBLISH_SECRET}}
       - uses: actions/create-release@v1
-        if: runner.os == 'Linux' && github.event.inputs.mode == 'staging'
+        if: runner.os == 'Linux'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -69,3 +69,18 @@ jobs:
             - Published packages are available in Maven central.
           draft: false
           prerelease: true
+      - name: Update README version
+        run: |
+          LATEST_VERSION=${{ env.VERSION }}
+          sed -i "s/id(\"org.pastalab.fray.gradle\") version \".*\"/id(\"org.pastalab.fray.gradle\") version \"$LATEST_VERSION\"/" README.md
+          sed -i "s|<version>.*</version>|<version>$LATEST_VERSION</version>|" README.md
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }} # You need to create your own token with pull request rights
+          commit-message: update readme
+          title: Update readme
+          body: Update readme to reflect release changes
+          branch: update-readme
+          base: main
+
