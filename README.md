@@ -14,7 +14,7 @@ To use Fray with Gradle, add the following plugin to your `build.gradle` file:
 
 ```kotlin
 plugins {
-    id("org.pastalab.fray.gradle") version "0.2.2"
+    id("org.pastalab.fray.gradle") version ""
 }
 ```
 
@@ -26,7 +26,7 @@ plugins {
 <plugin>
     <groupId>org.pastalab.fray.maven</groupId>
     <artifactId>fray-plugins-maven</artifactId>
-    <version>0.2.2</version>
+    <version></version>
     <executions>
         <execution>
             <id>prepare-fray</id>
@@ -44,7 +44,7 @@ plugins {
 <dependency>
     <groupId>org.pastalab.fray</groupId>
     <artifactId>fray-junit</artifactId>
-    <version>0.2.2</version>
+    <version></version>
     <scope>test</scope>
 </dependency>
 ```
