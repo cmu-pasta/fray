@@ -1,5 +1,7 @@
 package org.pastalab.fray.gradle
 
+import org.pastalab.fray.plugins.base.FrayVersion
+
 open class FrayExtension {
-  var version = "0.2.1"
+  var version = FrayVersion.version
 }

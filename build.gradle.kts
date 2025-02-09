@@ -6,7 +6,6 @@ plugins {
   kotlin("jvm") version "2.0.0"
   id("maven-publish")
   id("com.ncorti.ktfmt.gradle") version "0.17.0"
-  id("org.jetbrains.dokka") version "1.9.20"
   id("org.jreleaser") version "1.16.0"
   id("com.gradleup.shadow") version "9.0.0-beta7"
 }
@@ -60,17 +59,16 @@ jreleaser {
   }
 }
 
+
 configure(allprojects - rootProject -
-    project(":instrumentation") - project(":plugins").subprojects - project(":plugins")
-    - project(":integration-test")) {
+    project(":instrumentation") -
+    project(":plugins") -
+    project(":plugins:gradle") -
+    project(":plugins:idea") -
+    project(":integration-test")) {
   plugins.apply("maven-publish")
-  plugins.apply("org.jetbrains.dokka")
   afterEvaluate {
-    tasks.register<Jar>("dokkaJavadocJar") {
-      dependsOn(tasks.dokkaJavadoc)
-      from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
-      archiveClassifier.set("javadoc")
-    }
+
     java {
       withSourcesJar()
     }
@@ -102,13 +100,9 @@ configure(allprojects - rootProject -
               url = "https://github.com/cmu-pasta/fray"
             }
           }
-          afterEvaluate {
-            val shadowJar = tasks.findByName("shadowJar")
-            if (shadowJar == null) from(components["java"])
-            else artifact(shadowJar)
-          }
+          if (components.findByName("shadow") == null) from(components["java"])
+          else from(components["shadow"])
           if (project.name != "jvmti") {
-            artifact(tasks["dokkaJavadocJar"])
             artifactId = project.base.archivesName.get()
           } else {
             artifactId = project.base.archivesName.get() + "-$os-$arch"

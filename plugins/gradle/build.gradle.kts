@@ -4,11 +4,10 @@ plugins {
   id("com.gradle.plugin-publish") version "1.2.1"
   kotlin("jvm")
   id("java")
-  id("com.gradleup.shadow")
 }
 
 dependencies {
-  implementation("org.apache.commons:commons-compress:1.27.1")
+  implementation(project(":plugins:base", configuration = "shadow"))
 }
 
 repositories {
@@ -18,12 +17,6 @@ repositories {
 tasks.test {
   useJUnitPlatform()
 }
-
-tasks.named<ShadowJar>("shadowJar") {
-  archiveClassifier.set("")
-  relocate("org.apache.commons", "org.pastalab.fray.apache.commons")
-}
-
 
 gradlePlugin {
   website = "https://github.com/cmu-pasta/fray"
