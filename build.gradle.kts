@@ -8,7 +8,25 @@ plugins {
   id("com.ncorti.ktfmt.gradle") version "0.17.0"
   id("org.jreleaser") version "1.16.0"
   id("com.gradleup.shadow") version "9.0.0-beta7"
+  id("org.jetbrains.dokka") version "2.0.0"
+  id("org.jetbrains.dokka-javadoc") version "2.0.0"
 }
+
+dokka {
+  moduleName.set("Fray")
+  dokkaSourceSets.main {
+    includes.from("README.md")
+    sourceLink {
+      localDirectory.set(file("src/main/kotlin"))
+      remoteUrl("https://github.com/cmu-pasta/fray")
+      remoteLineSuffix.set("#L")
+    }
+  }
+  pluginsConfiguration.html {
+    footerMessage.set("(c) PASTA Lab, Carnegie Mellon University")
+  }
+}
+
 
 repositories {
   mavenCentral()
@@ -67,8 +85,15 @@ configure(allprojects - rootProject -
     project(":plugins:idea") -
     project(":integration-test")) {
   plugins.apply("maven-publish")
-  afterEvaluate {
+  plugins.apply("org.jetbrains.dokka")
+  plugins.apply("org.jetbrains.dokka-javadoc")
 
+  afterEvaluate {
+    val dokkaJavadocJar by tasks.registering(Jar::class) {
+      description = "A Javadoc JAR containing Dokka Javadoc"
+      from(tasks.dokkaGeneratePublicationJavadoc.flatMap { it.outputDirectory })
+      archiveClassifier.set("javadoc")
+    }
     java {
       withSourcesJar()
     }
@@ -103,6 +128,7 @@ configure(allprojects - rootProject -
           if (components.findByName("shadow") == null) from(components["java"])
           else from(components["shadow"])
           if (project.name != "jvmti") {
+            artifact(dokkaJavadocJar)
             artifactId = project.base.archivesName.get()
           } else {
             artifactId = project.base.archivesName.get() + "-$os-$arch"
