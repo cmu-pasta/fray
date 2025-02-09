@@ -6,10 +6,10 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URI
+import java.util.*
 import java.util.zip.ZipInputStream
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
-import kotlin.math.log
 
 class FrayWorkspaceInitializer(
     val jdkPath: File,
@@ -35,12 +35,11 @@ class FrayWorkspaceInitializer(
               "-J--class-path=$classPaths",
               "--output=${jdkPath.absolutePath}",
               "--add-modules=ALL-MODULE-PATH",
-              "--fray-instrumentation")
+              "--fray-instrumentation",
+          )
       val logFile = File("/tmp/tmp.log")
-      val process = ProcessBuilder(*command)
-          .redirectOutput(logFile)
-          .redirectErrorStream(true)
-          .start()
+      val process =
+          ProcessBuilder(*command).redirectOutput(logFile).redirectErrorStream(true).start()
       process.waitFor()
       jdkVersionPath.createNewFile()
       jdkVersionPath.writeText(frayVersion)

@@ -20,6 +20,18 @@ tasks.named<ShadowJar>("shadowJar") {
   relocate("org.apache.commons", "org.pastalab.fray.apache.commons")
 }
 
+val createVersionProperties by tasks.registering(WriteProperties::class) {
+  val filePath = sourceSets.main.map {
+    it.output.resourcesDir!!.resolve("org/pastalab/fray/plugins/base/version.properties")
+  }
+  destinationFile = filePath
+  property("version", project.version.toString())
+}
+
+tasks.classes {
+  dependsOn(createVersionProperties)
+}
+
 tasks.jar {
   enabled = false
 }

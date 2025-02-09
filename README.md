@@ -62,7 +62,8 @@ import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
 public class SimpleTest {
     @ConcurrencyTest
     public void concurrencyTest() {
-        ...
+        ... // some multithreaded code
+        assert(...);
     }
 }
 
@@ -78,7 +79,8 @@ import org.pastalab.fray.junit.plain.FrayInTestLauncher;
 
 public void test() {
     FrayInTestLauncher.INSTANCE.launchFrayTest(() -> {
-    ...
+        ... // some multithreaded code
+        assert(...);
     });
 }
 ```

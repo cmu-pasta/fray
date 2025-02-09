@@ -9,11 +9,12 @@ import org.apache.maven.plugins.annotations.Mojo
 import org.apache.maven.plugins.annotations.Parameter
 import org.apache.maven.plugins.annotations.ResolutionScope
 import org.apache.maven.project.MavenProject
+import org.pastalab.fray.plugins.base.FrayVersion
 import org.pastalab.fray.plugins.base.FrayWorkspaceInitializer
 
 @Mojo(
     name = "prepare-fray",
-    defaultPhase = LifecyclePhase.VERIFY,
+    defaultPhase = LifecyclePhase.INITIALIZE,
     requiresDependencyResolution = ResolutionScope.RUNTIME,
     threadSafe = true)
 class PrepareFrayMojo : AbstractMojo() {
@@ -50,7 +51,7 @@ class PrepareFrayMojo : AbstractMojo() {
             File(jvmtiPath),
             getJvmtiJarFile(),
             destFile.absolutePath)
-    initializer.createInstrumentedJDK("0.2.2")
+    initializer.createInstrumentedJDK(FrayVersion.version)
     initializer.createJVMTiRuntime()
 
     val oldValue = project!!.properties.getProperty("argLine") ?: ""
