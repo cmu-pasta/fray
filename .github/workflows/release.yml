@@ -53,7 +53,7 @@ jobs:
           JRELEASER_GPG_SECRET_KEY: ${{secrets.JRELEASER_GPG_SECRET_KEY}}
       - name: Publish to Gradle Plugins Portal
         if: runner.os == 'Linux'
-        run: ./gradlew publishPlugins
+        run: ./gradlew publishPlugins -Pversion=$VERSION
         env:
           GRADLE_PUBLISH_KEY: ${{secrets.GRADLE_PUBLISH_KEY}}
           GRADLE_PUBLISH_SECRET: ${{secrets.GRADLE_PUBLISH_SECRET}}

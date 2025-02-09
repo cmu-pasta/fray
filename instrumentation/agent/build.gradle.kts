@@ -10,8 +10,6 @@ repositories {
 }
 
 dependencies {
-  add("shadow", localGroovy())
-  add("shadow", gradleApi())
   testImplementation(platform("org.junit:junit-bom:5.10.0"))
   testImplementation("org.junit.jupiter:junit-jupiter")
   implementation(project(":instrumentation:base"))
@@ -23,7 +21,7 @@ tasks.build {
 }
 
 tasks.named<ShadowJar>("shadowJar") {
-  archiveClassifier.set("shadow")
+  archiveClassifier.set("")
   relocate("org.objectweb.asm", "org.pastalab.fray.instrumentation.agent.asm")
   dependencies {
     exclude(project(":runtime"))
@@ -31,6 +29,10 @@ tasks.named<ShadowJar>("shadowJar") {
   manifest {
     attributes(mapOf("Premain-Class" to "org.pastalab.fray.instrumentation.agent.PreMainKt"))
   }
+}
+
+tasks.jar {
+  enabled = false
 }
 
 tasks.test {

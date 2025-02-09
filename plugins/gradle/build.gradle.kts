@@ -1,5 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 plugins {
   id("com.gradle.plugin-publish") version "1.2.1"
   kotlin("jvm")
