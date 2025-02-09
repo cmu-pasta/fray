@@ -8,9 +8,11 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
       - name: Extract the latest version
         id: get-version
-        run: echo "LATEST_VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+        run: echo "LATEST_VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV   
       - name: Update README version
         run: |
           LATEST_VERSION=${{ env.LATEST_VERSION }}
