@@ -1,0 +1,26 @@
+name: Update Plugin Version in README
+
+on:
+  release:
+    types: [published]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract the latest version
+        id: get-version
+        run: echo "LATEST_VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+      - name: Update README version
+        run: |
+          LATEST_VERSION=${{ env.LATEST_VERSION }}
+          sed -i "s/id(\"org.pastalab.fray.gradle\") version \".*\"/id(\"org.pastalab.fray.gradle\") version \"$LATEST_VERSION\"/" README.md
+          sed -i "s|<version>.*</version>|<version>$LATEST_VERSION</version>|" README.md
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }} # You need to create your own token with pull request rights
+          commit-message: update readme
+          title: Update readme
+          body: Update readme to reflect release changes
+          branch: update-readme
+          base: main
