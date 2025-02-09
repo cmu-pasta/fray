@@ -32,8 +32,6 @@ jobs:
           echo "Version: $BASE_VERSION"
       - name: Create jreleaser work directory
         run: mkdir -p ./build/jreleaser
-      - name: Build the repository
-        run: ./gradlew build
       - name: Create stage deploy (macOS)
         if: runner.os == 'macOS'
         run: ./gradlew :jvmti:publish -Pversion=$VERSION
