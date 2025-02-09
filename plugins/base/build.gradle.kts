@@ -36,6 +36,10 @@ tasks.jar {
   enabled = false
 }
 
+tasks.register<Jar>("sourceJar") {
+  archiveClassifier.set("sources")
+  from(sourceSets.main.get().allSource)
+}
 
 tasks.test {
   useJUnitPlatform()

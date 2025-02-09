@@ -10,8 +10,7 @@ jobs:
   publish:
     runs-on: ${{ matrix.operating-system }}
     permissions:
-      contents: read
-      packages: write
+      contents: write
     strategy:
       fail-fast: false
       matrix:

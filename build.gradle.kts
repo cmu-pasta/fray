@@ -126,7 +126,10 @@ configure(allprojects - rootProject -
             }
           }
           if (components.findByName("shadow") == null) from(components["java"])
-          else from(components["shadow"])
+          else {
+            from(components["shadow"])
+            artifact(tasks["sourceJar"])
+          }
           if (project.name != "jvmti") {
             artifact(dokkaJavadocJar)
             artifactId = project.base.archivesName.get()
