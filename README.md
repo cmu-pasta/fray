@@ -8,50 +8,9 @@ Fray is designed to be easy to use and can be integrated into existing testing f
 
 # Quick Start
 
-## Gradle
-
-To use Fray with Gradle, add the following plugin to your `build.gradle` file:
-
-```kotlin
-plugins {
-    id("org.pastalab.fray.gradle") version "0.2.5"
-}
-```
-
-## Maven
-
-- First please add Fray plugin to your project
-
-```
-<plugin>
-    <groupId>org.pastalab.fray.maven</groupId>
-    <artifactId>fray-plugins-maven</artifactId>
-    <version>0.2.5</version>
-    <executions>
-        <execution>
-            <id>prepare-fray</id>
-            <goals>
-                <goal>prepare-fray</goal>
-            </goals>
-        </execution>
-    </executions>
-</plugin>
-```
-
-- Next, please add the `fray-junit` dependency
-
-```
-<dependency>
-    <groupId>org.pastalab.fray</groupId>
-    <artifactId>fray-junit</artifactId>
-    <version>0.2.5</version>
-    <scope>test</scope>
-</dependency>
-```
-
 ## JUnit 5
 
-If you are using JUnit 5, you can use the `@ConcurrencyTest` annotation to mark a test as a concurrency test. You 
+If you are using JUnit 5, you can use the `@ConcurrencyTest` annotation to mark a test as a concurrency test. You
 also need to add the `@ExtendWith(FrayTestExtension.class)` annotation to the test class.
 
 ```java
@@ -84,3 +43,56 @@ public void test() {
     });
 }
 ```
+
+## Gradle
+
+To use Fray with Gradle, add the following plugin to your `build.gradle` file:
+
+```kotlin
+plugins {
+    id("org.pastalab.fray.gradle") version "0.2.5"
+}
+```
+
+## Maven
+
+- First please add Fray plugin to your project
+
+```xml
+<plugin>
+    <groupId>org.pastalab.fray.maven</groupId>
+    <artifactId>fray-plugins-maven</artifactId>
+    <version>0.2.5</version>
+    <executions>
+        <execution>
+            <id>prepare-fray</id>
+            <goals>
+                <goal>prepare-fray</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+- Next, please add the `fray-junit` dependency
+
+```xml
+<dependency>
+    <groupId>org.pastalab.fray</groupId>
+    <artifactId>fray-junit</artifactId>
+    <version>0.2.5</version>
+    <scope>test</scope>
+</dependency>
+```
+
+
+# Documentation
+
+- [Technical Report](https://arxiv.org/abs/2501.12618)
+- [Usage Guide](./docs/usage.md)
+- [IDE Settings](./docs/IDE.md)
+- [Bugs Found by Fray and Testimonies](./docs/bugs.md)
+
+# Acknowledgements
+
+This project was funded in part by an Amazon Research Award and NSF grant CCF-2120955.

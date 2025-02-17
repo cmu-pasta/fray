@@ -235,7 +235,7 @@ data class Configuration(
   var currentIteration = 0
   val startTime = TimeSource.Monotonic.markNow()
 
-  fun saveToReportFolder(index: Int) {
+  fun saveToReportFolder(index: Int): String {
     val path =
         if (exploreMode) {
           "$report/recording_$index"
@@ -246,6 +246,7 @@ data class Configuration(
     File("$path/schedule.json").writeText(Json.encodeToString(scheduler))
     File("$path/random.json").writeText(Json.encodeToString(randomnessProvider))
     scheduleObservers.forEach { it.saveToReportFolder(path) }
+    return path
   }
 
   val frayLogger = FrayLogger("$report/fray.log")
