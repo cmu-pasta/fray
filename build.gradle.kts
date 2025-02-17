@@ -3,7 +3,7 @@ import org.jreleaser.model.Active
 import org.jreleaser.model.api.deploy.maven.MavenCentralMavenDeployer.Stage
 
 plugins {
-  kotlin("jvm") version "2.0.0"
+  kotlin("jvm") version "2.1.10"
   id("maven-publish")
   id("com.ncorti.ktfmt.gradle") version "0.17.0"
   id("org.jreleaser") version "1.16.0"

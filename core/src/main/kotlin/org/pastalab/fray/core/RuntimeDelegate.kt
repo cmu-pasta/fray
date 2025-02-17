@@ -13,6 +13,8 @@ import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.StampedLock
 import org.pastalab.fray.core.concurrency.HelperThread
+import org.pastalab.fray.core.utils.Utils.verifyOrReport
+import org.pastalab.fray.runtime.SyncurityCondition
 
 class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Delegate() {
 
@@ -1106,5 +1108,17 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       entered.set(false)
     }
     return 0
+  }
+
+  override fun onSyncurityCondition(condition: SyncurityCondition) {
+    if (checkEntered()) {
+      verifyOrReport(false, "This method should never be called recursively")
+      return
+    }
+    try {
+      context.syncurityCondition(condition)
+    } finally {
+      entered.set(false)
+    }
   }
 }
