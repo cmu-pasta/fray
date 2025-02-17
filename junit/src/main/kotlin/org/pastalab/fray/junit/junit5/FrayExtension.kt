@@ -44,7 +44,7 @@ class FrayExtension(
       Runtime.DELEGATE = Delegate()
     }
     if (frayContext.bugFound != null) {
-      throw frayContext.bugFound!!
+      throw AssertionError(frayContext.bugFound!!)
     }
   }
 

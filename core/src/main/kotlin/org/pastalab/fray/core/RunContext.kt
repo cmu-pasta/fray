@@ -41,6 +41,7 @@ import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.runtime.DeadlockException
 import org.pastalab.fray.runtime.LivenessException
 import org.pastalab.fray.runtime.Runtime.onReportError
+import org.pastalab.fray.runtime.SyncurityCondition
 
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 class RunContext(val config: Configuration) {
@@ -889,6 +890,27 @@ class RunContext(val config: Configuration) {
     }
   }
 
+  fun syncurityCondition(condition: SyncurityCondition) {
+    val context = registeredThreads[Thread.currentThread().id]!!
+    while (!condition.satisfied()) {
+      context.pendingOperation = SyncurityWaitOperation(condition, context)
+      context.state = ThreadState.Paused
+      scheduleNextOperation(true)
+    }
+  }
+
+  fun checkAndUnblockSyncurityOperations() {
+    for (thread in registeredThreads.values) {
+      if (thread.state == ThreadState.Paused && thread.pendingOperation is SyncurityWaitOperation) {
+        val condition = (thread.pendingOperation as SyncurityWaitOperation).condition
+        if (condition.satisfied()) {
+          thread.pendingOperation = ThreadResumeOperation(true)
+          thread.state = ThreadState.Enabled
+        }
+      }
+    }
+  }
+
   fun scheduleNextOperationAndCheckDeadlock(shouldBlockCurrentThread: Boolean) {
     try {
       scheduleNextOperation(shouldBlockCurrentThread)
@@ -915,7 +937,7 @@ class RunContext(val config: Configuration) {
         }
 
     if (deadLock) {
-      val e = org.pastalab.fray.runtime.DeadlockException()
+      val e = DeadlockException()
       reportError(e)
       cleanUp()
       throw e
@@ -952,9 +974,11 @@ class RunContext(val config: Configuration) {
         currentThreadId != mainThreadId &&
         Thread.currentThread() !is HelperThread) {
       currentThread.state = ThreadState.Running
+      // Let's try to break all running threads if a bug is found.
       throw RuntimeException()
     }
 
+    checkAndUnblockSyncurityOperations()
     var enabledOperations =
         registeredThreads.values
             .toList()

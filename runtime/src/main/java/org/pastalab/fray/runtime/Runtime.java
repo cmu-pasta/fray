@@ -469,4 +469,8 @@ public class Runtime {
     public static void onStampedLockSkip() {
         DELEGATE.onStampedLockSkip();
     }
+
+    public static void onSyncurityCondition(SyncurityCondition condition) {
+        DELEGATE.onSyncurityCondition(condition);
+    }
 }

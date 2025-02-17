@@ -9,6 +9,7 @@ repositories {
 }
 
 dependencies {
+  api("org.hamcrest:hamcrest:3.0")
   implementation(project(":core"))
   compileOnly(project(":runtime"))
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
@@ -19,19 +20,21 @@ dependencies {
   compileOnly("com.carrotsearch.randomizedtesting:randomizedtesting-runner:2.8.2")
   testCompileOnly("org.junit.jupiter:junit-jupiter-api:5.11.3")
   testImplementation("org.junit.jupiter:junit-jupiter-engine:5.11.3")
+  testImplementation("org.junit.platform:junit-platform-testkit:1.11.0-M1")
 }
 
 tasks.test {
   useJUnitPlatform {
-    includeEngines("junit-jupiter", "fray")
+    includeEngines("junit-jupiter")
   }
-  ignoreFailures = true
   dependsOn(":instrumentation:jdk:build")
+  exclude("org/pastalab/fray/junit/internal/**")
   val instrumentationTask = evaluationDependsOn(":instrumentation:agent")
       .tasks.named("shadowJar").get()
   val jdk = project(":instrumentation:jdk")
   val jvmti = project(":jvmti")
   val instrumentation = instrumentationTask.outputs.files.first().absolutePath
+  println(instrumentation)
   classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
   executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
   jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
