@@ -58,7 +58,7 @@ plugins {
 
 - First please add Fray plugin to your project
 
-```
+```xml
 <plugin>
     <groupId>org.pastalab.fray.maven</groupId>
     <artifactId>fray-plugins-maven</artifactId>
@@ -76,7 +76,7 @@ plugins {
 
 - Next, please add the `fray-junit` dependency
 
-```
+```xml
 <dependency>
     <groupId>org.pastalab.fray</groupId>
     <artifactId>fray-junit</artifactId>
