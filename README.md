@@ -92,3 +92,7 @@ plugins {
 - [IDE Settings](./docs/IDE.md)
 - [Usage Guide](./docs/usage.md)
 - [Bugs Found by Fray and Testimonies](./docs/bugs.md)
+
+# Acknowledgements
+
+This project was funded in part by an Amazon Research Award and NSF grant CCF-2120955.
