@@ -8,6 +8,42 @@ Fray is designed to be easy to use and can be integrated into existing testing f
 
 # Quick Start
 
+## JUnit 5
+
+If you are using JUnit 5, you can use the `@ConcurrencyTest` annotation to mark a test as a concurrency test. You
+also need to add the `@ExtendWith(FrayTestExtension.class)` annotation to the test class.
+
+```java
+import org.pastalab.fray.junit.junit5.FrayTestExtension;
+import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
+
+@ExtendWith(FrayTestExtension.class)
+public class SimpleTest {
+    @ConcurrencyTest
+    public void concurrencyTest() {
+        ... // some multithreaded code
+        assert(...);
+    }
+}
+
+```
+
+
+## Other Testing Frameworks
+
+Fray can be used with other testing frameworks as well. You may use the `FrayInTestLauncher`
+
+```java
+import org.pastalab.fray.junit.plain.FrayInTestLauncher;
+
+public void test() {
+    FrayInTestLauncher.INSTANCE.launchFrayTest(() -> {
+        ... // some multithreaded code
+        assert(...);
+    });
+}
+```
+
 ## Gradle
 
 To use Fray with Gradle, add the following plugin to your `build.gradle` file:
@@ -49,38 +85,10 @@ plugins {
 </dependency>
 ```
 
-## JUnit 5
 
-If you are using JUnit 5, you can use the `@ConcurrencyTest` annotation to mark a test as a concurrency test. You 
-also need to add the `@ExtendWith(FrayTestExtension.class)` annotation to the test class.
+# Documentation
 
-```java
-import org.pastalab.fray.junit.junit5.FrayTestExtension;
-import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
-
-@ExtendWith(FrayTestExtension.class)
-public class SimpleTest {
-    @ConcurrencyTest
-    public void concurrencyTest() {
-        ... // some multithreaded code
-        assert(...);
-    }
-}
-
-```
-
-
-## Other Testing Frameworks
-
-Fray can be used with other testing frameworks as well. You may use the `FrayInTestLauncher`
-
-```java
-import org.pastalab.fray.junit.plain.FrayInTestLauncher;
-
-public void test() {
-    FrayInTestLauncher.INSTANCE.launchFrayTest(() -> {
-        ... // some multithreaded code
-        assert(...);
-    });
-}
-```
+- [Technical Report](https://arxiv.org/abs/2501.12618)
+- [IDE Settings](./docs/IDE.md)
+- [Usage Guide](./docs/usage.md)
+- [Bugs Found by Fray and Testimonies](./docs/bugs.md)
