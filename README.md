@@ -89,8 +89,8 @@ plugins {
 # Documentation
 
 - [Technical Report](https://arxiv.org/abs/2501.12618)
-- [IDE Settings](./docs/IDE.md)
 - [Usage Guide](./docs/usage.md)
+- [IDE Settings](./docs/IDE.md)
 - [Bugs Found by Fray and Testimonies](./docs/bugs.md)
 
 # Acknowledgements
