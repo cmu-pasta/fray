@@ -3,8 +3,10 @@
 [![Build](https://github.com/cmu-pasta/fray/actions/workflows/main.yml/badge.svg)](https://github.com/cmu-pasta/fray/actions/workflows/main.yml)
 
 
-Fray is a general-purpose concurrency testing tool for Java applications. It performs deterministic concurrency testing using various testing algorithms.
-Fray is designed to be easy to use and can be integrated into existing testing frameworks.
+Fray is a concurrency testing tool for Java that can help you **find and debug tricky race conditions that manifest as assertion violations, run-time exceptions, or deadlocks**.
+It performs controlled concurrency testing using state-of-the-art techniques such as [probabilistic concurrency testing](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/asplos277-pct.pdf) 
+or [partial order sampling](https://www.cs.columbia.edu/~junfeng/papers/pos-cav18.pdf). Fray also provides deterministic replay capabilities for debugging specific thread interleavings. Fray is designed 
+to be easy to use and can be integrated into existing testing frameworks.
 
 # Quick Start
 
