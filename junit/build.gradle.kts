@@ -47,3 +47,8 @@ tasks.test {
   jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
   jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
 }
+
+tasks.register<Copy>("copyDependencies") {
+  from(configurations.runtimeClasspath)
+  into("${layout.buildDirectory.get().asFile}/dependency")
+}
