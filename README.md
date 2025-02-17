@@ -97,4 +97,8 @@ plugins {
 
 # Acknowledgements
 
-This project was funded in part by an Amazon Research Award and NSF grant CCF-2120955.
+This material is based upon work supported by the National Science Foundation under Grant No. 2120955. 
+Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) 
+and do not necessarily reflect the views of the National Science Foundation.
+
+The Fray project was also supported by an Amazon Research Award.
