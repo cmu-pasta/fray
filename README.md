@@ -97,6 +97,10 @@ plugins {
 - [IDE Settings](./docs/IDE.md)
 - [Bugs Found by Fray and Testimonies](./docs/bugs.md)
 
+# Contributing
+
+Contributions to Fray are both welcomed and appreciated! Please see our [contributing guide](./docs/contributing.md) for more information on how to contribute to Fray. 
+
 # Acknowledgements
 
 This material is based upon work supported by the National Science Foundation under Grant No. 2120955. 
