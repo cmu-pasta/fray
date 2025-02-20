@@ -6,6 +6,10 @@ class HelperThread : Thread("fray-helper-thread") {
   var shouldStop = false
   var currentRunnable: Runnable? = null
 
+  init {
+    isDaemon = true
+  }
+
   override fun run() {
     while (!shouldStop) {
       val job: Runnable?

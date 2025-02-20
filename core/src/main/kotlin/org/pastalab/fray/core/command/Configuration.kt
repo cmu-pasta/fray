@@ -219,7 +219,7 @@ class MainCommand : CliktCommand() {
 data class Configuration(
     val executionInfo: ExecutionInfo,
     val report: String,
-    val iter: Int,
+    var iter: Int,
     val timeout: Int,
     var scheduler: Scheduler,
     var randomnessProvider: ControlledRandom,
@@ -261,6 +261,7 @@ data class Configuration(
 
     if (System.getProperty("fray.debugger", "false").toBoolean()) {
       scheduler = FrayIdeaPluginScheduler()
+      iter = 1
     }
   }
 

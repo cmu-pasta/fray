@@ -82,7 +82,13 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
   }
 
   private fun totalRepetition(concurrencyTest: ConcurrencyTest, method: Method): Int {
-    val repetition = concurrencyTest.iterations
+    // If the user guide the program execution through IDE plugin, the repetition is set to 1
+    val repetition =
+        if (System.getProperty("fray.debugger", "false").toBoolean()) {
+          1
+        } else {
+          concurrencyTest.iterations
+        }
     Preconditions.condition(repetition > 0) {
       "Configuration error: @ConcurrencyTest on method [$method] must be declared with a positive 'value'."
     }
