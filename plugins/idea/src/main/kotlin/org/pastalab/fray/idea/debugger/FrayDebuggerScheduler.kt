@@ -11,8 +11,6 @@ class FrayDebuggerScheduler(val schedulerPanel: SchedulerPanel, val debugSession
     RemoteScheduler {
 
   override fun scheduleNextOperation(threads: List<ThreadInfo>): Int {
-    //    debugSession.pause()
-
     val cdl = CountDownLatch(1)
     var selected = 0
     schedulerPanel.schedule(
@@ -26,7 +24,6 @@ class FrayDebuggerScheduler(val schedulerPanel: SchedulerPanel, val debugSession
       debugSession.ui.selectAndFocus(content, false, false)
     }
     cdl.await()
-    //    debugSession.resume()
     return selected
   }
 }

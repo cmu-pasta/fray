@@ -14,7 +14,13 @@ class FrayExtension(
     val index: Int,
     val frayContext: RunContext,
     val frayJupiterContext: FrayJupiterContext
-) : BeforeEachCallback, AfterEachCallback, TestWatcher, ExecutionCondition, InvocationInterceptor {
+) :
+    BeforeEachCallback,
+    AfterEachCallback,
+    TestWatcher,
+    ExecutionCondition,
+    InvocationInterceptor,
+    AfterAllCallback {
 
   override fun <T : Any?> interceptTestClassConstructor(
       invocation: InvocationInterceptor.Invocation<T>,
@@ -61,5 +67,9 @@ class FrayExtension(
       return disabled("Bug found in previous iteration.")
     }
     return enabled("No bug found in previous iteration.")
+  }
+
+  override fun afterAll(context: ExtensionContext?) {
+    frayContext.shutDown()
   }
 }
