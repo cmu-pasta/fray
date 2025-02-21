@@ -10,6 +10,10 @@ plugins {
 
 group = project.property("pluginGroup")!!
 
+kotlin {
+  jvmToolchain(21)
+}
+
 // Configure project's dependencies
 repositories {
     mavenCentral()
