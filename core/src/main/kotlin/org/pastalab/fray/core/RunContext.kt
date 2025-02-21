@@ -1029,7 +1029,9 @@ class RunContext(val config: Configuration) {
         if (enabledOperations.size == 1) {
           enabledOperations.first()
         } else {
-          val thread = config.scheduler.scheduleNextOperation(enabledOperations, enabledOperations)
+          val thread =
+              config.scheduler.scheduleNextOperation(
+                  enabledOperations, registeredThreads.values.toList())
           config.scheduleObservers.forEach { it.onNewSchedule(enabledOperations, thread) }
           thread
         }
