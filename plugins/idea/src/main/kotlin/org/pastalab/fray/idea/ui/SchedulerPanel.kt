@@ -2,17 +2,17 @@ package org.pastalab.fray.idea.ui
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runReadAction
-import com.intellij.openapi.editor.impl.EditorId
-import com.intellij.openapi.editor.impl.editorId
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.markup.MarkupModel
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.ui.ComboBox
-import com.intellij.psi.JavaPsiFacade
-import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.PsiManager
+import com.intellij.psi.util.ClassUtil
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -38,7 +38,7 @@ class SchedulerPanel(val project: Project) : JPanel() {
   private val myFrameList: JBList<StackTraceElement>
   private val myFrameListModel: DefaultListModel<StackTraceElement>
   private val currentRangeHighlighters = mutableListOf<Pair<MarkupModel, RangeHighlighter>>()
-  private val threadInfoUpdaters: MutableMap<EditorId, ThreadInfoUpdater> = mutableMapOf()
+  private val threadInfoUpdaters: MutableMap<Editor, ThreadInfoUpdater> = mutableMapOf()
 
   private val scheduleButton: JButton
   var selected: ThreadInfo? = null
@@ -96,6 +96,7 @@ class SchedulerPanel(val project: Project) : JPanel() {
       currentRangeHighlighters.forEach { it.first.removeHighlighter(it.second) }
     }
     threadInfoUpdaters.forEach { it.value.threadNameMapping.clear() }
+    threadInfoUpdaters.clear()
     if (newSelected != null) {
       selected = newSelected
       callback?.invoke(newSelected) // Notify callback with selected thread ID
@@ -105,6 +106,7 @@ class SchedulerPanel(val project: Project) : JPanel() {
   fun stop() {
     currentRangeHighlighters.forEach { it.first.removeHighlighter(it.second) }
     threadInfoUpdaters.forEach { it.value.stop() }
+    threadInfoUpdaters.clear()
   }
 
   fun comboBoxSelected(threadInfo: ThreadInfo) {
@@ -125,54 +127,56 @@ class SchedulerPanel(val project: Project) : JPanel() {
       if (threadInfo.state == ThreadState.Completed) return@forEach
       for (stack in threadInfo.stackTraces) {
         if (stack.className == "ThreadStartOperation") continue
-        if (runReadAction {
-          val psiClass =
-              JavaPsiFacade.getInstance(project)
-                  .findClass(stack.className, GlobalSearchScope.projectScope(project))
-                  ?: return@runReadAction false
-          val psiFile = psiClass.containingFile
-          val document = psiFile.fileDocument
-          val start = document.getLineStartOffset(stack.lineNumber - 1)
-          val end = document.getLineEndOffset(stack.lineNumber - 1)
-          val color =
-              if (threadInfo.state == ThreadState.Paused) THREAD_DISABLED_COLOR
-              else THREAD_ENABLED_COLOR
-          val highlightAttributes =
-              TextAttributes(
-                  null, // foreground color
-                  color, // background color
-                  null, // effect color
-                  null, // effect type
-                  Font.PLAIN,
-              )
-          val vFile = psiFile.virtualFile
-          ApplicationManager.getApplication().invokeLater {
-            FileEditorManager.getInstance(project).openFile(vFile).forEach { fileEditor ->
-              if (fileEditor is TextEditor) {
-                val editor = fileEditor.editor
-                val highlighter =
-                    editor.markupModel.addRangeHighlighter(
-                        start,
-                        end,
-                        0,
-                        highlightAttributes,
-                        com.intellij.openapi.editor.markup.HighlighterTargetArea.LINES_IN_RANGE)
-                currentRangeHighlighters.add(Pair(editor.markupModel, highlighter))
-                threadInfoUpdaters
-                    .getOrPut(editor.editorId()) {
-                      val updater = ThreadInfoUpdater(editor)
-                      editor.addEditorMouseMotionListener(updater)
-                      updater
-                    }
-                    .threadNameMapping
-                    .getOrPut(stack.lineNumber - 1) { mutableSetOf() }
-                    .add(threadInfo)
-              }
+        val (document, virtualFile) =
+            runReadAction {
+              val psiClass =
+                  ClassUtil.findPsiClassByJVMName(PsiManager.getInstance(project), stack.className)
+                      ?: return@runReadAction null
+              val fileIndex = ProjectRootManager.getInstance(project).fileIndex
+              val psiFile = psiClass.containingFile
+              val vFile = psiFile.virtualFile
+              if (!fileIndex.isInSource(psiFile.virtualFile)) return@runReadAction null
+              Pair(psiFile.fileDocument, vFile)
+            } ?: continue
+        val start = document.getLineStartOffset(stack.lineNumber - 1)
+        val end = document.getLineEndOffset(stack.lineNumber - 1)
+        val color =
+            if (threadInfo.state == ThreadState.Paused) THREAD_DISABLED_COLOR
+            else THREAD_ENABLED_COLOR
+        val highlightAttributes =
+            TextAttributes(
+                null, // foreground color
+                color, // background color
+                null, // effect color
+                null, // effect type
+                Font.PLAIN,
+            )
+        ApplicationManager.getApplication().invokeLater {
+          FileEditorManager.getInstance(project).openFile(virtualFile).forEach { fileEditor ->
+            if (fileEditor is TextEditor) {
+              val editor = fileEditor.editor
+              val highlighter =
+                  editor.markupModel.addRangeHighlighter(
+                      start,
+                      end,
+                      0,
+                      highlightAttributes,
+                      com.intellij.openapi.editor.markup.HighlighterTargetArea.LINES_IN_RANGE,
+                  )
+              currentRangeHighlighters.add(Pair(editor.markupModel, highlighter))
+              threadInfoUpdaters
+                  .getOrPut(editor) {
+                    val updater = ThreadInfoUpdater(editor)
+                    editor.addEditorMouseMotionListener(updater)
+                    updater
+                  }
+                  .threadNameMapping
+                  .getOrPut(stack.lineNumber - 1) { mutableSetOf() }
+                  .add(threadInfo)
             }
           }
-          true
-        })
-            break
+        }
+        break
       }
     }
     comboBoxModel.selectedItem =
