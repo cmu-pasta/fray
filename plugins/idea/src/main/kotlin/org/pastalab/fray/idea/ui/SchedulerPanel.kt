@@ -13,12 +13,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import java.awt.BorderLayout
-import java.awt.Color
 import java.awt.Component
 import java.awt.Font
 import javax.swing.DefaultComboBoxModel
@@ -29,7 +27,8 @@ import javax.swing.JLabel
 import javax.swing.JList
 import javax.swing.JPanel
 import javax.swing.ListCellRenderer
-import kotlin.ranges.rangeTo
+import org.pastalab.fray.idea.ui.Colors.THREAD_DISABLED_COLOR
+import org.pastalab.fray.idea.ui.Colors.THREAD_ENABLED_COLOR
 import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
 
@@ -136,8 +135,8 @@ class SchedulerPanel(val project: Project) : JPanel() {
           val start = document.getLineStartOffset(stack.lineNumber - 1)
           val end = document.getLineEndOffset(stack.lineNumber - 1)
           val color =
-              if (threadInfo.state == ThreadState.Paused) JBColor.LIGHT_GRAY
-              else JBColor(Color(228, 251, 233), Color(228, 251, 233))
+              if (threadInfo.state == ThreadState.Paused) THREAD_DISABLED_COLOR
+              else THREAD_ENABLED_COLOR
           val highlightAttributes =
               TextAttributes(
                   null, // foreground color
@@ -165,8 +164,9 @@ class SchedulerPanel(val project: Project) : JPanel() {
                       editor.addEditorMouseMotionListener(updater)
                       updater
                     }
-                    .threadNameMapping[stack.lineNumber - 1] =
-                    "Thread-${threadInfo.threadName} (${threadInfo.state})"
+                    .threadNameMapping
+                    .getOrPut(stack.lineNumber - 1) { mutableSetOf() }
+                    .add(threadInfo)
               }
             }
           }
