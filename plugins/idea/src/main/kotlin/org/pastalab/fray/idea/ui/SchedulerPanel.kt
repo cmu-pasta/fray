@@ -2,8 +2,7 @@ package org.pastalab.fray.idea.ui
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runReadAction
-import com.intellij.openapi.editor.impl.EditorId
-import com.intellij.openapi.editor.impl.editorId
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.markup.MarkupModel
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
@@ -39,7 +38,7 @@ class SchedulerPanel(val project: Project) : JPanel() {
   private val myFrameList: JBList<StackTraceElement>
   private val myFrameListModel: DefaultListModel<StackTraceElement>
   private val currentRangeHighlighters = mutableListOf<Pair<MarkupModel, RangeHighlighter>>()
-  private val threadInfoUpdaters: MutableMap<EditorId, ThreadInfoUpdater> = mutableMapOf()
+  private val threadInfoUpdaters: MutableMap<Editor, ThreadInfoUpdater> = mutableMapOf()
 
   private val scheduleButton: JButton
   var selected: ThreadInfo? = null
@@ -97,6 +96,7 @@ class SchedulerPanel(val project: Project) : JPanel() {
       currentRangeHighlighters.forEach { it.first.removeHighlighter(it.second) }
     }
     threadInfoUpdaters.forEach { it.value.threadNameMapping.clear() }
+    threadInfoUpdaters.clear()
     if (newSelected != null) {
       selected = newSelected
       callback?.invoke(newSelected) // Notify callback with selected thread ID
@@ -106,6 +106,7 @@ class SchedulerPanel(val project: Project) : JPanel() {
   fun stop() {
     currentRangeHighlighters.forEach { it.first.removeHighlighter(it.second) }
     threadInfoUpdaters.forEach { it.value.stop() }
+    threadInfoUpdaters.clear()
   }
 
   fun comboBoxSelected(threadInfo: ThreadInfo) {
@@ -164,7 +165,7 @@ class SchedulerPanel(val project: Project) : JPanel() {
                   )
               currentRangeHighlighters.add(Pair(editor.markupModel, highlighter))
               threadInfoUpdaters
-                  .getOrPut(editor.editorId()) {
+                  .getOrPut(editor) {
                     val updater = ThreadInfoUpdater(editor)
                     editor.addEditorMouseMotionListener(updater)
                     updater
