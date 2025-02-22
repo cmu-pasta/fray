@@ -10,6 +10,7 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     permissions:
       contents: write
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
