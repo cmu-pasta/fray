@@ -1,10 +1,9 @@
-import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
   kotlin("jvm")
-  id("org.jetbrains.intellij.platform") version "2.2.0"
+  id("org.jetbrains.intellij.platform") version "2.2.1"
   id("org.jetbrains.changelog") version "2.2.1"
 }
 
@@ -50,7 +49,7 @@ intellijPlatform {
         version = project.property("version")!! as String
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
-        description = providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
+        description = providers.fileContents(rootProject.layout.projectDirectory.file("docs/IDE.md")).asText.map {
             val start = "<!-- Plugin description -->"
             val end = "<!-- Plugin description end -->"
 
@@ -61,19 +60,7 @@ intellijPlatform {
                 subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
             }
         }
-
-        val changelog = project.changelog // local variable for configuration cache compatibility
-        // Get the latest available change notes from the changelog file
-        changeNotes = (project.property("version") as String).let { pluginVersion ->
-            with(changelog) {
-                renderItem(
-                    (getOrNull(pluginVersion) ?: getUnreleased())
-                        .withHeader(false)
-                        .withEmptySections(false),
-                    Changelog.OutputType.HTML,
-                )
-            }
-        }
+        changeNotes = "The change notes are available in the [CHANGELOG.md](https://github.com/cmu-pasta/fray/blob/main/CHANGELOG.md)"
 
         ideaVersion {
             sinceBuild = project.property("pluginSinceBuild")!! as String
