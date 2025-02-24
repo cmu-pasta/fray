@@ -21,6 +21,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   var entered = ThreadLocal.withInitial { false }
   var skipFunctionEntered = ThreadLocal.withInitial { 0 }
   val stackTrace = ThreadLocal.withInitial { mutableListOf<String>() }
+  val syncurityConditionEvaluation = ThreadLocal.withInitial {  false }
 
   private fun checkEntered(): Boolean {
     if (entered.get()) {
@@ -1120,5 +1121,13 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     } finally {
       entered.set(false)
     }
+  }
+
+  override fun onSyncurityConditionEvaluationStart() {
+    syncurityConditionEvaluation.set(true)
+  }
+
+  override fun onSyncurityConditionEvaluationDone() {
+    syncurityConditionEvaluation.set(false)
   }
 }

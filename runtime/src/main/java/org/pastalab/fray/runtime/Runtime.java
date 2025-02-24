@@ -473,4 +473,12 @@ public class Runtime {
     public static void onSyncurityCondition(SyncurityCondition condition) {
         DELEGATE.onSyncurityCondition(condition);
     }
+
+    public static void onSyncurityConditionEvaluationStart() {
+        DELEGATE.onSyncurityConditionEvaluationStart();
+    }
+
+    public static void onSyncurityConditionEvaluationDone() {
+        DELEGATE.onSyncurityConditionEvaluationDone();
+    }
 }
