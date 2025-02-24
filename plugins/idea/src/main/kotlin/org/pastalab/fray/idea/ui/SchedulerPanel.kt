@@ -126,6 +126,7 @@ class SchedulerPanel(val project: Project) : JPanel() {
       comboBoxModel.addElement(threadInfo)
       if (threadInfo.state == ThreadState.Completed) return@forEach
       for (stack in threadInfo.stackTraces) {
+        if (stack.lineNumber <= 0) continue
         if (stack.className == "ThreadStartOperation") continue
         val (document, virtualFile) =
             runReadAction {
@@ -135,7 +136,7 @@ class SchedulerPanel(val project: Project) : JPanel() {
               val fileIndex = ProjectRootManager.getInstance(project).fileIndex
               val psiFile = psiClass.containingFile
               val vFile = psiFile.virtualFile
-              if (!fileIndex.isInSource(psiFile.virtualFile)) return@runReadAction null
+              if (!fileIndex.isInSource(vFile)) return@runReadAction null
               Pair(psiFile.fileDocument, vFile)
             } ?: continue
         val start = document.getLineStartOffset(stack.lineNumber - 1)

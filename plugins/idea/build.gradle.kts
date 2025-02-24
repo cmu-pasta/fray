@@ -4,7 +4,6 @@ import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 plugins {
   kotlin("jvm")
   id("org.jetbrains.intellij.platform") version "2.2.1"
-  id("org.jetbrains.changelog") version "2.2.1"
 }
 
 group = project.property("pluginGroup")!!
@@ -86,18 +85,6 @@ intellijPlatform {
         ides {
             recommended()
         }
-    }
-}
-
-// Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
-changelog {
-    groups.empty()
-    repositoryUrl = project.property("pluginRepositoryUrl")!! as String
-}
-
-tasks {
-    publishPlugin {
-        dependsOn(patchChangelog)
     }
 }
 
