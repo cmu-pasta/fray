@@ -21,14 +21,20 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   var entered = ThreadLocal.withInitial { false }
   var skipFunctionEntered = ThreadLocal.withInitial { 0 }
   val stackTrace = ThreadLocal.withInitial { mutableListOf<String>() }
+  val syncurityConditionEvaluationEntered = ThreadLocal.withInitial { false }
 
   private fun checkEntered(mayBlockSyncurityEvaluation: Boolean = false): Boolean {
     if (skipFunctionEntered.get() > 0) {
       return true
     }
 
+    if (syncurityConditionEvaluationEntered.get()) {
+      return false
+    }
+
     // We want to bypass the recurisve check if we are evaluating a syncurity condition.
     if (mayBlockSyncurityEvaluation && context.evaluatingSyncurityCondition.get()) {
+      syncurityConditionEvaluationEntered.set(true)
       return false
     }
 
