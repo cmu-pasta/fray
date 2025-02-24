@@ -2,6 +2,8 @@ package org.pastalab.fray.junit.tests;
 
 import org.junit.jupiter.api.Test;
 import org.junit.platform.testkit.engine.EngineTestKit;
+import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlock;
+import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitTest;
 
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.*;
@@ -12,7 +14,7 @@ public class SyncruityAwaitTest {
     public void testSyncurityAwaitTest() {
         EngineTestKit
                 .engine("junit-jupiter")
-                .selectors(selectClass(org.pastalab.fray.junit.internal.SyncurityAwaitTest.class))
+                .selectors(selectClass(SyncurityAwaitTest.class))
                 .execute()
                 .allEvents()
                 .assertThatEvents()
@@ -26,4 +28,13 @@ public class SyncruityAwaitTest {
                         event(test("testInThreadConstraintDeadlock"), finishedWithFailure())
                 );
     }
+
+    @Test
+    public void testSyncurityAwaitDeadlock() {
+        EngineTestKit
+                .engine("junit-jupiter")
+                .selectors(selectClass(SyncurityAwaitDeadlock.class))
+                .execute();
+    }
+
 }

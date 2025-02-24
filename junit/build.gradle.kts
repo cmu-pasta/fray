@@ -1,3 +1,5 @@
+import java.util.regex.Pattern
+
 plugins {
   id("java")
   kotlin("jvm")
@@ -52,3 +54,46 @@ tasks.register<Copy>("copyDependencies") {
   from(configurations.runtimeClasspath)
   into("${layout.buildDirectory.get().asFile}/dependency")
 }
+
+
+tasks.withType<JavaExec> {
+  dependsOn(":instrumentation:jdk:build")
+  val instrumentationTask = evaluationDependsOn(":instrumentation:agent")
+      .tasks.named("shadowJar").get()
+  val jdk = project(":instrumentation:jdk")
+  val jvmti = project(":jvmti")
+  val instrumentation = instrumentationTask.outputs.files.first().absolutePath
+  classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
+  executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
+  mainClass = "org.pastalab.fray.core.MainKt"
+  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
+  jvmArgs("-javaagent:$instrumentation")
+  jvmArgs("-ea")
+  jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
+  jvmArgs("--add-opens", "java.base/java.util=ALL-UNNAMED")
+  jvmArgs("--add-opens", "java.base/java.io=ALL-UNNAMED")
+  jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
+  jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
+}
+
+tasks.register<JavaExec>("runFray") {
+  var configPath = properties["configPath"] as String? ?: ""
+  val extraArgs = when (val extraArgs = properties["extraArgs"]) {
+    is String -> {
+      val pattern = Pattern.compile("""("[^"]+"|\S+)""")
+      val matcher = pattern.matcher(extraArgs)
+      val result = mutableListOf<String>()
+      while (matcher.find()) {
+        result.add(matcher.group(1).replace("\"", ""))
+      }
+      result
+    }
+    else -> emptyList()
+  }
+  if (!File(configPath).isAbsolute) {
+    configPath = System.getProperty("user.dir") + "/" + configPath
+  }
+  args = listOf("--run-config", "json", "--config-path", configPath) + extraArgs
+}
+

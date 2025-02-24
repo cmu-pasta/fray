@@ -1,4 +1,4 @@
-package org.pastalab.fray.junit.internal;
+package org.pastalab.fray.junit.internal.syncurity;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pastalab.fray.junit.junit5.FrayTestExtension;
