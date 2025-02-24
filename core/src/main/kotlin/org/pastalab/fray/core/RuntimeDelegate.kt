@@ -21,17 +21,21 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   var entered = ThreadLocal.withInitial { false }
   var skipFunctionEntered = ThreadLocal.withInitial { 0 }
   val stackTrace = ThreadLocal.withInitial { mutableListOf<String>() }
-  val syncurityConditionEvaluation = ThreadLocal.withInitial {  false }
 
-  private fun checkEntered(): Boolean {
+  private fun checkEntered(mayBlockSyncurityEvaluation: Boolean = false): Boolean {
+    if (skipFunctionEntered.get() > 0) {
+      return true
+    }
+
+    // We want to bypass the recurisve check if we are evaluating a syncurity condition.
+    if (mayBlockSyncurityEvaluation && context.evaluatingSyncurityCondition.get()) {
+      return false
+    }
+
     if (entered.get()) {
       return true
     }
     entered.set(true)
-    if (skipFunctionEntered.get() > 0) {
-      entered.set(false)
-      return true
-    }
     if (Thread.currentThread() is HelperThread) {
       entered.set(false)
       return true
@@ -124,7 +128,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onLockLockInterruptibly(l: Lock) {
-    if (checkEntered()) {
+    if (checkEntered(true)) {
       onSkipMethod("Lock.lock")
       return
     }
@@ -192,7 +196,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onLockLock(l: Lock) {
-    if (checkEntered()) {
+    if (checkEntered(true)) {
       onSkipMethod("Lock.lock")
       return
     }
@@ -238,7 +242,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onMonitorEnter(o: Any) {
-    if (checkEntered()) return
+    if (checkEntered(true)) return
     try {
       context.monitorEnter(o)
     } finally {
@@ -1121,13 +1125,5 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     } finally {
       entered.set(false)
     }
-  }
-
-  override fun onSyncurityConditionEvaluationStart() {
-    syncurityConditionEvaluation.set(true)
-  }
-
-  override fun onSyncurityConditionEvaluationDone() {
-    syncurityConditionEvaluation.set(false)
   }
 }

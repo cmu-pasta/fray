@@ -359,11 +359,5 @@ public class Delegate {
 
     public void onSyncurityCondition(SyncurityCondition condition) {
     }
-
-    public void onSyncurityConditionEvaluationStart() {
-    }
-
-    public void onSyncurityConditionEvaluationDone() {
-    }
 }
 

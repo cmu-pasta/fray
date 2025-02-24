@@ -1,5 +1,6 @@
 package org.pastalab.fray.junit.tests;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.testkit.engine.EngineTestKit;
 import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlock;

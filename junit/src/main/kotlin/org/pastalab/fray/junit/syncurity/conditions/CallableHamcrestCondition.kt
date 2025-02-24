@@ -8,9 +8,7 @@ class CallableHamcrestCondition<T>(val supplier: Supplier<T>, val matcher: Match
     SyncurityCondition() {
   override fun satisfied(): Boolean {
     try {
-      syncurityConditionEvaluationStart()
       val value = supplier.get()
-      syncurityConditionEvaluationEnd()
       return matcher.matches(value)
     } catch (e: Throwable) {
       return false

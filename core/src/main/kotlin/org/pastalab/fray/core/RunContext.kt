@@ -50,6 +50,7 @@ class RunContext(val config: Configuration) {
   var mainThreadId: Long = -1
   var bugFound: Throwable? = null
   var mainExiting = false
+  val evaluatingSyncurityCondition = ThreadLocal.withInitial { false }
   var nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
   val hashCodeMapper = ReferencedContextManager<Int>({ config.randomnessProvider.nextInt() })
   var forkJoinPool: ForkJoinPool? = null
@@ -538,6 +539,15 @@ class RunContext(val config: Configuration) {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
     val lockContext = lockManager.getContext(lock)
+
+    if (evaluatingSyncurityCondition.get()) {
+      if (!lockContext.canLock(Thread.currentThread().id)) {
+        throw RuntimeException("Abort syncurity condition evaluation because of deadlock.")
+      } else {
+        return
+      }
+    }
+
     context.pendingOperation = LockLockOperation(lock)
     context.state = ThreadState.Enabled
     scheduleNextOperation(true)
@@ -555,8 +565,8 @@ class RunContext(val config: Configuration) {
      * 2. foo.unlock(); } t2 = {
      * 1. foo.lock();
      * 2. foo.unlock(); } t3 = {
-     *     1. foo.lock();
-     *     2. foo.unlock(); } t1.1, t2.1, t1.2, t3.1 will make t2.1 lock again.
+     * 1. foo.lock();
+     * 2. foo.unlock(); } t1.1, t2.1, t1.2, t3.1 will make t2.1 lock again.
      */
     // TODO(aoli): we may need to store monitor locks and reentrant locks separately.
     // Consider the scenario where
@@ -902,7 +912,16 @@ class RunContext(val config: Configuration) {
     for (thread in registeredThreads.values) {
       if (thread.state == ThreadState.Paused && thread.pendingOperation is SyncurityWaitOperation) {
         val condition = (thread.pendingOperation as SyncurityWaitOperation).condition
-        if (condition.satisfied()) {
+        val result =
+            try {
+              evaluatingSyncurityCondition.set(true)
+              condition.satisfied()
+            } catch (e: Throwable) {
+              false
+            } finally {
+              evaluatingSyncurityCondition.set(false)
+            }
+        if (result) {
           thread.pendingOperation = ThreadResumeOperation(true)
           thread.state = ThreadState.Enabled
         }
