@@ -21,21 +21,10 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   var entered = ThreadLocal.withInitial { false }
   var skipFunctionEntered = ThreadLocal.withInitial { 0 }
   val stackTrace = ThreadLocal.withInitial { mutableListOf<String>() }
-  val syncurityConditionEvaluationEntered = ThreadLocal.withInitial { false }
 
-  private fun checkEntered(mayBlockSyncurityEvaluation: Boolean = false): Boolean {
+  private fun checkEntered(): Boolean {
     if (skipFunctionEntered.get() > 0) {
       return true
-    }
-
-    if (syncurityConditionEvaluationEntered.get()) {
-      return false
-    }
-
-    // We want to bypass the recurisve check if we are evaluating a syncurity condition.
-    if (mayBlockSyncurityEvaluation && context.evaluatingSyncurityCondition.get()) {
-      syncurityConditionEvaluationEntered.set(true)
-      return false
     }
 
     if (entered.get()) {
@@ -134,7 +123,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onLockLockInterruptibly(l: Lock) {
-    if (checkEntered(true)) {
+    if (checkEntered()) {
       onSkipMethod("Lock.lock")
       return
     }
@@ -202,7 +191,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onLockLock(l: Lock) {
-    if (checkEntered(true)) {
+    if (checkEntered()) {
       onSkipMethod("Lock.lock")
       return
     }
@@ -248,7 +237,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onMonitorEnter(o: Any) {
-    if (checkEntered(true)) return
+    if (checkEntered()) return
     try {
       context.monitorEnter(o)
     } finally {

@@ -1,6 +1,5 @@
 package org.pastalab.fray.junit.tests;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.testkit.engine.EngineTestKit;
 import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlock;
@@ -31,11 +30,16 @@ public class SyncruityAwaitTest {
     }
 
     @Test
-    public void testSyncurityAwaitDeadlock() {
+    public void testSyncurityAwaitWithSynchronizationPrimitives() {
         EngineTestKit
                 .engine("junit-jupiter")
                 .selectors(selectClass(SyncurityAwaitDeadlock.class))
-                .execute();
+                .execute()
+                .allEvents()
+                .assertThatEvents()
+                .haveExactly(100,
+                        event(test("testSyncurityAwaitConditionWithSynchronizationPrimitives"), finishedSuccessfully())
+                );
     }
 
 }

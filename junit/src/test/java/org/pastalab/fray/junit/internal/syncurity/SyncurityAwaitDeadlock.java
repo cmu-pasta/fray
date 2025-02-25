@@ -26,9 +26,10 @@ public class SyncurityAwaitDeadlock {
     }
 
     @ConcurrencyTest(
-            scheduler = RandomScheduler.class
+            scheduler = RandomScheduler.class,
+            iterations = 100
     )
-    public void testSyncurityAwaitDeadlockInCondition() {
+    public void testSyncurityAwaitConditionWithSynchronizationPrimitives() {
         MyThread t = new MyThread();
         // We need a dummy thread to evaluate the syncurity condition in
         // that thread.

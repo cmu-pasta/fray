@@ -35,11 +35,14 @@ import org.pastalab.fray.core.concurrency.primitives.SemaphoreContext
 import org.pastalab.fray.core.concurrency.primitives.SignalContext
 import org.pastalab.fray.core.concurrency.primitives.StampedLockContext
 import org.pastalab.fray.core.concurrency.primitives.WriteLockContext
+import org.pastalab.fray.core.syncurity.SyncurityEvaluationContext
+import org.pastalab.fray.core.syncurity.SyncurityEvaluationDelegate
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
 import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.runtime.DeadlockException
 import org.pastalab.fray.runtime.LivenessException
+import org.pastalab.fray.runtime.Runtime
 import org.pastalab.fray.runtime.Runtime.onReportError
 import org.pastalab.fray.runtime.SyncurityCondition
 
@@ -50,7 +53,6 @@ class RunContext(val config: Configuration) {
   var mainThreadId: Long = -1
   var bugFound: Throwable? = null
   var mainExiting = false
-  val evaluatingSyncurityCondition = ThreadLocal.withInitial { false }
   var nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
   val hashCodeMapper = ReferencedContextManager<Int>({ config.randomnessProvider.nextInt() })
   var forkJoinPool: ForkJoinPool? = null
@@ -63,7 +65,7 @@ class RunContext(val config: Configuration) {
     verifyOrReport(it is CountDownLatch) { "CDL Manager only accepts CountDownLatch objects" }
     CountDownLatchContext(it as CountDownLatch, syncManager)
   }
-  private val lockManager =
+  val lockManager =
       ReferencedContextManager<LockContext> {
         when (it) {
           is ReentrantLock -> ReentrantLockContext()
@@ -540,14 +542,6 @@ class RunContext(val config: Configuration) {
     val context = registeredThreads[t]!!
     val lockContext = lockManager.getContext(lock)
 
-    if (evaluatingSyncurityCondition.get()) {
-      if (!lockContext.canLock(Thread.currentThread().id)) {
-        throw RuntimeException("Abort syncurity condition evaluation because of deadlock.")
-      } else {
-        return
-      }
-    }
-
     context.pendingOperation = LockLockOperation(lock)
     context.state = ThreadState.Enabled
     scheduleNextOperation(true)
@@ -912,14 +906,16 @@ class RunContext(val config: Configuration) {
     for (thread in registeredThreads.values) {
       if (thread.state == ThreadState.Paused && thread.pendingOperation is SyncurityWaitOperation) {
         val condition = (thread.pendingOperation as SyncurityWaitOperation).condition
+        val currentRuntimeDelegate = Runtime.DELEGATE
         val result =
             try {
-              evaluatingSyncurityCondition.set(true)
+              val syncurityEvaluationContext = SyncurityEvaluationContext(this)
+              Runtime.DELEGATE = SyncurityEvaluationDelegate(syncurityEvaluationContext)
               condition.satisfied()
             } catch (e: Throwable) {
               false
             } finally {
-              evaluatingSyncurityCondition.set(false)
+              Runtime.DELEGATE = currentRuntimeDelegate
             }
         if (result) {
           thread.pendingOperation = ThreadResumeOperation(true)
@@ -1034,7 +1030,7 @@ class RunContext(val config: Configuration) {
     }
 
     step += 1
-    if (config.executionInfo.maxScheduledStep in 1..<step &&
+    if (config.executionInfo.maxScheduledStep in 1 ..< step &&
         !currentThread.isExiting &&
         Thread.currentThread() !is HelperThread &&
         !(mainExiting && currentThreadId == mainThreadId)) {
