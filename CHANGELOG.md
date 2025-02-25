@@ -12,6 +12,10 @@
 
 ### Fixed
 
+- Fix deadlock while evaluating syncurity conditions. This happens if the condition
+contains synchronization primitives. The solution is to switch Runtime delegate to 
+a special syncurity delegate that does not call RunContext directly. 
+
 ### Security
 
 ## 0.2.7 - 2025-02-24

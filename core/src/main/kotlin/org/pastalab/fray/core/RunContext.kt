@@ -35,11 +35,14 @@ import org.pastalab.fray.core.concurrency.primitives.SemaphoreContext
 import org.pastalab.fray.core.concurrency.primitives.SignalContext
 import org.pastalab.fray.core.concurrency.primitives.StampedLockContext
 import org.pastalab.fray.core.concurrency.primitives.WriteLockContext
+import org.pastalab.fray.core.syncurity.SyncurityEvaluationContext
+import org.pastalab.fray.core.syncurity.SyncurityEvaluationDelegate
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
 import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.runtime.DeadlockException
 import org.pastalab.fray.runtime.LivenessException
+import org.pastalab.fray.runtime.Runtime
 import org.pastalab.fray.runtime.Runtime.onReportError
 import org.pastalab.fray.runtime.SyncurityCondition
 
@@ -62,7 +65,7 @@ class RunContext(val config: Configuration) {
     verifyOrReport(it is CountDownLatch) { "CDL Manager only accepts CountDownLatch objects" }
     CountDownLatchContext(it as CountDownLatch, syncManager)
   }
-  private val lockManager =
+  val lockManager =
       ReferencedContextManager<LockContext> {
         when (it) {
           is ReentrantLock -> ReentrantLockContext()
@@ -538,6 +541,7 @@ class RunContext(val config: Configuration) {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
     val lockContext = lockManager.getContext(lock)
+
     context.pendingOperation = LockLockOperation(lock)
     context.state = ThreadState.Enabled
     scheduleNextOperation(true)
@@ -555,8 +559,8 @@ class RunContext(val config: Configuration) {
      * 2. foo.unlock(); } t2 = {
      * 1. foo.lock();
      * 2. foo.unlock(); } t3 = {
-     *     1. foo.lock();
-     *     2. foo.unlock(); } t1.1, t2.1, t1.2, t3.1 will make t2.1 lock again.
+     * 1. foo.lock();
+     * 2. foo.unlock(); } t1.1, t2.1, t1.2, t3.1 will make t2.1 lock again.
      */
     // TODO(aoli): we may need to store monitor locks and reentrant locks separately.
     // Consider the scenario where
@@ -902,7 +906,18 @@ class RunContext(val config: Configuration) {
     for (thread in registeredThreads.values) {
       if (thread.state == ThreadState.Paused && thread.pendingOperation is SyncurityWaitOperation) {
         val condition = (thread.pendingOperation as SyncurityWaitOperation).condition
-        if (condition.satisfied()) {
+        val currentRuntimeDelegate = Runtime.DELEGATE
+        val result =
+            try {
+              val syncurityEvaluationContext = SyncurityEvaluationContext(this)
+              Runtime.DELEGATE = SyncurityEvaluationDelegate(syncurityEvaluationContext)
+              condition.satisfied()
+            } catch (e: Throwable) {
+              false
+            } finally {
+              Runtime.DELEGATE = currentRuntimeDelegate
+            }
+        if (result) {
           thread.pendingOperation = ThreadResumeOperation(true)
           thread.state = ThreadState.Enabled
         }

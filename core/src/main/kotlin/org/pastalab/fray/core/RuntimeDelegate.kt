@@ -23,14 +23,14 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   val stackTrace = ThreadLocal.withInitial { mutableListOf<String>() }
 
   private fun checkEntered(): Boolean {
+    if (skipFunctionEntered.get() > 0) {
+      return true
+    }
+
     if (entered.get()) {
       return true
     }
     entered.set(true)
-    if (skipFunctionEntered.get() > 0) {
-      entered.set(false)
-      return true
-    }
     if (Thread.currentThread() is HelperThread) {
       entered.set(false)
       return true
