@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea.`object`
+package org.pastalab.fray.idea.objects
 
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.editor.Document
@@ -8,8 +8,8 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.util.ClassUtil
 import com.intellij.ui.JBColor
-import org.pastalab.fray.rmi.ThreadInfo
 import java.awt.Color
+import org.pastalab.fray.rmi.ThreadInfo
 
 class ThreadExecutionContext(val threadInfo: ThreadInfo, project: Project) {
   var executingLine = -1
@@ -62,6 +62,4 @@ class ThreadExecutionContext(val threadInfo: ThreadInfo, project: Project) {
     // Return a JBColor that adapts to the current theme
     return JBColor(lightModeColor, darkModeColor)
   }
-
-
 }

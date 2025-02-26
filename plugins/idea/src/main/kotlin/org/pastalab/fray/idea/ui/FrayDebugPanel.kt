@@ -1,26 +1,17 @@
 package org.pastalab.fray.idea.ui
 
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.markup.MarkupModel
-import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.ProjectRootManager
-import com.intellij.psi.PsiManager
-import com.intellij.psi.util.ClassUtil
-import org.pastalab.fray.idea.`object`.ThreadExecutionContext
 import java.awt.BorderLayout
-import java.awt.Dimension
 import java.awt.Font
 import javax.swing.JPanel
 import javax.swing.JSplitPane
+import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.idea.ui.Colors.THREAD_DISABLED_COLOR
-import org.pastalab.fray.idea.ui.Colors.THREAD_ENABLED_COLOR
-import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
 
 class FrayDebugPanel(val project: Project) : JPanel() {
@@ -29,23 +20,23 @@ class FrayDebugPanel(val project: Project) : JPanel() {
   private val threadTimelinePanel: ThreadTimelinePanel
 
   // Data management
-  private val currentRangeHighlighters = mutableListOf<Pair<MarkupModel, RangeHighlighter>>()
   private val threadInfoUpdaters: MutableMap<Editor, ThreadInfoUpdater> = mutableMapOf()
   var selected: ThreadExecutionContext? = null
   private var callback: ((ThreadExecutionContext) -> Unit)? = null
+  val highlightManager = MultiThreadHighlightManager()
 
   init {
     layout = BorderLayout()
 
     // Create the control panel (thread selection, stack trace, etc.)
-    controlPanel = SchedulerControlPanel(
-        project,
-        onThreadSelected = { threadInfo ->
-          selected = threadInfo
-          threadTimelinePanel.repaint() // Refresh timeline to show selection
-        },
-        onScheduleButtonPressed = { selectedThread -> scheduleButtonPressed(selectedThread) }
-    )
+    controlPanel =
+        SchedulerControlPanel(
+            project,
+            onThreadSelected = { threadInfo ->
+              selected = threadInfo
+              threadTimelinePanel.repaint() // Refresh timeline to show selection
+            },
+            onScheduleButtonPressed = { selectedThread -> scheduleButtonPressed(selectedThread) })
 
     // Create the thread timeline panel
     threadTimelinePanel = ThreadTimelinePanel()
@@ -60,9 +51,7 @@ class FrayDebugPanel(val project: Project) : JPanel() {
   }
 
   fun scheduleButtonPressed(newSelected: ThreadExecutionContext?) {
-    ApplicationManager.getApplication().invokeAndWait {
-      currentRangeHighlighters.forEach { it.first.removeHighlighter(it.second) }
-    }
+    ApplicationManager.getApplication().invokeAndWait { highlightManager.clearAll() }
     threadInfoUpdaters.forEach { it.value.threadNameMapping.clear() }
     threadInfoUpdaters.clear()
     controlPanel.clear()
@@ -75,13 +64,16 @@ class FrayDebugPanel(val project: Project) : JPanel() {
   }
 
   fun stop() {
-    currentRangeHighlighters.forEach { it.first.removeHighlighter(it.second) }
+    highlightManager.clearAll()
     threadInfoUpdaters.forEach { it.value.stop() }
     threadInfoUpdaters.clear()
     controlPanel.clear()
   }
 
-  fun schedule(enabledThreads: List<ThreadExecutionContext>, onThreadSelected: (ThreadExecutionContext) -> Unit) {
+  fun schedule(
+      enabledThreads: List<ThreadExecutionContext>,
+      onThreadSelected: (ThreadExecutionContext) -> Unit
+  ) {
     // Update the thread information in the control panel
     controlPanel.updateThreads(enabledThreads, selected)
 
@@ -92,9 +84,7 @@ class FrayDebugPanel(val project: Project) : JPanel() {
     callback = onThreadSelected
   }
 
-  /**
-   * Process thread information and add editor highlighting
-   */
+  /** Process thread information and add editor highlighting */
   private fun processThreadsForHighlighting(threads: List<ThreadExecutionContext>) {
     threads.forEach { threadExecutionContext ->
       if (threadExecutionContext.threadInfo.state == ThreadState.Completed) return@forEach
@@ -106,7 +96,7 @@ class FrayDebugPanel(val project: Project) : JPanel() {
       val end = document.getLineEndOffset(threadExecutionContext.executingLine - 1)
       val color =
           if (threadExecutionContext.threadInfo.state == ThreadState.Paused) THREAD_DISABLED_COLOR
-          else THREAD_ENABLED_COLOR
+          else Colors.getThreadColor(threadExecutionContext.threadInfo.index)
 
       val highlightAttributes =
           TextAttributes(
@@ -121,15 +111,12 @@ class FrayDebugPanel(val project: Project) : JPanel() {
         FileEditorManager.getInstance(project).openFile(vFile).forEach { fileEditor ->
           if (fileEditor is TextEditor) {
             val editor = fileEditor.editor
-            val highlighter =
-                editor.markupModel.addRangeHighlighter(
-                    start,
-                    end,
-                    0,
-                    highlightAttributes,
-                    com.intellij.openapi.editor.markup.HighlighterTargetArea.LINES_IN_RANGE,
-                )
-            currentRangeHighlighters.add(Pair(editor.markupModel, highlighter))
+            highlightManager.addThreadToLine(
+                threadExecutionContext.executingLine,
+                threadExecutionContext,
+                editor,
+                document,
+                project)
             threadInfoUpdaters
                 .getOrPut(editor) {
                   val updater = ThreadInfoUpdater(editor)

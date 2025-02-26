@@ -2,8 +2,8 @@ package org.pastalab.fray.idea.debugger
 
 import com.intellij.util.ui.UIUtil
 import com.intellij.xdebugger.XDebugSession
-import org.pastalab.fray.idea.`object`.ThreadExecutionContext
 import java.util.concurrent.CountDownLatch
+import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.idea.ui.FrayDebugPanel
 import org.pastalab.fray.rmi.RemoteScheduler
 import org.pastalab.fray.rmi.ThreadInfo

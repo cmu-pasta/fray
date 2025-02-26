@@ -6,7 +6,6 @@ import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
-import org.pastalab.fray.idea.`object`.ThreadExecutionContext
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
@@ -18,15 +17,14 @@ import javax.swing.JLabel
 import javax.swing.JList
 import javax.swing.JPanel
 import javax.swing.ListCellRenderer
+import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.rmi.ThreadState
 
-/**
- * Panel that contains the thread selector, stack trace viewer, and scheduling controls.
- */
+/** Panel that contains the thread selector, stack trace viewer, and scheduling controls. */
 class SchedulerControlPanel(
-  val project: Project,
-  private val onThreadSelected: (ThreadExecutionContext) -> Unit,
-  private val onScheduleButtonPressed: (ThreadExecutionContext?) -> Unit
+    val project: Project,
+    private val onThreadSelected: (ThreadExecutionContext) -> Unit,
+    private val onScheduleButtonPressed: (ThreadExecutionContext?) -> Unit
 ) : JPanel() {
   // UI Components
   private val comboBoxModel = DefaultComboBoxModel<ThreadExecutionContext>()
@@ -44,21 +42,24 @@ class SchedulerControlPanel(
 
     // Thread selector combo box
     comboBox = ComboBox<ThreadExecutionContext>(comboBoxModel)
-    comboBox.renderer = object : DefaultListCellRenderer() {
-      override fun getListCellRendererComponent(
-        list: JList<*>?,
-        value: Any?,
-        index: Int,
-        isSelected: Boolean,
-        cellHasFocus: Boolean
-      ): Component {
-        val label = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus) as JLabel
-        if (value is ThreadExecutionContext) {
-          label.text = "Thread: $value"
+    comboBox.renderer =
+        object : DefaultListCellRenderer() {
+          override fun getListCellRendererComponent(
+              list: JList<*>?,
+              value: Any?,
+              index: Int,
+              isSelected: Boolean,
+              cellHasFocus: Boolean
+          ): Component {
+            val label =
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
+                    as JLabel
+            if (value is ThreadExecutionContext) {
+              label.text = "Thread: $value"
+            }
+            return label
+          }
         }
-        return label
-      }
-    }
     comboBox.addActionListener {
       val selected = comboBox.selectedItem as? ThreadExecutionContext
       if (selected != null) {
@@ -78,15 +79,11 @@ class SchedulerControlPanel(
 
     // Schedule button
     scheduleButton = JButton("Schedule")
-    scheduleButton.addActionListener {
-      onScheduleButtonPressed(selectedThread)
-    }
+    scheduleButton.addActionListener { onScheduleButtonPressed(selectedThread) }
     add(scheduleButton, BorderLayout.SOUTH)
   }
 
-  /**
-   * Handles selection of a thread from the combo box or externally
-   */
+  /** Handles selection of a thread from the combo box or externally */
   fun handleThreadSelection(context: ThreadExecutionContext) {
     selectedThread = context
 
@@ -101,34 +98,31 @@ class SchedulerControlPanel(
     onThreadSelected(context)
   }
 
-  /**
-   * Select a thread programmatically (e.g., when selected from timeline)
-   */
+  /** Select a thread programmatically (e.g., when selected from timeline) */
   fun selectThread(threadInfo: ThreadExecutionContext) {
     // Update the combo box selection (this will trigger the action listener)
     comboBoxModel.selectedItem = threadInfo
   }
 
-  /**
-   * Updates the panel with new thread information
-   */
-  fun updateThreads(threads: List<ThreadExecutionContext>, previouslySelected: ThreadExecutionContext? = null) {
+  /** Updates the panel with new thread information */
+  fun updateThreads(
+      threads: List<ThreadExecutionContext>,
+      previouslySelected: ThreadExecutionContext? = null
+  ) {
     // Update the combo box model
     comboBoxModel.removeAllElements()
-    threads.forEach { threadInfo ->
-      comboBoxModel.addElement(threadInfo)
-    }
+    threads.forEach { threadInfo -> comboBoxModel.addElement(threadInfo) }
 
     // Try to restore previous selection or select the first thread
     if (threads.isNotEmpty()) {
-      val threadToSelect = threads.find { it.threadInfo.index == previouslySelected?.threadInfo?.index } ?: threads.first()
+      val threadToSelect =
+          threads.find { it.threadInfo.index == previouslySelected?.threadInfo?.index }
+              ?: threads.first()
       comboBoxModel.selectedItem = threadToSelect
     }
   }
 
-  /**
-   * Clears all thread data
-   */
+  /** Clears all thread data */
   fun clear() {
     comboBoxModel.removeAllElements()
     myFrameListModel.clear()

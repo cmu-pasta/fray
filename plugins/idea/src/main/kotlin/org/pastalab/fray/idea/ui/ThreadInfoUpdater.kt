@@ -12,13 +12,13 @@ import com.intellij.ui.HintHint
 import com.intellij.ui.JBColor
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.panels.NonOpaquePanel
-import org.pastalab.fray.idea.`object`.ThreadExecutionContext
 import java.awt.BorderLayout
 import javax.swing.BoxLayout
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JSeparator
 import javax.swing.border.EmptyBorder
+import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.idea.ui.Colors.THREAD_DISABLED_COLOR
 import org.pastalab.fray.idea.ui.Colors.THREAD_ENABLED_COLOR
 import org.pastalab.fray.rmi.ThreadState
