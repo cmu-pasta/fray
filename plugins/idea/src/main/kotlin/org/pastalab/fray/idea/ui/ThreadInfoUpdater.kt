@@ -18,13 +18,13 @@ import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JSeparator
 import javax.swing.border.EmptyBorder
+import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.idea.ui.Colors.THREAD_DISABLED_COLOR
 import org.pastalab.fray.idea.ui.Colors.THREAD_ENABLED_COLOR
-import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
 
 class ThreadInfoUpdater(val editor: Editor) : EditorMouseMotionListener {
-  val threadNameMapping: MutableMap<Int, MutableSet<ThreadInfo>> = mutableMapOf()
+  val threadNameMapping: MutableMap<Int, MutableSet<ThreadExecutionContext>> = mutableMapOf()
   var threadInfoBalloon: Balloon? = null
 
   fun getBalloonLabelOf(offset: Int): String {
@@ -32,9 +32,7 @@ class ThreadInfoUpdater(val editor: Editor) : EditorMouseMotionListener {
     if (threadInfos == null) {
       return ""
     }
-    return threadInfos.joinToString("\n") { threadInfo ->
-      "${threadInfo.threadName} (${threadInfo.state})"
-    }
+    return threadInfos.joinToString("\n")
   }
 
   fun buildBalloonComponent(offset: Int): JComponent? {
@@ -49,15 +47,15 @@ class ThreadInfoUpdater(val editor: Editor) : EditorMouseMotionListener {
     content.layout = BoxLayout(content, BoxLayout.Y_AXIS)
 
     var first = true
-    for (threadInfo in threadInfos) {
+    for (context in threadInfos) {
       val threadItem = NonOpaquePanel(BorderLayout())
       val (bgColor, icon) =
-          if (threadInfo.state == ThreadState.Enabled)
+          if (context.threadInfo.state == ThreadState.Runnable)
               Pair(THREAD_ENABLED_COLOR, AllIcons.Debugger.ThreadRunning)
           else Pair(THREAD_DISABLED_COLOR, AllIcons.Debugger.ThreadFrozen)
       val text =
           IdeTooltipManager.initPane(
-              "${threadInfo.threadName} (${threadInfo.state})",
+              context.toString(),
               HintHint().setTextFg(JBColor.BLACK).setTextBg(bgColor).setAwtTooltip(true),
               null)
       text.isEditable = false

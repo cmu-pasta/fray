@@ -10,7 +10,7 @@ class SyncurityWaitOperation(val condition: SyncurityCondition, val threadContex
     NonRacingOperation(), Interruptible {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
     threadContext.pendingOperation = ThreadResumeOperation(true)
-    threadContext.state = ThreadState.Enabled
+    threadContext.state = ThreadState.Runnable
     return null
   }
 }

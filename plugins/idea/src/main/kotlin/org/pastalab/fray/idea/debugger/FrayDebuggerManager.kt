@@ -9,12 +9,12 @@ import com.intellij.xdebugger.XDebugSessionListener
 import java.rmi.registry.LocateRegistry
 import java.rmi.registry.Registry
 import java.rmi.server.UnicastRemoteObject
-import org.pastalab.fray.idea.ui.SchedulerPanel
+import org.pastalab.fray.idea.ui.FrayDebugPanel
 import org.pastalab.fray.rmi.RemoteScheduler
 
 class FrayDebuggerManager(val debugSession: XDebugSession) :
     XDebugSessionListener, ProcessListener {
-  val schedulerPanel: SchedulerPanel = SchedulerPanel(debugSession.project)
+  val schedulerPanel: FrayDebugPanel = FrayDebugPanel(debugSession.project)
   val scheduler = FrayDebuggerScheduler(schedulerPanel, debugSession)
 
   init {
@@ -27,7 +27,7 @@ class FrayDebuggerManager(val debugSession: XDebugSession) :
     container.setContent(schedulerPanel)
     val content =
         debugSession.ui.createContent(
-            SchedulerPanel.CONTENT_ID, container, "Fray Scheduler", null, null)
+            FrayDebugPanel.CONTENT_ID, container, "Fray Scheduler", null, null)
     content.isCloseable = false
 
     ApplicationManager.getApplication().invokeLater { debugSession.ui.addContent(content) }

@@ -41,7 +41,7 @@ class SemaphoreContext(var totalPermits: Int) : InterruptibleContext {
         val (tid, p) = it.next()
         if (totalPermits >= p.first) {
           p.second.thread.pendingOperation = ThreadResumeOperation(true)
-          p.second.thread.state = ThreadState.Enabled
+          p.second.thread.state = ThreadState.Runnable
           lockWaiters.remove(tid)
         }
       }
@@ -57,7 +57,7 @@ class SemaphoreContext(var totalPermits: Int) : InterruptibleContext {
     val noTimeout = type != InterruptionType.TIMEOUT
     if (lockWaiter.second.canInterrupt) {
       lockWaiter.second.thread.pendingOperation = ThreadResumeOperation(noTimeout)
-      lockWaiter.second.thread.state = ThreadState.Enabled
+      lockWaiter.second.thread.state = ThreadState.Runnable
       lockWaiters.remove(tid)
     }
     return false

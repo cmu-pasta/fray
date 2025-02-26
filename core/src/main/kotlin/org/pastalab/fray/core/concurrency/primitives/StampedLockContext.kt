@@ -30,12 +30,12 @@ class StampedLockContext : InterruptibleContext {
   fun unblockAllWaiters() {
     readLockWaiters.values.forEach {
       it.thread.pendingOperation = ThreadResumeOperation(true)
-      it.thread.state = ThreadState.Enabled
+      it.thread.state = ThreadState.Runnable
       readLockWaiters.remove(it.thread.thread.id)
     }
     writeLockWaiters.values.forEach {
       it.thread.pendingOperation = ThreadResumeOperation(true)
-      it.thread.state = ThreadState.Enabled
+      it.thread.state = ThreadState.Runnable
       writeLockWaiters.remove(it.thread.thread.id)
     }
   }
@@ -97,14 +97,14 @@ class StampedLockContext : InterruptibleContext {
     readLockWaiters[tid]?.let {
       if (it.canInterrupt) {
         it.thread.pendingOperation = ThreadResumeOperation(noTimeout)
-        it.thread.state = ThreadState.Enabled
+        it.thread.state = ThreadState.Runnable
         readLockWaiters.remove(tid)
       }
     }
     writeLockWaiters[tid]?.let {
       if (it.canInterrupt) {
         it.thread.pendingOperation = ThreadResumeOperation(noTimeout)
-        it.thread.state = ThreadState.Enabled
+        it.thread.state = ThreadState.Runnable
         writeLockWaiters.remove(tid)
       }
     }

@@ -6,9 +6,9 @@ import java.rmi.RemoteException
 import kotlin.jvm.Throws
 
 enum class ThreadState {
-  Enabled,
+  Runnable,
   Running,
-  Paused,
+  Blocked,
   Completed,
   Created,
 }

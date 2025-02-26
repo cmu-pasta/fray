@@ -106,7 +106,7 @@ class WriteLockContext : LockContext {
         (type == InterruptionType.TIMEOUT) ||
         (type == InterruptionType.FORCE)) {
       lockWaiter.thread.pendingOperation = ThreadResumeOperation(noTimeout)
-      lockWaiter.thread.state = ThreadState.Enabled
+      lockWaiter.thread.state = ThreadState.Runnable
       lockWaiters.remove(tid)
     }
     return false
@@ -115,12 +115,12 @@ class WriteLockContext : LockContext {
   fun unlockWaiters() {
     for (writeLockWaiter in lockWaiters.values) {
       writeLockWaiter.thread.pendingOperation = ThreadResumeOperation(true)
-      writeLockWaiter.thread.state = ThreadState.Enabled
+      writeLockWaiter.thread.state = ThreadState.Runnable
     }
     // Waking threads are write waiters as well.
     for (thread in wakingThreads.values) {
       thread.pendingOperation = ThreadResumeOperation(true)
-      thread.state = ThreadState.Enabled
+      thread.state = ThreadState.Runnable
     }
   }
 

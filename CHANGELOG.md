@@ -4,7 +4,12 @@
 
 ### Added
 
+- Add a new timeline view in the Intellij Plugin.
+
 ### Changed
+
+- Assign different colors to different threads in the Intellij Plugin.
+- Rename the thread state to `Runnabled` and `Blocked`.
 
 ### Deprecated
 

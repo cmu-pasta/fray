@@ -34,7 +34,7 @@ class ConditionSignalContext(lockContext: LockContext, lock: Lock, val condition
       canInterrupt: Boolean
   ) {
     threadContext.pendingOperation = ConditionAwaitBlocked(this, canInterrupt, timed)
-    threadContext.state = ThreadState.Paused
+    threadContext.state = ThreadState.Blocked
   }
 
   override fun getSyncObject(): Any {

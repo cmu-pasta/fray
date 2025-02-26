@@ -3,24 +3,25 @@ package org.pastalab.fray.idea.debugger
 import com.intellij.util.ui.UIUtil
 import com.intellij.xdebugger.XDebugSession
 import java.util.concurrent.CountDownLatch
-import org.pastalab.fray.idea.ui.SchedulerPanel
+import org.pastalab.fray.idea.objects.ThreadExecutionContext
+import org.pastalab.fray.idea.ui.FrayDebugPanel
 import org.pastalab.fray.rmi.RemoteScheduler
 import org.pastalab.fray.rmi.ThreadInfo
 
-class FrayDebuggerScheduler(val schedulerPanel: SchedulerPanel, val debugSession: XDebugSession) :
+class FrayDebuggerScheduler(val schedulerPanel: FrayDebugPanel, val debugSession: XDebugSession) :
     RemoteScheduler {
 
   override fun scheduleNextOperation(threads: List<ThreadInfo>): Int {
     val cdl = CountDownLatch(1)
     var selected = 0
     schedulerPanel.schedule(
-        threads,
+        threads.map { ThreadExecutionContext(it, debugSession.project) }.toList(),
         {
-          selected = threads.indexOf(it)
+          selected = threads.indexOf(it.threadInfo)
           cdl.countDown()
         })
     UIUtil.invokeLaterIfNeeded {
-      val content = debugSession.ui.findContent(SchedulerPanel.CONTENT_ID)
+      val content = debugSession.ui.findContent(FrayDebugPanel.CONTENT_ID)
       debugSession.ui.selectAndFocus(content, false, false)
     }
     cdl.await()

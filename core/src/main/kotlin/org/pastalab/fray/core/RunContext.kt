@@ -133,7 +133,7 @@ class RunContext(val config: Configuration) {
       sw.append("Error: ${e}\n")
       if (e is org.pastalab.fray.runtime.DeadlockException) {
         for (registeredThread in registeredThreads.values) {
-          if (registeredThread.state == ThreadState.Paused) {
+          if (registeredThread.state == ThreadState.Blocked) {
             sw.append("Thread: ${registeredThread.thread}\n")
             sw.append("Stacktrace: \n")
             for (stackTraceElement in registeredThread.thread.stackTrace) {
@@ -189,13 +189,13 @@ class RunContext(val config: Configuration) {
           it.value != context
     }) {
       try {
-        context.state = ThreadState.Enabled
+        context.state = ThreadState.Runnable
         scheduleNextOperation(true)
       } catch (e: org.pastalab.fray.runtime.TargetTerminateException) {
         // If deadlock detected let's try to unblock one thread and continue.
         if (e is org.pastalab.fray.runtime.DeadlockException) {
           for (thread in registeredThreads.values) {
-            if (thread.state == ThreadState.Paused) {
+            if (thread.state == ThreadState.Blocked) {
               val pendingOperation = thread.pendingOperation
               if (pendingOperation is Interruptible) {
                 pendingOperation.unblockThread(thread.thread.id, InterruptionType.FORCE)
@@ -219,7 +219,7 @@ class RunContext(val config: Configuration) {
     currentThreadId = t.id
     mainThreadId = t.id
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this)
-    registeredThreads[t.id]?.state = ThreadState.Enabled
+    registeredThreads[t.id]?.state = ThreadState.Runnable
     scheduleNextOperation(true)
   }
 
@@ -265,7 +265,7 @@ class RunContext(val config: Configuration) {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
 
-    context.state = ThreadState.Enabled
+    context.state = ThreadState.Runnable
     context.pendingOperation = ParkBlocking()
     scheduleNextOperation(true)
 
@@ -282,10 +282,10 @@ class RunContext(val config: Configuration) {
       val supriousWakeup = config.randomnessProvider.nextInt() % 2 == 0
       if (supriousWakeup) {
         context.pendingOperation = ThreadResumeOperation(true)
-        context.state = ThreadState.Enabled
+        context.state = ThreadState.Runnable
       } else {
         context.pendingOperation = ParkBlocked(timed, context)
-        context.state = ThreadState.Paused
+        context.state = ThreadState.Blocked
         scheduleNextOperation(true)
       }
     } else if (context.unparkSignaled) {
@@ -295,10 +295,10 @@ class RunContext(val config: Configuration) {
 
   fun threadUnpark(t: Thread) {
     val context = registeredThreads[t.id]
-    if (context?.state == ThreadState.Paused && context?.pendingOperation is ParkBlocked) {
-      context.state = ThreadState.Enabled
+    if (context?.state == ThreadState.Blocked && context?.pendingOperation is ParkBlocked) {
+      context.state = ThreadState.Runnable
       context.pendingOperation = ThreadResumeOperation(true)
-    } else if (context?.state == ThreadState.Enabled || context?.state == ThreadState.Running) {
+    } else if (context?.state == ThreadState.Runnable || context?.state == ThreadState.Running) {
       context.unparkSignaled = true
     }
   }
@@ -308,7 +308,7 @@ class RunContext(val config: Configuration) {
   fun threadRun() {
     var t = Thread.currentThread()
     registeredThreads[t.id]?.pendingOperation = ThreadStartOperation()
-    registeredThreads[t.id]?.state = ThreadState.Enabled
+    registeredThreads[t.id]?.state = ThreadState.Runnable
     syncManager.signal(t)
     registeredThreads[t.id]?.block()
   }
@@ -322,7 +322,7 @@ class RunContext(val config: Configuration) {
         state == Thread.State.TIMED_WAITING ||
         state == Thread.State.BLOCKED) {
       val context = registeredThreads[t.id]
-      if (context?.state == ThreadState.Running || context?.state == ThreadState.Enabled) {
+      if (context?.state == ThreadState.Running || context?.state == ThreadState.Runnable) {
         return Thread.State.RUNNABLE
       }
     }
@@ -342,7 +342,7 @@ class RunContext(val config: Configuration) {
     val lockContext = lockManager.getContext(t)
     lockContext.wakingThreads.let {
       for (thread in it) {
-        thread.value.state = ThreadState.Enabled
+        thread.value.state = ThreadState.Runnable
       }
       size = it.size
     }
@@ -366,7 +366,7 @@ class RunContext(val config: Configuration) {
     val lockContext = signalContext.lockContext
     val context = registeredThreads[t]!!
     context.pendingOperation = ObjectWaitOperation(objId)
-    context.state = ThreadState.Enabled
+    context.state = ThreadState.Runnable
     scheduleNextOperation(true)
 
     context.pendingOperation = ThreadResumeOperation(true)
@@ -543,7 +543,7 @@ class RunContext(val config: Configuration) {
     val lockContext = lockManager.getContext(lock)
 
     context.pendingOperation = LockLockOperation(lock)
-    context.state = ThreadState.Enabled
+    context.state = ThreadState.Runnable
     scheduleNextOperation(true)
 
     if (canInterrupt) {
@@ -570,7 +570,7 @@ class RunContext(val config: Configuration) {
     //   lock.unlock();
     // }
     while (!lockContext.lock(context, blockingWait, false, canInterrupt) && blockingWait) {
-      context.state = ThreadState.Paused
+      context.state = ThreadState.Blocked
       context.pendingOperation = LockBlocking(timed, lockContext)
       // We want to block current thread because we do
       // not want to rely on ReentrantLock. This allows
@@ -668,14 +668,14 @@ class RunContext(val config: Configuration) {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
     context.pendingOperation = LockLockOperation(lock)
-    context.state = ThreadState.Enabled
+    context.state = ThreadState.Runnable
     scheduleNextOperation(true)
 
     val stampedLockContext = stampedLockManager.getContext(lock)
     val lockFun = if (isReadLock) stampedLockContext::readLock else stampedLockContext::writeLock
 
     while (!lockFun(context, shouldBlock, canInterrupt) && shouldBlock) {
-      context.state = ThreadState.Paused
+      context.state = ThreadState.Blocked
       context.pendingOperation = LockBlocking(timed, stampedLockContext)
 
       scheduleNextOperation(true)
@@ -734,13 +734,13 @@ class RunContext(val config: Configuration) {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
     context.pendingOperation = LockLockOperation(sem)
-    context.state = ThreadState.Enabled
+    context.state = ThreadState.Runnable
     scheduleNextOperation(true)
 
     while (!semaphoreManager.getContext(sem).acquire(permits, shouldBlock, canInterrupt, context) &&
         shouldBlock) {
       context.pendingOperation = LockBlocking(timed, semaphoreManager.getContext(sem))
-      context.state = ThreadState.Paused
+      context.state = ThreadState.Blocked
 
       scheduleNextOperation(true)
       if (canInterrupt) {
@@ -802,7 +802,7 @@ class RunContext(val config: Configuration) {
   fun memoryOperation(obj: Int, type: org.pastalab.fray.runtime.MemoryOpType) {
     val t = Thread.currentThread().id
     registeredThreads[t]?.pendingOperation = MemoryOperation(obj, type)
-    registeredThreads[t]?.state = ThreadState.Enabled
+    registeredThreads[t]?.state = ThreadState.Runnable
     scheduleNextOperation(true)
   }
 
@@ -813,12 +813,12 @@ class RunContext(val config: Configuration) {
     val latchContext = latchManager.getContext(latch)
 
     context.pendingOperation = ObjectWaitOperation(objId)
-    context.state = ThreadState.Enabled
+    context.state = ThreadState.Runnable
     scheduleNextOperation(true)
 
     if (latchContext.await(true, context)) {
       context.pendingOperation = CountDownLatchAwaitBlocking(timed, latchContext)
-      context.state = ThreadState.Paused
+      context.state = ThreadState.Blocked
       checkDeadlock {
         // We should not use [InterruptionType.FORCE] here because
         // The thread is not blocked by the latch yet.
@@ -884,11 +884,11 @@ class RunContext(val config: Configuration) {
     if (false) {
       context.checkInterrupt()
       context.pendingOperation = ThreadSleepBlocking(context)
-      context.state = ThreadState.Paused
+      context.state = ThreadState.Blocked
       scheduleNextOperation(true)
     } else {
       context.pendingOperation = ThreadResumeOperation(true)
-      context.state = ThreadState.Enabled
+      context.state = ThreadState.Runnable
       scheduleNextOperation(true)
     }
   }
@@ -897,14 +897,15 @@ class RunContext(val config: Configuration) {
     val context = registeredThreads[Thread.currentThread().id]!!
     while (!condition.satisfied()) {
       context.pendingOperation = SyncurityWaitOperation(condition, context)
-      context.state = ThreadState.Paused
+      context.state = ThreadState.Blocked
       scheduleNextOperation(true)
     }
   }
 
   fun checkAndUnblockSyncurityOperations() {
     for (thread in registeredThreads.values) {
-      if (thread.state == ThreadState.Paused && thread.pendingOperation is SyncurityWaitOperation) {
+      if (thread.state == ThreadState.Blocked &&
+          thread.pendingOperation is SyncurityWaitOperation) {
         val condition = (thread.pendingOperation as SyncurityWaitOperation).condition
         val currentRuntimeDelegate = Runtime.DELEGATE
         val result =
@@ -919,7 +920,7 @@ class RunContext(val config: Configuration) {
             }
         if (result) {
           thread.pendingOperation = ThreadResumeOperation(true)
-          thread.state = ThreadState.Enabled
+          thread.state = ThreadState.Runnable
         }
       }
     }
@@ -930,7 +931,7 @@ class RunContext(val config: Configuration) {
       scheduleNextOperation(shouldBlockCurrentThread)
     } catch (e: DeadlockException) {
       for (thread in registeredThreads.values) {
-        if (thread.state == ThreadState.Paused) {
+        if (thread.state == ThreadState.Blocked) {
           val pendingOperation = thread.pendingOperation
           if (pendingOperation is Interruptible) {
             pendingOperation.unblockThread(thread.thread.id, InterruptionType.FORCE)
@@ -959,7 +960,7 @@ class RunContext(val config: Configuration) {
   }
 
   fun yield() {
-    registeredThreads[Thread.currentThread().id]!!.state = ThreadState.Enabled
+    registeredThreads[Thread.currentThread().id]!!.state = ThreadState.Runnable
     scheduleNextOperation(true)
   }
 
@@ -979,7 +980,7 @@ class RunContext(val config: Configuration) {
     verifyOrReport(
         Thread.currentThread() is HelperThread ||
             currentThreadId == Thread.currentThread().id ||
-            currentThread.state == ThreadState.Enabled ||
+            currentThread.state == ThreadState.Runnable ||
             currentThread.state == ThreadState.Completed)
     verifyOrReport(registeredThreads.none { it.value.state == ThreadState.Running })
 
@@ -996,7 +997,7 @@ class RunContext(val config: Configuration) {
     var enabledOperations =
         registeredThreads.values
             .toList()
-            .filter { it.state == ThreadState.Enabled }
+            .filter { it.state == ThreadState.Runnable }
             .sortedBy { it.thread.id }
     if (mainExiting && (currentThreadId == mainThreadId || enabledOperations.size > 1)) {
       enabledOperations = enabledOperations.filter { it.thread.id != mainThreadId }
@@ -1007,7 +1008,7 @@ class RunContext(val config: Configuration) {
       enabledOperations =
           registeredThreads.values
               .toList()
-              .filter { it.state == ThreadState.Enabled }
+              .filter { it.state == ThreadState.Runnable }
               .sortedBy { it.thread.id }
       if (mainExiting && (currentThreadId == mainThreadId || enabledOperations.size > 1)) {
         enabledOperations = enabledOperations.filter { it.thread.id != mainThreadId }
