@@ -904,7 +904,8 @@ class RunContext(val config: Configuration) {
 
   fun checkAndUnblockSyncurityOperations() {
     for (thread in registeredThreads.values) {
-      if (thread.state == ThreadState.Blocked && thread.pendingOperation is SyncurityWaitOperation) {
+      if (thread.state == ThreadState.Blocked &&
+          thread.pendingOperation is SyncurityWaitOperation) {
         val condition = (thread.pendingOperation as SyncurityWaitOperation).condition
         val currentRuntimeDelegate = Runtime.DELEGATE
         val result =
