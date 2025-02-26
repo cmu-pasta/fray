@@ -83,7 +83,7 @@ class MultiThreadHighlightManager {
       // Single thread - use its color
       val thread = threads.first()
       val color =
-          if (thread.threadInfo.state == ThreadState.Paused) THREAD_DISABLED_COLOR
+          if (thread.threadInfo.state == ThreadState.Blocked) THREAD_DISABLED_COLOR
           else Colors.getThreadColor(thread.threadInfo.index)
 
       return TextAttributes(

@@ -26,7 +26,7 @@ class ObjectNotifyContext(lockContext: LockContext, obj: Any) : SignalContext(lo
       canInterrupt: Boolean
   ) {
     threadContext.pendingOperation = ObjectWaitBlock(this, timedOperation)
-    threadContext.state = ThreadState.Paused
+    threadContext.state = ThreadState.Blocked
   }
 
   override fun getSyncObject(): Any {

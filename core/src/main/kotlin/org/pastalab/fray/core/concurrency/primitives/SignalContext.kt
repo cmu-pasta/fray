@@ -38,7 +38,7 @@ abstract class SignalContext(val lockContext: LockContext) : InterruptibleContex
     updatedThreadContextDueToUnblock(threadContext, type)
     lockContext.addWakingThread(threadContext)
     if (lockContext.canLock(tid)) {
-      threadContext.state = ThreadState.Enabled
+      threadContext.state = ThreadState.Runnable
       return true
     }
     return false

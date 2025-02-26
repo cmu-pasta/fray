@@ -50,7 +50,7 @@ class ThreadInfoUpdater(val editor: Editor) : EditorMouseMotionListener {
     for (context in threadInfos) {
       val threadItem = NonOpaquePanel(BorderLayout())
       val (bgColor, icon) =
-          if (context.threadInfo.state == ThreadState.Enabled)
+          if (context.threadInfo.state == ThreadState.Runnable)
               Pair(THREAD_ENABLED_COLOR, AllIcons.Debugger.ThreadRunning)
           else Pair(THREAD_DISABLED_COLOR, AllIcons.Debugger.ThreadFrozen)
       val text =

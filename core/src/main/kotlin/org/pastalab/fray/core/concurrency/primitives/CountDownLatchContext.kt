@@ -76,7 +76,7 @@ class CountDownLatchContext(latch: CountDownLatch, val syncManager: Synchronizat
     val pendingOperation = lockWaiter.thread.pendingOperation
     verifyOrReport(pendingOperation is CountDownLatchAwaitBlocking)
     lockWaiter.thread.pendingOperation = ThreadResumeOperation(type != InterruptionType.TIMEOUT)
-    lockWaiter.thread.state = ThreadState.Enabled
+    lockWaiter.thread.state = ThreadState.Runnable
     latchWaiters.remove(tid)
     return if ((pendingOperation as CountDownLatchAwaitBlocking).timed) {
       false

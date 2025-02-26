@@ -95,7 +95,7 @@ class FrayDebugPanel(val project: Project) : JPanel() {
       val start = document.getLineStartOffset(threadExecutionContext.executingLine - 1)
       val end = document.getLineEndOffset(threadExecutionContext.executingLine - 1)
       val color =
-          if (threadExecutionContext.threadInfo.state == ThreadState.Paused) THREAD_DISABLED_COLOR
+          if (threadExecutionContext.threadInfo.state == ThreadState.Blocked) THREAD_DISABLED_COLOR
           else Colors.getThreadColor(threadExecutionContext.threadInfo.index)
 
       val highlightAttributes =

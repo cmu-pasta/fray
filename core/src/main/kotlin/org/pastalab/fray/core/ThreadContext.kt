@@ -22,7 +22,7 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
     sync.block()
   }
 
-  fun schedulable() = state == ThreadState.Enabled || state == ThreadState.Running
+  fun schedulable() = state == ThreadState.Runnable || state == ThreadState.Running
 
   fun unblock() {
     sync.unblock()

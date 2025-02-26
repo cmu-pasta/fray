@@ -65,7 +65,7 @@ class ReadLockContext : LockContext {
   fun unlockWaiters() {
     for (readLockWaiter in lockWaiters.values) {
       readLockWaiter.thread.pendingOperation = ThreadResumeOperation(true)
-      readLockWaiter.thread.state = ThreadState.Enabled
+      readLockWaiter.thread.state = ThreadState.Runnable
     }
   }
 
@@ -108,7 +108,7 @@ class ReadLockContext : LockContext {
         (type == InterruptionType.FORCE) ||
         (type == InterruptionType.TIMEOUT)) {
       lockWaiter.thread.pendingOperation = ThreadResumeOperation(noTimeout)
-      lockWaiter.thread.state = ThreadState.Enabled
+      lockWaiter.thread.state = ThreadState.Runnable
       lockWaiters.remove(tid)
     }
     return false

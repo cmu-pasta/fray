@@ -45,7 +45,7 @@ class ReentrantLockContext : LockContext {
       wakingThreads.remove(tid)
 
       for (thread in wakingThreads.values) {
-        thread.state = ThreadState.Paused
+        thread.state = ThreadState.Blocked
       }
       return true
     } else {
@@ -75,13 +75,13 @@ class ReentrantLockContext : LockContext {
       lockHolder = null
       for (thread in wakingThreads.values) {
         if (thread.state != ThreadState.Completed) {
-          thread.state = ThreadState.Enabled
+          thread.state = ThreadState.Runnable
         }
       }
       for (lockWaiter in lockWaiters.values) {
         if (lockWaiter.thread.state != ThreadState.Completed) {
           lockWaiter.thread.pendingOperation = ThreadResumeOperation(true)
-          lockWaiter.thread.state = ThreadState.Enabled
+          lockWaiter.thread.state = ThreadState.Runnable
         }
       }
       lockWaiters.clear()
@@ -100,7 +100,7 @@ class ReentrantLockContext : LockContext {
         (type == InterruptionType.FORCE) ||
         (type == InterruptionType.TIMEOUT)) {
       lockWaiter.thread.pendingOperation = ThreadResumeOperation(type != InterruptionType.TIMEOUT)
-      lockWaiter.thread.state = ThreadState.Enabled
+      lockWaiter.thread.state = ThreadState.Runnable
       lockWaiters.remove(tid)
     }
     return false

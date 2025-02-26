@@ -9,6 +9,7 @@
 ### Changed
 
 - Assign different colors to different threads in the Intellij Plugin.
+- Rename the thread state to `Runnabled` and `Blocked`.
 
 ### Deprecated
 

@@ -91,7 +91,7 @@ class SchedulerControlPanel(
     myFrameListModel.clear()
     ApplicationManager.getApplication().invokeAndWait {
       context.threadInfo.stackTraces.forEach { myFrameListModel.addElement(it) }
-      scheduleButton.isEnabled = context.threadInfo.state == ThreadState.Enabled
+      scheduleButton.isEnabled = context.threadInfo.state == ThreadState.Runnable
     }
 
     // Notify the parent component of the selection
