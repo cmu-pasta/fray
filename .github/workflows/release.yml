@@ -55,6 +55,18 @@ jobs:
         env:
           GRADLE_PUBLISH_KEY: ${{secrets.GRADLE_PUBLISH_KEY}}
           GRADLE_PUBLISH_SECRET: ${{secrets.GRADLE_PUBLISH_SECRET}}
+      - name: Publish to Intellij Marketplace
+        if: runner.os == 'Linux'
+        run: ./gradlew publishPlugin -Pversion=$VERSION
+        env:
+          ORG_GRADLE_PROJECT_intellijPlatformPublishingToken: ${{secrets.ORG_GRADLE_PROJECT_intellijPlatformPublishingToken}}
+      - name: Get changelog
+        id: get-changelog
+        if: runner.os == 'Linux'
+        run: |
+          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+          ./gradlew getChangelog --console=plain -q --no-header --no-summary >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
       - uses: actions/create-release@v1
         if: runner.os == 'Linux'
         env:
@@ -63,11 +75,8 @@ jobs:
           tag_name: ${{ env.VERSION }}
           release_name: "Release ${{ env.VERSION }}"
           body: |
-            This release includes the following:
-            - Version: `${{ env.VERSION }}`
-            - Published packages are available in Maven central.
-          draft: false
-          prerelease: true
+            ## Changelog
+            ${{ env.CHANGELOG }}
       - name: Update versions in the project
         if: runner.os == 'Linux'
         run: |
