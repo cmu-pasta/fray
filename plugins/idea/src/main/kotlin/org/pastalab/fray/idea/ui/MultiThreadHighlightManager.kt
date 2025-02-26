@@ -59,29 +59,6 @@ class MultiThreadHighlightManager {
     return highlighter
   }
 
-  // Remove a thread from a line and update highlighting
-  fun removeThreadFromLine(line: Int, threadContext: ThreadExecutionContext, editor: Editor) {
-    // Get threads for this line
-    val threadsForLine = lineThreadsMap[line] ?: return
-
-    // Remove this thread
-    threadsForLine.remove(threadContext)
-
-    // Get existing highlighter
-    val existingHighlighter =
-        lineHighlightersMap.getOrPut(line) { mutableMapOf() }.get(editor) ?: return
-
-    // If no threads left, remove the highlighter
-    if (threadsForLine.isEmpty()) {
-      editor.markupModel.removeHighlighter(existingHighlighter)
-      lineHighlightersMap[line]?.remove(editor)
-      lineThreadsMap.remove(line)
-    } else {
-      // Otherwise, update the highlighter with new appearance
-      updateHighlighterAttributes(existingHighlighter, threadsForLine)
-    }
-  }
-
   // Clear all highlighting
   fun clearAll() {
     // For each line and editor, remove highlighters

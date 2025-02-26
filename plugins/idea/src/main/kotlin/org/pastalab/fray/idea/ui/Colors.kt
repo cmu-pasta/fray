@@ -12,9 +12,9 @@ object Colors {
     // Using HSB color model to create visually distinct colors
     val hue = ((index * 0.618033988749895) % 1).toFloat()
 
-    // Create light and dark theme variants of the same hue
-    val lightModeColor = Color.getHSBColor(hue, 0.65f, 0.85f)
-    val darkModeColor = Color.getHSBColor(hue, 0.65f, 0.75f)
+    // Create light and dark theme variants with reduced saturation
+    val lightModeColor = Color.getHSBColor(hue, 0.45f, 0.85f) // Reduced from 0.65f to 0.45f
+    val darkModeColor = Color.getHSBColor(hue, 0.55f, 0.75f)  // Reduced from 0.65f to 0.55f
 
     // Return a JBColor that adapts to the current theme
     return JBColor(lightModeColor, darkModeColor)

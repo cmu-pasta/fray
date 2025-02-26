@@ -28,8 +28,8 @@ class ThreadTimelinePanel : JPanel() {
   init {
     layout = BorderLayout()
     val scrollPane = JBScrollPane(timelineCanvas)
-    //    threadExecutionHistory[0] = ThreadExecutionHistory( mutableListOf(Pair(currentTime++,
-    // "Program Start")))
+    threadExecutionHistory[0] =
+        ThreadExecutionHistory("main", mutableListOf(Pair(currentTime++, "Program Start")))
     scrollPane.preferredSize = Dimension(300, 0) // Default width for timeline
     add(scrollPane, BorderLayout.CENTER)
 
@@ -42,13 +42,7 @@ class ThreadTimelinePanel : JPanel() {
     val frame = thread.executingFrame ?: return
     threadExecutionHistory
         .getOrPut(thread.threadInfo.index) {
-          val events =
-              if (thread.threadInfo.index == 0L) {
-                mutableListOf(Pair(currentTime++, "Program Start"))
-              } else {
-                mutableListOf()
-              }
-          ThreadExecutionHistory(thread.threadInfo.threadName, events)
+          ThreadExecutionHistory(thread.threadInfo.threadName, mutableListOf())
         }
         .events
         .add(Pair(currentTime++, frame.toString()))
