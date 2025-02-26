@@ -3,7 +3,7 @@
 [![Build](https://github.com/cmu-pasta/fray/actions/workflows/main.yml/badge.svg)](https://github.com/cmu-pasta/fray/actions/workflows/main.yml)
 [![Gradle](https://img.shields.io/gradle-plugin-portal/v/org.pastalab.fray.gradle)](https://plugins.gradle.org/plugin/org.pastalab.fray.gradle)
 [![Maven](https://img.shields.io/maven-central/v/org.pastalab.fray.maven/fray-plugins-maven)](https://central.sonatype.com/artifact/org.pastalab.fray.maven/fray-plugins-maven)
-![JetBrains Plugin Version](https://img.shields.io/jetbrains/plugin/v/26623-fray-debugger)
+[![JetBrain Plugin](https://img.shields.io/jetbrains/plugin/v/26623-fray-debugger)](https://plugins.jetbrains.com/plugin/26623-fray-debugger)
 
 
 Fray is a concurrency testing tool for Java that can help you **find and debug tricky race conditions that manifest as assertion violations, run-time exceptions, or deadlocks**.
