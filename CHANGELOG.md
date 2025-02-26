@@ -10,6 +10,8 @@
 
 - Assign different colors to different threads in the Intellij Plugin.
 - Rename the thread state to `Runnabled` and `Blocked`.
+- Release the Fray Debugger plugin through github actions.
+- Append changelog to the release notes in the github action.
 
 ### Deprecated
 
