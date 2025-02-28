@@ -41,6 +41,7 @@ import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
 import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.runtime.DeadlockException
+import org.pastalab.fray.runtime.Delegate
 import org.pastalab.fray.runtime.LivenessException
 import org.pastalab.fray.runtime.Runtime
 import org.pastalab.fray.runtime.Runtime.onReportError
@@ -167,6 +168,8 @@ class RunContext(val config: Configuration) {
       if (config.exploreMode || config.noExitWhenBugFound) {
         return
       }
+      // We want to switch to the dummy so that the shutdown will not be blocked.
+      Runtime.DELEGATE = Delegate()
       exitProcess(0)
     }
   }
