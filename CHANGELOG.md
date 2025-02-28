@@ -4,6 +4,9 @@
 
 ### Added
 
+- Pass the `ResourceInfo` to the operations that may block a
+thread's execution.
+
 ### Changed
 
 ### Deprecated

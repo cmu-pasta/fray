@@ -1,11 +1,13 @@
 package org.pastalab.fray.core.concurrency.primitives
 
+import java.util.concurrent.locks.Lock
 import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.rmi.ThreadState
 
-class WriteLockContext : LockContext {
+class WriteLockContext(lock: Lock) : LockContext(lock) {
   lateinit var readLockContext: ReadLockContext
   private val lockWaiters = mutableMapOf<Long, LockWaiter>()
   private val lockTimes = mutableMapOf<Long, Int>()
@@ -42,10 +44,16 @@ class WriteLockContext : LockContext {
       lockTimes[lockThread.thread.id] = lockTimes.getOrDefault(lockThread.thread.id, 0) + 1
     }
     lockHolder = lockThread.thread.id
+    lockThread.acquiredResources.add(this)
     return true
   }
 
-  override fun unlock(tid: Long, unlockBecauseOfWait: Boolean, earlyExit: Boolean): Boolean {
+  override fun unlock(
+      lockThread: ThreadContext,
+      unlockBecauseOfWait: Boolean,
+      earlyExit: Boolean
+  ): Boolean {
+    val tid = lockThread.thread.id
     verifyOrReport(lockHolder == tid) { "Thread $tid is not the lock holder" }
     if (!unlockBecauseOfWait) {
       lockTimes[tid] = lockTimes[tid]!! - 1
@@ -58,6 +66,7 @@ class WriteLockContext : LockContext {
       readLockContext.unlockWaiters()
       if (readLockContext.lockHolders.isEmpty()) {
         unlockWaiters()
+        lockThread.acquiredResources.add(this)
         return true
       }
     }

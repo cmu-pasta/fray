@@ -1,11 +1,12 @@
 package org.pastalab.fray.core.concurrency.primitives
 
 import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.rmi.ThreadState
 
-class ReentrantLockContext : LockContext {
+class ReentrantLockContext(lock: Any) : LockContext(lock) {
   var lockHolder: Long? = null
   private val lockTimes = mutableMapOf<Long, Int>()
   // Mapping from thread id to whether the thread is interruptible.
@@ -47,6 +48,7 @@ class ReentrantLockContext : LockContext {
       for (thread in wakingThreads.values) {
         thread.state = ThreadState.Blocked
       }
+      lockThread.acquiredResources.add(this)
       return true
     } else {
       if (canInterrupt) {
@@ -59,7 +61,12 @@ class ReentrantLockContext : LockContext {
     return false
   }
 
-  override fun unlock(tid: Long, unlockBecauseOfWait: Boolean, earlyExit: Boolean): Boolean {
+  override fun unlock(
+      threadContext: ThreadContext,
+      unlockBecauseOfWait: Boolean,
+      earlyExit: Boolean
+  ): Boolean {
+    val tid = threadContext.thread.id
     verifyOrReport(lockHolder == tid || earlyExit)
     if (lockHolder != tid && earlyExit) {
       return false
@@ -85,6 +92,7 @@ class ReentrantLockContext : LockContext {
         }
       }
       lockWaiters.clear()
+      threadContext.acquiredResources.remove(this)
       return true
     }
     return false

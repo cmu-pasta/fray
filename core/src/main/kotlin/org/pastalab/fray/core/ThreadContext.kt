@@ -1,8 +1,10 @@
 package org.pastalab.fray.core
 
 import org.pastalab.fray.core.concurrency.Sync
+import org.pastalab.fray.core.concurrency.operations.BlockedOperation
 import org.pastalab.fray.core.concurrency.operations.Operation
 import org.pastalab.fray.core.concurrency.operations.ThreadStartOperation
+import org.pastalab.fray.core.concurrency.primitives.Acquirable
 import org.pastalab.fray.core.utils.isFrayInternals
 import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
@@ -13,8 +15,8 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
   var unparkSignaled = false
   var interruptSignaled = false
   var isExiting = false
+  val acquiredResources = mutableSetOf<Acquirable>()
 
-  // Pending operation is null if a thread is just resumed/blocked.
   var pendingOperation: Operation = ThreadStartOperation()
   val sync = Sync(1)
 
@@ -36,7 +38,7 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
     }
   }
 
-  fun toStackInfo(): ThreadInfo {
+  fun toThreadInfo(): ThreadInfo {
     val stackTraces =
         when (pendingOperation) {
           is ThreadStartOperation -> {
@@ -46,6 +48,13 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
           }
           else -> thread.stackTrace.toList().drop(1).filter { !it.isFrayInternals }
         }
-    return ThreadInfo(thread.name, index.toLong(), state, stackTraces)
+    val blockedBy = (pendingOperation as? BlockedOperation)?.resourceInfo
+    return ThreadInfo(
+        thread.name,
+        index.toLong(),
+        state,
+        stackTraces,
+        blockedBy,
+        acquiredResources.map { it.resourceInfo }.toSet())
   }
 }

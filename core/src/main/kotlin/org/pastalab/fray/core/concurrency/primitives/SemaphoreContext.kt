@@ -1,10 +1,16 @@
 package org.pastalab.fray.core.concurrency.primitives
 
+import java.util.concurrent.Semaphore
 import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
+import org.pastalab.fray.rmi.ResourceInfo
+import org.pastalab.fray.rmi.ResourceType
 import org.pastalab.fray.rmi.ThreadState
 
-class SemaphoreContext(var totalPermits: Int) : InterruptibleContext {
+class SemaphoreContext(var totalPermits: Int, semaphore: Semaphore) :
+    InterruptibleContext,
+    Acquirable(ResourceInfo(System.identityHashCode(semaphore), ResourceType.SEMAPHORE)) {
   private val lockWaiters = mutableMapOf<Long, Pair<Int, LockWaiter>>()
 
   fun acquire(
@@ -15,6 +21,7 @@ class SemaphoreContext(var totalPermits: Int) : InterruptibleContext {
   ): Boolean {
     if (totalPermits >= permits) {
       totalPermits -= permits
+      thread.acquiredResources.add(this)
       return true
     } else {
       if (canInterrupt) {
@@ -33,9 +40,10 @@ class SemaphoreContext(var totalPermits: Int) : InterruptibleContext {
     return permits
   }
 
-  fun release(permits: Int) {
+  fun release(permits: Int, threadContext: ThreadContext) {
     totalPermits += permits
     if (totalPermits > 0) {
+      threadContext.acquiredResources.add(this)
       val it = lockWaiters.iterator()
       while (it.hasNext()) {
         val (tid, p) = it.next()

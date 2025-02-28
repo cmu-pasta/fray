@@ -1,31 +1,39 @@
 package org.pastalab.fray.core.concurrency.primitives
 
 import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.rmi.ResourceInfo
+import org.pastalab.fray.rmi.ResourceType
 
-interface LockContext : InterruptibleContext {
-  val wakingThreads: MutableMap<Long, ThreadContext>
-  val signalContexts: MutableSet<SignalContext>
+abstract class LockContext(lock: Any) :
+    InterruptibleContext,
+    Acquirable(ResourceInfo(System.identityHashCode(lock), ResourceType.LOCK)) {
+  abstract val wakingThreads: MutableMap<Long, ThreadContext>
+  abstract val signalContexts: MutableSet<SignalContext>
 
-  fun addWakingThread(t: ThreadContext)
+  abstract fun addWakingThread(t: ThreadContext)
 
-  fun canLock(tid: Long): Boolean
+  abstract fun canLock(tid: Long): Boolean
 
-  fun lock(
+  abstract fun lock(
       lockThread: ThreadContext,
       shouldBlock: Boolean,
       lockBecauseOfWait: Boolean,
       canInterrupt: Boolean
   ): Boolean
 
-  fun unlock(tid: Long, unlockBecauseOfWait: Boolean, earlyExit: Boolean): Boolean
+  abstract fun unlock(
+      lockThread: ThreadContext,
+      unlockBecauseOfWait: Boolean,
+      earlyExit: Boolean
+  ): Boolean
 
-  fun hasQueuedThreads(): Boolean
+  abstract fun hasQueuedThreads(): Boolean
 
-  fun hasQueuedThread(tid: Long): Boolean
+  abstract fun hasQueuedThread(tid: Long): Boolean
 
-  fun isEmpty(): Boolean
+  abstract fun isEmpty(): Boolean
 
-  fun isLockHolder(tid: Long): Boolean
+  abstract fun isLockHolder(tid: Long): Boolean
 
-  fun getNumThreadsWaitingForLockDueToSignal(): Int
+  abstract fun getNumThreadsWaitingForLockDueToSignal(): Int
 }
