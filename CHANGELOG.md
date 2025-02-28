@@ -12,6 +12,9 @@
 
 ### Fixed
 
+- Disable Fray instrumentation when `System.exit` is called. This avoids 
+  deadlock when a new thread is created during the shutdown process.
+
 ### Security
 
 ## 0.2.8 - 2025-02-26
