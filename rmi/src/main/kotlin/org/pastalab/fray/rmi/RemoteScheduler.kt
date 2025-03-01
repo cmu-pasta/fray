@@ -13,11 +13,28 @@ enum class ThreadState {
   Created,
 }
 
+enum class ResourceType {
+  LOCK,
+  CONDITION,
+  SEMAPHORE,
+  CDL,
+  PARK,
+  SYNCURITY_CONDITION,
+}
+
+data class ResourceInfo(val resourceId: Int, val resourceType: ResourceType) : Serializable {
+  override fun toString(): String {
+    return "Id: $resourceId, Type: $resourceType"
+  }
+}
+
 data class ThreadInfo(
     val threadName: String,
     val index: Long,
     val state: ThreadState,
     val stackTraces: List<StackTraceElement>,
+    val waitingFor: ResourceInfo?,
+    val acquired: Set<ResourceInfo>
 ) : Serializable
 
 interface RemoteScheduler : Remote {

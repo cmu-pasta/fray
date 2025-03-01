@@ -2,22 +2,20 @@ package org.pastalab.fray.idea.ui
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import java.awt.BorderLayout
-import java.awt.Font
 import javax.swing.JPanel
 import javax.swing.JSplitPane
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
-import org.pastalab.fray.idea.ui.Colors.THREAD_DISABLED_COLOR
 import org.pastalab.fray.rmi.ThreadState
 
 class FrayDebugPanel(val project: Project) : JPanel() {
   // UI Components
   private val controlPanel: SchedulerControlPanel
   private val threadTimelinePanel: ThreadTimelinePanel
+  private val threadResourcePanel: ThreadResourcePanel
 
   // Data management
   private val threadInfoUpdaters: MutableMap<Editor, ThreadInfoUpdater> = mutableMapOf()
@@ -41,13 +39,30 @@ class FrayDebugPanel(val project: Project) : JPanel() {
     // Create the thread timeline panel
     threadTimelinePanel = ThreadTimelinePanel()
 
-    // Create a split pane to hold both panels
-    val splitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT, controlPanel, threadTimelinePanel)
-    splitPane.resizeWeight = 0.5 // Equal distribution initially
-    splitPane.dividerLocation = 350 // Starting position
+    // Create the thread resource panel
+    threadResourcePanel = ThreadResourcePanel()
+
+    // Create a main split pane for control panel and the right side
+    val mainSplitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT, controlPanel, createRightPanel())
+    mainSplitPane.resizeWeight = 0.4 // Control panel gets 40% of width
+    mainSplitPane.dividerLocation = 350 // Starting position
 
     // Add the split pane to the main layout
-    add(splitPane, BorderLayout.CENTER)
+    add(mainSplitPane, BorderLayout.CENTER)
+  }
+
+  private fun createRightPanel(): JPanel {
+    // Create a panel to hold timeline and resource panels
+    val rightPanel = JPanel(BorderLayout())
+
+    // Create a vertical split pane for timeline and resource panels
+    val rightSplitPane =
+        JSplitPane(JSplitPane.VERTICAL_SPLIT, threadTimelinePanel, threadResourcePanel)
+    rightSplitPane.resizeWeight = 0.6 // Timeline gets 60% of height
+    rightSplitPane.dividerLocation = 300 // Starting position
+
+    rightPanel.add(rightSplitPane, BorderLayout.CENTER)
+    return rightPanel
   }
 
   fun scheduleButtonPressed(newSelected: ThreadExecutionContext?) {
@@ -55,6 +70,7 @@ class FrayDebugPanel(val project: Project) : JPanel() {
     threadInfoUpdaters.forEach { it.value.threadNameMapping.clear() }
     threadInfoUpdaters.clear()
     controlPanel.clear()
+    threadResourcePanel.clear()
 
     if (newSelected != null) {
       threadTimelinePanel.newThreadScheduled(newSelected)
@@ -68,6 +84,7 @@ class FrayDebugPanel(val project: Project) : JPanel() {
     threadInfoUpdaters.forEach { it.value.stop() }
     threadInfoUpdaters.clear()
     controlPanel.clear()
+    threadResourcePanel.clear()
   }
 
   fun schedule(
@@ -80,6 +97,9 @@ class FrayDebugPanel(val project: Project) : JPanel() {
     // Process thread information for editor highlighting
     processThreadsForHighlighting(enabledThreads)
 
+    // Update thread resource information
+    threadResourcePanel.updateThreadResources(enabledThreads)
+
     // Store the callback
     callback = onThreadSelected
   }
@@ -91,22 +111,6 @@ class FrayDebugPanel(val project: Project) : JPanel() {
       if (threadExecutionContext.executingLine < 0) return@forEach
       val document = threadExecutionContext.document ?: return@forEach
       val vFile = threadExecutionContext.virtualFile ?: return@forEach
-
-      val start = document.getLineStartOffset(threadExecutionContext.executingLine - 1)
-      val end = document.getLineEndOffset(threadExecutionContext.executingLine - 1)
-      val color =
-          if (threadExecutionContext.threadInfo.state == ThreadState.Blocked) THREAD_DISABLED_COLOR
-          else Colors.getThreadColor(threadExecutionContext.threadInfo.index)
-
-      val highlightAttributes =
-          TextAttributes(
-              null, // foreground color
-              color, // background color
-              null, // effect color
-              null, // effect type
-              Font.PLAIN,
-          )
-
       ApplicationManager.getApplication().invokeLater {
         FileEditorManager.getInstance(project).openFile(vFile).forEach { fileEditor ->
           if (fileEditor is TextEditor) {

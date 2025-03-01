@@ -1,13 +1,19 @@
 package org.pastalab.fray.core.concurrency.primitives
 
+import java.util.concurrent.locks.StampedLock
 import java.util.concurrent.locks.StampedLock.isOptimisticReadStamp
 import java.util.concurrent.locks.StampedLock.isReadLockStamp
 import java.util.concurrent.locks.StampedLock.isWriteLockStamp
 import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
+import org.pastalab.fray.rmi.ResourceInfo
+import org.pastalab.fray.rmi.ResourceType
 import org.pastalab.fray.rmi.ThreadState
 
-class StampedLockContext : InterruptibleContext {
+class StampedLockContext(stampedLock: StampedLock) :
+    InterruptibleContext,
+    Acquirable(ResourceInfo(System.identityHashCode(stampedLock), ResourceType.LOCK)) {
   var readHolders = 0
   var writeLockAcquired = false
   val readLockWaiters = mutableMapOf<Long, LockWaiter>()
@@ -24,6 +30,7 @@ class StampedLockContext : InterruptibleContext {
       return false
     }
     readHolders += 1
+    lockThread.acquiredResources.add(this)
     return true
   }
 
@@ -40,21 +47,24 @@ class StampedLockContext : InterruptibleContext {
     }
   }
 
-  fun unlockReadLock() {
+  fun unlockReadLock(threadContext: ThreadContext) {
     readHolders -= 1
+    threadContext.acquiredResources.remove(this)
     if (readHolders == 0) {
       unblockAllWaiters()
     }
   }
 
-  fun unlockWriteLock() {
+  fun unlockWriteLock(threadContext: ThreadContext) {
     writeLockAcquired = false
+    threadContext.acquiredResources.remove(this)
     unblockAllWaiters()
   }
 
   fun writeLock(lockThread: ThreadContext, shouldBlock: Boolean, canInterrupt: Boolean): Boolean {
     if (readHolders == 0 && !writeLockAcquired) {
       writeLockAcquired = true
+      lockThread.acquiredResources.add(this)
       return true
     }
     if (canInterrupt) {

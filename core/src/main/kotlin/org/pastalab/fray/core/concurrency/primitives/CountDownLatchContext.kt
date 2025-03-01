@@ -5,6 +5,7 @@ import java.util.concurrent.CountDownLatch
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.SynchronizationManager
 import org.pastalab.fray.core.concurrency.operations.CountDownLatchAwaitBlocking
+import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.rmi.ThreadState
@@ -15,6 +16,7 @@ import org.pastalab.fray.rmi.ThreadState
  */
 class CountDownLatchContext(latch: CountDownLatch, val syncManager: SynchronizationManager) :
     InterruptibleContext {
+  val latchId = System.identityHashCode(latch)
   var count = latch.count
   val latchWaiters = mutableMapOf<Long, LockWaiter>()
   val latchReference = WeakReference(latch)

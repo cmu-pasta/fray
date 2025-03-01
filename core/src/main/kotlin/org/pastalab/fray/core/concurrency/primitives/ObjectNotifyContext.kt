@@ -2,7 +2,8 @@ package org.pastalab.fray.core.concurrency.primitives
 
 import java.lang.ref.WeakReference
 import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.core.concurrency.operations.ObjectWaitBlock
+import org.pastalab.fray.core.concurrency.operations.InterruptionType
+import org.pastalab.fray.core.concurrency.operations.ObjectWaitBlocked
 import org.pastalab.fray.core.concurrency.operations.ObjectWakeBlocked
 import org.pastalab.fray.rmi.ThreadState
 
@@ -25,7 +26,7 @@ class ObjectNotifyContext(lockContext: LockContext, obj: Any) : SignalContext(lo
       timedOperation: Boolean,
       canInterrupt: Boolean
   ) {
-    threadContext.pendingOperation = ObjectWaitBlock(this, timedOperation)
+    threadContext.pendingOperation = ObjectWaitBlocked(this, timedOperation)
     threadContext.state = ThreadState.Blocked
   }
 

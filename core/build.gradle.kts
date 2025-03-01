@@ -16,22 +16,13 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
   implementation("com.github.ajalt.clikt:clikt:4.2.2")
   testImplementation("org.jetbrains.kotlin:kotlin-test")
-  testCompileOnly(project(":runtime"))
+  testImplementation(project(":runtime"))
+  testImplementation(project(":instrumentation:base"))
+  testImplementation(kotlin("test"))
 }
 
 tasks.test {
   useJUnitPlatform()
-  val jvmti = project(":jvmti")
-  val jdk = project(":instrumentation:jdk")
-  val agent = project(":instrumentation:agent")
-  executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
-  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
-  jvmArgs("-javaagent:${agent.layout.buildDirectory.get().asFile}/libs/" +
-      "${agent.base.archivesName.get()}-${agent.version}.jar")
-  jvmArgs("-Dfray.debug=true")
-  dependsOn(":instrumentation:jdk:build")
-  dependsOn(":instrumentation:agent:build")
-  dependsOn(":jvmti:build")
 }
 
 tasks.named("build") {

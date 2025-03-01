@@ -4,13 +4,13 @@ import org.pastalab.fray.core.concurrency.primitives.ObjectNotifyContext
 import org.pastalab.fray.rmi.ResourceInfo
 import org.pastalab.fray.rmi.ResourceType
 
-class ObjectWakeBlocked(val objectContext: ObjectNotifyContext, val noTimeout: Boolean) :
+class ObjectWaitBlocked(val objectContext: ObjectNotifyContext, timed: Boolean) :
     BlockedOperation(
-        false,
+        timed,
         ResourceInfo(
             System.identityHashCode(objectContext.objReference.get()), ResourceType.CONDITION)) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
-    if (type == InterruptionType.INTERRUPT) {
+    if (objectContext.unblockThread(tid, type)) {
       return objectContext.getSyncObject()
     }
     return null

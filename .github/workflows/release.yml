@@ -60,6 +60,17 @@ jobs:
         run: ./gradlew publishPlugin -Pversion=$VERSION
         env:
           ORG_GRADLE_PROJECT_intellijPlatformPublishingToken: ${{secrets.ORG_GRADLE_PROJECT_intellijPlatformPublishingToken}}
+      - name: Update versions in the project
+        if: runner.os == 'Linux'
+        run: |
+          LATEST_VERSION=${{ env.VERSION }}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST_VERSION"
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH-SNAPSHOT"
+          sed -i "s/id(\"org.pastalab.fray.gradle\") version \".*\"/id(\"org.pastalab.fray.gradle\") version \"$LATEST_VERSION\"/" README.md
+          sed -i "s|<version>.*</version>|<version>$LATEST_VERSION</version>|" README.md
+          sed -i "s/^version=.*/version=$NEW_VERSION/" gradle.properties
+          ./gradlew patchChangelog -Pversion=$LATEST_VERSION
       - name: Get changelog
         id: get-changelog
         if: runner.os == 'Linux'
@@ -77,17 +88,6 @@ jobs:
           body: |
             ## Changelog
             ${{ env.CHANGELOG }}
-      - name: Update versions in the project
-        if: runner.os == 'Linux'
-        run: |
-          LATEST_VERSION=${{ env.VERSION }}
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST_VERSION"
-          NEW_PATCH=$((PATCH + 1))
-          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH-SNAPSHOT"
-          sed -i "s/id(\"org.pastalab.fray.gradle\") version \".*\"/id(\"org.pastalab.fray.gradle\") version \"$LATEST_VERSION\"/" README.md
-          sed -i "s|<version>.*</version>|<version>$LATEST_VERSION</version>|" README.md
-          sed -i "s/^version=.*/version=$NEW_VERSION/" gradle.properties
-          ./gradlew patchChangelog -Pversion=$LATEST_VERSION
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         if: runner.os == 'Linux'

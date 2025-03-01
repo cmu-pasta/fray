@@ -1,5 +1,6 @@
 package org.pastalab.fray.idea.objects
 
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.Project
@@ -7,9 +8,12 @@ import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.util.ClassUtil
-import com.intellij.ui.JBColor
 import java.awt.Color
+import javax.swing.Icon
+import org.pastalab.fray.idea.ui.Colors.THREAD_DISABLED_COLOR
+import org.pastalab.fray.idea.ui.Colors.THREAD_ENABLED_COLOR
 import org.pastalab.fray.rmi.ThreadInfo
+import org.pastalab.fray.rmi.ThreadState
 
 class ThreadExecutionContext(val threadInfo: ThreadInfo, project: Project) {
   var executingLine = -1
@@ -46,20 +50,17 @@ class ThreadExecutionContext(val threadInfo: ThreadInfo, project: Project) {
     }
   }
 
-  override fun toString(): String {
-    return "${threadInfo.threadName} (${threadInfo.state})"
+  fun threadStateIcon(): Icon {
+    return if (threadInfo.state == ThreadState.Runnable) AllIcons.Debugger.ThreadRunning
+    else AllIcons.Debugger.ThreadFrozen
   }
 
-  private fun getThreadColor(): JBColor {
-    // Generate a consistent color based on thread index
-    // Using HSB color model to create visually distinct colors
-    val hue = ((threadInfo.index * 0.618033988749895) % 1).toFloat()
+  fun threadStateColor(): Color {
+    return if (threadInfo.state == ThreadState.Runnable) THREAD_ENABLED_COLOR
+    else THREAD_DISABLED_COLOR
+  }
 
-    // Create light and dark theme variants of the same hue
-    val lightModeColor = Color.getHSBColor(hue, 0.65f, 0.85f)
-    val darkModeColor = Color.getHSBColor(hue, 0.65f, 0.75f)
-
-    // Return a JBColor that adapts to the current theme
-    return JBColor(lightModeColor, darkModeColor)
+  override fun toString(): String {
+    return "${threadInfo.threadName} (${threadInfo.state})"
   }
 }

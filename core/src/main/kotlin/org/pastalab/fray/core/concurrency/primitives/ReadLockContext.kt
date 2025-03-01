@@ -1,11 +1,13 @@
 package org.pastalab.fray.core.concurrency.primitives
 
+import java.util.concurrent.locks.Lock
 import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.rmi.ThreadState
 
-class ReadLockContext : LockContext {
+class ReadLockContext(lock: Lock) : LockContext(lock) {
   lateinit var writeLockContext: WriteLockContext
 
   val lockHolders = mutableSetOf<Long>()
@@ -43,10 +45,16 @@ class ReadLockContext : LockContext {
     }
     lockTimes[tid] = lockTimes.getOrDefault(tid, 0) + 1
     lockHolders.add(tid)
+    lockThread.acquiredResources.add(this)
     return true
   }
 
-  override fun unlock(tid: Long, unlockBecauseOfWait: Boolean, earlyExit: Boolean): Boolean {
+  override fun unlock(
+      threadContext: ThreadContext,
+      unlockBecauseOfWait: Boolean,
+      earlyExit: Boolean
+  ): Boolean {
+    val tid = threadContext.thread.id
     verifyOrReport(lockHolders.contains(tid))
     verifyOrReport(!unlockBecauseOfWait) // Read lock does not have `Condition`
     lockTimes[tid] = lockTimes[tid]!! - 1
@@ -56,6 +64,7 @@ class ReadLockContext : LockContext {
       if (lockHolders.isEmpty() && writeLockContext.lockHolder == null) {
         writeLockContext.unlockWaiters()
         unlockWaiters()
+        threadContext.acquiredResources.remove(this)
         return true
       }
     }
