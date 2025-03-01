@@ -6,9 +6,7 @@
 [![JetBrain Plugin](https://img.shields.io/jetbrains/plugin/v/26623-fray-debugger)](https://plugins.jetbrains.com/plugin/26623-fray-debugger)
 
 <a href="https://github.com/cmu-pasta/fray">
-  <div style="width: 256px; height: 140px; overflow: hidden;">
-    <img src="./assets/logo.png" style="width: 100%; height: 100%; object-fit: cover; object-position: center;" alt="logo"/>
-  </div>
+  <img src="./assets/logo-cropped.png" width="256" alt="logo"/>
 </a>
 
 
