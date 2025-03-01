@@ -5,6 +5,12 @@
 [![Maven](https://img.shields.io/maven-central/v/org.pastalab.fray.maven/fray-plugins-maven)](https://central.sonatype.com/artifact/org.pastalab.fray.maven/fray-plugins-maven)
 [![JetBrain Plugin](https://img.shields.io/jetbrains/plugin/v/26623-fray-debugger)](https://plugins.jetbrains.com/plugin/26623-fray-debugger)
 
+<a href="https://github.com/cmu-pasta/fray">
+  <div style="width: 256px; height: 140px; overflow: hidden;">
+    <img src="./assets/logo.png" style="width: 100%; height: 100%; object-fit: cover; object-position: center;" alt="logo"/>
+  </div>
+</a>
+
 
 Fray is a concurrency testing tool for Java that can help you **find and debug tricky race conditions that manifest as assertion violations, run-time exceptions, or deadlocks**.
 It performs controlled concurrency testing using state-of-the-art techniques such as [probabilistic concurrency testing](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/asplos277-pct.pdf) 
