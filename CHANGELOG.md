@@ -6,6 +6,7 @@
 
 - Pass the `ResourceInfo` to the operations that may block a
 thread's execution.
+- Add `ThreadResourcePanel` to the Fray Debugger plugin. The panel visualizes the concurrency resources of each thread.
 
 ### Changed
 
@@ -17,6 +18,7 @@ thread's execution.
 
 - Disable Fray instrumentation when `System.exit` is called. This avoids 
   deadlock when a new thread is created during the shutdown process.
+- Fixed Github release action including the wrong changelog.
 
 ### Security
 
