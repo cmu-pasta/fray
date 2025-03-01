@@ -4,6 +4,8 @@
 [![Gradle](https://img.shields.io/gradle-plugin-portal/v/org.pastalab.fray.gradle)](https://plugins.gradle.org/plugin/org.pastalab.fray.gradle)
 [![Maven](https://img.shields.io/maven-central/v/org.pastalab.fray.maven/fray-plugins-maven)](https://central.sonatype.com/artifact/org.pastalab.fray.maven/fray-plugins-maven)
 [![JetBrain Plugin](https://img.shields.io/jetbrains/plugin/v/26623-fray-debugger)](https://plugins.jetbrains.com/plugin/26623-fray-debugger)
+[![Discord](https://img.shields.io/discord/1345494709807743057)](https://discord.gg/2VkNRuHUCX)
+
 
 <a href="https://github.com/cmu-pasta/fray">
   <img src="./assets/logo-cropped.png" width="256" alt="logo"/>
