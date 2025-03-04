@@ -84,7 +84,7 @@ class MultiThreadHighlightManager {
       val thread = threads.first()
       val color =
           if (thread.threadInfo.state == ThreadState.Blocked) THREAD_DISABLED_COLOR
-          else Colors.getThreadColor(thread.threadInfo.index)
+          else Colors.getThreadColor(thread.threadInfo.threadIndex)
 
       return TextAttributes(
           null, // foreground color
@@ -93,18 +93,8 @@ class MultiThreadHighlightManager {
           null, // effect type
           Font.PLAIN)
     } else {
-      // Multiple threads - use special visualization
-
-      // Option 1: Use a special "multi-thread" color
       val multiThreadColor = JBColor(Color(255, 230, 180), Color(100, 80, 30))
 
-      // Option 2: Create striped/patterned effect (more advanced)
-      // This requires custom rendering and is more complex
-
-      // Option 3: Create gradient or blend of colors
-      // val blendedColor = blendColors(threads.map { Colors.getThreadColor(it.threadInfo.index) })
-
-      // For now, use the special color and add an effect
       return TextAttributes(
           null, // foreground color
           multiThreadColor, // background color
@@ -112,13 +102,5 @@ class MultiThreadHighlightManager {
           EffectType.WAVE_UNDERSCORE, // add an underscore to indicate multiple threads
           Font.PLAIN)
     }
-  }
-
-  // Update highlighter attributes based on threads
-  private fun updateHighlighterAttributes(
-      highlighter: RangeHighlighter,
-      threads: Set<ThreadExecutionContext>
-  ) {
-    //    highlighter.textAttributes = createMultiThreadAttributes(threads)
   }
 }

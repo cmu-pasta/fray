@@ -8,10 +8,11 @@ import com.intellij.openapi.project.Project
 import java.awt.BorderLayout
 import javax.swing.JPanel
 import javax.swing.JSplitPane
+import org.pastalab.fray.idea.debugger.FrayScheduleObserver
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.rmi.ThreadState
 
-class FrayDebugPanel(val project: Project) : JPanel() {
+class FrayDebugPanel(val project: Project, val scheduleObserver: FrayScheduleObserver) : JPanel() {
   // UI Components
   private val controlPanel: SchedulerControlPanel
   private val threadTimelinePanel: ThreadTimelinePanel
@@ -30,14 +31,12 @@ class FrayDebugPanel(val project: Project) : JPanel() {
     controlPanel =
         SchedulerControlPanel(
             project,
-            onThreadSelected = { threadInfo ->
-              selected = threadInfo
-              threadTimelinePanel.repaint() // Refresh timeline to show selection
-            },
+            onThreadSelected = { threadInfo -> selected = threadInfo },
             onScheduleButtonPressed = { selectedThread -> scheduleButtonPressed(selectedThread) })
 
     // Create the thread timeline panel
     threadTimelinePanel = ThreadTimelinePanel()
+    scheduleObserver.observers.add(threadTimelinePanel)
 
     // Create the thread resource panel
     threadResourcePanel = ThreadResourcePanel()
@@ -73,7 +72,6 @@ class FrayDebugPanel(val project: Project) : JPanel() {
     threadResourcePanel.clear()
 
     if (newSelected != null) {
-      threadTimelinePanel.newThreadScheduled(newSelected)
       selected = newSelected
       callback?.invoke(newSelected) // Notify callback with selected thread ID
     }
@@ -85,6 +83,7 @@ class FrayDebugPanel(val project: Project) : JPanel() {
     threadInfoUpdaters.clear()
     controlPanel.clear()
     threadResourcePanel.clear()
+    scheduleObserver.observers.remove(threadTimelinePanel)
   }
 
   fun schedule(

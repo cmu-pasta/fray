@@ -3,6 +3,8 @@ package org.pastalab.fray.core.utils
 import kotlin.math.ceil
 import kotlin.math.ln
 import org.pastalab.fray.core.FrayInternalError
+import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.runtime.Runtime
 
 object Utils {
@@ -36,3 +38,7 @@ val StackTraceElement.isFrayInternals
   get() =
       this.className.startsWith("org.pastalab.fray.core") ||
           this.className.startsWith("org.pastalab.fray.runtime")
+
+fun List<ThreadContext>.toThreadInfos(): List<ThreadInfo> {
+  return this.map { it.toThreadInfo() }
+}

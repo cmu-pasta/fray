@@ -30,7 +30,7 @@ data class ResourceInfo(val resourceId: Int, val resourceType: ResourceType) : S
 
 data class ThreadInfo(
     val threadName: String,
-    val index: Long,
+    val threadIndex: Int,
     val state: ThreadState,
     val stackTraces: List<StackTraceElement>,
     val waitingFor: ResourceInfo?,
@@ -39,4 +39,8 @@ data class ThreadInfo(
 
 interface RemoteScheduler : Remote {
   @Throws(RemoteException::class) fun scheduleNextOperation(threads: List<ThreadInfo>): Int
+
+  companion object {
+    const val NAME = "RemoteScheduler"
+  }
 }

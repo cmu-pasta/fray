@@ -116,7 +116,7 @@ class SchedulerControlPanel(
     // Try to restore previous selection or select the first thread
     if (threads.isNotEmpty()) {
       val threadToSelect =
-          threads.find { it.threadInfo.index == previouslySelected?.threadInfo?.index }
+          threads.find { it.threadInfo.threadIndex == previouslySelected?.threadInfo?.threadIndex }
               ?: threads.first()
       comboBoxModel.selectedItem = threadToSelect
     }

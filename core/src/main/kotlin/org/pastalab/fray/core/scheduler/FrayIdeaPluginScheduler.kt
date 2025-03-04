@@ -1,14 +1,12 @@
 package org.pastalab.fray.core.scheduler
 
-import java.rmi.registry.LocateRegistry
-import java.rmi.registry.Registry
+import kotlinx.serialization.Serializable
 import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.rmi.RemoteScheduler
+import org.pastalab.fray.core.debugger.DebuggerRegistry
 
+@Serializable
 class FrayIdeaPluginScheduler : Scheduler {
-  val registry = LocateRegistry.getRegistry("localhost", Registry.REGISTRY_PORT)
-
-  val remoteScheduler = registry.lookup("RemoteScheduler") as RemoteScheduler
+  @Transient val remoteScheduler = DebuggerRegistry.getRemoteScheduler()
 
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,

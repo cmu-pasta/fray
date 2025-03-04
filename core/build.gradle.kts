@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
   compileOnly(project(":runtime"))
-  implementation(project(":rmi"))
+  api(project(":rmi"))
   compileOnly(project(":instrumentation:base"))
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
   implementation("com.github.ajalt.clikt:clikt:4.2.2")
