@@ -51,7 +51,7 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
     val blockedBy = (pendingOperation as? BlockedOperation)?.resourceInfo
     return ThreadInfo(
         thread.name,
-        index.toLong(),
+        index,
         state,
         stackTraces,
         blockedBy,

@@ -37,6 +37,7 @@ import org.pastalab.fray.core.concurrency.primitives.WriteLockContext
 import org.pastalab.fray.core.syncurity.SyncurityEvaluationContext
 import org.pastalab.fray.core.syncurity.SyncurityEvaluationDelegate
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
+import org.pastalab.fray.core.utils.toThreadInfos
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
 import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.runtime.DeadlockException
@@ -216,7 +217,6 @@ class RunContext(val config: Configuration) {
 
   fun start() {
     val t = Thread.currentThread()
-    config.scheduleObservers.forEach { it.onExecutionStart() }
     step = 0
     bugFound = null
     mainExiting = false
@@ -224,6 +224,7 @@ class RunContext(val config: Configuration) {
     mainThreadId = t.id
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this)
     registeredThreads[t.id]?.state = ThreadState.Runnable
+    config.scheduleObservers.forEach { it.onExecutionStart() }
     scheduleNextOperation(true)
   }
 
@@ -1001,6 +1002,7 @@ class RunContext(val config: Configuration) {
       enabledOperations = enabledOperations.filter { it.thread.id != mainThreadId }
     }
 
+    // The first empty check will enable timed operations
     if (enabledOperations.isEmpty()) {
       unblockTimedOperations()
       enabledOperations =
@@ -1013,6 +1015,7 @@ class RunContext(val config: Configuration) {
       }
     }
 
+    // The second empty check throws deadlock exceptions.
     if (enabledOperations.isEmpty()) {
       if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
         // We are done here, we should go back to the main thread.
@@ -1043,12 +1046,14 @@ class RunContext(val config: Configuration) {
         if (enabledOperations.size == 1) {
           enabledOperations.first()
         } else {
-          val thread =
-              config.scheduler.scheduleNextOperation(
-                  enabledOperations, registeredThreads.values.toList())
-          config.scheduleObservers.forEach { it.onNewSchedule(enabledOperations, thread) }
-          thread
+          config.scheduler.scheduleNextOperation(
+              enabledOperations,
+              registeredThreads.values.toList(),
+          )
         }
+    config.scheduleObservers.forEach {
+      it.onNewSchedule(enabledOperations.toThreadInfos(), nextThread.toThreadInfo())
+    }
 
     currentThreadId = nextThread.thread.id
     nextThread.state = ThreadState.Running

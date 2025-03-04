@@ -3,19 +3,20 @@ package org.pastalab.fray.core.observers
 import java.io.File
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.rmi.ScheduleObserver
+import org.pastalab.fray.rmi.ThreadInfo
 
-class ScheduleRecorder : ScheduleObserver {
+class ScheduleRecorder : ScheduleObserver<ThreadInfo> {
   val recordings = mutableListOf<ScheduleRecording>()
 
   override fun onExecutionStart() {
     recordings.clear()
   }
 
-  override fun onNewSchedule(enabledSchedules: List<ThreadContext>, scheduled: ThreadContext) {
-    var operation = scheduled.pendingOperation.toString()
+  override fun onNewSchedule(enabledSchedules: List<ThreadInfo>, scheduled: ThreadInfo) {
     var count = 0
-    for (st in Thread.currentThread().stackTrace.drop(1)) {
+    var operation = ""
+    for (st in scheduled.stackTraces) {
       if (st.className.startsWith("org.pastalab.fray")) {
         continue
       }
@@ -23,8 +24,8 @@ class ScheduleRecorder : ScheduleObserver {
       count += 1
       if (count == 3) break
     }
-    val enabled = enabledSchedules.map { it.index }.toList()
-    val scheduledIndex = scheduled.index
+    val enabled = enabledSchedules.map { it.threadIndex }.toList()
+    val scheduledIndex = scheduled.threadIndex
     val recording = ScheduleRecording(scheduledIndex, enabled, operation)
     recordings.add(recording)
   }

@@ -14,22 +14,21 @@ import java.awt.event.MouseMotionAdapter
 import javax.swing.JPanel
 import javax.swing.ToolTipManager
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
+import org.pastalab.fray.rmi.ScheduleObserver
 
 data class ThreadExecutionHistory(
-    val threadName: String,
+    var threadName: String,
     val events: MutableList<Pair<Int, String>>
 )
 
-class ThreadTimelinePanel : JPanel() {
-  private val threadExecutionHistory = mutableMapOf<Long, ThreadExecutionHistory>()
+class ThreadTimelinePanel : JPanel(), ScheduleObserver<ThreadExecutionContext> {
+  private val threadExecutionHistory = mutableMapOf<Int, ThreadExecutionHistory>()
   private val timelineCanvas = ThreadTimelineCanvas()
   private var currentTime = 0
 
   init {
     layout = BorderLayout()
     val scrollPane = JBScrollPane(timelineCanvas)
-    threadExecutionHistory[0] =
-        ThreadExecutionHistory("main", mutableListOf(Pair(currentTime++, "Program Start")))
     scrollPane.preferredSize = Dimension(300, 0) // Default width for timeline
     add(scrollPane, BorderLayout.CENTER)
 
@@ -40,13 +39,12 @@ class ThreadTimelinePanel : JPanel() {
 
   fun newThreadScheduled(thread: ThreadExecutionContext) {
     val frame = thread.executingFrame ?: return
-    threadExecutionHistory
-        .getOrPut(thread.threadInfo.index) {
+    val history =
+        threadExecutionHistory.getOrPut(thread.threadInfo.threadIndex) {
           ThreadExecutionHistory(thread.threadInfo.threadName, mutableListOf())
         }
-        .events
-        .add(Pair(currentTime++, frame.toString()))
-
+    history.threadName = thread.threadInfo.threadName
+    history.events.add(Pair(currentTime++, frame.toString()))
     // Request repaint to show the updated timeline
     timelineCanvas.repaint()
   }
@@ -57,6 +55,19 @@ class ThreadTimelinePanel : JPanel() {
     timelineCanvas.repaint()
   }
 
+  override fun onExecutionStart() {}
+
+  override fun onNewSchedule(
+      enabledSchedules: List<ThreadExecutionContext>,
+      scheduled: ThreadExecutionContext
+  ) {
+    newThreadScheduled(scheduled)
+  }
+
+  override fun onExecutionDone() {}
+
+  override fun saveToReportFolder(path: String) {}
+
   inner class ThreadTimelineCanvas : JPanel() {
     private val rowHeight = 30
     private val threadNameWidth = 100
@@ -64,7 +75,7 @@ class ThreadTimelinePanel : JPanel() {
     private val eventHeight = 16
     private val eventRadius = 4
 
-    private var hoveredEvent: Pair<Long, Pair<Int, String>>? = null
+    private var hoveredEvent: Pair<Int, Pair<Int, String>>? = null
 
     init {
       // Set a preferred size to make panel scrollable
@@ -166,7 +177,7 @@ class ThreadTimelinePanel : JPanel() {
 
     private fun drawThreadTimeline(
         g2d: Graphics2D,
-        threadIndex: Long,
+        threadIndex: Int,
         events: List<Pair<Int, String>>,
         y: Int
     ) {
@@ -191,7 +202,7 @@ class ThreadTimelinePanel : JPanel() {
 
         // Draw event marker
         val isHovered =
-            hoveredEvent?.let { it.first == threadIndex && it.second.first == timeStep } ?: false
+            hoveredEvent?.let { it.first == threadIndex && it.second.first == timeStep } == true
 
         if (isHovered) {
           // Draw highlighted event

@@ -2,9 +2,10 @@ package org.pastalab.fray.core.observers
 
 import java.io.File
 import kotlinx.serialization.json.Json
-import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.rmi.ScheduleObserver
+import org.pastalab.fray.rmi.ThreadInfo
 
-class ScheduleVerifier(val schedules: List<ScheduleRecording>) : ScheduleObserver {
+class ScheduleVerifier(val schedules: List<ScheduleRecording>) : ScheduleObserver<ThreadInfo> {
   constructor(
       path: String
   ) : this(Json.decodeFromString<List<ScheduleRecording>>(File(path).readText()))
@@ -15,16 +16,16 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) : ScheduleObserve
     index = 0
   }
 
-  override fun onNewSchedule(enabledSchedules: List<ThreadContext>, scheduled: ThreadContext) {
+  override fun onNewSchedule(enabledSchedules: List<ThreadInfo>, scheduled: ThreadInfo) {
     if (index >= schedules.size) {
       return
     }
     val recording = schedules[index]
-    val scheduledIndex = scheduled.index
-    val enabled = enabledSchedules.map { it.index }.toList()
-    var operation = scheduled.pendingOperation.toString()
+    val scheduledIndex = scheduled.threadIndex
+    val enabled = enabledSchedules.map { it.threadIndex }.toList()
+    var operation = ""
     var count = 0
-    for (st in Thread.currentThread().stackTrace.drop(1)) {
+    for (st in scheduled.stackTraces) {
       if (st.className.startsWith("org.pastalab.fray")) {
         continue
       }

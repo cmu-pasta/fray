@@ -10,6 +10,9 @@ thread's execution.
 
 ### Changed
 
+- Refine the timeline construction logic. Pass timeline information through
+schedule observers.
+
 ### Deprecated
 
 ### Removed

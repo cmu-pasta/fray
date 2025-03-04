@@ -22,13 +22,15 @@ import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
+import org.pastalab.fray.core.debugger.DebuggerRegistry
 import org.pastalab.fray.core.logger.FrayLogger
-import org.pastalab.fray.core.observers.ScheduleObserver
 import org.pastalab.fray.core.observers.ScheduleRecorder
 import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.observers.ScheduleVerifier
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.*
+import org.pastalab.fray.rmi.ScheduleObserver
+import org.pastalab.fray.rmi.ThreadInfo
 
 @Serializable
 data class ExecutionInfo(
@@ -230,7 +232,7 @@ data class Configuration(
     val noFray: Boolean,
     val dummyRun: Boolean,
 ) {
-  val scheduleObservers = mutableListOf<ScheduleObserver>()
+  val scheduleObservers = mutableListOf<ScheduleObserver<ThreadInfo>>()
   var nextSavedIndex = 0
   var currentIteration = 0
   val startTime = TimeSource.Monotonic.markNow()
@@ -261,6 +263,7 @@ data class Configuration(
 
     if (System.getProperty("fray.debugger", "false").toBoolean()) {
       scheduler = FrayIdeaPluginScheduler()
+      scheduleObservers.add(DebuggerRegistry.getRemoteScheduleObserver())
       iter = 1
     }
   }

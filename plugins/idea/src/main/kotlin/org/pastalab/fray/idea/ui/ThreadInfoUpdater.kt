@@ -1,6 +1,5 @@
 package org.pastalab.fray.idea.ui
 
-import com.intellij.icons.AllIcons
 import com.intellij.ide.IdeTooltipManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
@@ -19,9 +18,6 @@ import javax.swing.JLabel
 import javax.swing.JSeparator
 import javax.swing.border.EmptyBorder
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
-import org.pastalab.fray.idea.ui.Colors.THREAD_DISABLED_COLOR
-import org.pastalab.fray.idea.ui.Colors.THREAD_ENABLED_COLOR
-import org.pastalab.fray.rmi.ThreadState
 
 class ThreadInfoUpdater(val editor: Editor) : EditorMouseMotionListener {
   val threadNameMapping: MutableMap<Int, MutableSet<ThreadExecutionContext>> = mutableMapOf()
@@ -49,10 +45,8 @@ class ThreadInfoUpdater(val editor: Editor) : EditorMouseMotionListener {
     var first = true
     for (context in threadInfos) {
       val threadItem = NonOpaquePanel(BorderLayout())
-      val (bgColor, icon) =
-          if (context.threadInfo.state == ThreadState.Runnable)
-              Pair(THREAD_ENABLED_COLOR, AllIcons.Debugger.ThreadRunning)
-          else Pair(THREAD_DISABLED_COLOR, AllIcons.Debugger.ThreadFrozen)
+      val icon = context.threadStateIcon()
+      val bgColor = context.threadStateColor()
       val text =
           IdeTooltipManager.initPane(
               context.toString(),
