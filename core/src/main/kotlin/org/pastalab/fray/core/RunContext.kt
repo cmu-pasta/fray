@@ -897,7 +897,8 @@ class RunContext(val config: Configuration) {
     val result =
         try {
           val syncurityEvaluationContext = SyncurityEvaluationContext(this)
-          Runtime.DELEGATE = SyncurityEvaluationDelegate(syncurityEvaluationContext)
+          Runtime.DELEGATE =
+              SyncurityEvaluationDelegate(syncurityEvaluationContext, Thread.currentThread())
           condition.satisfied()
         } catch (e: Throwable) {
           false
