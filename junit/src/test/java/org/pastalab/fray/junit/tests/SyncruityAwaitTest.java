@@ -2,7 +2,8 @@ package org.pastalab.fray.junit.tests;
 
 import org.junit.jupiter.api.Test;
 import org.junit.platform.testkit.engine.EngineTestKit;
-import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlock;
+import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlockInConditionTest;
+import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlockTest;
 import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitTest;
 
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
@@ -33,12 +34,25 @@ public class SyncruityAwaitTest {
     public void testSyncurityAwaitWithSynchronizationPrimitives() {
         EngineTestKit
                 .engine("junit-jupiter")
-                .selectors(selectClass(SyncurityAwaitDeadlock.class))
+                .selectors(selectClass(SyncurityAwaitDeadlockTest.class))
                 .execute()
                 .allEvents()
                 .assertThatEvents()
                 .haveExactly(100,
                         event(test("testSyncurityAwaitConditionWithSynchronizationPrimitives"), finishedSuccessfully())
+                );
+    }
+
+    @Test
+    public void testSyncurityAwaitDeadlockInCondition() {
+        EngineTestKit
+                .engine("junit-jupiter")
+                .selectors(selectClass(SyncurityAwaitDeadlockInConditionTest.class))
+                .execute()
+                .allEvents()
+                .assertThatEvents()
+                .haveExactly(1,
+                        event(test("testConstraintWithPark"), finishedWithFailure())
                 );
     }
 

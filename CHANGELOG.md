@@ -23,6 +23,7 @@ schedule observers.
   deadlock when a new thread is created during the shutdown process.
 - Fixed Github release action including the wrong changelog.
 - Prevent Fray hangs by properly removing threads from read/write lock waiters
+- Fix Fray hangs if wait/await are used in syncurity conditions.
 
 ### Security
 

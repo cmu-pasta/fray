@@ -1,5 +1,9 @@
 package org.pastalab.fray.core.syncurity
 
+import java.util.Date
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.Condition
 import org.pastalab.fray.runtime.Delegate
 
 class SyncurityEvaluationDelegate(val syncurityRunContext: SyncurityEvaluationContext) :
@@ -18,6 +22,43 @@ class SyncurityEvaluationDelegate(val syncurityRunContext: SyncurityEvaluationCo
     }
     entered.set(true)
     return false
+  }
+
+  override fun onThreadPark() {
+    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+  }
+
+  override fun onConditionAwait(l: Condition) {
+    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+  }
+
+  override fun onConditionAwaitTime(condition: Condition, time: Long, unit: TimeUnit?): Boolean {
+    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+  }
+
+  override fun onConditionAwaitNanos(condition: Condition, nanos: Long): Long {
+    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+  }
+
+  override fun onConditionAwaitUninterruptibly(condition: Condition) {
+    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+  }
+
+  override fun onConditionAwaitUntil(condition: Condition, deadline: Date?): Boolean {
+    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+  }
+
+  override fun onObjectWait(o: Any?, timeout: Long) {
+    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+  }
+
+  override fun onLatchAwait(latch: CountDownLatch) {
+    if (checkEntered()) return
+    try {
+      syncurityRunContext.latchAwait(latch)
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onMonitorEnter(o: Any) {
