@@ -4,18 +4,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.platform.testkit.engine.EngineTestKit;
 import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlockInConditionTest;
 import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlockTest;
-import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitTest;
 
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.*;
 
-public class SyncruityAwaitTest {
+public class SyncurityAwaitTest {
 
     @Test
     public void testSyncurityAwaitTest() {
         EngineTestKit
                 .engine("junit-jupiter")
-                .selectors(selectClass(SyncurityAwaitTest.class))
+                .selectors(selectClass(org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitTest.class))
                 .execute()
                 .allEvents()
                 .assertThatEvents()
