@@ -112,6 +112,7 @@ class WriteLockContext(lock: Lock) : LockContext(lock) {
     val lockWaiter = lockWaiters[tid] ?: return false
     val noTimeout = type != InterruptionType.TIMEOUT
     if ((lockWaiter.canInterrupt && type == InterruptionType.INTERRUPT) ||
+        (type == InterruptionType.RESOURCE_AVAILABLE) ||
         (type == InterruptionType.TIMEOUT) ||
         (type == InterruptionType.FORCE)) {
       lockWaiter.thread.pendingOperation = ThreadResumeOperation(noTimeout)
@@ -123,8 +124,7 @@ class WriteLockContext(lock: Lock) : LockContext(lock) {
 
   fun unlockWaiters() {
     for (writeLockWaiter in lockWaiters.values) {
-      writeLockWaiter.thread.pendingOperation = ThreadResumeOperation(true)
-      writeLockWaiter.thread.state = ThreadState.Runnable
+      unblockThread(writeLockWaiter.thread.thread.id, InterruptionType.RESOURCE_AVAILABLE)
     }
     // Waking threads are write waiters as well.
     for (thread in wakingThreads.values) {

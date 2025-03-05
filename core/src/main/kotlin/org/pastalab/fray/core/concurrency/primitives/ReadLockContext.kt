@@ -73,8 +73,7 @@ class ReadLockContext(lock: Lock) : LockContext(lock) {
 
   fun unlockWaiters() {
     for (readLockWaiter in lockWaiters.values) {
-      readLockWaiter.thread.pendingOperation = ThreadResumeOperation(true)
-      readLockWaiter.thread.state = ThreadState.Runnable
+      unblockThread(readLockWaiter.thread.thread.id, InterruptionType.RESOURCE_AVAILABLE)
     }
   }
 
@@ -115,6 +114,7 @@ class ReadLockContext(lock: Lock) : LockContext(lock) {
     val noTimeout = type != InterruptionType.TIMEOUT
     if ((lockWaiter.canInterrupt && type == InterruptionType.INTERRUPT) ||
         (type == InterruptionType.FORCE) ||
+        (type == InterruptionType.RESOURCE_AVAILABLE) ||
         (type == InterruptionType.TIMEOUT)) {
       lockWaiter.thread.pendingOperation = ThreadResumeOperation(noTimeout)
       lockWaiter.thread.state = ThreadState.Runnable
