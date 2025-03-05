@@ -22,6 +22,7 @@ schedule observers.
 - Disable Fray instrumentation when `System.exit` is called. This avoids 
   deadlock when a new thread is created during the shutdown process.
 - Fixed Github release action including the wrong changelog.
+- Prevent Fray hangs by properly removing threads from read/write lock waiters
 
 ### Security
 
