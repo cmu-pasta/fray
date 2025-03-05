@@ -52,7 +52,10 @@ public class SyncurityAwaitTest {
                 .assertThatEvents()
                 .haveExactly(1,
                         event(test("testConstraintWithPark"), finishedWithFailure())
-                );
+                        )
+                .haveExactly(1,
+                        event(test("testConstraintWithWait"), finishedWithFailure())
+                        );
     }
 
 }
