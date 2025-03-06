@@ -11,7 +11,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.pastalab.fray.junit.syncurity.ConditionFactoryKt.await;
 
 @ExtendWith(FrayTestExtension.class)
-public class SyncurityAwaitDeadlock {
+public class SyncurityAwaitDeadlockTest {
     public static class MyThread extends Thread {
         public AtomicBoolean flag = new AtomicBoolean(false);
         public void run() {

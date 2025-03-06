@@ -62,7 +62,7 @@ class RunContext(val config: Configuration) {
     SemaphoreContext(0, it as Semaphore)
   }
   private val volatileManager = VolatileManager(true)
-  private val latchManager = ReferencedContextManager {
+  val latchManager = ReferencedContextManager {
     verifyOrReport(it is CountDownLatch) { "CDL Manager only accepts CountDownLatch objects" }
     CountDownLatchContext(it as CountDownLatch, syncManager)
   }
@@ -892,9 +892,25 @@ class RunContext(val config: Configuration) {
     scheduleNextOperation(true)
   }
 
+  fun evaluateSyncurityCondition(condition: SyncurityCondition): Boolean {
+    val currentRuntimeDelegate = Runtime.DELEGATE
+    val result =
+        try {
+          val syncurityEvaluationContext = SyncurityEvaluationContext(this)
+          Runtime.DELEGATE =
+              SyncurityEvaluationDelegate(syncurityEvaluationContext, Thread.currentThread())
+          condition.satisfied()
+        } catch (e: Throwable) {
+          false
+        } finally {
+          Runtime.DELEGATE = currentRuntimeDelegate
+        }
+    return result
+  }
+
   fun syncurityCondition(condition: SyncurityCondition) {
     val context = registeredThreads[Thread.currentThread().id]!!
-    while (!condition.satisfied()) {
+    while (!evaluateSyncurityCondition(condition)) {
       context.pendingOperation = SyncurityWaitOperation(condition, context)
       context.state = ThreadState.Blocked
       scheduleNextOperation(true)
@@ -906,18 +922,7 @@ class RunContext(val config: Configuration) {
       if (thread.state == ThreadState.Blocked &&
           thread.pendingOperation is SyncurityWaitOperation) {
         val condition = (thread.pendingOperation as SyncurityWaitOperation).condition
-        val currentRuntimeDelegate = Runtime.DELEGATE
-        val result =
-            try {
-              val syncurityEvaluationContext = SyncurityEvaluationContext(this)
-              Runtime.DELEGATE = SyncurityEvaluationDelegate(syncurityEvaluationContext)
-              condition.satisfied()
-            } catch (e: Throwable) {
-              false
-            } finally {
-              Runtime.DELEGATE = currentRuntimeDelegate
-            }
-        if (result) {
+        if (evaluateSyncurityCondition(condition)) {
           thread.pendingOperation = ThreadResumeOperation(true)
           thread.state = ThreadState.Runnable
         }
