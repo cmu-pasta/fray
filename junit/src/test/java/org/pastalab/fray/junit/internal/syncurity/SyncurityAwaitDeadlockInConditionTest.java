@@ -26,7 +26,7 @@ public class SyncurityAwaitDeadlockInConditionTest {
         await().until(() -> {
             lock.lock();
             try {
-                condition.wait();
+                condition.await();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
