@@ -4,7 +4,7 @@ import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.Condition
-import java.util.concurrent.locks.LockSupport
+import java.util.concurrent.locks.Lock
 import org.pastalab.fray.runtime.Delegate
 
 class SyncurityEvaluationDelegate(
@@ -29,82 +29,40 @@ class SyncurityEvaluationDelegate(
     return false
   }
 
-  override fun onThreadPark() {
-    if (checkEntered()) return
-    entered.set(false)
-    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
-  }
-
-  override fun onThreadParkNanos(nanos: Long) {
-    if (checkEntered()) {
-      LockSupport.parkNanos(nanos)
-      return
-    }
-    entered.set(false)
-    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
-  }
-
-  override fun onThreadParkUntil(nanos: Long) {
-    if (checkEntered()) {
-      LockSupport.parkUntil(nanos)
-      return
-    }
-    entered.set(false)
-    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
-  }
-
-  override fun onThreadParkNanosWithBlocker(blocker: Any?, nanos: Long) {
-    if (checkEntered()) {
-      LockSupport.parkNanos(blocker, nanos)
-      return
-    }
-    entered.set(false)
-    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
-  }
-
-  override fun onThreadParkUntilWithBlocker(blocker: Any?, nanos: Long) {
-    if (checkEntered()) {
-      LockSupport.parkUntil(blocker, nanos)
-      return
-    }
-    entered.set(false)
-    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
-  }
-
   override fun onConditionAwait(l: Condition) {
     if (checkEntered()) return
     entered.set(false)
-    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+    throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
   }
 
   override fun onConditionAwaitTime(condition: Condition, time: Long, unit: TimeUnit): Boolean {
     if (checkEntered()) return condition.await(time, unit)
     entered.set(false)
-    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+    throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
   }
 
   override fun onConditionAwaitNanos(condition: Condition, nanos: Long): Long {
     if (checkEntered()) return condition.awaitNanos(nanos)
     entered.set(false)
-    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+    throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
   }
 
   override fun onConditionAwaitUninterruptibly(condition: Condition) {
     if (checkEntered()) return
     entered.set(false)
-    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+    throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
   }
 
   override fun onConditionAwaitUntil(condition: Condition, deadline: Date?): Boolean {
     if (checkEntered()) return condition.awaitUntil(deadline)
     entered.set(false)
-    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+    throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
   }
 
   override fun onObjectWait(o: Any, timeout: Long) {
     if (checkEntered()) return
     entered.set(false)
-    throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+    throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
   }
 
   override fun onLatchAwait(latch: CountDownLatch) {
@@ -123,6 +81,41 @@ class SyncurityEvaluationDelegate(
     } finally {
       entered.set(false)
     }
+  }
+
+  override fun onLockLock(l: Lock) {
+    if (checkEntered()) {
+      onSkipMethod("Lock.lock")
+      return
+    }
+    try {
+      syncurityRunContext.lockImpl(l)
+    } finally {
+      entered.set(false)
+      onSkipMethod("Lock.lock")
+    }
+  }
+
+  override fun onLockLockDone() {
+    onSkipMethodDone("Lock.lock")
+  }
+
+  override fun onLockTryLockInterruptibly(l: Lock, timeout: Long): Long {
+    if (checkEntered()) {
+      onSkipMethod("Lock.tryLock")
+      return timeout
+    }
+    try {
+      syncurityRunContext.lockImpl(l)
+    } finally {
+      entered.set(false)
+      onSkipMethod("Lock.tryLock")
+    }
+    return 0
+  }
+
+  override fun onLockTryLockInterruptiblyDone(l: Lock) {
+    onSkipMethodDone("Lock.tryLock")
   }
 
   val onSkipRecursion = ThreadLocal.withInitial { false }

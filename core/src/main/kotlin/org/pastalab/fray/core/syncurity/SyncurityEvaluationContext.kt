@@ -7,7 +7,7 @@ class SyncurityEvaluationContext(val runContext: RunContext) {
   fun latchAwait(latch: CountDownLatch) {
     val context = runContext.latchManager.getContext(latch)
     if (context.count > 0) {
-      throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+      throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
     }
   }
 
@@ -16,7 +16,7 @@ class SyncurityEvaluationContext(val runContext: RunContext) {
   ) {
     val lockContext = runContext.lockManager.getContext(lock)
     if (!lockContext.canLock(Thread.currentThread().id)) {
-      throw AbortEvaluation("Abort syncurity condition evaluation because of deadlock.")
+      throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
     } else {
       return
     }

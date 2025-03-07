@@ -6,7 +6,10 @@ import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
 import org.pastalab.fray.junit.syncurity.ConditionFactory;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,8 +21,16 @@ public class SyncurityAwaitDeadlockInConditionTest {
             iterations = 100
     )
     public void testConstraintWithPark() {
+        Lock lock = new ReentrantLock();
+        Condition condition = lock.newCondition();
         await().until(() -> {
-            LockSupport.park();
+            lock.lock();
+            try {
+                condition.await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            lock.unlock();
             return 1;
         }, equalTo(1));
     }

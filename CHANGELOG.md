@@ -12,6 +12,8 @@ thread's execution.
 
 - Refine the timeline construction logic. Pass timeline information through
 schedule observers.
+- Improve the condition/object wait blocking by using the original lock instead 
+of the while loop.
 
 ### Deprecated
 

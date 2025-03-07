@@ -20,7 +20,11 @@ class HelperThread : Thread("fray-helper-thread") {
         job = currentRunnable
         currentRunnable = null
       }
-      job?.run()
+      try {
+        job?.run()
+      } catch (e: Throwable) {
+        e.printStackTrace()
+      }
     }
   }
 

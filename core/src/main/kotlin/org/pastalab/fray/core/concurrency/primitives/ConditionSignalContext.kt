@@ -9,17 +9,17 @@ import org.pastalab.fray.core.concurrency.operations.ConditionWakeBlocked
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.rmi.ThreadState
 
-class ConditionSignalContext(lockContext: LockContext, lock: Lock, condition: Condition) :
+class ConditionSignalContext(lockContext: LockContext, condition: Condition) :
     SignalContext(lockContext) {
-  val lockReference = WeakReference(lock)
   val conditionReference = WeakReference(condition)
 
   override fun sendSignalToObject() {
-    lockReference.get()?.lock()
+    val lock = lockContext.lockReference.get() as Lock? ?: return
+    lock.lock()
     try {
       conditionReference.get()?.signalAll()
     } finally {
-      lockReference.get()?.unlock()
+      lock.unlock()
     }
   }
 

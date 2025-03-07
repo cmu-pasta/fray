@@ -4,6 +4,7 @@ import io.github.classgraph.ClassGraph;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
+import org.pastalab.fray.core.FrayInternalError;
 import org.pastalab.fray.core.TestRunner;
 import org.pastalab.fray.core.command.Configuration;
 import org.pastalab.fray.core.command.ExecutionInfo;
@@ -61,6 +62,7 @@ public class FrayTestCase {
         return dynamicTest("Test: " + className, () -> {
             Throwable result = runner.run();
             if (testShouldFail) {
+                assertFalse(result instanceof FrayInternalError);
                 assertNotEquals(null, result);
             } else {
                 assertEquals(null, result);
@@ -75,7 +77,7 @@ public class FrayTestCase {
                     new ExecutionInfo(
                             new LambdaExecutor(() -> {
                                 try {
-                                    ReentrantReadWriteLockNormalLockUnlock.main(new String[]{});
+                                    NotifyOrder.main(new String[]{});
                                 } catch (Exception e) {
                                     throw new RuntimeException(e);
                                 }
@@ -86,7 +88,7 @@ public class FrayTestCase {
                             -1
                     ),
                     "/tmp/report2",
-                    10000,
+                    1000,
                     60,
                     new RandomScheduler(),
                     new ControlledRandom(),
