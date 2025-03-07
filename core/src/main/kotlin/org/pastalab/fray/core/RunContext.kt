@@ -401,7 +401,6 @@ class RunContext(val config: Configuration) {
     checkDeadlock {
       signalContext.unblockThread(t, InterruptionType.FORCE)
       verifyOrReport(lockContext.lock(context, false, true, false))
-      syncManager.removeWait(signalContext.getSyncObject())
       context.pendingOperation = ThreadResumeOperation(true)
       context.state = ThreadState.Running
     }
@@ -411,10 +410,13 @@ class RunContext(val config: Configuration) {
     // Therefore, we need to call `reentrantLockUnlockDone`
     // manually.
     executor.submit {
-      syncManager.wait(signalContext.getSyncObject())
-      while (registeredThreads[t]!!.thread.state == Thread.State.RUNNABLE) {
-        Thread.yield()
-      }
+      // We need a way to check the running thread is truly blocked. Unfortunately,
+      // The while loop is not reliable. So we do this based on the semantic of the Condition
+      // object. Currently, the lock object is acquired by the running thread and will only
+      // be released when the running thread calls `object.wait()` or `condition.await()`.
+      // Therefore, we can just add a dummy lock/unlock here to make sure the running thread
+      // is blocked.
+      lockContext.lockAndUnlock()
       scheduleNextOperationAndCheckDeadlock(false)
     }
   }
@@ -659,7 +661,7 @@ class RunContext(val config: Configuration) {
 
   fun lockNewCondition(condition: Condition, lock: Lock) {
     val lockContext = lockManager.getContext(lock)
-    val conditionContext = ConditionSignalContext(lockContext, lock, condition)
+    val conditionContext = ConditionSignalContext(lockContext, condition)
     lockContext.signalContexts.add(conditionContext)
     signalManager.addContext(condition, conditionContext)
   }

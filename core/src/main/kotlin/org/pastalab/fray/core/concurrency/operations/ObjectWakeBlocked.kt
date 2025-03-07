@@ -8,7 +8,8 @@ class ObjectWakeBlocked(val objectContext: ObjectNotifyContext, val noTimeout: B
     BlockedOperation(
         false,
         ResourceInfo(
-            System.identityHashCode(objectContext.objReference.get()), ResourceType.CONDITION)) {
+            System.identityHashCode(objectContext.lockContext.lockReference.get()),
+            ResourceType.CONDITION)) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
     if (type == InterruptionType.INTERRUPT) {
       return objectContext.getSyncObject()

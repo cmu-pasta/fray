@@ -1,6 +1,6 @@
 package org.pastalab.fray.core.syncurity
 
-class AbortEvaluation : RuntimeException {
+class AbortEvaluationException : RuntimeException {
   constructor() : super()
 
   constructor(message: String) : super(message)
