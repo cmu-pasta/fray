@@ -62,7 +62,7 @@ public class FrayTestCase {
         return dynamicTest("Test: " + className, () -> {
             Throwable result = runner.run();
             if (testShouldFail) {
-                assert(!(result instanceof FrayInternalError));
+                assertFalse(result instanceof FrayInternalError);
                 assertNotEquals(null, result);
             } else {
                 assertEquals(null, result);
