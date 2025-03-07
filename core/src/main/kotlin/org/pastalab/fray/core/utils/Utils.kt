@@ -13,10 +13,7 @@ object Utils {
   }
 
   fun verifyOrReport(condition: Boolean) {
-    if (!condition) {
-      val e = FrayInternalError("Internal error")
-      Runtime.onReportError(e)
-    }
+    verifyOrReport(condition, "Internal error")
   }
 
   fun verifyOrReport(condition: Boolean, message: String) {
@@ -27,10 +24,7 @@ object Utils {
   }
 
   fun verifyOrReport(condition: Boolean, message: () -> String) {
-    if (!condition) {
-      val e = FrayInternalError(message())
-      Runtime.onReportError(e)
-    }
+    verifyOrReport(condition, message())
   }
 }
 
