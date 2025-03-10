@@ -53,7 +53,6 @@ class RunContext(val config: Configuration) {
   var currentThreadId: Long = -1
   var mainThreadId: Long = -1
   var bugFound: Throwable? = null
-  var mainExiting = false
   var nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
   val hashCodeMapper = ReferencedContextManager<Int>({ config.randomnessProvider.nextInt() })
   var forkJoinPool: ForkJoinPool? = null
@@ -187,14 +186,13 @@ class RunContext(val config: Configuration) {
   fun mainExit() {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
-    mainExiting = true
     while (registeredThreads.any {
       it.value.state != ThreadState.Completed &&
           it.value.state != ThreadState.Created &&
           it.value != context
     }) {
       try {
-        context.state = ThreadState.Runnable
+        context.state = ThreadState.MainExiting
         scheduleNextOperation(true)
       } catch (e: org.pastalab.fray.runtime.TargetTerminateException) {
         // If deadlock detected let's try to unblock one thread and continue.
@@ -219,7 +217,6 @@ class RunContext(val config: Configuration) {
     val t = Thread.currentThread()
     step = 0
     bugFound = null
-    mainExiting = false
     currentThreadId = t.id
     mainThreadId = t.id
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this)
@@ -1014,9 +1011,6 @@ class RunContext(val config: Configuration) {
             .toList()
             .filter { it.state == ThreadState.Runnable }
             .sortedBy { it.thread.id }
-    if (mainExiting && (currentThreadId == mainThreadId || enabledOperations.size > 1)) {
-      enabledOperations = enabledOperations.filter { it.thread.id != mainThreadId }
-    }
 
     // The first empty check will enable timed operations
     if (enabledOperations.isEmpty()) {
@@ -1026,13 +1020,17 @@ class RunContext(val config: Configuration) {
               .toList()
               .filter { it.state == ThreadState.Runnable }
               .sortedBy { it.thread.id }
-      if (mainExiting && (currentThreadId == mainThreadId || enabledOperations.size > 1)) {
-        enabledOperations = enabledOperations.filter { it.thread.id != mainThreadId }
-      }
     }
 
     // The second empty check throws deadlock exceptions.
     if (enabledOperations.isEmpty()) {
+      // If no thread is blocked. We are done. Return to main thread and exit.
+      if (registeredThreads.values.none { it.state == ThreadState.Blocked }) {
+        if (currentThreadId != mainThreadId) {
+          registeredThreads[mainThreadId]?.unblock()
+        }
+        return
+      }
       val e = DeadlockException()
       reportError(e)
       throw e
@@ -1042,7 +1040,7 @@ class RunContext(val config: Configuration) {
     if (config.executionInfo.maxScheduledStep in 1 ..< step &&
         !currentThread.isExiting &&
         Thread.currentThread() !is HelperThread &&
-        !(mainExiting && currentThreadId == mainThreadId)) {
+        currentThread.state != ThreadState.MainExiting) {
       currentThread.state = ThreadState.Running
       val e = LivenessException()
       reportError(e)

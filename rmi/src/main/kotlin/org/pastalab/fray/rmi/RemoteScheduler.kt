@@ -10,6 +10,7 @@ enum class ThreadState {
   Running,
   Blocked,
   Completed,
+  MainExiting,
   Created,
 }
 

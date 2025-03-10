@@ -6,6 +6,8 @@
 
 ### Changed
 
+- Simplify the `mainExit` logic and introduce `MainExiting` state.
+
 ### Deprecated
 
 ### Removed
