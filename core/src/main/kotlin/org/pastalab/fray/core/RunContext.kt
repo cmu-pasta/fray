@@ -337,7 +337,7 @@ class RunContext(val config: Configuration) {
   fun threadCompleted(t: Thread) {
     val context = registeredThreads[t.id]!!
     context.isExiting = true
-    monitorEnter(t)
+    monitorEnter(t, true)
     objectNotifyAll(t)
     context.state = ThreadState.Completed
     //    lockManager.threadUnblockedDueToDeadlock(t)
@@ -539,7 +539,7 @@ class RunContext(val config: Configuration) {
   }
 
   fun lockTryLock(lock: Any, canInterrupt: Boolean, timed: Boolean) {
-    lockImpl(lock, false, false, canInterrupt, timed)
+    lockImpl(lock, false, false, canInterrupt, timed, false)
   }
 
   fun lockImpl(
@@ -547,7 +547,8 @@ class RunContext(val config: Configuration) {
       isMonitorLock: Boolean,
       shouldBlock: Boolean,
       canInterrupt: Boolean,
-      timed: Boolean
+      timed: Boolean,
+      shouldRetry: Boolean,
   ) {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
@@ -587,7 +588,11 @@ class RunContext(val config: Configuration) {
       // not want to rely on ReentrantLock. This allows
       // us to pick which Thread to run next if multiple
       // threads hold the same lock.
-      scheduleNextOperation(true)
+      if (shouldRetry) {
+        scheduleNextOperationAndCheckDeadlock(true)
+      } else {
+        scheduleNextOperation(true)
+      }
       if (canInterrupt) {
         context.checkInterrupt()
       }
@@ -599,12 +604,12 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun monitorEnter(lock: Any) {
-    lockImpl(lock, true, true, false, false)
+  fun monitorEnter(lock: Any, shouldRetry: Boolean) {
+    lockImpl(lock, true, true, false, false, shouldRetry)
   }
 
   fun lockLock(lock: Any, canInterrupt: Boolean) {
-    lockImpl(lock, false, true, canInterrupt, false)
+    lockImpl(lock, false, true, canInterrupt, false, false)
   }
 
   fun reentrantReadWriteLockInit(
@@ -1028,18 +1033,9 @@ class RunContext(val config: Configuration) {
 
     // The second empty check throws deadlock exceptions.
     if (enabledOperations.isEmpty()) {
-      if (registeredThreads.all { it.value.state == ThreadState.Completed }) {
-        // We are done here, we should go back to the main thread.
-        if (currentThreadId != mainThreadId) {
-          registeredThreads[mainThreadId]!!.unblock()
-        }
-        return
-      } else if (!currentThread.isExiting || Thread.currentThread() is HelperThread) {
-        // Deadlock detected
-        val e = org.pastalab.fray.runtime.DeadlockException()
-        reportError(e)
-        throw e
-      }
+      val e = DeadlockException()
+      reportError(e)
+      throw e
     }
 
     step += 1
