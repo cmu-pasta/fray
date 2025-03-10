@@ -4,6 +4,20 @@
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 0.3.0 - 2025-03-10
+
+### Added
+
 - Pass the `ResourceInfo` to the operations that may block a
 thread's execution.
 - Add `ThreadResourcePanel` to the Fray Debugger plugin. The panel visualizes the concurrency resources of each thread.
@@ -15,10 +29,6 @@ schedule observers.
 - Improve the condition/object wait blocking by using the original lock instead 
 of the while loop.
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 
 - Disable Fray instrumentation when `System.exit` is called. This avoids 
@@ -26,8 +36,6 @@ of the while loop.
 - Fixed Github release action including the wrong changelog.
 - Prevent Fray hangs by properly removing threads from read/write lock waiters
 - Fix Fray hangs if wait/await are used in syncurity conditions.
-
-### Security
 
 ## 0.2.8 - 2025-02-26
 
