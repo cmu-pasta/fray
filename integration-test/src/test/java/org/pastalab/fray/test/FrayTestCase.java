@@ -12,19 +12,8 @@ import org.pastalab.fray.core.command.LambdaExecutor;
 import org.pastalab.fray.core.command.MethodExecutor;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
-import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
-import org.pastalab.fray.test.fail.cdl.CountDownLatchDeadlockUnblockMultiThread;
-import org.pastalab.fray.test.fail.park.ParkDeadlock;
-import org.pastalab.fray.test.fail.rwlock.ReentrantReadWriteLockDeadlock;
-import org.pastalab.fray.test.fail.wait.NotifyOrder;
-import org.pastalab.fray.test.success.condition.ConditionAwaitTimeoutNotifyInterrupt;
-import org.pastalab.fray.test.success.rwlock.ReentrantReadWriteLockDowngradingNoDeadlock;
-import org.pastalab.fray.test.success.rwlock.ReentrantReadWriteLockNoDeadlock;
-import org.pastalab.fray.test.success.rwlock.ReentrantReadWriteLockNormalLockUnlock;
-import org.pastalab.fray.test.success.stampedlock.StampedLockTryLockNoDeadlock;
-import org.pastalab.fray.test.success.thread.ThreadInterruptionWithoutStart;
-import org.pastalab.fray.test.success.time.TestTime;
+import org.pastalab.fray.test.fail.thread.ThreadExitDeadlock;
 
 import java.util.*;
 
@@ -77,7 +66,7 @@ public class FrayTestCase {
                     new ExecutionInfo(
                             new LambdaExecutor(() -> {
                                 try {
-                                    NotifyOrder.main(new String[]{});
+                                    ThreadExitDeadlock.main(new String[]{});
                                 } catch (Exception e) {
                                     throw new RuntimeException(e);
                                 }

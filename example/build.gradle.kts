@@ -1,10 +1,9 @@
 plugins {
   id("java")
-  id("org.pastalab.fray.gradle") version "0.2.9-SNAPSHOT"
+  id("org.pastalab.fray.gradle") version "0.3.1-SNAPSHOT"
 }
 
 group = "org.pastalab.fray.example"
-version = "0.2.9-SNAPSHOT"
 
 repositories {
   mavenCentral()

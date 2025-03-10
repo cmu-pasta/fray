@@ -80,6 +80,7 @@ jreleaser {
 
 
 configure(allprojects - rootProject -
+    project(":example") -
     project(":instrumentation") -
     project(":plugins") -
     project(":plugins:gradle") -

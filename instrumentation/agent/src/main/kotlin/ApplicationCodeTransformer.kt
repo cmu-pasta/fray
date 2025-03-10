@@ -45,6 +45,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
             "com.github.ajalt",
         ) ||
         (dotClassName.startsWith("org.pastalab.fray") &&
+            !dotClassName.startsWith("org.pastalab.fray.example") &&
             !dotClassName.startsWith("org.pastalab.fray.benchmark") &&
             !dotClassName.startsWith("org.pastalab.fray.test") &&
             !dotClassName.startsWith("org.pastalab.fray.junit.internal") &&
