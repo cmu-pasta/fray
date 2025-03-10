@@ -18,9 +18,7 @@ public class Interface extends DeadlockEmpireTestBase {
     @ConcurrencyTest
     public void runTest() {
         Thread thread1 = new Thread(() -> {
-            businessLogic();
             criticalSection();
-            businessLogic();
         });
         Thread thread2 = new Thread(() -> {
             if (flag.get()) {
