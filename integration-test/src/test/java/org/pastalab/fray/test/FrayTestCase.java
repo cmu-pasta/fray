@@ -12,7 +12,7 @@ import org.pastalab.fray.core.command.LambdaExecutor;
 import org.pastalab.fray.core.command.MethodExecutor;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
-import org.pastalab.fray.core.scheduler.RandomScheduler;
+import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.test.fail.thread.ThreadExitDeadlock;
 
 import java.util.*;
@@ -79,7 +79,7 @@ public class FrayTestCase {
                     "/tmp/report2",
                     1000,
                     60,
-                    new RandomScheduler(),
+                    new POSScheduler(),
                     new ControlledRandom(),
                     true,
                     false,

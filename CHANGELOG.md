@@ -6,11 +6,15 @@
 
 ### Changed
 
+- Simplify the `mainExit` logic and introduce `MainExiting` state.
+
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+
+- Fix Fray hang when a thread exits but the monitor lock is not released.
 
 ### Security
 
