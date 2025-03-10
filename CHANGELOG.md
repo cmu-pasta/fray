@@ -12,6 +12,8 @@
 
 ### Fixed
 
+- Fix Fray hang when a thread exits but the monitor lock is not released.
+
 ### Security
 
 ## 0.3.0 - 2025-03-10

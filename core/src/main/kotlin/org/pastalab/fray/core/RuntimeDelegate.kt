@@ -239,7 +239,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   override fun onMonitorEnter(o: Any) {
     if (checkEntered()) return
     try {
-      context.monitorEnter(o)
+      context.monitorEnter(o, false)
     } finally {
       entered.set(false)
     }
