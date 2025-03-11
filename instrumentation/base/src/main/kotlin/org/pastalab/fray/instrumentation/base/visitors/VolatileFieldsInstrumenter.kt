@@ -23,9 +23,7 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor, private val instrumentingJdk:
   ) {
     super.visit(version, access, name, signature, superName, interfaces)
     className = name
-    //    if (instrumentingJdk) {
-    //      shouldInstrument = name.startsWith("java/util/HashMap")
-    //    }
+    shouldInstrument = !instrumentingJdk || name.startsWith("java/util/concurrent")
   }
 
   override fun visitField(

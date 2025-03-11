@@ -114,6 +114,10 @@ public class Runtime {
         DELEGATE.onAtomicOperation(o, type);
     }
 
+    public static void onAtomicOperationDone() {
+        DELEGATE.onAtomicOperationDone();
+    }
+
     public static void onArrayLoad(Object o, int index) {
         DELEGATE.onArrayLoad(o, index);
     }

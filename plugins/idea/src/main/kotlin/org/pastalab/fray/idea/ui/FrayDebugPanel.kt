@@ -9,6 +9,7 @@ import java.awt.BorderLayout
 import javax.swing.JPanel
 import javax.swing.JSplitPane
 import org.pastalab.fray.idea.debugger.FrayScheduleObserver
+import org.pastalab.fray.idea.getPsiFile
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.rmi.ThreadState
 
@@ -107,28 +108,28 @@ class FrayDebugPanel(val project: Project, val scheduleObserver: FrayScheduleObs
   private fun processThreadsForHighlighting(threads: List<ThreadExecutionContext>) {
     threads.forEach { threadExecutionContext ->
       if (threadExecutionContext.threadInfo.state == ThreadState.Completed) return@forEach
-      if (threadExecutionContext.executingLine < 0) return@forEach
-      val document = threadExecutionContext.document ?: return@forEach
-      val vFile = threadExecutionContext.virtualFile ?: return@forEach
-      ApplicationManager.getApplication().invokeLater {
-        FileEditorManager.getInstance(project).openFile(vFile).forEach { fileEditor ->
-          if (fileEditor is TextEditor) {
-            val editor = fileEditor.editor
-            highlightManager.addThreadToLine(
-                threadExecutionContext.executingLine,
-                threadExecutionContext,
-                editor,
-                document,
-                project)
-            threadInfoUpdaters
-                .getOrPut(editor) {
-                  val updater = ThreadInfoUpdater(editor)
-                  editor.addEditorMouseMotionListener(updater)
-                  updater
-                }
-                .threadNameMapping
-                .getOrPut(threadExecutionContext.executingLine - 1) { mutableSetOf() }
-                .add(threadExecutionContext)
+      threadExecutionContext.threadInfo.stackTraces.forEach { stackTraceElement ->
+        if (stackTraceElement.lineNumber <= 0) return@forEach
+        if (stackTraceElement.className == "ThreadStartOperation") return@forEach
+        val psiFile = stackTraceElement.getPsiFile(project) ?: return@forEach
+        val document = psiFile.fileDocument
+        val vFile = psiFile.virtualFile
+        ApplicationManager.getApplication().invokeLater {
+          FileEditorManager.getInstance(project).openFile(vFile).forEach { fileEditor ->
+            if (fileEditor is TextEditor) {
+              val editor = fileEditor.editor
+              highlightManager.addThreadToLine(
+                  stackTraceElement.lineNumber, threadExecutionContext, editor, document, project)
+              threadInfoUpdaters
+                  .getOrPut(editor) {
+                    val updater = ThreadInfoUpdater(editor)
+                    editor.addEditorMouseMotionListener(updater)
+                    updater
+                  }
+                  .threadNameMapping
+                  .getOrPut(stackTraceElement.lineNumber - 1) { mutableSetOf() }
+                  .add(threadExecutionContext)
+            }
           }
         }
       }

@@ -1,13 +1,13 @@
 package org.pastalab.fray.core.debugger
 
 import java.rmi.registry.LocateRegistry
-import java.rmi.registry.Registry
+import org.pastalab.fray.rmi.Constant
 import org.pastalab.fray.rmi.RemoteScheduler
 import org.pastalab.fray.rmi.ScheduleObserver
 import org.pastalab.fray.rmi.ThreadInfo
 
 object DebuggerRegistry {
-  val registry = LocateRegistry.getRegistry("localhost", Registry.REGISTRY_PORT)
+  val registry = LocateRegistry.getRegistry("localhost", Constant.REGISTRY_PORT)
 
   fun getRemoteScheduler(): RemoteScheduler {
     return registry.lookup(RemoteScheduler.NAME) as RemoteScheduler

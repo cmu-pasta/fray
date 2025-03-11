@@ -4,6 +4,9 @@
 
 ### Added
 
+- Allow the Fray debugger to highlight all lines of a thread that is being executed.
+- Add translated Deadlock Empire games!
+
 ### Changed
 
 - Simplify the `mainExit` logic and introduce `MainExiting` state.

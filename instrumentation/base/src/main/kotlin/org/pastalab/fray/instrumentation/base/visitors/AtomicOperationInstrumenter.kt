@@ -1,10 +1,28 @@
 package org.pastalab.fray.instrumentation.base.visitors
 
-import java.util.*
-import java.util.concurrent.atomic.*
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicIntegerArray
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicLongArray
+import java.util.concurrent.atomic.AtomicLongFieldUpdater
+import java.util.concurrent.atomic.AtomicMarkableReference
+import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.AtomicReferenceArray
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater
+import java.util.concurrent.atomic.AtomicStampedReference
+import java.util.concurrent.atomic.DoubleAccumulator
+import java.util.concurrent.atomic.DoubleAdder
+import java.util.concurrent.atomic.LongAccumulator
+import java.util.concurrent.atomic.LongAdder
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes.*
+import org.objectweb.asm.Opcodes.ACC_PUBLIC
+import org.objectweb.asm.Opcodes.ALOAD
+import org.objectweb.asm.Opcodes.ASM9
+import org.objectweb.asm.Opcodes.GETSTATIC
+import org.pastalab.fray.runtime.Runtime
 
 class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   var className = ""
@@ -32,26 +50,34 @@ class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
     val memoryType = memoryTypeFromMethodName(name)
     if (atomicClasses.contains(className) &&
         !atomicNonVolatileMethodNames.contains(name) &&
-        access and ACC_PUBLIC != 0 &&
-        // We cannot instrument Atomic.get method because the debugger will call
-        // it to evaluate the value of the atomic variable. Therefore, we move
-        // the Atomic.get instrumentation to application level in `AtomicGetInstrumenter`.
-        !(name == "get" && descriptor.startsWith("()"))) {
-      return object : MethodVisitor(ASM9, mv) {
-        override fun visitCode() {
-          super.visitCode()
-          val type = org.pastalab.fray.runtime.MemoryOpType::class.java.name.replace(".", "/")
-          visitVarInsn(ALOAD, 0)
-          visitFieldInsn(GETSTATIC, type, memoryType.name, "L$type;")
-          visitMethodInsn(
-              INVOKESTATIC,
-              org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-              org.pastalab.fray.runtime.Runtime::onAtomicOperation.name,
-              Utils.kFunctionToJvmMethodDescriptor(
-                  org.pastalab.fray.runtime.Runtime::onAtomicOperation),
-              false)
-        }
-      }
+        access and ACC_PUBLIC != 0) {
+      val type = org.pastalab.fray.runtime.MemoryOpType::class.java.name.replace(".", "/")
+      val eMv =
+          MethodEnterVisitor(
+              mv,
+              Runtime::onAtomicOperation,
+              access,
+              name,
+              descriptor,
+              false,
+              false,
+              preCustomizer = {
+                // We do not use loadThis() here because we are instrumenting both static and
+                // instance methods
+                visitVarInsn(ALOAD, 0)
+                visitFieldInsn(GETSTATIC, type, memoryType.name, "L$type;")
+              },
+          )
+      return MethodExitVisitor(
+          eMv,
+          Runtime::onAtomicOperationDone,
+          access,
+          name,
+          descriptor,
+          false,
+          false,
+          false,
+      )
     }
     return mv
   }
@@ -67,7 +93,7 @@ class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
 
   companion object {
     val atomicClasses: List<String> =
-        Arrays.asList(
+        listOf(
             AtomicBoolean::class.java.name.replace('.', '/'),
             AtomicInteger::class.java.name.replace('.', '/'),
             AtomicIntegerArray::class.java.name.replace('.', '/'),
@@ -83,7 +109,8 @@ class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
             DoubleAccumulator::class.java.name.replace('.', '/'),
             DoubleAdder::class.java.name.replace('.', '/'),
             LongAccumulator::class.java.name.replace('.', '/'),
-            LongAdder::class.java.name.replace('.', '/'))
+            LongAdder::class.java.name.replace('.', '/'),
+        )
     val atomicNonVolatileMethodNames: List<String> =
         mutableListOf(
             "<init>",
@@ -96,6 +123,7 @@ class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
             "hashCode",
             "equals",
             "clone",
-            "getClass")
+            "getClass",
+        )
   }
 }

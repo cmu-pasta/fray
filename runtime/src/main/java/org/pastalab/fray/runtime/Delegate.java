@@ -77,6 +77,8 @@ public class Delegate {
     public void onAtomicOperation(Object o, MemoryOpType type) {
     }
 
+    public void onAtomicOperationDone() {}
+
     public void onLockNewCondition(Condition c, Lock l) {
     }
 

@@ -21,7 +21,7 @@ import java.util.Queue;
 @ExtendWith(FrayTestExtension.class)
 public class ConditionVariables extends DeadlockEmpireTestBase {
     private final Object mutex = new Object();
-    private final Queue<Integer> queue = new LinkedList<>();
+    private final SimpleAtomicQueue<Integer> queue = new SimpleAtomicQueue<>(10);
 
     @ConcurrencyTest
     public void runTest() {

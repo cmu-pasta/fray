@@ -6,6 +6,7 @@ import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Translation of "Producer-Consumer (variant)" from The Deadlock Empire
@@ -20,7 +21,7 @@ import java.util.Queue;
  */
 @ExtendWith(FrayTestExtension.class)
 public class ProducerConsumerVariant extends DeadlockEmpireTestBase {
-    private final Queue<String> queue = new LinkedList<>();
+    private final SimpleAtomicQueue<String> queue = new SimpleAtomicQueue<>(10);
 
     @ConcurrencyTest
     public void runTest() {

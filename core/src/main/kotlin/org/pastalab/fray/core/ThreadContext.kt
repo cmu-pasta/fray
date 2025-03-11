@@ -47,7 +47,11 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
                     "ThreadStartOperation", "ThreadStartOperation", "ThreadStartOperation", 0))
           }
           else -> thread.stackTrace.toList().drop(1).filter { !it.isFrayInternals }
-        }
+        }.toMutableList()
+    if (stackTraces.isEmpty()) {
+      stackTraces +=
+          StackTraceElement("ThreadEndOperation", "ThreadEndOperation", "ThreadEndOperation", 0)
+    }
     val blockedBy = (pendingOperation as? BlockedOperation)?.resourceInfo
     return ThreadInfo(
         thread.name,

@@ -208,12 +208,20 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onAtomicOperation(o: Any, type: org.pastalab.fray.runtime.MemoryOpType) {
-    if (checkEntered()) return
+    if (checkEntered()) {
+      onSkipMethod("AtomicOperation")
+      return
+    }
     try {
       context.atomicOperation(o, type)
     } finally {
       entered.set(false)
+      onSkipMethod("AtomicOperation")
     }
+  }
+
+  override fun onAtomicOperationDone() {
+    onSkipMethodDone("AtomicOperation")
   }
 
   override fun onLockUnlock(l: Lock) {

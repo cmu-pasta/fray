@@ -4,8 +4,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.pastalab.fray.junit.junit5.FrayTestExtension;
 import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
 
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -22,7 +20,7 @@ import java.util.concurrent.Semaphore;
  */
 @ExtendWith(FrayTestExtension.class)
 public class ProducerConsumer extends DeadlockEmpireTestBase {
-    private final Queue<String> queue = new LinkedList<>();
+    private final SimpleAtomicQueue<String> queue = new SimpleAtomicQueue<>(10);
     private final Semaphore semaphore = new Semaphore(0);
 
     @ConcurrencyTest

@@ -16,13 +16,12 @@ import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
 
 class ThreadExecutionContext(val threadInfo: ThreadInfo, project: Project) {
-  var executingLine = -1
   var document: Document? = null
   var virtualFile: VirtualFile? = null
   var executingFrame: StackTraceElement? = null
 
   init {
-    for (stack in getStackTraces()) {
+    for (stack in threadInfo.stackTraces) {
       executingFrame = stack
       if (stack.lineNumber <= 0) continue
       if (stack.className == "ThreadStartOperation") continue
@@ -34,19 +33,10 @@ class ThreadExecutionContext(val threadInfo: ThreadInfo, project: Project) {
         val psiFile = psiClass.containingFile
         virtualFile = psiFile.virtualFile
         if (!fileIndex.isInSource(virtualFile!!)) return@runReadAction false
-        executingLine = stack.lineNumber
         document = psiFile.fileDocument
         true
       })
           break
-    }
-  }
-
-  fun getStackTraces(): List<StackTraceElement> {
-    if (threadInfo.stackTraces.isEmpty()) {
-      return listOf(StackTraceElement("N/A", "ThreadEnds", "ThreadEnds", -1))
-    } else {
-      return threadInfo.stackTraces
     }
   }
 
