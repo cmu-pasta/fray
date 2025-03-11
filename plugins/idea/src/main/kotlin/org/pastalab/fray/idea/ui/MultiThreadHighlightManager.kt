@@ -12,10 +12,13 @@ import java.awt.Font
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.idea.ui.Colors.THREAD_DISABLED_COLOR
 import org.pastalab.fray.rmi.ThreadState
+import com.intellij.openapi.editor.markup.HighlighterLayer
 
 class MultiThreadHighlightManager {
   // Map to track highlighters by line
   private val lineHighlightersMap = mutableMapOf<Int, MutableMap<Editor, RangeHighlighter>>()
+
+  private val THREAD_HIGHLIGHT_LAYER = HighlighterLayer.SELECTION + 100
 
   // Add a thread to a line and update highlighting
   fun addThreadToLine(
@@ -39,7 +42,7 @@ class MultiThreadHighlightManager {
 
     val highlighter =
         editor.markupModel.addRangeHighlighter(
-            start, end, 0, attributes, HighlighterTargetArea.LINES_IN_RANGE)
+            start, end, THREAD_HIGHLIGHT_LAYER, attributes, HighlighterTargetArea.LINES_IN_RANGE)
 
     lineHighlightersMap.getOrPut(line) { mutableMapOf() }[editor] = highlighter
 

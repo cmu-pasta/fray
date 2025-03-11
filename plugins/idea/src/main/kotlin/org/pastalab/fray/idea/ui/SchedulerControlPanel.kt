@@ -1,7 +1,9 @@
 package org.pastalab.fray.idea.ui
 
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.editor.LogicalPosition
+import com.intellij.openapi.editor.ScrollType
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
@@ -105,6 +107,11 @@ class SchedulerControlPanel(
   fun handleThreadSelection(context: ThreadExecutionContext) {
     selectedThread = context
 
+    for (st in context.threadInfo.stackTraces) {
+      if (navigateToSource(st)) {
+        break
+      }
+    }
     // Update the stack trace view
     myFrameListModel.clear()
     ApplicationManager.getApplication().invokeAndWait {
@@ -123,7 +130,7 @@ class SchedulerControlPanel(
   ) {
     // Update the combo box model
     comboBoxModel.removeAllElements()
-    threads.forEach { threadInfo -> comboBoxModel.addElement(threadInfo) }
+    comboBoxModel.addAll(threads)
 
     // Try to restore previous selection or select the first thread
     if (threads.isNotEmpty()) {
@@ -142,19 +149,20 @@ class SchedulerControlPanel(
   }
 
   /** Navigates to the source code location of the selected stack frame */
-  private fun navigateToSource(frame: StackTraceElement) {
-    val psiFile = frame.getPsiFile(project) ?: return
+  private fun navigateToSource(frame: StackTraceElement): Boolean {
+    val psiFile = frame.getPsiFile(project) ?: return false
     val virtualFile = psiFile.virtualFile
     val editorManager = FileEditorManager.getInstance(project)
-    val editor = editorManager.openFile(virtualFile, true).firstOrNull()
     ApplicationManager.getApplication().invokeLater {
+      val editor = editorManager.openFile(virtualFile, true).firstOrNull()
       if (editor is TextEditor) {
         val lineNumber = frame.lineNumber - 1
         if (lineNumber >= 0 && lineNumber < editor.editor.document.lineCount) {
           editor.editor.caretModel.moveToLogicalPosition(LogicalPosition(lineNumber, 0))
-          (psiFile as? Navigatable)?.navigate(true)
+          editor.editor.scrollingModel.scrollToCaret(ScrollType.CENTER)
         }
       }
     }
+    return true
   }
 }
