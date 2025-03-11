@@ -4,6 +4,20 @@
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 0.3.1 - 2025-03-11
+
+### Added
+
 - Allow the Fray debugger to highlight all lines of a thread that is being executed.
 - Enable click action in the thread stack trace to navigate to the source code.
 - Add translated Deadlock Empire games!
@@ -14,15 +28,9 @@
 - Simplify the `mainExit` logic and introduce `MainExiting` state.
 - Change the z order of highlighting to be on top of the editor.
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 
 - Fix Fray hang when a thread exits but the monitor lock is not released.
-
-### Security
 
 ## 0.3.0 - 2025-03-10
 
