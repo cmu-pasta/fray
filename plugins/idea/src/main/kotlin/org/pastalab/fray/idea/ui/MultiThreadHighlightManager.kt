@@ -2,6 +2,7 @@ package org.pastalab.fray.idea.ui
 
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
@@ -12,7 +13,6 @@ import java.awt.Font
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.idea.ui.Colors.THREAD_DISABLED_COLOR
 import org.pastalab.fray.rmi.ThreadState
-import com.intellij.openapi.editor.markup.HighlighterLayer
 
 class MultiThreadHighlightManager {
   // Map to track highlighters by line
