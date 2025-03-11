@@ -49,19 +49,15 @@ class ThreadTimelinePanel : JPanel(), ScheduleObserver<ThreadExecutionContext> {
     timelineCanvas.repaint()
   }
 
-  fun clearHistory() {
-    threadExecutionHistory.clear()
-    currentTime = 0
-    timelineCanvas.repaint()
-  }
-
   override fun onExecutionStart() {}
 
   override fun onNewSchedule(
       enabledSchedules: List<ThreadExecutionContext>,
       scheduled: ThreadExecutionContext
   ) {
-    newThreadScheduled(scheduled)
+    if (enabledSchedules.size > 1 || threadExecutionHistory.isEmpty()) {
+      newThreadScheduled(scheduled)
+    }
   }
 
   override fun onExecutionDone() {}
@@ -220,12 +216,9 @@ class ThreadTimelinePanel : JPanel(), ScheduleObserver<ThreadExecutionContext> {
           g2d.drawOval(x - eventRadius, y - eventRadius, eventRadius * 2, eventRadius * 2)
         }
 
-        // Optionally show event number
-        if (events.size < 20) {
-          g2d.color = JBColor.foreground()
-          g2d.font = Font(Font.MONOSPACED, Font.PLAIN, 9)
-          g2d.drawString("${index+1}", x - 3, y + eventHeight)
-        }
+        g2d.color = JBColor.foreground()
+        g2d.font = Font(Font.MONOSPACED, Font.PLAIN, 9)
+        g2d.drawString("${index+1}", x - 3, y + eventHeight)
       }
     }
   }

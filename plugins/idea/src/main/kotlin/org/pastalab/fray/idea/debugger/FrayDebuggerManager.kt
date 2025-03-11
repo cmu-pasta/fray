@@ -8,9 +8,9 @@ import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebugSessionListener
 import java.rmi.Remote
 import java.rmi.registry.LocateRegistry
-import java.rmi.registry.Registry
 import java.rmi.server.UnicastRemoteObject
 import org.pastalab.fray.idea.ui.FrayDebugPanel
+import org.pastalab.fray.rmi.Constant
 import org.pastalab.fray.rmi.RemoteScheduler
 import org.pastalab.fray.rmi.ScheduleObserver
 
@@ -49,6 +49,6 @@ class FrayDebuggerManager(val debugSession: XDebugSession) :
   }
 
   companion object {
-    val registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT)
+    val registry = LocateRegistry.createRegistry(Constant.REGISTRY_PORT)
   }
 }

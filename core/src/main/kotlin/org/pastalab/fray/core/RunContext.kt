@@ -34,6 +34,7 @@ import org.pastalab.fray.core.concurrency.primitives.SemaphoreContext
 import org.pastalab.fray.core.concurrency.primitives.SignalContext
 import org.pastalab.fray.core.concurrency.primitives.StampedLockContext
 import org.pastalab.fray.core.concurrency.primitives.WriteLockContext
+import org.pastalab.fray.core.scheduler.FrayIdeaPluginScheduler
 import org.pastalab.fray.core.syncurity.SyncurityEvaluationContext
 import org.pastalab.fray.core.syncurity.SyncurityEvaluationDelegate
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
@@ -281,8 +282,9 @@ class RunContext(val config: Configuration) {
     val context = registeredThreads[t.id]!!
 
     if (!context.unparkSignaled && !context.interruptSignaled) {
-      val supriousWakeup = config.randomnessProvider.nextInt() % 2 == 0
-      if (supriousWakeup) {
+      val spuriousWakeup = config.randomnessProvider.nextInt() % 2 == 0
+      // We only enable spurious wakeup in testing mode.
+      if (spuriousWakeup && config.scheduler !is FrayIdeaPluginScheduler) {
         context.pendingOperation = ThreadResumeOperation(true)
         context.state = ThreadState.Runnable
       } else {
@@ -391,7 +393,7 @@ class RunContext(val config: Configuration) {
     val spuriousWakeup = config.randomnessProvider.nextInt() % 2 == 0
     // This is a spurious wakeup.
     // https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html#wait(long,int)
-    if (spuriousWakeup) {
+    if (spuriousWakeup && config.scheduler !is FrayIdeaPluginScheduler) {
       signalContext.unblockThread(t, InterruptionType.RESOURCE_AVAILABLE)
     }
 

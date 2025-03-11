@@ -1,6 +1,11 @@
 package org.pastalab.fray.idea.ui
 
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.invokeLater
+import com.intellij.openapi.editor.LogicalPosition
+import com.intellij.openapi.editor.ScrollType
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.components.JBLabel
@@ -9,6 +14,8 @@ import com.intellij.ui.components.JBScrollPane
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import javax.swing.DefaultComboBoxModel
 import javax.swing.DefaultListCellRenderer
 import javax.swing.DefaultListModel
@@ -17,6 +24,7 @@ import javax.swing.JLabel
 import javax.swing.JList
 import javax.swing.JPanel
 import javax.swing.ListCellRenderer
+import org.pastalab.fray.idea.getPsiFile
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.rmi.ThreadState
 
@@ -74,6 +82,17 @@ class SchedulerControlPanel(
     myFrameList.cellRenderer = ListCellRenderer { list, value, index, isSelected, cellHasFocus ->
       JBLabel("\t\t$value")
     }
+    myFrameList.addMouseListener(
+        object : MouseAdapter() {
+          override fun mouseClicked(e: MouseEvent) {
+            if (e.clickCount == 2) {
+              val selectedFrame = myFrameList.selectedValue
+              if (selectedFrame != null) {
+                navigateToSource(selectedFrame)
+              }
+            }
+          }
+        })
     val scrollPane = JBScrollPane(myFrameList)
     add(scrollPane, BorderLayout.CENTER)
 
@@ -87,6 +106,11 @@ class SchedulerControlPanel(
   fun handleThreadSelection(context: ThreadExecutionContext) {
     selectedThread = context
 
+    for (st in context.threadInfo.stackTraces) {
+      if (navigateToSource(st)) {
+        break
+      }
+    }
     // Update the stack trace view
     myFrameListModel.clear()
     ApplicationManager.getApplication().invokeAndWait {
@@ -98,12 +122,6 @@ class SchedulerControlPanel(
     onThreadSelected(context)
   }
 
-  /** Select a thread programmatically (e.g., when selected from timeline) */
-  fun selectThread(threadInfo: ThreadExecutionContext) {
-    // Update the combo box selection (this will trigger the action listener)
-    comboBoxModel.selectedItem = threadInfo
-  }
-
   /** Updates the panel with new thread information */
   fun updateThreads(
       threads: List<ThreadExecutionContext>,
@@ -111,7 +129,7 @@ class SchedulerControlPanel(
   ) {
     // Update the combo box model
     comboBoxModel.removeAllElements()
-    threads.forEach { threadInfo -> comboBoxModel.addElement(threadInfo) }
+    comboBoxModel.addAll(threads)
 
     // Try to restore previous selection or select the first thread
     if (threads.isNotEmpty()) {
@@ -127,5 +145,23 @@ class SchedulerControlPanel(
     comboBoxModel.removeAllElements()
     myFrameListModel.clear()
     selectedThread = null
+  }
+
+  /** Navigates to the source code location of the selected stack frame */
+  private fun navigateToSource(frame: StackTraceElement): Boolean {
+    val psiFile = frame.getPsiFile(project) ?: return false
+    val virtualFile = psiFile.virtualFile
+    val editorManager = FileEditorManager.getInstance(project)
+    ApplicationManager.getApplication().invokeLater {
+      val editor = editorManager.openFile(virtualFile, true).firstOrNull()
+      if (editor is TextEditor) {
+        val lineNumber = frame.lineNumber - 1
+        if (lineNumber >= 0 && lineNumber < editor.editor.document.lineCount) {
+          editor.editor.caretModel.moveToLogicalPosition(LogicalPosition(lineNumber, 0))
+          editor.editor.scrollingModel.scrollToCaret(ScrollType.CENTER)
+        }
+      }
+    }
+    return true
   }
 }

@@ -7,10 +7,10 @@ import kotlin.jvm.Throws
 
 enum class ThreadState {
   Runnable,
+  MainExiting,
   Running,
   Blocked,
   Completed,
-  MainExiting,
   Created,
 }
 
