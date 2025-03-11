@@ -5,6 +5,7 @@
 ### Added
 
 - Allow the Fray debugger to highlight all lines of a thread that is being executed.
+- Enable click action in the thread stack trace to navigate to the source code.
 - Add translated Deadlock Empire games!
 
 ### Changed
