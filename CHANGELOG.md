@@ -10,6 +10,8 @@
 
 ### Removed
 
+- Move deadlock empire to a separate repository.
+
 ### Fixed
 
 ### Security
