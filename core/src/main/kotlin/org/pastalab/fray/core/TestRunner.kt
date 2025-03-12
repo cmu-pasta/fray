@@ -1,6 +1,7 @@
 package org.pastalab.fray.core
 
 import java.util.*
+import kotlin.system.exitProcess
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.runtime.Runtime
@@ -31,12 +32,22 @@ class TestRunner(val config: Configuration) {
     config.executionInfo.executor.beforeExecution()
     config.frayLogger.info("Fray started.")
     var bugsFound = 0
+    if (config.noFray) {
+      Thread.setDefaultUncaughtExceptionHandler(
+          object : Thread.UncaughtExceptionHandler {
+            override fun uncaughtException(t: Thread, e: Throwable) {
+              exitProcess(0)
+            }
+          })
+    }
     while (config.shouldRun()) {
       reportProgress(config.currentIteration, bugsFound)
       if (config.noFray) {
         try {
           config.executionInfo.executor.execute()
-        } catch (e: Throwable) {}
+        } catch (e: Throwable) {
+          exitProcess(0)
+        }
       } else {
         try {
           if (config.currentIteration != 0) {
