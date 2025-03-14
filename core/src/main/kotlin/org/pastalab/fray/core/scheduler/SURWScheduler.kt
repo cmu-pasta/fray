@@ -10,18 +10,12 @@ import org.pastalab.fray.core.concurrency.operations.ThreadStartOperation
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
-data class MemoryAccessRecord(
-    val threadId: Int,
-    val locationHashes: MutableSet<Int>,
-    var isInteresting: Boolean = false
-) {}
-
 // See https://dl.acm.org/doi/10.1145/3669940.3707214
 @Serializable
 class SURWScheduler(
     val rand: ControlledRandom,
-    val executionLengths: Map<Int, Int>,
-    val interestingOperations: Set<Int>
+    val executionLengths: MutableMap<Int, Int>,
+    val interestingOperations: MutableSet<Int>
 ) : Scheduler {
   // A mapping between thread id and its weight
   // We should use `ThreadContext.id` instead of `Thread.id` because
@@ -30,13 +24,21 @@ class SURWScheduler(
   @Transient val blocked = mutableSetOf<Int>()
   @Transient var nextIntendedThread = -1
 
+  init {
+    if (rand.nextDouble() < 0.05) {
+      executionLengths.clear()
+      interestingOperations.clear()
+    }
+  }
+
   @Transient val createdThreads = mutableSetOf<Int>()
   @Transient val childThreads = mutableMapOf<Int, MutableSet<Int>>()
 
   // These three fields are only used for the first trial to
   // construct interesting operations map.
-  @Transient val interestingObjectMap = mutableMapOf<Int, MemoryAccessRecord>()
-  @Transient val interestingOperationCache = mutableSetOf<Int>()
+
+  // Mapping from resource ID to thread ID to Location hashes
+  @Transient val interestingObjectMap = mutableMapOf<Int, MutableMap<Int, MutableSet<Int>>>()
   @Transient val threadExecutionLengthCache = mutableMapOf<Int, Int>()
 
   fun updateNextIntendedThread(threads: List<ThreadContext>) {
@@ -131,23 +133,25 @@ class SURWScheduler(
 
   private fun constructInterestingOperation(thread: ThreadContext) {
     val operation = thread.pendingOperation
-    if (operation is MemoryOperation) {
-      if (interestingObjectMap.containsKey(operation.resource)) {
-        val objectRecord = interestingObjectMap[operation.resource]!!
-        if (objectRecord.isInteresting) {
-          interestingOperationCache.add(operation.stackTraceHash)
-        } else if (objectRecord.threadId == thread.index) {
-          objectRecord.locationHashes.add(operation.stackTraceHash)
-        } else {
-          objectRecord.isInteresting = true
-          interestingOperationCache.add(operation.stackTraceHash)
-          interestingOperationCache.addAll(objectRecord.locationHashes)
-        }
-      } else {
-        interestingObjectMap[operation.resource] =
-            MemoryAccessRecord(thread.index, mutableSetOf(operation.stackTraceHash), false)
+    if (operation is MemoryOperation && isInteresting(thread)) {
+      interestingObjectMap
+          .getOrPut(operation.resource) { mutableMapOf() }
+          .getOrPut(thread.index) { mutableSetOf() }
+          .add(operation.stackTraceHash)
+    }
+  }
+
+  private fun isInteresting(thread: ThreadContext): Boolean {
+    for (st in thread.thread.stackTrace.drop(1)) {
+      if (st.className.contains("org.pastalab.fray.core") ||
+          st.className.contains("org.pastalab.fray.runtime")) {
+        continue
+      }
+      if (st.className.contains("java.util.concurrent")) {
+        return false
       }
     }
+    return true
   }
 
   private fun buildThreadWeights(): MutableMap<Int, Int> {
@@ -173,6 +177,13 @@ class SURWScheduler(
     return threadWeights[threadId]!!
   }
 
+  private fun buildInterestingOperations(): MutableSet<Int> {
+    val ops = mutableSetOf<Int>()
+    val entries = interestingObjectMap.filter { it.value.size > 1 }.entries
+    ops.addAll(entries.shuffled().take(20).map { it.value.values.flatten() }.flatten())
+    return ops
+  }
+
   override fun nextIteration(): Scheduler {
     return SURWScheduler(
         ControlledRandom(),
@@ -182,7 +193,7 @@ class SURWScheduler(
           executionLengths
         },
         if (interestingOperations.isEmpty()) {
-          interestingOperationCache
+          buildInterestingOperations()
         } else {
           interestingOperations
         })
