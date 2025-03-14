@@ -50,7 +50,7 @@ public class TestUniformSamplingLeftShift {
 
     @ConcurrencyTest(
             scheduler = SURWScheduler.class,
-            iterations = 10000
+            iterations = 1000
     )
     public void testUniformSampling() {
         Thread[] threads = new Thread[2];

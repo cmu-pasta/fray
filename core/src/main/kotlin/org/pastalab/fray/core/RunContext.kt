@@ -1056,7 +1056,7 @@ class RunContext(val config: Configuration) {
         } else {
           try {
             config.scheduler.scheduleNextOperation(
-                enabledOperations.reversed(), registeredThreads.values.toList(), currentThread)
+                enabledOperations.reversed(), registeredThreads.values.toList())
           } catch (e: Throwable) {
             reportError(e)
             enabledOperations.first()

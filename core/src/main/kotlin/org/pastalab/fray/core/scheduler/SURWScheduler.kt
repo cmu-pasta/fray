@@ -16,7 +16,6 @@ data class MemoryAccessRecord(
     var isInteresting: Boolean = false
 ) {}
 
-
 // See https://dl.acm.org/doi/10.1145/3669940.3707214
 @Serializable
 class SURWScheduler(
