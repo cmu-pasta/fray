@@ -4,6 +4,8 @@
 
 ### Added
 
+- Implement [SURW](https://dl.acm.org/doi/10.1145/3669940.3707214) algorithm
+
 ### Changed
 
 ### Deprecated
