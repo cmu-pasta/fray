@@ -14,6 +14,7 @@ import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.test.fail.thread.ThreadExitDeadlock;
+import org.pastalab.fray.test.success.thread.ThreadInterruptWithReentrantLockUnlock;
 
 import java.util.*;
 
@@ -66,7 +67,7 @@ public class FrayTestCase {
                     new ExecutionInfo(
                             new LambdaExecutor(() -> {
                                 try {
-                                    ThreadExitDeadlock.main(new String[]{});
+                                    ThreadInterruptWithReentrantLockUnlock.main(new String[]{});
                                 } catch (Exception e) {
                                     throw new RuntimeException(e);
                                 }
