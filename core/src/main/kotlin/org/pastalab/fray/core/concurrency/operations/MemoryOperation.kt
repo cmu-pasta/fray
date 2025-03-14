@@ -1,8 +1,7 @@
 package org.pastalab.fray.core.concurrency.operations
 
-class MemoryOperation(obj: Any, type: org.pastalab.fray.runtime.MemoryOpType) :
-    RacingOperation(System.identityHashCode(obj), type) {
-  val name = obj.javaClass.name
+class MemoryOperation(obj: Int, type: org.pastalab.fray.runtime.MemoryOpType) :
+    RacingOperation(obj, type) {
 
   override fun isRacing(op: Operation): Boolean {
     if (op is MemoryOperation) {
@@ -15,6 +14,6 @@ class MemoryOperation(obj: Any, type: org.pastalab.fray.runtime.MemoryOpType) :
   }
 
   override fun toString(): String {
-    return super.toString() + "@$name:$type"
+    return super.toString() + "@$resource:$type"
   }
 }
