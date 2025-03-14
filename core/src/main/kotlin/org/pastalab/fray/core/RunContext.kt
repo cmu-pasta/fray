@@ -35,6 +35,7 @@ import org.pastalab.fray.core.concurrency.primitives.SignalContext
 import org.pastalab.fray.core.concurrency.primitives.StampedLockContext
 import org.pastalab.fray.core.concurrency.primitives.WriteLockContext
 import org.pastalab.fray.core.scheduler.FrayIdeaPluginScheduler
+import org.pastalab.fray.core.scheduler.SURWScheduler
 import org.pastalab.fray.core.syncurity.SyncurityEvaluationContext
 import org.pastalab.fray.core.syncurity.SyncurityEvaluationDelegate
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
@@ -220,7 +221,7 @@ class RunContext(val config: Configuration) {
     bugFound = null
     currentThreadId = t.id
     mainThreadId = t.id
-    registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this)
+    registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this, -1)
     registeredThreads[t.id]?.state = ThreadState.Runnable
     config.scheduleObservers.forEach { it.onExecutionStart() }
     scheduleNextOperation(true)
@@ -252,7 +253,8 @@ class RunContext(val config: Configuration) {
       originalHanlder?.uncaughtException(t, e)
     }
     t.setUncaughtExceptionHandler(handler)
-    registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this)
+    val parentContext = registeredThreads[Thread.currentThread().id]!!
+    registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this, parentContext.index)
   }
 
   fun threadStart(t: Thread) {
@@ -311,7 +313,6 @@ class RunContext(val config: Configuration) {
 
   fun threadRun() {
     var t = Thread.currentThread()
-    registeredThreads[t.id]?.pendingOperation = ThreadStartOperation()
     registeredThreads[t.id]?.state = ThreadState.Runnable
     syncManager.signal(t)
     registeredThreads[t.id]?.block()
@@ -1050,13 +1051,16 @@ class RunContext(val config: Configuration) {
     }
 
     val nextThread =
-        if (enabledOperations.size == 1) {
+        if (enabledOperations.size == 1 && config.scheduler !is SURWScheduler) {
           enabledOperations.first()
         } else {
-          config.scheduler.scheduleNextOperation(
-              enabledOperations,
-              registeredThreads.values.toList(),
-          )
+          try {
+            config.scheduler.scheduleNextOperation(
+                enabledOperations.reversed(), registeredThreads.values.toList())
+          } catch (e: Throwable) {
+            reportError(e)
+            enabledOperations.first()
+          }
         }
     config.scheduleObservers.forEach {
       it.onNewSchedule(enabledOperations.toThreadInfos(), nextThread.toThreadInfo())

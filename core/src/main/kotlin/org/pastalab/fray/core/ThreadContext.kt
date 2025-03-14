@@ -9,7 +9,7 @@ import org.pastalab.fray.core.utils.isFrayInternals
 import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
 
-class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
+class ThreadContext(val thread: Thread, val index: Int, context: RunContext, parentId: Int) {
   val localRandomProbe = context.config.randomnessProvider.nextInt()
   var state = ThreadState.Created
   var unparkSignaled = false
@@ -17,7 +17,7 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext) {
   var isExiting = false
   val acquiredResources = mutableSetOf<Acquirable>()
 
-  var pendingOperation: Operation = ThreadStartOperation()
+  var pendingOperation: Operation = ThreadStartOperation(parentId)
   val sync = Sync(1)
 
   fun block() {

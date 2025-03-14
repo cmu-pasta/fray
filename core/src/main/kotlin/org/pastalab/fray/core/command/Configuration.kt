@@ -145,6 +145,12 @@ class PCT : ScheduleAlgorithm("pct") {
   }
 }
 
+class SURW : ScheduleAlgorithm("surw") {
+  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
+    return Triple(SURWScheduler(), ControlledRandom(), null)
+  }
+}
+
 class MainCommand : CliktCommand() {
   val report by option("-o", "--output", help = "Report output directory.").default("/tmp/report")
   val timeout by
@@ -165,6 +171,7 @@ class MainCommand : CliktCommand() {
               "pos" to POS(),
               "random" to Rand(),
               "pct" to PCT(),
+              "surw" to SURW(),
               "replay" to Replay())
           .defaultByName("random")
   val noFray by option("--no-fray", help = "Runnning in no-Fray mode.").flag()
