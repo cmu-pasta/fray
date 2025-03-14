@@ -653,6 +653,9 @@ class RunContext(val config: Configuration) {
         lockContext.signalContexts.forEach { it.sendSignalToObject() }
       }
       syncManager.createWait(lockContext, waitingThreads)
+    } else {
+      val id = System.identityHashCode(lockContext)
+      verifyOrReport(!syncManager.synchronizationPoints.contains(id))
     }
   }
 

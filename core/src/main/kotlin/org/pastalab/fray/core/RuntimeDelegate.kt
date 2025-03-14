@@ -419,12 +419,13 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       return
     }
     onSkipRecursion.set(true)
-    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
-      onSkipRecursion.set(false)
-      return
-    }
     stackTrace.get().add(signature)
     skipFunctionEntered.set(1 + skipFunctionEntered.get())
+
+    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
+      stackTrace.get().removeLast()
+      skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+    }
     onSkipRecursion.set(false)
   }
 
@@ -502,15 +503,20 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onThreadInterrupt(t: Thread) {
-    if (checkEntered()) return
+    if (checkEntered()) {
+      onSkipMethod("Thread.interrupt")
+      return
+    }
     try {
       context.threadInterrupt(t)
     } finally {
+      onSkipMethod("Thread.interrupt")
       entered.set(false)
     }
   }
 
   override fun onThreadInterruptDone(t: Thread) {
+    onSkipMethodDone("Thread.interrupt")
     if (checkEntered()) return
     context.threadInterruptDone(t)
     entered.set(false)

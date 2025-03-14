@@ -16,6 +16,8 @@
 
 ### Fixed
 
+- Fix Fray hang when security manager is enabled. 
+
 ### Security
 
 ## 0.3.1 - 2025-03-11
