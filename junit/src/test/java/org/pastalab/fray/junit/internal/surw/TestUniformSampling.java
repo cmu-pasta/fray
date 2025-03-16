@@ -72,7 +72,7 @@ public class TestUniformSampling {
 
     @ConcurrencyTest(
             scheduler = SURWScheduler.class,
-            iterations = 1000
+            iterations = 5000
     )
     public void testUniformSampling() {
         Thread[] threads = new Thread[3];

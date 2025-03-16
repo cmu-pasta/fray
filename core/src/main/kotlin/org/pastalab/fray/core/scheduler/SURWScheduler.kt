@@ -24,17 +24,10 @@ class SURWScheduler(
   @Transient val blocked = mutableSetOf<Int>()
   @Transient var nextIntendedThread = -1
 
-  init {
-    if (rand.nextDouble() < 0.05) {
-      executionLengths.clear()
-      interestingOperations.clear()
-    }
-  }
-
   @Transient val createdThreads = mutableSetOf<Int>()
   @Transient val childThreads = mutableMapOf<Int, MutableSet<Int>>()
 
-  // These three fields are only used for the first trial to
+  // These fields are only used for the first trial to
   // construct interesting operations map.
 
   // Mapping from resource ID to thread ID to Location hashes
