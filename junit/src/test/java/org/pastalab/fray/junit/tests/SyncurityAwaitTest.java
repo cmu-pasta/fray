@@ -2,6 +2,7 @@ package org.pastalab.fray.junit.tests;
 
 import org.junit.jupiter.api.Test;
 import org.junit.platform.testkit.engine.EngineTestKit;
+import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlockByFuture;
 import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlockInConditionTest;
 import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlockTest;
 
@@ -56,6 +57,14 @@ public class SyncurityAwaitTest {
                 .haveExactly(1,
                         event(test("testConstraintWithWait"), finishedWithFailure())
                         );
+    }
+
+    @Test
+    public void testSyncurityAwaitDeadlockByFuture() {
+        EngineTestKit
+                .engine("junit-jupiter")
+                .selectors(selectClass(SyncurityAwaitDeadlockByFuture.class))
+                .execute();
     }
 
 }
