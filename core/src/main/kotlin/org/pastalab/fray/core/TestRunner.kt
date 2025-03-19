@@ -1,9 +1,9 @@
-package org.pastalab.fray.core
+package org.anonlab.fray.core
 
 import java.util.*
-import org.pastalab.fray.core.command.Configuration
-import org.pastalab.fray.core.randomness.ControlledRandom
-import org.pastalab.fray.runtime.Runtime
+import org.anonlab.fray.core.command.Configuration
+import org.anonlab.fray.core.randomness.ControlledRandom
+import org.anonlab.fray.runtime.Runtime
 
 class TestRunner(val config: Configuration) {
 

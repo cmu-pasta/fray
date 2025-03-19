@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type

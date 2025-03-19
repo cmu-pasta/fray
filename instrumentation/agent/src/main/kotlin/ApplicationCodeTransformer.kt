@@ -1,17 +1,17 @@
-package org.pastalab.fray.instrumentation.agent
+package org.anonlab.fray.instrumentation.agent
 
 import java.lang.instrument.ClassFileTransformer
 import java.security.ProtectionDomain
+import org.anonlab.fray.instrumentation.base.Configs.DEBUG_MODE
+import org.anonlab.fray.instrumentation.base.Utils.writeClassFile
+import org.anonlab.fray.instrumentation.base.visitors.*
+import org.anonlab.fray.runtime.Runtime
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.util.CheckClassAdapter
-import org.pastalab.fray.instrumentation.base.Configs.DEBUG_MODE
-import org.pastalab.fray.instrumentation.base.Utils.writeClassFile
-import org.pastalab.fray.instrumentation.base.visitors.*
-import org.pastalab.fray.runtime.Runtime
 
 class ApplicationCodeTransformer : ClassFileTransformer {
   override fun transform(
@@ -44,13 +44,13 @@ class ApplicationCodeTransformer : ClassFileTransformer {
         dotClassName.startsWith(
             "com.github.ajalt",
         ) ||
-        (dotClassName.startsWith("org.pastalab.fray") &&
-            !dotClassName.startsWith("org.pastalab.fray.example") &&
-            !dotClassName.startsWith("org.pastalab.fray.benchmark") &&
-            !dotClassName.startsWith("org.pastalab.fray.test") &&
-            !dotClassName.startsWith("org.pastalab.fray.junit.internal") &&
+        (dotClassName.startsWith("org.anonlab.fray") &&
+            !dotClassName.startsWith("org.anonlab.fray.example") &&
+            !dotClassName.startsWith("org.anonlab.fray.benchmark") &&
+            !dotClassName.startsWith("org.anonlab.fray.test") &&
+            !dotClassName.startsWith("org.anonlab.fray.junit.internal") &&
             !dotClassName.startsWith(
-                "org.pastalab.fray.core.test",
+                "org.anonlab.fray.core.test",
             ))) {
       // This is likely a JDK class, so skip transformation
       return classfileBuffer

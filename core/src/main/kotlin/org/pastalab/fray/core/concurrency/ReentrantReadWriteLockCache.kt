@@ -1,10 +1,10 @@
-package org.pastalab.fray.core.concurrency
+package org.anonlab.fray.core.concurrency
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
-import org.pastalab.fray.core.concurrency.primitives.ReferencedContextManager
+import org.anonlab.fray.core.concurrency.primitives.ReferencedContextManager
 
 /**
  * We need a static object to store the [ReadLock] and [WriteLock] because if the lock is created

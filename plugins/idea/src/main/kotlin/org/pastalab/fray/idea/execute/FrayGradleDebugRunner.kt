@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea.execute
+package org.anonlab.fray.idea.execute
 
 import com.intellij.execution.configurations.RunProfile
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemTaskDebugRunner

@@ -1,8 +1,8 @@
-package org.pastalab.fray.core.concurrency.operations
+package org.anonlab.fray.core.concurrency.operations
 
-import org.pastalab.fray.core.concurrency.primitives.CountDownLatchContext
-import org.pastalab.fray.rmi.ResourceInfo
-import org.pastalab.fray.rmi.ResourceType
+import org.anonlab.fray.core.concurrency.primitives.CountDownLatchContext
+import org.anonlab.fray.rmi.ResourceInfo
+import org.anonlab.fray.rmi.ResourceType
 
 class CountDownLatchAwaitBlocking(timed: Boolean, val latchContext: CountDownLatchContext) :
     BlockedOperation(timed, ResourceInfo(latchContext.latchId, ResourceType.CDL)) {

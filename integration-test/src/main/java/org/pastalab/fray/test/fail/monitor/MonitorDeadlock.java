@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.fail.monitor;
+package org.anonlab.fray.test.fail.monitor;
 
 public class MonitorDeadlock {
 

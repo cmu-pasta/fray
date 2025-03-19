@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
@@ -18,7 +18,7 @@ class UnsafeInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, "sun.misc.Unsa
         name == "compareAndSetReference") {
       return MethodEnterVisitor(
           mv,
-          org.pastalab.fray.runtime.Runtime::onUnsafeWriteVolatile,
+          org.anonlab.fray.runtime.Runtime::onUnsafeWriteVolatile,
           access,
           name,
           descriptor,
@@ -45,7 +45,7 @@ class UnsafeInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, "sun.misc.Unsa
         name == "getDoubleVolatile") {
       return MethodEnterVisitor(
           mv,
-          org.pastalab.fray.runtime.Runtime::onUnsafeReadVolatile,
+          org.anonlab.fray.runtime.Runtime::onUnsafeReadVolatile,
           access,
           name,
           descriptor,
@@ -68,7 +68,7 @@ class UnsafeInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, "sun.misc.Unsa
         name == "getAndSetObject") {
       return MethodEnterVisitor(
           mv,
-          org.pastalab.fray.runtime.Runtime::onUnsafeWriteVolatile,
+          org.anonlab.fray.runtime.Runtime::onUnsafeWriteVolatile,
           access,
           name,
           descriptor,

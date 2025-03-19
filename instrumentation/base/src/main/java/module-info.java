@@ -1,8 +1,8 @@
-module org.pastalab.fray.instrumentation.base {
-    exports org.pastalab.fray.instrumentation.base;
-    exports org.pastalab.fray.instrumentation.base.visitors;
-    opens org.pastalab.fray.instrumentation.base;
-    requires org.pastalab.fray.runtime;
+module org.anonlab.fray.instrumentation.base {
+    exports org.anonlab.fray.instrumentation.base;
+    exports org.anonlab.fray.instrumentation.base.visitors;
+    opens org.anonlab.fray.instrumentation.base;
+    requires org.anonlab.fray.runtime;
     requires kotlin.reflect;
     requires org.objectweb.asm;
     requires org.objectweb.asm.tree;

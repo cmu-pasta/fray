@@ -1,6 +1,6 @@
-package org.pastalab.fray.test.fail.intstream;
+package org.anonlab.fray.test.fail.intstream;
 
-import org.pastalab.fray.test.ExpectedException;
+import org.anonlab.fray.test.ExpectedException;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

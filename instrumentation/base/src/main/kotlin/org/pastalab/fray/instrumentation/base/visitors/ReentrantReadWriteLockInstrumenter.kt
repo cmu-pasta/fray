@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import org.objectweb.asm.ClassVisitor
@@ -17,7 +17,7 @@ class ReentrantReadWriteLockInstrumenter(cv: ClassVisitor) :
     if (name == "<init>" && descriptor == "(Z)V") {
       return MethodExitVisitor(
           mv,
-          org.pastalab.fray.runtime.Runtime::onReentrantReadWriteLockInit,
+          org.anonlab.fray.runtime.Runtime::onReentrantReadWriteLockInit,
           access,
           name,
           descriptor,

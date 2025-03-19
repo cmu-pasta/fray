@@ -1,4 +1,4 @@
-package org.pastalab.fray.core.scheduler
+package org.anonlab.fray.core.scheduler
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

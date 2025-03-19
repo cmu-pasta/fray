@@ -1,7 +1,10 @@
-package org.pastalab.fray.instrumentation.base
+package org.anonlab.fray.instrumentation.base
 
 import java.io.File
 import java.io.InputStream
+import org.anonlab.fray.instrumentation.base.Configs.DEBUG_MODE
+import org.anonlab.fray.instrumentation.base.Utils.writeClassFile
+import org.anonlab.fray.instrumentation.base.visitors.*
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
@@ -11,9 +14,6 @@ import org.objectweb.asm.commons.ModuleTargetAttribute
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.ModuleExportNode
 import org.objectweb.asm.util.CheckClassAdapter
-import org.pastalab.fray.instrumentation.base.Configs.DEBUG_MODE
-import org.pastalab.fray.instrumentation.base.Utils.writeClassFile
-import org.pastalab.fray.instrumentation.base.visitors.*
 
 fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
   val byteArray = inputStream.readBytes()
@@ -76,7 +76,7 @@ fun instrumentModuleInfo(inputStream: InputStream, packages: List<String>): Byte
   var attrs =
       mutableListOf(ModuleTargetAttribute(), ModuleResolutionAttribute(), ModuleHashesAttribute())
   cr.accept(cn, attrs.toTypedArray(), 0)
-  cn.module.exports.add(ModuleExportNode("org/pastalab/fray/runtime", 0, null))
+  cn.module.exports.add(ModuleExportNode("org/anonlab/fray/runtime", 0, null))
   cn.module.packages.addAll(packages)
   var cw = ClassWriter(0)
   cn.accept(cw)
@@ -88,7 +88,7 @@ fun instrumentModuleInfo(inputStream: InputStream, packages: List<String>): Byte
 }
 
 /**
- * To run this main method you need to add --patch-module org.pastalab.fray.instrumentation.base=
+ * To run this main method you need to add --patch-module org.anonlab.fray.instrumentation.base=
  * PATH_TO_FRAY/instrumentation/base/build/classes
  */
 fun main(args: Array<String>) {

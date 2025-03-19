@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import java.util.concurrent.locks.LockSupport
 import org.objectweb.asm.ClassVisitor
@@ -18,7 +18,7 @@ class LockSupportInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onThreadPark,
+              org.anonlab.fray.runtime.Runtime::onThreadPark,
               access,
               name,
               descriptor,
@@ -26,7 +26,7 @@ class LockSupportInstrumenter(cv: ClassVisitor) :
               false)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onThreadParkDone,
+          org.anonlab.fray.runtime.Runtime::onThreadParkDone,
           access,
           name,
           descriptor,
@@ -38,7 +38,7 @@ class LockSupportInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onThreadUnpark,
+              org.anonlab.fray.runtime.Runtime::onThreadUnpark,
               access,
               name,
               descriptor,
@@ -46,7 +46,7 @@ class LockSupportInstrumenter(cv: ClassVisitor) :
               true)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onThreadUnparkDone,
+          org.anonlab.fray.runtime.Runtime::onThreadUnparkDone,
           access,
           name,
           descriptor,

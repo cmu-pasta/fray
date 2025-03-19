@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea
+package org.anonlab.fray.idea
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.NonNls

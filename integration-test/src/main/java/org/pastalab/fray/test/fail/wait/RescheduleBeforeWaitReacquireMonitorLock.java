@@ -1,6 +1,6 @@
-package org.pastalab.fray.test.fail.wait;
+package org.anonlab.fray.test.fail.wait;
 
-import org.pastalab.fray.test.ExpectedException;
+import org.anonlab.fray.test.ExpectedException;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;

@@ -3,5 +3,5 @@ plugins {
 }
 
 subprojects {
-  group = "org.pastalab.fray.instrumentation"
+  group = "org.anonlab.fray.instrumentation"
 }

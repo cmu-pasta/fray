@@ -1,7 +1,7 @@
-package org.pastalab.fray.core.syncurity
+package org.anonlab.fray.core.syncurity
 
 import java.util.concurrent.CountDownLatch
-import org.pastalab.fray.core.RunContext
+import org.anonlab.fray.core.RunContext
 
 class SyncurityEvaluationContext(val runContext: RunContext) {
   fun latchAwait(latch: CountDownLatch) {

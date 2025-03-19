@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.ASM9
@@ -55,9 +55,9 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
         dup()
         super.visitMethodInsn(
             Opcodes.INVOKESTATIC,
-            org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-            org.pastalab.fray.runtime.Runtime::onMonitorEnter.name,
-            Utils.kFunctionToJvmMethodDescriptor(org.pastalab.fray.runtime.Runtime::onMonitorEnter),
+            org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+            org.anonlab.fray.runtime.Runtime::onMonitorEnter.name,
+            Utils.kFunctionToJvmMethodDescriptor(org.anonlab.fray.runtime.Runtime::onMonitorEnter),
             false)
         visitLabel(enterLabel)
         visitInsn(MONITORENTER)
@@ -73,17 +73,17 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
         dup()
         super.visitMethodInsn(
             Opcodes.INVOKESTATIC,
-            org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-            org.pastalab.fray.runtime.Runtime::onMonitorExit.name,
-            Utils.kFunctionToJvmMethodDescriptor(org.pastalab.fray.runtime.Runtime::onMonitorExit),
+            org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+            org.anonlab.fray.runtime.Runtime::onMonitorExit.name,
+            Utils.kFunctionToJvmMethodDescriptor(org.anonlab.fray.runtime.Runtime::onMonitorExit),
             false)
         visitInsn(MONITOREXIT)
         super.visitMethodInsn(
             Opcodes.INVOKESTATIC,
-            org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-            org.pastalab.fray.runtime.Runtime::onMonitorExitDone.name,
+            org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+            org.anonlab.fray.runtime.Runtime::onMonitorExitDone.name,
             Utils.kFunctionToJvmMethodDescriptor(
-                org.pastalab.fray.runtime.Runtime::onMonitorExitDone),
+                org.anonlab.fray.runtime.Runtime::onMonitorExitDone),
             false)
       }
 

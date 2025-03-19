@@ -17,13 +17,13 @@ tasks.test {
 }
 
 gradlePlugin {
-  website = "https://github.com/cmu-pasta/fray"
-  vcsUrl = "https://github.com/cmu-pasta/fray"
+  website = "https://github.com/anon/fray"
+  vcsUrl = "https://github.com/anon/fray"
   plugins {
     create("fray") {
-      id = "org.pastalab.fray.gradle"
+      id = "org.anonlab.fray.gradle"
       displayName = "Fray Gradle Plugin"
-      implementationClass = "org.pastalab.fray.gradle.FrayPlugin"
+      implementationClass = "org.anonlab.fray.gradle.FrayPlugin"
       description = "Fray gradle plugin to test concurrency programs."
       tags = listOf("fray", "testing", "concurrency")
     }

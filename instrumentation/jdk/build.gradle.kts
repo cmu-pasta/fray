@@ -20,14 +20,14 @@ tasks.test {
 tasks.compileJava {
     options.compilerArgumentProviders.add(CommandLineArgumentProvider {
         // Provide compiled Kotlin classes to javac – needed for Java/Kotlin mixed sources to work
-        listOf("--patch-module", "org.pastalab.fray.instrumentation.jdk=${sourceSets["main"].output
+        listOf("--patch-module", "org.anonlab.fray.instrumentation.jdk=${sourceSets["main"].output
             .asPath}")
     })
 }
 
 tasks.jar {
     manifest {
-        attributes(mapOf("Premain-Class" to "org.pastalab.fray.instrumentation.jdk.agent.AgentKt"))
+        attributes(mapOf("Premain-Class" to "org.anonlab.fray.instrumentation.jdk.agent.AgentKt"))
     }
     dependsOn("copyDependencies")
 }
@@ -50,7 +50,7 @@ tasks.build {
             ?.joinToString(separator = ":") { it.absolutePath }
           ?: "No JAR files found."
         val command = listOf("jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars:$runtimeJar",
-            "-J--add-modules=org.pastalab.fray.instrumentation.jdk",
+            "-J--add-modules=org.anonlab.fray.instrumentation.jdk",
             "-J-Dfray.debug=true",
             "-J--class-path=$jars:$runtimeJar",
             "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH",  "--fray-instrumentation")

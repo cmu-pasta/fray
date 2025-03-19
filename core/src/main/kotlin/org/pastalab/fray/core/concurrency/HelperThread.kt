@@ -1,6 +1,6 @@
-package org.pastalab.fray.core.concurrency
+package org.anonlab.fray.core.concurrency
 
-import org.pastalab.fray.core.utils.Utils
+import org.anonlab.fray.core.utils.Utils
 
 class HelperThread : Thread("fray-helper-thread") {
   var shouldStop = false

@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea.ui
+package org.anonlab.fray.idea.ui
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.invokeLater
@@ -24,9 +24,9 @@ import javax.swing.JLabel
 import javax.swing.JList
 import javax.swing.JPanel
 import javax.swing.ListCellRenderer
-import org.pastalab.fray.idea.getPsiFile
-import org.pastalab.fray.idea.objects.ThreadExecutionContext
-import org.pastalab.fray.rmi.ThreadState
+import org.anonlab.fray.idea.getPsiFile
+import org.anonlab.fray.idea.objects.ThreadExecutionContext
+import org.anonlab.fray.rmi.ThreadState
 
 /** Panel that contains the thread selector, stack trace viewer, and scheduling controls. */
 class SchedulerControlPanel(

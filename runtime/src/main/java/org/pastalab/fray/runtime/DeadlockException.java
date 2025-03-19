@@ -1,4 +1,4 @@
-package org.pastalab.fray.runtime;
+package org.anonlab.fray.runtime;
 
 public class DeadlockException extends TargetTerminateException {
 }

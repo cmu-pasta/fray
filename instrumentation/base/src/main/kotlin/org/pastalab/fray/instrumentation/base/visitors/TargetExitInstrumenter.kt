@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
@@ -25,9 +25,9 @@ class TargetExitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
         if (owner == System::class.java.name.replace(".", "/") && name == "exit") {
           super.visitMethodInsn(
               Opcodes.INVOKESTATIC,
-              org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-              org.pastalab.fray.runtime.Runtime::onExit.name,
-              Utils.kFunctionToJvmMethodDescriptor(org.pastalab.fray.runtime.Runtime::onExit),
+              org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+              org.anonlab.fray.runtime.Runtime::onExit.name,
+              Utils.kFunctionToJvmMethodDescriptor(org.anonlab.fray.runtime.Runtime::onExit),
               false)
         } else {
           super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)

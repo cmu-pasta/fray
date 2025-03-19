@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.success.condition;
+package org.anonlab.fray.test.success.condition;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;

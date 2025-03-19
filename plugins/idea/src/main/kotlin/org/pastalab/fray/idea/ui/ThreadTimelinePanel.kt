@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea.ui
+package org.anonlab.fray.idea.ui
 
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBScrollPane
@@ -13,8 +13,8 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionAdapter
 import javax.swing.JPanel
 import javax.swing.ToolTipManager
-import org.pastalab.fray.idea.objects.ThreadExecutionContext
-import org.pastalab.fray.rmi.ScheduleObserver
+import org.anonlab.fray.idea.objects.ThreadExecutionContext
+import org.anonlab.fray.rmi.ScheduleObserver
 
 data class ThreadExecutionHistory(
     var threadName: String,

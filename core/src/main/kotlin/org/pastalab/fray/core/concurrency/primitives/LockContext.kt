@@ -1,10 +1,10 @@
-package org.pastalab.fray.core.concurrency.primitives
+package org.anonlab.fray.core.concurrency.primitives
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.locks.Lock
-import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.rmi.ResourceInfo
-import org.pastalab.fray.rmi.ResourceType
+import org.anonlab.fray.core.ThreadContext
+import org.anonlab.fray.rmi.ResourceInfo
+import org.anonlab.fray.rmi.ResourceType
 
 abstract class LockContext(lock: Any) :
     InterruptibleContext,

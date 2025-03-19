@@ -1,4 +1,4 @@
-package org.pastalab.fray.core.syncurity
+package org.anonlab.fray.core.syncurity
 
 class AbortEvaluationException : RuntimeException {
   constructor() : super()

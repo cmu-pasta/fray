@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.success.lock;
+package org.anonlab.fray.test.success.lock;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;

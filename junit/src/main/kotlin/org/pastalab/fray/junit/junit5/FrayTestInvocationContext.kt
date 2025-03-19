@@ -1,8 +1,8 @@
-package org.pastalab.fray.junit.junit5
+package org.anonlab.fray.junit.junit5
 
+import org.anonlab.fray.core.RunContext
 import org.junit.jupiter.api.extension.Extension
 import org.junit.jupiter.api.extension.TestTemplateInvocationContext
-import org.pastalab.fray.core.RunContext
 
 class FrayTestInvocationContext(
     val index: Int,

@@ -1,10 +1,10 @@
-package org.pastalab.fray.core.debugger
+package org.anonlab.fray.core.debugger
 
 import java.rmi.registry.LocateRegistry
-import org.pastalab.fray.rmi.Constant
-import org.pastalab.fray.rmi.RemoteScheduler
-import org.pastalab.fray.rmi.ScheduleObserver
-import org.pastalab.fray.rmi.ThreadInfo
+import org.anonlab.fray.rmi.Constant
+import org.anonlab.fray.rmi.RemoteScheduler
+import org.anonlab.fray.rmi.ScheduleObserver
+import org.anonlab.fray.rmi.ThreadInfo
 
 object DebuggerRegistry {
   val registry = LocateRegistry.getRegistry("localhost", Constant.REGISTRY_PORT)

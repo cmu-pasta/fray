@@ -3,7 +3,7 @@ plugins {
   id("org.gradlex.maven-plugin-development") version "1.0.2"
 }
 
-group = "org.pastalab.fray.maven"
+group = "org.anonlab.fray.maven"
 
 repositories {
   mavenCentral()
@@ -22,8 +22,8 @@ dependencies {
   implementation(project(":instrumentation:jdk"))
   implementation(project(":plugins:base", configuration = "shadow"))
   implementation(project(":instrumentation:agent", configuration = "shadow"))
-  implementation("org.pastalab.fray:fray-jvmti-linux-x86-64:0.2.0")
-  implementation("org.pastalab.fray:fray-jvmti-macos-aarch64:0.2.0")
+  // implementation("org.anonlab.fray:fray-jvmti-linux-x86-64:0.2.0")
+  // implementation("org.anonlab.fray:fray-jvmti-macos-aarch64:0.2.0")
 }
 
 tasks.test {

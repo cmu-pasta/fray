@@ -1,6 +1,8 @@
-package org.pastalab.fray.maven
+package org.anonlab.fray.maven
 
 import java.io.File
+import org.anonlab.fray.plugins.base.FrayVersion
+import org.anonlab.fray.plugins.base.FrayWorkspaceInitializer
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
@@ -9,8 +11,6 @@ import org.apache.maven.plugins.annotations.Mojo
 import org.apache.maven.plugins.annotations.Parameter
 import org.apache.maven.plugins.annotations.ResolutionScope
 import org.apache.maven.project.MavenProject
-import org.pastalab.fray.plugins.base.FrayVersion
-import org.pastalab.fray.plugins.base.FrayWorkspaceInitializer
 
 @Mojo(
     name = "prepare-fray",
@@ -34,8 +34,7 @@ class PrepareFrayMojo : AbstractMojo() {
     val reportPath = destFile.absolutePath + "/fray-report"
 
     val jlinkJar =
-        pluginArtifactMap!!["org.pastalab.fray" + ".instrumentation:fray-instrumentation-jdk"]!!
-            .file
+        pluginArtifactMap!!["org.anonlab.fray" + ".instrumentation:fray-instrumentation-jdk"]!!.file
     val jlinkDependencies =
         pluginArtifactMap.values
             .filter {
@@ -69,8 +68,7 @@ class PrepareFrayMojo : AbstractMojo() {
   }
 
   fun getAgentJarFile(): File {
-    return pluginArtifactMap!!["org.pastalab.fray.instrumentation:fray-instrumentation-agent"]!!
-        .file
+    return pluginArtifactMap!!["org.anonlab.fray.instrumentation:fray-instrumentation-agent"]!!.file
   }
 
   fun getJvmtiJarFile(): File {
@@ -83,6 +81,6 @@ class PrepareFrayMojo : AbstractMojo() {
         }
 
     val arch = System.getProperty("os.arch")
-    return pluginArtifactMap!!["org.pastalab.fray:fray-jvmti-$os-$arch"]!!.file
+    return pluginArtifactMap!!["org.anonlab.fray:fray-jvmti-$os-$arch"]!!.file
   }
 }

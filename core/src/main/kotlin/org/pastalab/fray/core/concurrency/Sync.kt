@@ -1,6 +1,6 @@
-package org.pastalab.fray.core.concurrency
+package org.anonlab.fray.core.concurrency
 
-import org.pastalab.fray.core.utils.Utils.verifyOrReport
+import org.anonlab.fray.core.utils.Utils.verifyOrReport
 
 // Simple sync structure to block a thread and wait
 // for signals.

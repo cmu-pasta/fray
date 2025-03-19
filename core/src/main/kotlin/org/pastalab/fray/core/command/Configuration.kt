@@ -1,4 +1,4 @@
-package org.pastalab.fray.core.command
+package org.anonlab.fray.core.command
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
@@ -22,15 +22,15 @@ import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import org.pastalab.fray.core.debugger.DebuggerRegistry
-import org.pastalab.fray.core.logger.FrayLogger
-import org.pastalab.fray.core.observers.ScheduleRecorder
-import org.pastalab.fray.core.observers.ScheduleRecording
-import org.pastalab.fray.core.observers.ScheduleVerifier
-import org.pastalab.fray.core.randomness.ControlledRandom
-import org.pastalab.fray.core.scheduler.*
-import org.pastalab.fray.rmi.ScheduleObserver
-import org.pastalab.fray.rmi.ThreadInfo
+import org.anonlab.fray.core.debugger.DebuggerRegistry
+import org.anonlab.fray.core.logger.FrayLogger
+import org.anonlab.fray.core.observers.ScheduleRecorder
+import org.anonlab.fray.core.observers.ScheduleRecording
+import org.anonlab.fray.core.observers.ScheduleVerifier
+import org.anonlab.fray.core.randomness.ControlledRandom
+import org.anonlab.fray.core.scheduler.*
+import org.anonlab.fray.rmi.ScheduleObserver
+import org.anonlab.fray.rmi.ThreadInfo
 
 @Serializable
 data class ExecutionInfo(

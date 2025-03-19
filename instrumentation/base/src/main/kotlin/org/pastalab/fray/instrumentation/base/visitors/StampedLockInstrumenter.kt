@@ -1,8 +1,8 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
+import org.anonlab.fray.runtime.Runtime
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
-import org.pastalab.fray.runtime.Runtime
 
 class StampedLockInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(cv, "java/util/concurrent/locks/StampedLock") {
@@ -21,7 +21,7 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onStampedLockWriteLock,
+              org.anonlab.fray.runtime.Runtime::onStampedLockWriteLock,
               access,
               name,
               descriptor,
@@ -29,7 +29,7 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
               false)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onStampedLockSkipDone,
+          org.anonlab.fray.runtime.Runtime::onStampedLockSkipDone,
           access,
           name,
           descriptor,
@@ -41,7 +41,7 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onStampedLockReadLock,
+              org.anonlab.fray.runtime.Runtime::onStampedLockReadLock,
               access,
               name,
               descriptor,
@@ -49,7 +49,7 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
               false)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onStampedLockSkipDone,
+          org.anonlab.fray.runtime.Runtime::onStampedLockSkipDone,
           access,
           name,
           descriptor,

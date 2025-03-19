@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.memory
+package org.anonlab.fray.instrumentation.base.memory
 
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier

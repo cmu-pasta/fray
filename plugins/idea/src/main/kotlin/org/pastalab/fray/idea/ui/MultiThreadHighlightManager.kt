@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea.ui
+package org.anonlab.fray.idea.ui
 
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
@@ -10,9 +10,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import java.awt.Color
 import java.awt.Font
-import org.pastalab.fray.idea.objects.ThreadExecutionContext
-import org.pastalab.fray.idea.ui.Colors.THREAD_DISABLED_COLOR
-import org.pastalab.fray.rmi.ThreadState
+import org.anonlab.fray.idea.objects.ThreadExecutionContext
+import org.anonlab.fray.idea.ui.Colors.THREAD_DISABLED_COLOR
+import org.anonlab.fray.rmi.ThreadState
 
 class MultiThreadHighlightManager {
   // Map to track highlighters by line

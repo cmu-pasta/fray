@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.success.semaphore;
+package org.anonlab.fray.test.success.semaphore;
 
 import java.util.concurrent.Semaphore;
 

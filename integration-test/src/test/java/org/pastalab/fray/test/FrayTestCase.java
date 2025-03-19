@@ -1,20 +1,20 @@
-package org.pastalab.fray.test;
+package org.anonlab.fray.test;
 
 import io.github.classgraph.ClassGraph;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
-import org.pastalab.fray.core.FrayInternalError;
-import org.pastalab.fray.core.TestRunner;
-import org.pastalab.fray.core.command.Configuration;
-import org.pastalab.fray.core.command.ExecutionInfo;
-import org.pastalab.fray.core.command.LambdaExecutor;
-import org.pastalab.fray.core.command.MethodExecutor;
-import org.pastalab.fray.core.randomness.ControlledRandom;
-import org.pastalab.fray.core.scheduler.PCTScheduler;
-import org.pastalab.fray.core.scheduler.POSScheduler;
-import org.pastalab.fray.test.fail.thread.ThreadExitDeadlock;
-import org.pastalab.fray.test.success.thread.ThreadInterruptWithReentrantLockUnlock;
+import org.anonlab.fray.core.FrayInternalError;
+import org.anonlab.fray.core.TestRunner;
+import org.anonlab.fray.core.command.Configuration;
+import org.anonlab.fray.core.command.ExecutionInfo;
+import org.anonlab.fray.core.command.LambdaExecutor;
+import org.anonlab.fray.core.command.MethodExecutor;
+import org.anonlab.fray.core.randomness.ControlledRandom;
+import org.anonlab.fray.core.scheduler.PCTScheduler;
+import org.anonlab.fray.core.scheduler.POSScheduler;
+import org.anonlab.fray.test.fail.thread.ThreadExitDeadlock;
+import org.anonlab.fray.test.success.thread.ThreadInterruptWithReentrantLockUnlock;
 
 import java.util.*;
 
@@ -96,7 +96,7 @@ public class FrayTestCase {
     @TestFactory
     public List<DynamicTest> testCases() {
         List<DynamicTest> tests = new ArrayList<>();
-        new ClassGraph().acceptPackages("org.pastalab.fray.test").scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
+        new ClassGraph().acceptPackages("org.anonlab.fray.test").scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
             String name = classInfo.getName();
             boolean shouldFail = true;
             if (name.contains("fail")) {

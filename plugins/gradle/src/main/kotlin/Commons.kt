@@ -1,4 +1,4 @@
-package org.pastalab.fray.gradle
+package org.anonlab.fray.gradle
 
 object Commons {
   val DIR_BASE = "fray"

@@ -1,3 +1,3 @@
-module org.pastalab.fray.runtime {
-    exports org.pastalab.fray.runtime;
+module org.anonlab.fray.runtime {
+    exports org.anonlab.fray.runtime;
 }

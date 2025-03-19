@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import kotlin.reflect.KFunction
 import org.objectweb.asm.MethodVisitor
@@ -26,7 +26,7 @@ class MethodEnterVisitor(
     }
     preCustomizer(this)
     invokeStatic(
-        Type.getObjectType(org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+        Type.getObjectType(org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
         Utils.kFunctionToASMMethod(method),
     )
     postCustomizer(this)

@@ -1,10 +1,10 @@
-package org.pastalab.fray.core.observers
+package org.anonlab.fray.core.observers
 
 import java.io.File
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.pastalab.fray.rmi.ScheduleObserver
-import org.pastalab.fray.rmi.ThreadInfo
+import org.anonlab.fray.rmi.ScheduleObserver
+import org.anonlab.fray.rmi.ThreadInfo
 
 class ScheduleRecorder : ScheduleObserver<ThreadInfo> {
   val recordings = mutableListOf<ScheduleRecording>()
@@ -17,7 +17,7 @@ class ScheduleRecorder : ScheduleObserver<ThreadInfo> {
     var count = 0
     var operation = ""
     for (st in scheduled.stackTraces) {
-      if (st.className.startsWith("org.pastalab.fray")) {
+      if (st.className.startsWith("org.anonlab.fray")) {
         continue
       }
       operation += "@${st.className}.${st.methodName},"

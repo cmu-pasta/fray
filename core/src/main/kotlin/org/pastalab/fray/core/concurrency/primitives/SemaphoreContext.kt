@@ -1,12 +1,12 @@
-package org.pastalab.fray.core.concurrency.primitives
+package org.anonlab.fray.core.concurrency.primitives
 
 import java.util.concurrent.Semaphore
-import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.core.concurrency.operations.InterruptionType
-import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
-import org.pastalab.fray.rmi.ResourceInfo
-import org.pastalab.fray.rmi.ResourceType
-import org.pastalab.fray.rmi.ThreadState
+import org.anonlab.fray.core.ThreadContext
+import org.anonlab.fray.core.concurrency.operations.InterruptionType
+import org.anonlab.fray.core.concurrency.operations.ThreadResumeOperation
+import org.anonlab.fray.rmi.ResourceInfo
+import org.anonlab.fray.rmi.ResourceType
+import org.anonlab.fray.rmi.ThreadState
 
 class SemaphoreContext(var totalPermits: Int, semaphore: Semaphore) :
     InterruptibleContext,

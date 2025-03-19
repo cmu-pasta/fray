@@ -30,7 +30,7 @@ tasks.test {
     includeEngines("junit-jupiter")
   }
   dependsOn(":instrumentation:jdk:build")
-  exclude("org/pastalab/fray/junit/internal/**")
+  exclude("org/anonlab/fray/junit/internal/**")
   val instrumentationTask = evaluationDependsOn(":instrumentation:agent")
       .tasks.named("shadowJar").get()
   val jdk = project(":instrumentation:jdk")
@@ -65,7 +65,7 @@ tasks.withType<JavaExec> {
   val instrumentation = instrumentationTask.outputs.files.first().absolutePath
   classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
   executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
-  mainClass = "org.pastalab.fray.core.MainKt"
+  mainClass = "org.anonlab.fray.core.MainKt"
   jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
   jvmArgs("-javaagent:$instrumentation")
   jvmArgs("-ea")

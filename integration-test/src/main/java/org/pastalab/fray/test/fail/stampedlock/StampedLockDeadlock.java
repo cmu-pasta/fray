@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.fail.stampedlock;
+package org.anonlab.fray.test.fail.stampedlock;
 
 import java.util.concurrent.locks.StampedLock;
 

@@ -1,4 +1,4 @@
-package org.pastalab.fray.rmi
+package org.anonlab.fray.rmi
 
 import java.rmi.Remote
 import java.rmi.RemoteException

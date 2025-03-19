@@ -1,13 +1,13 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.ForkJoinTask
+import org.anonlab.fray.runtime.Runtime
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
-import org.pastalab.fray.runtime.Runtime
 
 class ForkJoinPoolInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(cv, ForkJoinPool::class.java.name, ForkJoinTask::class.java.name) {
@@ -26,7 +26,7 @@ class ForkJoinPoolInstrumenter(cv: ClassVisitor) :
           if (opcode == GETSTATIC && name == "common") {
             invokeStatic(
                 Type.getObjectType(
-                    org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+                    org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
                 Utils.kFunctionToASMMethod(Runtime::onForkJoinPoolCommonPool))
             return
           }

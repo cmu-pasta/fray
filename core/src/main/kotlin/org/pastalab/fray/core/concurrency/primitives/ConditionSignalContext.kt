@@ -1,13 +1,13 @@
-package org.pastalab.fray.core.concurrency.primitives
+package org.anonlab.fray.core.concurrency.primitives
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
-import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.core.concurrency.operations.ConditionAwaitBlocked
-import org.pastalab.fray.core.concurrency.operations.ConditionWakeBlocked
-import org.pastalab.fray.core.concurrency.operations.InterruptionType
-import org.pastalab.fray.rmi.ThreadState
+import org.anonlab.fray.core.ThreadContext
+import org.anonlab.fray.core.concurrency.operations.ConditionAwaitBlocked
+import org.anonlab.fray.core.concurrency.operations.ConditionWakeBlocked
+import org.anonlab.fray.core.concurrency.operations.InterruptionType
+import org.anonlab.fray.rmi.ThreadState
 
 class ConditionSignalContext(lockContext: LockContext, condition: Condition) :
     SignalContext(lockContext) {

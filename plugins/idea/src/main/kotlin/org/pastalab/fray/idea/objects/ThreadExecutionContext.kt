@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea.objects
+package org.anonlab.fray.idea.objects
 
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.runReadAction
@@ -10,10 +10,10 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.util.ClassUtil
 import java.awt.Color
 import javax.swing.Icon
-import org.pastalab.fray.idea.ui.Colors.THREAD_DISABLED_COLOR
-import org.pastalab.fray.idea.ui.Colors.THREAD_ENABLED_COLOR
-import org.pastalab.fray.rmi.ThreadInfo
-import org.pastalab.fray.rmi.ThreadState
+import org.anonlab.fray.idea.ui.Colors.THREAD_DISABLED_COLOR
+import org.anonlab.fray.idea.ui.Colors.THREAD_ENABLED_COLOR
+import org.anonlab.fray.rmi.ThreadInfo
+import org.anonlab.fray.rmi.ThreadState
 
 class ThreadExecutionContext(val threadInfo: ThreadInfo, project: Project) {
   var document: Document? = null

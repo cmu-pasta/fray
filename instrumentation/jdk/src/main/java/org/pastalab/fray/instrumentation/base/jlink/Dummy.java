@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.jlink;
+package org.anonlab.fray.instrumentation.base.jlink;
 
 public class Dummy {
 }

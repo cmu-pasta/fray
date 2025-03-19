@@ -1,6 +1,6 @@
-package org.pastalab.fray.test.fail.wait;
+package org.anonlab.fray.test.fail.wait;
 
-import org.pastalab.fray.test.ExpectedException;
+import org.anonlab.fray.test.ExpectedException;
 
 public class WaitWithoutMonitorLock {
     public static void main(String[] args) {

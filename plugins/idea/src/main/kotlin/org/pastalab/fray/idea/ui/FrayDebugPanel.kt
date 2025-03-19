@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea.ui
+package org.anonlab.fray.idea.ui
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
@@ -8,10 +8,10 @@ import com.intellij.openapi.project.Project
 import java.awt.BorderLayout
 import javax.swing.JPanel
 import javax.swing.JSplitPane
-import org.pastalab.fray.idea.debugger.FrayScheduleObserver
-import org.pastalab.fray.idea.getPsiFile
-import org.pastalab.fray.idea.objects.ThreadExecutionContext
-import org.pastalab.fray.rmi.ThreadState
+import org.anonlab.fray.idea.debugger.FrayScheduleObserver
+import org.anonlab.fray.idea.getPsiFile
+import org.anonlab.fray.idea.objects.ThreadExecutionContext
+import org.anonlab.fray.rmi.ThreadState
 
 class FrayDebugPanel(val project: Project, val scheduleObserver: FrayScheduleObserver) : JPanel() {
   // UI Components

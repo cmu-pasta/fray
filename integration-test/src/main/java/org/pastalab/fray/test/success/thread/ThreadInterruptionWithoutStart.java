@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.success.thread;
+package org.anonlab.fray.test.success.thread;
 
 public class ThreadInterruptionWithoutStart {
 

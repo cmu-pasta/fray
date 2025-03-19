@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.success.cdl;
+package org.anonlab.fray.test.success.cdl;
 
 import java.util.concurrent.TimeUnit;
 

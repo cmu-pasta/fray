@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea
+package org.anonlab.fray.idea
 
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
 

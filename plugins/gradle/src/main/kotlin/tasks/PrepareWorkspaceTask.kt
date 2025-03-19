@@ -1,15 +1,15 @@
-package org.pastalab.fray.gradle.tasks
+package org.anonlab.fray.gradle.tasks
 
 import java.io.File
 import kotlin.io.path.Path
+import org.anonlab.fray.gradle.Commons
+import org.anonlab.fray.plugins.base.FrayWorkspaceInitializer
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
-import org.pastalab.fray.gradle.Commons
-import org.pastalab.fray.plugins.base.FrayWorkspaceInitializer
 
 abstract class PrepareWorkspaceTask : DefaultTask() {
 

@@ -1,10 +1,10 @@
-package org.pastalab.fray.junit.internal.surw;
+package org.anonlab.fray.junit.internal.surw;
 
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.pastalab.fray.core.scheduler.RandomScheduler;
-import org.pastalab.fray.core.scheduler.SURWScheduler;
-import org.pastalab.fray.junit.junit5.FrayTestExtension;
-import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
+import org.anonlab.fray.core.scheduler.RandomScheduler;
+import org.anonlab.fray.core.scheduler.SURWScheduler;
+import org.anonlab.fray.junit.junit5.FrayTestExtension;
+import org.anonlab.fray.junit.junit5.annotations.ConcurrencyTest;
 
 import java.util.ArrayList;
 import java.util.HashMap;

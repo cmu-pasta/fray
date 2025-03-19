@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea.ui
+package org.anonlab.fray.idea.ui
 
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.util.IconLoader
@@ -10,7 +10,7 @@ import javax.swing.*
 import kotlin.collections.fill
 import kotlin.inc
 import kotlin.toString
-import org.pastalab.fray.idea.objects.ThreadExecutionContext
+import org.anonlab.fray.idea.objects.ThreadExecutionContext
 
 class ThreadResourcePanel : JPanel() {
   private var threadInfos = emptyList<ThreadExecutionContext>()

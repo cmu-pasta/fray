@@ -1,9 +1,9 @@
-package org.pastalab.fray.junit.junit5.annotations
+package org.anonlab.fray.junit.junit5.annotations
 
 import kotlin.reflect.KClass
+import org.anonlab.fray.core.scheduler.POSScheduler
+import org.anonlab.fray.core.scheduler.Scheduler
 import org.junit.jupiter.api.TestTemplate
-import org.pastalab.fray.core.scheduler.POSScheduler
-import org.pastalab.fray.core.scheduler.Scheduler
 
 @Target(
     AnnotationTarget.ANNOTATION_CLASS,

@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
@@ -28,15 +28,15 @@ class AtomicGetInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
             name == "get" &&
             descriptor.startsWith("()")) {
           dup()
-          val type = org.pastalab.fray.runtime.MemoryOpType::class.java.name.replace(".", "/")
+          val type = org.anonlab.fray.runtime.MemoryOpType::class.java.name.replace(".", "/")
           visitFieldInsn(
-              GETSTATIC, type, org.pastalab.fray.runtime.MemoryOpType.MEMORY_READ.name, "L$type;")
+              GETSTATIC, type, org.anonlab.fray.runtime.MemoryOpType.MEMORY_READ.name, "L$type;")
           visitMethodInsn(
               INVOKESTATIC,
-              org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-              org.pastalab.fray.runtime.Runtime::onAtomicOperation.name,
+              org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+              org.anonlab.fray.runtime.Runtime::onAtomicOperation.name,
               Utils.kFunctionToJvmMethodDescriptor(
-                  org.pastalab.fray.runtime.Runtime::onAtomicOperation),
+                  org.anonlab.fray.runtime.Runtime::onAtomicOperation),
               false)
         }
         super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)

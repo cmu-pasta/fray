@@ -1,14 +1,14 @@
-package org.pastalab.fray.junit.junit5
+package org.anonlab.fray.junit.junit5
 
 import java.lang.reflect.Constructor
+import org.anonlab.fray.core.RunContext
+import org.anonlab.fray.core.RuntimeDelegate
+import org.anonlab.fray.core.randomness.ControlledRandom
+import org.anonlab.fray.runtime.Delegate
+import org.anonlab.fray.runtime.Runtime
 import org.junit.jupiter.api.extension.*
 import org.junit.jupiter.api.extension.ConditionEvaluationResult.disabled
 import org.junit.jupiter.api.extension.ConditionEvaluationResult.enabled
-import org.pastalab.fray.core.RunContext
-import org.pastalab.fray.core.RuntimeDelegate
-import org.pastalab.fray.core.randomness.ControlledRandom
-import org.pastalab.fray.runtime.Delegate
-import org.pastalab.fray.runtime.Runtime
 
 class FrayExtension(
     val index: Int,

@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea.execute
+package org.anonlab.fray.idea.execute
 
 import com.intellij.execution.configurations.ConfigurationFactory
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
@@ -6,7 +6,7 @@ import com.intellij.openapi.externalSystem.service.execution.AbstractExternalSys
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
-import org.pastalab.fray.idea.FrayConstants
+import org.anonlab.fray.idea.FrayConstants
 
 class FrayGradleRunConfigurationType :
     AbstractExternalSystemTaskConfigurationType(FrayConstants.FRAY_GRADLE_ID) {

@@ -1,14 +1,14 @@
-package org.pastalab.fray.core.scheduler
+package org.anonlab.fray.core.scheduler
 
 import kotlin.math.max
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.core.concurrency.operations.MemoryOperation
-import org.pastalab.fray.core.concurrency.operations.RacingOperation
-import org.pastalab.fray.core.concurrency.operations.ThreadStartOperation
-import org.pastalab.fray.core.randomness.ControlledRandom
-import org.pastalab.fray.core.utils.Utils.verifyOrReport
+import org.anonlab.fray.core.ThreadContext
+import org.anonlab.fray.core.concurrency.operations.MemoryOperation
+import org.anonlab.fray.core.concurrency.operations.RacingOperation
+import org.anonlab.fray.core.concurrency.operations.ThreadStartOperation
+import org.anonlab.fray.core.randomness.ControlledRandom
+import org.anonlab.fray.core.utils.Utils.verifyOrReport
 
 // See https://dl.acm.org/doi/10.1145/3669940.3707214
 @Serializable
@@ -136,8 +136,8 @@ class SURWScheduler(
 
   private fun isInteresting(thread: ThreadContext): Boolean {
     for (st in thread.thread.stackTrace.drop(1)) {
-      if (st.className.contains("org.pastalab.fray.core") ||
-          st.className.contains("org.pastalab.fray.runtime")) {
+      if (st.className.contains("org.anonlab.fray.core") ||
+          st.className.contains("org.anonlab.fray.runtime")) {
         continue
       }
       if (st.className.contains("java.util.concurrent")) {

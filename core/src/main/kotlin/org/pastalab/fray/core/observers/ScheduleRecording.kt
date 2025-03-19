@@ -1,4 +1,4 @@
-package org.pastalab.fray.core.observers
+package org.anonlab.fray.core.observers
 
 import kotlinx.serialization.Serializable
 

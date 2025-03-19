@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.success.wait;
+package org.anonlab.fray.test.success.wait;
 
 public class WaitWithTimeoutNoDeadlock {
     public static void main(String[] args) {

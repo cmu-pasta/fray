@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import java.util.concurrent.Semaphore
 import org.objectweb.asm.ClassVisitor
@@ -16,7 +16,7 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
     if (name == "<init>") {
       return MethodExitVisitor(
           mv,
-          org.pastalab.fray.runtime.Runtime::onSemaphoreInit,
+          org.anonlab.fray.runtime.Runtime::onSemaphoreInit,
           access,
           name,
           descriptor,
@@ -28,25 +28,25 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
       val method =
           if (name == "acquire") {
             if (descriptor.startsWith("()")) {
-              org.pastalab.fray.runtime.Runtime::onSemaphoreAcquire
+              org.anonlab.fray.runtime.Runtime::onSemaphoreAcquire
             } else {
-              org.pastalab.fray.runtime.Runtime::onSemaphoreAcquirePermits
+              org.anonlab.fray.runtime.Runtime::onSemaphoreAcquirePermits
             }
           } else if (name == "acquireUninterruptibly") {
             if (descriptor.startsWith("()")) {
-              org.pastalab.fray.runtime.Runtime::onSemaphoreAcquireUninterruptibly
+              org.anonlab.fray.runtime.Runtime::onSemaphoreAcquireUninterruptibly
             } else {
-              org.pastalab.fray.runtime.Runtime::onSemaphoreAcquirePermitsUninterruptibly
+              org.anonlab.fray.runtime.Runtime::onSemaphoreAcquirePermitsUninterruptibly
             }
           } else {
             if (descriptor.startsWith("()")) {
-              org.pastalab.fray.runtime.Runtime::onSemaphoreTryAcquire
+              org.anonlab.fray.runtime.Runtime::onSemaphoreTryAcquire
             } else if (descriptor.startsWith("(I)")) {
-              org.pastalab.fray.runtime.Runtime::onSemaphoreTryAcquirePermits
+              org.anonlab.fray.runtime.Runtime::onSemaphoreTryAcquirePermits
             } else if (descriptor.startsWith("(J")) {
-              org.pastalab.fray.runtime.Runtime::onSemaphoreTryAcquireTimeout
+              org.anonlab.fray.runtime.Runtime::onSemaphoreTryAcquireTimeout
             } else {
-              org.pastalab.fray.runtime.Runtime::onSemaphoreTryAcquirePermitsTimeout
+              org.anonlab.fray.runtime.Runtime::onSemaphoreTryAcquirePermitsTimeout
             }
           }
       val eMv =
@@ -62,7 +62,7 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           }
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onSemaphoreAcquireDone,
+          org.anonlab.fray.runtime.Runtime::onSemaphoreAcquireDone,
           access,
           name,
           descriptor,
@@ -74,7 +74,7 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onSemaphoreRelease,
+              org.anonlab.fray.runtime.Runtime::onSemaphoreRelease,
               access,
               name,
               descriptor,
@@ -82,7 +82,7 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
               true)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onSemaphoreReleaseDone,
+          org.anonlab.fray.runtime.Runtime::onSemaphoreReleaseDone,
           access,
           name,
           descriptor,
@@ -94,7 +94,7 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onSemaphoreReleasePermits,
+              org.anonlab.fray.runtime.Runtime::onSemaphoreReleasePermits,
               access,
               name,
               descriptor,
@@ -102,7 +102,7 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
               true)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onSemaphoreReleaseDone,
+          org.anonlab.fray.runtime.Runtime::onSemaphoreReleaseDone,
           access,
           name,
           descriptor,
@@ -114,7 +114,7 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onSemaphoreDrainPermits,
+              org.anonlab.fray.runtime.Runtime::onSemaphoreDrainPermits,
               access,
               name,
               descriptor,
@@ -122,7 +122,7 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
               false)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onSemaphoreDrainPermitsDone,
+          org.anonlab.fray.runtime.Runtime::onSemaphoreDrainPermitsDone,
           access,
           name,
           descriptor,
@@ -134,7 +134,7 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onSemaphoreReducePermits,
+              org.anonlab.fray.runtime.Runtime::onSemaphoreReducePermits,
               access,
               name,
               descriptor,
@@ -142,7 +142,7 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
               true)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onSemaphoreReducePermitsDone,
+          org.anonlab.fray.runtime.Runtime::onSemaphoreReducePermitsDone,
           access,
           name,
           descriptor,

@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea.ui
+package org.anonlab.fray.idea.ui
 
 import com.intellij.ide.IdeTooltipManager
 import com.intellij.openapi.editor.Editor
@@ -17,7 +17,7 @@ import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JSeparator
 import javax.swing.border.EmptyBorder
-import org.pastalab.fray.idea.objects.ThreadExecutionContext
+import org.anonlab.fray.idea.objects.ThreadExecutionContext
 
 class ThreadInfoUpdater(val editor: Editor) : EditorMouseMotionListener {
   val threadNameMapping: MutableMap<Int, MutableSet<ThreadExecutionContext>> = mutableMapOf()

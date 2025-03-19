@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import kotlin.reflect.KFunction
 import org.objectweb.asm.ClassVisitor
@@ -14,15 +14,15 @@ class TimedWaitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
         (name == "parkNanos" || name == "parkUntil")) {
       return if (name == "parkNanos") {
         if (descriptor == "(J)V") {
-          org.pastalab.fray.runtime.Runtime::onThreadParkNanos
+          org.anonlab.fray.runtime.Runtime::onThreadParkNanos
         } else {
-          org.pastalab.fray.runtime.Runtime::onThreadParkNanosWithBlocker
+          org.anonlab.fray.runtime.Runtime::onThreadParkNanosWithBlocker
         }
       } else {
         if (descriptor == "(J)V") {
-          org.pastalab.fray.runtime.Runtime::onThreadParkUntil
+          org.anonlab.fray.runtime.Runtime::onThreadParkUntil
         } else {
-          org.pastalab.fray.runtime.Runtime::onThreadParkUntilWithBlocker
+          org.anonlab.fray.runtime.Runtime::onThreadParkUntilWithBlocker
         }
       }
     }
@@ -30,17 +30,17 @@ class TimedWaitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
         name.contains("await") &&
         descriptor != "()V") {
       return if (name == "await") {
-        org.pastalab.fray.runtime.Runtime::onConditionAwaitTime
+        org.anonlab.fray.runtime.Runtime::onConditionAwaitTime
       } else if (name == "awaitNanos") {
-        org.pastalab.fray.runtime.Runtime::onConditionAwaitNanos
+        org.anonlab.fray.runtime.Runtime::onConditionAwaitNanos
       } else {
-        org.pastalab.fray.runtime.Runtime::onConditionAwaitUntil
+        org.anonlab.fray.runtime.Runtime::onConditionAwaitUntil
       }
     }
     if (owner == "java/util/concurrent/CountDownLatch" &&
         name == "await" &&
         descriptor == "(JLjava/util/concurrent/TimeUnit;)Z") {
-      return org.pastalab.fray.runtime.Runtime::onLatchAwaitTimeout
+      return org.anonlab.fray.runtime.Runtime::onLatchAwaitTimeout
     }
     return null
   }
@@ -69,7 +69,7 @@ class TimedWaitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
         findRuntimeMethod(owner, name, descriptor)?.let {
           invokeStatic(
               Type.getObjectType(
-                  org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+                  org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
               Utils.kFunctionToASMMethod(it),
           )
         } ?: super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)

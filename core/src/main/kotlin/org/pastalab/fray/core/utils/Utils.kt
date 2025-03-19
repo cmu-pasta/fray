@@ -1,11 +1,11 @@
-package org.pastalab.fray.core.utils
+package org.anonlab.fray.core.utils
 
 import kotlin.math.ceil
 import kotlin.math.ln
-import org.pastalab.fray.core.FrayInternalError
-import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.rmi.ThreadInfo
-import org.pastalab.fray.runtime.Runtime
+import org.anonlab.fray.core.FrayInternalError
+import org.anonlab.fray.core.ThreadContext
+import org.anonlab.fray.rmi.ThreadInfo
+import org.anonlab.fray.runtime.Runtime
 
 object Utils {
   fun sampleGeometric(p: Double, rand: Double): Int {
@@ -30,8 +30,8 @@ object Utils {
 
 val StackTraceElement.isFrayInternals
   get() =
-      this.className.startsWith("org.pastalab.fray.core") ||
-          this.className.startsWith("org.pastalab.fray.runtime")
+      this.className.startsWith("org.anonlab.fray.core") ||
+          this.className.startsWith("org.anonlab.fray.runtime")
 
 fun List<ThreadContext>.toThreadInfos(): List<ThreadInfo> {
   return this.map { it.toThreadInfo() }

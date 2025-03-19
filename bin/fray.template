@@ -54,7 +54,7 @@ def main():
         "-cp", class_path,
         "-agentpath:" + JVMTI_PATH,
         "-javaagent:" + AGENT_PATH,
-        "org.pastalab.fray.core.MainKt",
+        "org.anonlab.fray.core.MainKt",
         "--run-config",
         "cli",
         "--clazz",

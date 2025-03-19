@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.agent
+package org.anonlab.fray.instrumentation.agent
 
 import java.lang.instrument.Instrumentation
 

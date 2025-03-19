@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.success.rwlock;
+package org.anonlab.fray.test.success.rwlock;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;

@@ -1,13 +1,13 @@
 # Fray: General-Purpose Concurrency Testing 
 
-[![Build](https://github.com/cmu-pasta/fray/actions/workflows/main.yml/badge.svg)](https://github.com/cmu-pasta/fray/actions/workflows/main.yml)
-[![Gradle](https://img.shields.io/gradle-plugin-portal/v/org.pastalab.fray.gradle)](https://plugins.gradle.org/plugin/org.pastalab.fray.gradle)
-[![Maven](https://img.shields.io/maven-central/v/org.pastalab.fray.maven/fray-plugins-maven)](https://central.sonatype.com/artifact/org.pastalab.fray.maven/fray-plugins-maven)
+[![Build](https://github.com/anon/fray/actions/workflows/main.yml/badge.svg)](https://github.com/anon/fray/actions/workflows/main.yml)
+[![Gradle](https://img.shields.io/gradle-plugin-portal/v/org.anonlab.fray.gradle)](https://plugins.gradle.org/plugin/org.anonlab.fray.gradle)
+[![Maven](https://img.shields.io/maven-central/v/org.anonlab.fray.maven/fray-plugins-maven)](https://central.sonatype.com/artifact/org.anonlab.fray.maven/fray-plugins-maven)
 [![JetBrain Plugin](https://img.shields.io/jetbrains/plugin/v/26623-fray-debugger)](https://plugins.jetbrains.com/plugin/26623-fray-debugger)
 [![Discord](https://img.shields.io/discord/1345494709807743057)](https://discord.gg/2VkNRuHUCX)
 
 
-<a href="https://github.com/cmu-pasta/fray">
+<a href="https://github.com/anon/fray">
   <img src="./assets/logo-cropped.png" width="256" alt="logo"/>
 </a>
 
@@ -25,8 +25,8 @@ If you are using JUnit 5, you can use the `@ConcurrencyTest` annotation to mark 
 also need to add the `@ExtendWith(FrayTestExtension.class)` annotation to the test class.
 
 ```java
-import org.pastalab.fray.junit.junit5.FrayTestExtension;
-import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
+import org.anonlab.fray.junit.junit5.FrayTestExtension;
+import org.anonlab.fray.junit.junit5.annotations.ConcurrencyTest;
 
 @ExtendWith(FrayTestExtension.class)
 public class SimpleTest {
@@ -45,7 +45,7 @@ public class SimpleTest {
 Fray can be used with other testing frameworks as well. You may use the `FrayInTestLauncher`
 
 ```java
-import org.pastalab.fray.junit.plain.FrayInTestLauncher;
+import org.anonlab.fray.junit.plain.FrayInTestLauncher;
 
 public void test() {
     FrayInTestLauncher.INSTANCE.launchFrayTest(() -> {
@@ -61,7 +61,7 @@ To use Fray with Gradle, add the following plugin to your `build.gradle` file:
 
 ```kotlin
 plugins {
-    id("org.pastalab.fray.gradle") version "0.3.1"
+    id("org.anonlab.fray.gradle") version "0.3.1"
 }
 ```
 
@@ -71,7 +71,7 @@ plugins {
 
 ```xml
 <plugin>
-    <groupId>org.pastalab.fray.maven</groupId>
+    <groupId>org.anonlab.fray.maven</groupId>
     <artifactId>fray-plugins-maven</artifactId>
     <version>0.3.1</version>
     <executions>
@@ -89,7 +89,7 @@ plugins {
 
 ```xml
 <dependency>
-    <groupId>org.pastalab.fray</groupId>
+    <groupId>org.anonlab.fray</groupId>
     <artifactId>fray-junit</artifactId>
     <version>0.3.1</version>
     <scope>test</scope>

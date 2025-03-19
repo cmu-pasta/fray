@@ -1,12 +1,12 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
+import org.anonlab.fray.instrumentation.base.memory.VolatileManager
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.FieldVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.commons.AdviceAdapter
-import org.pastalab.fray.instrumentation.base.memory.VolatileManager
 
 class VolatileFieldsInstrumenter(cv: ClassVisitor, private val instrumentingJdk: Boolean) :
     ClassVisitor(ASM9, cv) {
@@ -55,7 +55,7 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor, private val instrumentingJdk:
     return object : AdviceAdapter(ASM9, mv, access, name, descriptor) {
       override fun visitFieldInsn(opcode: Int, owner: String, name: String, descriptor: String) {
         if ((recursiveVisitClass(owner) || volatileManager.isVolatile(owner, name)) &&
-            !name.startsWith("org.pastalab/fray/runtime/")) {
+            !name.startsWith("org.anonlab/fray/runtime/")) {
 
           if (opcode == Opcodes.GETFIELD) {
             dup()
@@ -76,37 +76,37 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor, private val instrumentingJdk:
             Opcodes.GETFIELD ->
                 super.visitMethodInsn(
                     Opcodes.INVOKESTATIC,
-                    org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-                    org.pastalab.fray.runtime.Runtime::onFieldRead.name,
+                    org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+                    org.anonlab.fray.runtime.Runtime::onFieldRead.name,
                     Utils.kFunctionToJvmMethodDescriptor(
-                        org.pastalab.fray.runtime.Runtime::onFieldRead),
+                        org.anonlab.fray.runtime.Runtime::onFieldRead),
                     false,
                 )
             Opcodes.PUTFIELD ->
                 super.visitMethodInsn(
                     Opcodes.INVOKESTATIC,
-                    org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-                    org.pastalab.fray.runtime.Runtime::onFieldWrite.name,
+                    org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+                    org.anonlab.fray.runtime.Runtime::onFieldWrite.name,
                     Utils.kFunctionToJvmMethodDescriptor(
-                        org.pastalab.fray.runtime.Runtime::onFieldWrite),
+                        org.anonlab.fray.runtime.Runtime::onFieldWrite),
                     false,
                 )
             Opcodes.PUTSTATIC ->
                 super.visitMethodInsn(
                     Opcodes.INVOKESTATIC,
-                    org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-                    org.pastalab.fray.runtime.Runtime::onStaticFieldWrite.name,
+                    org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+                    org.anonlab.fray.runtime.Runtime::onStaticFieldWrite.name,
                     Utils.kFunctionToJvmMethodDescriptor(
-                        org.pastalab.fray.runtime.Runtime::onStaticFieldWrite),
+                        org.anonlab.fray.runtime.Runtime::onStaticFieldWrite),
                     false,
                 )
             Opcodes.GETSTATIC ->
                 super.visitMethodInsn(
                     Opcodes.INVOKESTATIC,
-                    org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-                    org.pastalab.fray.runtime.Runtime::onStaticFieldRead.name,
+                    org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+                    org.anonlab.fray.runtime.Runtime::onStaticFieldRead.name,
                     Utils.kFunctionToJvmMethodDescriptor(
-                        org.pastalab.fray.runtime.Runtime::onStaticFieldRead),
+                        org.anonlab.fray.runtime.Runtime::onStaticFieldRead),
                     false,
                 )
           }

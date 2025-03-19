@@ -60,7 +60,7 @@ intellijPlatform {
                 subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
             }
         }
-        changeNotes = "The change notes are available in the [CHANGELOG.md](https://github.com/cmu-pasta/fray/blob/main/CHANGELOG.md)"
+        changeNotes = "The change notes are available in the [CHANGELOG.md](https://github.com/anon/fray/blob/main/CHANGELOG.md)"
 
         ideaVersion {
             sinceBuild = project.property("pluginSinceBuild")!! as String

@@ -18,14 +18,14 @@ dependencies {
 }
 
 tasks.withType<JavaExec> {
-  jvmArgs("--patch-module", "org.pastalab.fray.instrumentation.base=${sourceSets["main"].output
+  jvmArgs("--patch-module", "org.anonlab.fray.instrumentation.base=${sourceSets["main"].output
       .asPath}")
 }
 
 tasks.compileJava {
   options.compilerArgumentProviders.add(CommandLineArgumentProvider {
     // Provide compiled Kotlin classes to javac – needed for Java/Kotlin mixed sources to work
-    listOf("--patch-module", "org.pastalab.fray.instrumentation.base=${sourceSets["main"].output
+    listOf("--patch-module", "org.anonlab.fray.instrumentation.base=${sourceSets["main"].output
         .asPath}")
   })
 }

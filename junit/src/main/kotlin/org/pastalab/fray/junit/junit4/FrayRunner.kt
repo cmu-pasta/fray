@@ -1,4 +1,4 @@
-package org.pastalab.fray.junit.junit4
+package org.anonlab.fray.junit.junit4
 
 import org.junit.runner.notification.RunNotifier
 import org.junit.runners.BlockJUnit4ClassRunner

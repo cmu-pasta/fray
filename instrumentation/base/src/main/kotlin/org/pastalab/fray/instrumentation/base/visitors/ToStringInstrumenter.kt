@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
@@ -21,7 +21,7 @@ class ToStringInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onSkipMethod,
+              org.anonlab.fray.runtime.Runtime::onSkipMethod,
               access,
               name,
               descriptor,
@@ -30,7 +30,7 @@ class ToStringInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
               preCustomizer = { it.push("toString") })
       MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onSkipMethodDone,
+          org.anonlab.fray.runtime.Runtime::onSkipMethodDone,
           access,
           name,
           descriptor,

@@ -1,12 +1,12 @@
-package org.pastalab.fray.idea.debugger
+package org.anonlab.fray.idea.debugger
 
 import com.intellij.util.ui.UIUtil
 import com.intellij.xdebugger.XDebugSession
 import java.util.concurrent.CountDownLatch
-import org.pastalab.fray.idea.objects.ThreadExecutionContext
-import org.pastalab.fray.idea.ui.FrayDebugPanel
-import org.pastalab.fray.rmi.RemoteScheduler
-import org.pastalab.fray.rmi.ThreadInfo
+import org.anonlab.fray.idea.objects.ThreadExecutionContext
+import org.anonlab.fray.idea.ui.FrayDebugPanel
+import org.anonlab.fray.rmi.RemoteScheduler
+import org.anonlab.fray.rmi.ThreadInfo
 
 class FrayDebuggerScheduler(val schedulerPanel: FrayDebugPanel, val debugSession: XDebugSession) :
     RemoteScheduler {

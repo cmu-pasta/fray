@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.fail.rwlock;
+package org.anonlab.fray.test.fail.rwlock;
 
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 

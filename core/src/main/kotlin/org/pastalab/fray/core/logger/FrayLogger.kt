@@ -1,4 +1,4 @@
-package org.pastalab.fray.core.logger
+package org.anonlab.fray.core.logger
 
 import java.io.File
 import java.time.LocalDateTime

@@ -1,8 +1,8 @@
-package org.pastalab.fray.core.scheduler
+package org.anonlab.fray.core.scheduler
 
 import kotlinx.serialization.Serializable
-import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.core.randomness.ControlledRandom
+import org.anonlab.fray.core.ThreadContext
+import org.anonlab.fray.core.randomness.ControlledRandom
 
 @Serializable
 class RandomScheduler(val rand: ControlledRandom) : Scheduler {

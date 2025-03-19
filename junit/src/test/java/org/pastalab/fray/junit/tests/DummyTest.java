@@ -1,4 +1,4 @@
-package org.pastalab.fray.junit.tests;
+package org.anonlab.fray.junit.tests;
 
 import org.junit.jupiter.api.Test;
 import org.junit.platform.testkit.engine.EngineTestKit;
@@ -11,7 +11,7 @@ public class DummyTest {
     public void testDummyTestInstance() {
         EngineTestKit
                 .engine("junit-jupiter")
-                .selectors(selectClass(org.pastalab.fray.junit.internal.DummyTest.class))
+                .selectors(selectClass(org.anonlab.fray.junit.internal.DummyTest.class))
                 .execute()
                 .allEvents()
                 .assertThatEvents()

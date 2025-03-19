@@ -1,9 +1,9 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import java.util.concurrent.ThreadLocalRandom
+import org.anonlab.fray.runtime.Runtime
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
-import org.pastalab.fray.runtime.Runtime
 
 class ThreadLocalRandomInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(cv, ThreadLocalRandom::class.java.name) {

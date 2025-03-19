@@ -1,8 +1,8 @@
 package visitors
 
+import org.anonlab.fray.instrumentation.base.visitors.Utils
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.pastalab.fray.instrumentation.base.visitors.Utils
 
 fun exampleMethod(param1: String, param2: Int): Long = 42L
 
@@ -18,6 +18,6 @@ class UtilsTest {
     assertEquals(
         "(Ljava/util/concurrent/Semaphore;I)V",
         Utils.kFunctionToJvmMethodDescriptor(
-            org.pastalab.fray.runtime.Runtime::onSemaphoreAcquirePermits))
+            org.anonlab.fray.runtime.Runtime::onSemaphoreAcquirePermits))
   }
 }

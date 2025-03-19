@@ -1,11 +1,11 @@
-package org.pastalab.fray.core.syncurity
+package org.anonlab.fray.core.syncurity
 
 import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
-import org.pastalab.fray.runtime.Delegate
+import org.anonlab.fray.runtime.Delegate
 
 class SyncurityEvaluationDelegate(
     val syncurityRunContext: SyncurityEvaluationContext,

@@ -1,14 +1,14 @@
-package org.pastalab.fray.core.concurrency.primitives
+package org.anonlab.fray.core.concurrency.primitives
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
-import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.core.concurrency.SynchronizationManager
-import org.pastalab.fray.core.concurrency.operations.CountDownLatchAwaitBlocking
-import org.pastalab.fray.core.concurrency.operations.InterruptionType
-import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
-import org.pastalab.fray.core.utils.Utils.verifyOrReport
-import org.pastalab.fray.rmi.ThreadState
+import org.anonlab.fray.core.ThreadContext
+import org.anonlab.fray.core.concurrency.SynchronizationManager
+import org.anonlab.fray.core.concurrency.operations.CountDownLatchAwaitBlocking
+import org.anonlab.fray.core.concurrency.operations.InterruptionType
+import org.anonlab.fray.core.concurrency.operations.ThreadResumeOperation
+import org.anonlab.fray.core.utils.Utils.verifyOrReport
+import org.anonlab.fray.rmi.ThreadState
 
 /**
  * Context for a [CountDownLatch]. We have to pass syncManager here because we need to create a

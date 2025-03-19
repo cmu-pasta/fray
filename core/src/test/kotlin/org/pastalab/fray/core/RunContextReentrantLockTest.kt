@@ -1,15 +1,15 @@
-package org.pastalab.fray.core
+package org.anonlab.fray.core
 
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import org.anonlab.fray.core.command.Configuration
+import org.anonlab.fray.core.command.ExecutionInfo
+import org.anonlab.fray.core.command.LambdaExecutor
+import org.anonlab.fray.core.randomness.ControlledRandom
+import org.anonlab.fray.core.scheduler.RandomScheduler
+import org.anonlab.fray.rmi.ResourceType
 import org.junit.jupiter.api.BeforeEach
-import org.pastalab.fray.core.command.Configuration
-import org.pastalab.fray.core.command.ExecutionInfo
-import org.pastalab.fray.core.command.LambdaExecutor
-import org.pastalab.fray.core.randomness.ControlledRandom
-import org.pastalab.fray.core.scheduler.RandomScheduler
-import org.pastalab.fray.rmi.ResourceType
 
 class RunContextReentrantLockTest {
   val context =

@@ -1,10 +1,10 @@
-package org.pastalab.fray.idea.execute
+package org.anonlab.fray.idea.execute
 
 import com.intellij.execution.Executor
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.util.IconLoader
 import javax.swing.Icon
-import org.pastalab.fray.idea.FrayBundle
+import org.anonlab.fray.idea.FrayBundle
 
 class FrayDebugExecutor : Executor() {
   override fun getToolWindowId(): String {

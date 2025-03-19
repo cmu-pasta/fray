@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -16,13 +16,13 @@ import java.util.concurrent.atomic.DoubleAccumulator
 import java.util.concurrent.atomic.DoubleAdder
 import java.util.concurrent.atomic.LongAccumulator
 import java.util.concurrent.atomic.LongAdder
+import org.anonlab.fray.runtime.Runtime
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes.ACC_PUBLIC
 import org.objectweb.asm.Opcodes.ALOAD
 import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.Opcodes.GETSTATIC
-import org.pastalab.fray.runtime.Runtime
 
 class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   var className = ""
@@ -51,7 +51,7 @@ class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
     if (atomicClasses.contains(className) &&
         !atomicNonVolatileMethodNames.contains(name) &&
         access and ACC_PUBLIC != 0) {
-      val type = org.pastalab.fray.runtime.MemoryOpType::class.java.name.replace(".", "/")
+      val type = org.anonlab.fray.runtime.MemoryOpType::class.java.name.replace(".", "/")
       val eMv =
           MethodEnterVisitor(
               mv,
@@ -82,12 +82,12 @@ class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
     return mv
   }
 
-  fun memoryTypeFromMethodName(name: String): org.pastalab.fray.runtime.MemoryOpType {
+  fun memoryTypeFromMethodName(name: String): org.anonlab.fray.runtime.MemoryOpType {
     val lname = name.lowercase()
     return if (lname.contains("set") || lname.contains("exchange")) {
-      org.pastalab.fray.runtime.MemoryOpType.MEMORY_WRITE
+      org.anonlab.fray.runtime.MemoryOpType.MEMORY_WRITE
     } else {
-      org.pastalab.fray.runtime.MemoryOpType.MEMORY_READ
+      org.anonlab.fray.runtime.MemoryOpType.MEMORY_READ
     }
   }
 

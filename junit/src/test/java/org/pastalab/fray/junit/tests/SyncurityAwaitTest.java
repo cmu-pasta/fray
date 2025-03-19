@@ -1,9 +1,9 @@
-package org.pastalab.fray.junit.tests;
+package org.anonlab.fray.junit.tests;
 
 import org.junit.jupiter.api.Test;
 import org.junit.platform.testkit.engine.EngineTestKit;
-import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlockInConditionTest;
-import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlockTest;
+import org.anonlab.fray.junit.internal.syncurity.SyncurityAwaitDeadlockInConditionTest;
+import org.anonlab.fray.junit.internal.syncurity.SyncurityAwaitDeadlockTest;
 
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.*;
@@ -14,7 +14,7 @@ public class SyncurityAwaitTest {
     public void testSyncurityAwaitTest() {
         EngineTestKit
                 .engine("junit-jupiter")
-                .selectors(selectClass(org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitTest.class))
+                .selectors(selectClass(org.anonlab.fray.junit.internal.syncurity.SyncurityAwaitTest.class))
                 .execute()
                 .allEvents()
                 .assertThatEvents()

@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.Label
@@ -20,7 +20,7 @@ class ObjectInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Object::class.
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onObjectWait,
+              org.anonlab.fray.runtime.Runtime::onObjectWait,
               access,
               name,
               descriptor,
@@ -44,8 +44,8 @@ class ObjectInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Object::class.
             loadThis()
             invokeStatic(
                 Type.getObjectType(
-                    org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
-                Utils.kFunctionToASMMethod(org.pastalab.fray.runtime.Runtime::onObjectWaitDone))
+                    org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+                Utils.kFunctionToASMMethod(org.anonlab.fray.runtime.Runtime::onObjectWaitDone))
           }
           super.onMethodExit(opcode)
         }
@@ -58,8 +58,8 @@ class ObjectInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Object::class.
           loadThis()
           invokeStatic(
               Type.getObjectType(
-                  org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
-              Utils.kFunctionToASMMethod(org.pastalab.fray.runtime.Runtime::onObjectWaitDone))
+                  org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+              Utils.kFunctionToASMMethod(org.anonlab.fray.runtime.Runtime::onObjectWaitDone))
           visitInsn(ATHROW)
           super.visitMaxs(maxStack, maxLocals)
         }

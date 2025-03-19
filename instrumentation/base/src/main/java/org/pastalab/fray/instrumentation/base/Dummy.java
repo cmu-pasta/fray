@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base;
+package org.anonlab.fray.instrumentation.base;
 
 // We need this dummy class to make sure
 // the corresponding folders is also created in

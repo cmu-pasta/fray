@@ -1,8 +1,8 @@
-package org.pastalab.fray.core.observers
+package org.anonlab.fray.core.observers
 
-import org.pastalab.fray.core.command.Configuration
-import org.pastalab.fray.rmi.ScheduleObserver
-import org.pastalab.fray.rmi.ThreadInfo
+import org.anonlab.fray.core.command.Configuration
+import org.anonlab.fray.rmi.ScheduleObserver
+import org.anonlab.fray.rmi.ThreadInfo
 
 class ScheduleSaver(val config: Configuration) : ScheduleObserver<ThreadInfo> {
   override fun onExecutionStart() {}

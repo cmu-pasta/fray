@@ -1,4 +1,4 @@
-package org.pastalab.fray.plugins.base
+package org.anonlab.fray.plugins.base
 
 import java.io.BufferedInputStream
 import java.io.File
@@ -31,7 +31,7 @@ class FrayWorkspaceInitializer(
               "$jdk/bin/jlink",
               "-J-javaagent:$jlinkJar",
               "-J--module-path=$classPaths",
-              "-J--add-modules=org.pastalab.fray.instrumentation.jdk",
+              "-J--add-modules=org.anonlab.fray.instrumentation.jdk",
               "-J--class-path=$classPaths",
               "--output=${jdkPath.absolutePath}",
               "--add-modules=ALL-MODULE-PATH",

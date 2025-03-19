@@ -1,10 +1,10 @@
-package org.pastalab.fray.junit.tests.surw;
+package org.anonlab.fray.junit.tests.surw;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.testkit.engine.EngineTestKit;
-import org.pastalab.fray.junit.internal.surw.TestUniformSamplingLeftShift;
+import org.anonlab.fray.junit.internal.surw.TestUniformSamplingLeftShift;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,14 +32,14 @@ public class TestUniformSampling {
     public void testUniformSampling() {
         EngineTestKit
                 .engine("junit-jupiter")
-                .selectors(selectClass(org.pastalab.fray.junit.internal.surw.TestUniformSampling.class))
+                .selectors(selectClass(org.anonlab.fray.junit.internal.surw.TestUniformSampling.class))
                 .execute()
                 .allEvents()
                 .assertThatEvents()
                 .haveExactly(5000,
                         event(test("testUniformSampling"), finishedSuccessfully())
                 );
-        Map<Integer, Integer> values = org.pastalab.fray.junit.internal.surw.TestUniformSampling.xValues;
+        Map<Integer, Integer> values = org.anonlab.fray.junit.internal.surw.TestUniformSampling.xValues;
         Assertions.assertTrue(calculateStandardDeviation(new ArrayList(values.values())) < 50);
     }
 
@@ -57,7 +57,7 @@ public class TestUniformSampling {
                 .haveExactly(1000,
                         event(test("testUniformSampling"), finishedSuccessfully())
                 );
-        Map<Integer, Integer> values = org.pastalab.fray.junit.internal.surw.TestUniformSamplingLeftShift.xValues;
+        Map<Integer, Integer> values = org.anonlab.fray.junit.internal.surw.TestUniformSamplingLeftShift.xValues;
         for (Map.Entry<Integer, Integer> entry : values.entrySet()) {
             System.out.println("Value " + entry.getKey() + " returned " + entry.getValue() + " times.");
         }

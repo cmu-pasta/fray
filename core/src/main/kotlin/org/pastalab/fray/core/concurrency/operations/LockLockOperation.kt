@@ -1,8 +1,8 @@
-package org.pastalab.fray.core.concurrency.operations
+package org.anonlab.fray.core.concurrency.operations
 
 class LockLockOperation(obj: Any) :
     RacingOperation(
-        System.identityHashCode(obj), org.pastalab.fray.runtime.MemoryOpType.MEMORY_WRITE) {
+        System.identityHashCode(obj), org.anonlab.fray.runtime.MemoryOpType.MEMORY_WRITE) {
   val name = obj.javaClass.name
 
   override fun isRacing(op: Operation): Boolean {

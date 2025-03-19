@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
@@ -21,7 +21,7 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
             "(Ljava/lang/ThreadGroup;Ljava/lang/String;ILjava/lang/Runnable;JLjava/security/AccessControlContext;)V") {
       return MethodExitVisitor(
           mv,
-          org.pastalab.fray.runtime.Runtime::onThreadCreateDone,
+          org.anonlab.fray.runtime.Runtime::onThreadCreateDone,
           access,
           name,
           descriptor,
@@ -33,7 +33,7 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
       val eMv =
           MethodExitVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onThreadStartDone,
+              org.anonlab.fray.runtime.Runtime::onThreadStartDone,
               access,
               name,
               descriptor,
@@ -42,7 +42,7 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
               true)
       return MethodEnterVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onThreadStart,
+          org.anonlab.fray.runtime.Runtime::onThreadStart,
           access,
           name,
           descriptor,
@@ -51,12 +51,12 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
     }
     if (name == "yield") {
       return MethodEnterVisitor(
-          mv, org.pastalab.fray.runtime.Runtime::onYield, access, name, descriptor, false, false)
+          mv, org.anonlab.fray.runtime.Runtime::onYield, access, name, descriptor, false, false)
     }
     if (name == "getAndClearInterrupt") {
       return MethodExitVisitor(
           mv,
-          org.pastalab.fray.runtime.Runtime::onThreadGetAndClearInterrupt,
+          org.anonlab.fray.runtime.Runtime::onThreadGetAndClearInterrupt,
           access,
           name,
           descriptor,
@@ -67,7 +67,7 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
     if (name == "isInterrupted") {
       return MethodExitVisitor(
           mv,
-          org.pastalab.fray.runtime.Runtime::onThreadIsInterrupted,
+          org.anonlab.fray.runtime.Runtime::onThreadIsInterrupted,
           access,
           name,
           descriptor,
@@ -78,7 +78,7 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
     if (name == "clearInterrupt") {
       return MethodExitVisitor(
           mv,
-          org.pastalab.fray.runtime.Runtime::onThreadClearInterrupt,
+          org.anonlab.fray.runtime.Runtime::onThreadClearInterrupt,
           access,
           name,
           descriptor,
@@ -90,7 +90,7 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onThreadInterrupt,
+              org.anonlab.fray.runtime.Runtime::onThreadInterrupt,
               access,
               name,
               descriptor,
@@ -98,7 +98,7 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
               false)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onThreadInterruptDone,
+          org.anonlab.fray.runtime.Runtime::onThreadInterruptDone,
           access,
           name,
           descriptor,
@@ -109,7 +109,7 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
     if (name == "getState") {
       return MethodExitVisitor(
           mv,
-          org.pastalab.fray.runtime.Runtime::onThreadGetState,
+          org.anonlab.fray.runtime.Runtime::onThreadGetState,
           access,
           name,
           descriptor,
@@ -122,7 +122,7 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onThreadInterrupt,
+              org.anonlab.fray.runtime.Runtime::onThreadInterrupt,
               access,
               name,
               descriptor,
@@ -143,9 +143,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
             loadThis()
             invokeStatic(
                 Type.getObjectType(
-                    org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
-                Utils.kFunctionToASMMethod(
-                    org.pastalab.fray.runtime.Runtime::onThreadInterruptDone),
+                    org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+                Utils.kFunctionToASMMethod(org.anonlab.fray.runtime.Runtime::onThreadInterruptDone),
             )
           }
         }

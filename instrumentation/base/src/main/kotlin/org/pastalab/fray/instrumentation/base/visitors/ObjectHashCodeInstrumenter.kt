@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
@@ -46,8 +46,8 @@ class ObjectHashCodeInstrumenter(cv: ClassVisitor, val instrumentJdk: Boolean) :
         if (name == "hashCode" && owner == "java/lang/Object") {
           invokeStatic(
               Type.getObjectType(
-                  org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
-              Utils.kFunctionToASMMethod(org.pastalab.fray.runtime.Runtime::onObjectHashCode),
+                  org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+              Utils.kFunctionToASMMethod(org.anonlab.fray.runtime.Runtime::onObjectHashCode),
           )
         } else {
           super.visitMethodInsn(opcodeAndSource, owner, name, descriptor, isInterface)

@@ -1,9 +1,9 @@
-package org.pastalab.fray.core.observers
+package org.anonlab.fray.core.observers
 
 import java.io.File
 import kotlinx.serialization.json.Json
-import org.pastalab.fray.rmi.ScheduleObserver
-import org.pastalab.fray.rmi.ThreadInfo
+import org.anonlab.fray.rmi.ScheduleObserver
+import org.anonlab.fray.rmi.ThreadInfo
 
 class ScheduleVerifier(val schedules: List<ScheduleRecording>) : ScheduleObserver<ThreadInfo> {
   constructor(
@@ -26,7 +26,7 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) : ScheduleObserve
     var operation = ""
     var count = 0
     for (st in scheduled.stackTraces) {
-      if (st.className.startsWith("org.pastalab.fray")) {
+      if (st.className.startsWith("org.anonlab.fray")) {
         continue
       }
       operation += "@${st.className}.${st.methodName},"

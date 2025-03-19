@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
@@ -25,7 +25,7 @@ class LockInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onLockTryLock,
+              org.anonlab.fray.runtime.Runtime::onLockTryLock,
               access,
               name,
               descriptor,
@@ -33,7 +33,7 @@ class LockInstrumenter(cv: ClassVisitor) :
               false)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onLockTryLockDone,
+          org.anonlab.fray.runtime.Runtime::onLockTryLockDone,
           access,
           name,
           descriptor,
@@ -45,7 +45,7 @@ class LockInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onLockTryLockInterruptibly,
+              org.anonlab.fray.runtime.Runtime::onLockTryLockInterruptibly,
               access,
               name,
               descriptor,
@@ -54,7 +54,7 @@ class LockInstrumenter(cv: ClassVisitor) :
               postCustomizer = { storeArg(0) })
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onLockTryLockInterruptiblyDone,
+          org.anonlab.fray.runtime.Runtime::onLockTryLockInterruptiblyDone,
           access,
           name,
           descriptor,
@@ -65,7 +65,7 @@ class LockInstrumenter(cv: ClassVisitor) :
     if (name == "hasQueuedThreads") {
       return MethodExitVisitor(
           mv,
-          org.pastalab.fray.runtime.Runtime::onLockHasQueuedThreads,
+          org.anonlab.fray.runtime.Runtime::onLockHasQueuedThreads,
           access,
           name,
           descriptor,
@@ -76,7 +76,7 @@ class LockInstrumenter(cv: ClassVisitor) :
     if (name == "hasQueuedThread") {
       return MethodExitVisitor(
           mv,
-          org.pastalab.fray.runtime.Runtime::onLockHasQueuedThread,
+          org.anonlab.fray.runtime.Runtime::onLockHasQueuedThread,
           access,
           name,
           descriptor,
@@ -89,7 +89,7 @@ class LockInstrumenter(cv: ClassVisitor) :
           if (name == "lock") {
             MethodEnterVisitor(
                 mv,
-                org.pastalab.fray.runtime.Runtime::onLockLock,
+                org.anonlab.fray.runtime.Runtime::onLockLock,
                 access,
                 name,
                 descriptor,
@@ -98,7 +98,7 @@ class LockInstrumenter(cv: ClassVisitor) :
           } else {
             MethodEnterVisitor(
                 mv,
-                org.pastalab.fray.runtime.Runtime::onLockLockInterruptibly,
+                org.anonlab.fray.runtime.Runtime::onLockLockInterruptibly,
                 access,
                 name,
                 descriptor,
@@ -107,7 +107,7 @@ class LockInstrumenter(cv: ClassVisitor) :
           }
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onLockLockDone,
+          org.anonlab.fray.runtime.Runtime::onLockLockDone,
           access,
           name,
           descriptor,
@@ -119,7 +119,7 @@ class LockInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onLockUnlock,
+              org.anonlab.fray.runtime.Runtime::onLockUnlock,
               access,
               name,
               descriptor,
@@ -127,7 +127,7 @@ class LockInstrumenter(cv: ClassVisitor) :
               false)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onLockUnlockDone,
+          org.anonlab.fray.runtime.Runtime::onLockUnlockDone,
           access,
           name,
           descriptor,
@@ -137,7 +137,7 @@ class LockInstrumenter(cv: ClassVisitor) :
     }
     if (name == "newCondition") {
       return NewConditionVisitor(
-          mv, org.pastalab.fray.runtime.Runtime::onLockNewCondition, access, name, descriptor)
+          mv, org.anonlab.fray.runtime.Runtime::onLockNewCondition, access, name, descriptor)
     }
     return mv
   }
@@ -154,8 +154,7 @@ class LockInstrumenter(cv: ClassVisitor) :
         dup()
         loadThis()
         invokeStatic(
-            Type.getObjectType(
-                org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+            Type.getObjectType(org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
             Utils.kFunctionToASMMethod(method))
         super.onMethodExit(opcode)
       }

@@ -1,10 +1,10 @@
-package org.pastalab.fray.core.concurrency.primitives
+package org.anonlab.fray.core.concurrency.primitives
 
-import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.core.concurrency.operations.InterruptionType
-import org.pastalab.fray.core.randomness.ControlledRandom
-import org.pastalab.fray.core.utils.Utils.verifyOrReport
-import org.pastalab.fray.rmi.ThreadState
+import org.anonlab.fray.core.ThreadContext
+import org.anonlab.fray.core.concurrency.operations.InterruptionType
+import org.anonlab.fray.core.randomness.ControlledRandom
+import org.anonlab.fray.core.utils.Utils.verifyOrReport
+import org.anonlab.fray.rmi.ThreadState
 
 abstract class SignalContext(val lockContext: LockContext) : InterruptibleContext {
   val waitingThreads = mutableListOf<ThreadContext>()

@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea.debugger
+package org.anonlab.fray.idea.debugger
 
 import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebuggerManagerListener

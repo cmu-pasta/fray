@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
@@ -56,10 +56,10 @@ class FieldInstanceReadWriteInstrumenter(cv: ClassVisitor) :
 
             visitMethodInsn(
                 Opcodes.INVOKESTATIC,
-                org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-                org.pastalab.fray.runtime.Runtime::onUnsafeWriteVolatile.name,
+                org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+                org.anonlab.fray.runtime.Runtime::onUnsafeWriteVolatile.name,
                 Utils.kFunctionToJvmMethodDescriptor(
-                    org.pastalab.fray.runtime.Runtime::onUnsafeWriteVolatile),
+                    org.anonlab.fray.runtime.Runtime::onUnsafeWriteVolatile),
                 false)
 
             loadLocal(offset)

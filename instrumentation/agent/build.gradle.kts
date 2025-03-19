@@ -22,12 +22,12 @@ tasks.build {
 
 tasks.named<ShadowJar>("shadowJar") {
   archiveClassifier.set("")
-  relocate("org.objectweb.asm", "org.pastalab.fray.instrumentation.agent.asm")
+  relocate("org.objectweb.asm", "org.anonlab.fray.instrumentation.agent.asm")
   dependencies {
     exclude(project(":runtime"))
   }
   manifest {
-    attributes(mapOf("Premain-Class" to "org.pastalab.fray.instrumentation.agent.PreMainKt"))
+    attributes(mapOf("Premain-Class" to "org.anonlab.fray.instrumentation.agent.PreMainKt"))
   }
 }
 

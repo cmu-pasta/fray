@@ -1,7 +1,7 @@
 # Usage Examples
 
 Fray is a tool that helps you to test multithreaded code. It is especially useful when you want to test the behavior of your code under different thread interleavings. Here is an example of how to add Fray to a Gradle project.
-You may find the complete source code [here](https://github.com/cmu-pasta/fray-examples/tree/main/fray-gradle-example)
+You may find the complete source code [here](https://github.com/anon/fray-examples/tree/main/fray-gradle-example)
 
 ## Gradle Configuration
 
@@ -9,7 +9,7 @@ Add the following plugin to your `build.gradle` file:
 
 ```kotlin
 plugins {
-    id("org.pastalab.fray.gradle") version "0.2.5"
+    id("org.anonlab.fray.gradle") version "0.2.5"
 }
 ```
 
@@ -72,8 +72,8 @@ Here is an example of a test code that tests the `BankAccount` class with Fray:
 ```java
 ...
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.pastalab.fray.junit.junit5.FrayTestExtension;
-import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
+import org.anonlab.fray.junit.junit5.FrayTestExtension;
+import org.anonlab.fray.junit.junit5.annotations.ConcurrencyTest;
 
 @ExtendWith(FrayTestExtension.class)
 public class BankAccountTest {
@@ -92,7 +92,7 @@ public class BankAccountTest {
 
 - First you need to add the `@ExtendWith(FrayTestExtension.class)` annotation to the test class so that Fray can run the test.
 - Then you need to add the `@ConcurrencyTest` annotation to the test method. The `iterations` parameter specifies how many times the test method should be executed.
-    - You may also specify scheduling algorithms and other parameters in the `@ConcurrencyTest` annotation. For more information, see the [ConcurrencyTest.kt](https://github.com/cmu-pasta/fray/blob/main/junit/src/main/kotlin/org/pastalab/fray/junit/junit5/annotations/ConcurrencyTest.kt#L18)
+    - You may also specify scheduling algorithms and other parameters in the `@ConcurrencyTest` annotation. For more information, see the [ConcurrencyTest.kt](https://github.com/anon/fray/blob/main/junit/src/main/kotlin/org/anonlab/fray/junit/junit5/annotations/ConcurrencyTest.kt#L18)
 
 ## Run the Test
 

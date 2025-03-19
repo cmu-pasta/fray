@@ -1,6 +1,6 @@
-package org.pastalab.fray.gradle
+package org.anonlab.fray.gradle
 
-import org.pastalab.fray.plugins.base.FrayVersion
+import org.anonlab.fray.plugins.base.FrayVersion
 
 open class FrayExtension {
   var version = FrayVersion.version

@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.fail.wait;
+package org.anonlab.fray.test.fail.wait;
 
 public class WaitWithoutNotifyDeadlock {
     public static void main(String[] args) {

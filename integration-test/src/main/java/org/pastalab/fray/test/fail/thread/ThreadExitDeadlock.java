@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.fail.thread;
+package org.anonlab.fray.test.fail.thread;
 
 import java.util.concurrent.CountDownLatch;
 

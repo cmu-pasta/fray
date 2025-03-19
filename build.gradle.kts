@@ -19,7 +19,7 @@ dokka {
     includes.from("README.md")
     sourceLink {
       localDirectory.set(file("src/main/kotlin"))
-      remoteUrl("https://github.com/cmu-pasta/fray")
+      remoteUrl("https://github.com/anon/fray")
       remoteLineSuffix.set("#L")
     }
   }
@@ -106,7 +106,7 @@ configure(allprojects - rootProject -
           pom {
             name = "Fray Testing Framework"
             description = "Fray testing framework for concurrency programs."
-            url = "github.com/cmu-pasta/fray"
+            url = "github.com/anon/fray"
             licenses {
               license {
                 name = "Apache-2.0"
@@ -115,15 +115,15 @@ configure(allprojects - rootProject -
             }
             developers {
               developer {
-                id = "aoli-al"
+                id = "anon"
                 name = "Ao Li"
-                email = "aoli.al@hotmail.com"
+                email = "anon.al@hotmail.com"
               }
             }
             scm {
-              connection = "scm:git:https://github.com/cmu-pasta/fray.git"
-              developerConnection = "scm:git:ssh://github.com/cmu-pasta/fray.git"
-              url = "https://github.com/cmu-pasta/fray"
+              connection = "scm:git:https://github.com/anon/fray.git"
+              developerConnection = "scm:git:ssh://github.com/anon/fray.git"
+              url = "https://github.com/anon/fray"
             }
           }
           if (components.findByName("shadow") == null) from(components["java"])

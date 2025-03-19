@@ -1,19 +1,19 @@
-package org.pastalab.fray.junit.plain
+package org.anonlab.fray.junit.plain
 
 import java.io.File
 import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 import kotlinx.serialization.json.Json
-import org.pastalab.fray.core.TestRunner
-import org.pastalab.fray.core.command.Configuration
-import org.pastalab.fray.core.command.ExecutionInfo
-import org.pastalab.fray.core.command.LambdaExecutor
-import org.pastalab.fray.core.observers.ScheduleVerifier
-import org.pastalab.fray.core.randomness.ControlledRandom
-import org.pastalab.fray.core.scheduler.POSScheduler
-import org.pastalab.fray.core.scheduler.Scheduler
-import org.pastalab.fray.junit.Common.WORK_DIR
+import org.anonlab.fray.core.TestRunner
+import org.anonlab.fray.core.command.Configuration
+import org.anonlab.fray.core.command.ExecutionInfo
+import org.anonlab.fray.core.command.LambdaExecutor
+import org.anonlab.fray.core.observers.ScheduleVerifier
+import org.anonlab.fray.core.randomness.ControlledRandom
+import org.anonlab.fray.core.scheduler.POSScheduler
+import org.anonlab.fray.core.scheduler.Scheduler
+import org.anonlab.fray.junit.Common.WORK_DIR
 
 object FrayInTestLauncher {
 

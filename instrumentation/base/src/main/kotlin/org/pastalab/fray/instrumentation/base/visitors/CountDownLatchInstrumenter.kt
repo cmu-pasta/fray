@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import java.util.concurrent.CountDownLatch
 import org.objectweb.asm.ClassVisitor
@@ -18,7 +18,7 @@ class CountDownLatchInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onLatchAwait,
+              org.anonlab.fray.runtime.Runtime::onLatchAwait,
               access,
               name,
               descriptor,
@@ -26,7 +26,7 @@ class CountDownLatchInstrumenter(cv: ClassVisitor) :
               false)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onLatchAwaitDone,
+          org.anonlab.fray.runtime.Runtime::onLatchAwaitDone,
           access,
           name,
           descriptor,
@@ -38,7 +38,7 @@ class CountDownLatchInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onLatchCountDown,
+              org.anonlab.fray.runtime.Runtime::onLatchCountDown,
               access,
               name,
               descriptor,
@@ -46,7 +46,7 @@ class CountDownLatchInstrumenter(cv: ClassVisitor) :
               false)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onLatchCountDownDone,
+          org.anonlab.fray.runtime.Runtime::onLatchCountDownDone,
           access,
           name,
           descriptor,

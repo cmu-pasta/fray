@@ -2,7 +2,7 @@ plugins {
   id("java")
 }
 
-group = "org.pastalab.fray.test"
+group = "org.anonlab.fray.test"
 
 repositories {
   mavenCentral()

@@ -1,4 +1,4 @@
-package org.pastalab.fray.core.command
+package org.anonlab.fray.core.command
 
 import java.lang.reflect.InvocationTargetException
 import java.net.URI

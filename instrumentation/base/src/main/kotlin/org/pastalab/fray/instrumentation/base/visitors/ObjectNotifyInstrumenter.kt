@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
@@ -28,7 +28,7 @@ class ObjectNotifyInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
-    // TODO(aoli): we should make it more generic.
+    // TODO(anon): we should make it more generic.
     if (className.startsWith("jdk/internal/") || access and Opcodes.ACC_NATIVE != 0) {
       return super.visitMethod(access, name, descriptor, signature, exceptions)
     }
@@ -55,20 +55,20 @@ class ObjectNotifyInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           super.visitInsn(DUP)
           super.visitMethodInsn(
               Opcodes.INVOKESTATIC,
-              org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-              org.pastalab.fray.runtime.Runtime::onObjectNotify.name,
+              org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+              org.anonlab.fray.runtime.Runtime::onObjectNotify.name,
               Utils.kFunctionToJvmMethodDescriptor(
-                  org.pastalab.fray.runtime.Runtime::onObjectNotify),
+                  org.anonlab.fray.runtime.Runtime::onObjectNotify),
               false)
           super.visitMethodInsn(opcode, owner, callee, descriptor, isInterface)
         } else if (callee == "notifyAll" && descriptor == "()V") {
           super.visitInsn(DUP)
           super.visitMethodInsn(
               Opcodes.INVOKESTATIC,
-              org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-              org.pastalab.fray.runtime.Runtime::onObjectNotifyAll.name,
+              org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+              org.anonlab.fray.runtime.Runtime::onObjectNotifyAll.name,
               Utils.kFunctionToJvmMethodDescriptor(
-                  org.pastalab.fray.runtime.Runtime::onObjectNotifyAll),
+                  org.anonlab.fray.runtime.Runtime::onObjectNotifyAll),
               false)
           super.visitMethodInsn(opcode, owner, callee, descriptor, isInterface)
         } else {

@@ -1,4 +1,4 @@
-package org.pastalab.fray.core
+package org.anonlab.fray.core
 
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -17,37 +17,37 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 import java.util.concurrent.locks.StampedLock
 import kotlin.system.exitProcess
-import org.pastalab.fray.core.command.Configuration
-import org.pastalab.fray.core.concurrency.HelperThread
-import org.pastalab.fray.core.concurrency.ReentrantReadWriteLockCache
-import org.pastalab.fray.core.concurrency.SynchronizationManager
-import org.pastalab.fray.core.concurrency.operations.*
-import org.pastalab.fray.core.concurrency.operations.InterruptionType
-import org.pastalab.fray.core.concurrency.primitives.ConditionSignalContext
-import org.pastalab.fray.core.concurrency.primitives.CountDownLatchContext
-import org.pastalab.fray.core.concurrency.primitives.LockContext
-import org.pastalab.fray.core.concurrency.primitives.ObjectNotifyContext
-import org.pastalab.fray.core.concurrency.primitives.ReadLockContext
-import org.pastalab.fray.core.concurrency.primitives.ReentrantLockContext
-import org.pastalab.fray.core.concurrency.primitives.ReferencedContextManager
-import org.pastalab.fray.core.concurrency.primitives.SemaphoreContext
-import org.pastalab.fray.core.concurrency.primitives.SignalContext
-import org.pastalab.fray.core.concurrency.primitives.StampedLockContext
-import org.pastalab.fray.core.concurrency.primitives.WriteLockContext
-import org.pastalab.fray.core.scheduler.FrayIdeaPluginScheduler
-import org.pastalab.fray.core.scheduler.SURWScheduler
-import org.pastalab.fray.core.syncurity.SyncurityEvaluationContext
-import org.pastalab.fray.core.syncurity.SyncurityEvaluationDelegate
-import org.pastalab.fray.core.utils.Utils.verifyOrReport
-import org.pastalab.fray.core.utils.toThreadInfos
-import org.pastalab.fray.instrumentation.base.memory.VolatileManager
-import org.pastalab.fray.rmi.ThreadState
-import org.pastalab.fray.runtime.DeadlockException
-import org.pastalab.fray.runtime.Delegate
-import org.pastalab.fray.runtime.LivenessException
-import org.pastalab.fray.runtime.Runtime
-import org.pastalab.fray.runtime.Runtime.onReportError
-import org.pastalab.fray.runtime.SyncurityCondition
+import org.anonlab.fray.core.command.Configuration
+import org.anonlab.fray.core.concurrency.HelperThread
+import org.anonlab.fray.core.concurrency.ReentrantReadWriteLockCache
+import org.anonlab.fray.core.concurrency.SynchronizationManager
+import org.anonlab.fray.core.concurrency.operations.*
+import org.anonlab.fray.core.concurrency.operations.InterruptionType
+import org.anonlab.fray.core.concurrency.primitives.ConditionSignalContext
+import org.anonlab.fray.core.concurrency.primitives.CountDownLatchContext
+import org.anonlab.fray.core.concurrency.primitives.LockContext
+import org.anonlab.fray.core.concurrency.primitives.ObjectNotifyContext
+import org.anonlab.fray.core.concurrency.primitives.ReadLockContext
+import org.anonlab.fray.core.concurrency.primitives.ReentrantLockContext
+import org.anonlab.fray.core.concurrency.primitives.ReferencedContextManager
+import org.anonlab.fray.core.concurrency.primitives.SemaphoreContext
+import org.anonlab.fray.core.concurrency.primitives.SignalContext
+import org.anonlab.fray.core.concurrency.primitives.StampedLockContext
+import org.anonlab.fray.core.concurrency.primitives.WriteLockContext
+import org.anonlab.fray.core.scheduler.FrayIdeaPluginScheduler
+import org.anonlab.fray.core.scheduler.SURWScheduler
+import org.anonlab.fray.core.syncurity.SyncurityEvaluationContext
+import org.anonlab.fray.core.syncurity.SyncurityEvaluationDelegate
+import org.anonlab.fray.core.utils.Utils.verifyOrReport
+import org.anonlab.fray.core.utils.toThreadInfos
+import org.anonlab.fray.instrumentation.base.memory.VolatileManager
+import org.anonlab.fray.rmi.ThreadState
+import org.anonlab.fray.runtime.DeadlockException
+import org.anonlab.fray.runtime.Delegate
+import org.anonlab.fray.runtime.LivenessException
+import org.anonlab.fray.runtime.Runtime
+import org.anonlab.fray.runtime.Runtime.onReportError
+import org.anonlab.fray.runtime.SyncurityCondition
 
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 class RunContext(val config: Configuration) {
@@ -135,7 +135,7 @@ class RunContext(val config: Configuration) {
       bugFound = e
       val sw = StringWriter()
       sw.append("Error: ${e}\n")
-      if (e is org.pastalab.fray.runtime.DeadlockException) {
+      if (e is org.anonlab.fray.runtime.DeadlockException) {
         for (registeredThread in registeredThreads.values) {
           if (registeredThread.state == ThreadState.Blocked) {
             sw.append("Thread: ${registeredThread.thread}\n")
@@ -196,9 +196,9 @@ class RunContext(val config: Configuration) {
       try {
         context.state = ThreadState.MainExiting
         scheduleNextOperation(true)
-      } catch (e: org.pastalab.fray.runtime.TargetTerminateException) {
+      } catch (e: org.anonlab.fray.runtime.TargetTerminateException) {
         // If deadlock detected let's try to unblock one thread and continue.
-        if (e is org.pastalab.fray.runtime.DeadlockException) {
+        if (e is org.anonlab.fray.runtime.DeadlockException) {
           for (thread in registeredThreads.values) {
             if (thread.state == ThreadState.Blocked) {
               val pendingOperation = thread.pendingOperation
@@ -211,7 +211,7 @@ class RunContext(val config: Configuration) {
       }
     }
     context.state = ThreadState.Completed
-    org.pastalab.fray.runtime.Runtime.DELEGATE = org.pastalab.fray.runtime.Delegate()
+    org.anonlab.fray.runtime.Runtime.DELEGATE = org.anonlab.fray.runtime.Delegate()
     done()
   }
 
@@ -242,7 +242,7 @@ class RunContext(val config: Configuration) {
   }
 
   fun shutDown() {
-    org.pastalab.fray.runtime.Runtime.DELEGATE = org.pastalab.fray.runtime.Delegate()
+    org.anonlab.fray.runtime.Runtime.DELEGATE = org.anonlab.fray.runtime.Delegate()
     executor.stopHelperThread()
   }
 
@@ -446,7 +446,7 @@ class RunContext(val config: Configuration) {
         }
         syncManager.signal(signalContext.getSyncObject())
         if (waitingObject is Condition) {
-          // TODO(aoli): Is this necessary?
+          // TODO(anon): Is this necessary?
           if (canInterrupt) {
             waitingObject.await()
           } else {
@@ -574,7 +574,7 @@ class RunContext(val config: Configuration) {
      * 1. foo.lock();
      * 2. foo.unlock(); } t1.1, t2.1, t1.2, t3.1 will make t2.1 lock again.
      */
-    // TODO(aoli): we may need to store monitor locks and reentrant locks separately.
+    // TODO(anon): we may need to store monitor locks and reentrant locks separately.
     // Consider the scenario where
     // ReentrantLock lock = new ReentrantLock();
     // lock.lock();
@@ -791,7 +791,7 @@ class RunContext(val config: Configuration) {
       obj: Any?,
       owner: String,
       name: String,
-      type: org.pastalab.fray.runtime.MemoryOpType
+      type: org.anonlab.fray.runtime.MemoryOpType
   ) {
     if (!config.executionInfo.interleaveMemoryOps && !volatileManager.isVolatile(owner, name))
         return
@@ -805,23 +805,23 @@ class RunContext(val config: Configuration) {
     memoryOperation(objIds.toIntArray().contentHashCode(), type)
   }
 
-  fun atomicOperation(obj: Any, type: org.pastalab.fray.runtime.MemoryOpType) {
+  fun atomicOperation(obj: Any, type: org.anonlab.fray.runtime.MemoryOpType) {
     val objId = System.identityHashCode(obj)
     memoryOperation(objId, type)
   }
 
-  fun arrayOperation(obj: Any, index: Int, type: org.pastalab.fray.runtime.MemoryOpType) {
+  fun arrayOperation(obj: Any, index: Int, type: org.anonlab.fray.runtime.MemoryOpType) {
     if (!config.executionInfo.interleaveMemoryOps) return
     val objId = System.identityHashCode(obj)
     memoryOperation((31 * objId) + index, type)
   }
 
-  fun unsafeOperation(obj: Any, offset: Long, type: org.pastalab.fray.runtime.MemoryOpType) {
+  fun unsafeOperation(obj: Any, offset: Long, type: org.anonlab.fray.runtime.MemoryOpType) {
     val objId = System.identityHashCode(obj)
     memoryOperation((31 * objId) + offset.toInt(), type)
   }
 
-  fun memoryOperation(obj: Int, type: org.pastalab.fray.runtime.MemoryOpType) {
+  fun memoryOperation(obj: Int, type: org.anonlab.fray.runtime.MemoryOpType) {
     val t = Thread.currentThread().id
     registeredThreads[t]?.pendingOperation = MemoryOperation(obj, type)
     registeredThreads[t]?.state = ThreadState.Runnable

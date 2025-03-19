@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.success.rwlock;
+package org.anonlab.fray.test.success.rwlock;
 
 public class StaticReentrantReadWriteLockMultipleTests {
     public static void main(String[] args) {

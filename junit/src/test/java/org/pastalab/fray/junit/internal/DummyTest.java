@@ -1,10 +1,10 @@
-package org.pastalab.fray.junit.internal;
+package org.anonlab.fray.junit.internal;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.pastalab.fray.junit.junit5.FrayTestExtension;
-import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
+import org.anonlab.fray.junit.junit5.FrayTestExtension;
+import org.anonlab.fray.junit.junit5.annotations.ConcurrencyTest;
 
 @ExtendWith(FrayTestExtension.class)
 public class DummyTest {

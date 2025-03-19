@@ -1,4 +1,4 @@
-package org.pastalab.fray.core.randomness
+package org.anonlab.fray.core.randomness
 
 import java.util.*
 import kotlinx.serialization.Serializable

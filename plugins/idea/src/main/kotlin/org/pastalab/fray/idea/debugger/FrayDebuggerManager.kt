@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea.debugger
+package org.anonlab.fray.idea.debugger
 
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessListener
@@ -9,10 +9,10 @@ import com.intellij.xdebugger.XDebugSessionListener
 import java.rmi.Remote
 import java.rmi.registry.LocateRegistry
 import java.rmi.server.UnicastRemoteObject
-import org.pastalab.fray.idea.ui.FrayDebugPanel
-import org.pastalab.fray.rmi.Constant
-import org.pastalab.fray.rmi.RemoteScheduler
-import org.pastalab.fray.rmi.ScheduleObserver
+import org.anonlab.fray.idea.ui.FrayDebugPanel
+import org.anonlab.fray.rmi.Constant
+import org.anonlab.fray.rmi.RemoteScheduler
+import org.anonlab.fray.rmi.ScheduleObserver
 
 class FrayDebuggerManager(val debugSession: XDebugSession) :
     XDebugSessionListener, ProcessListener {

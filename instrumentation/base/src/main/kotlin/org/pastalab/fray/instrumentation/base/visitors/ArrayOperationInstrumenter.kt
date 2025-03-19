@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
@@ -30,11 +30,11 @@ class ArrayOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           dup2()
           invokeStatic(
               Type.getObjectType(
-                  org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+                  org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
               Method(
-                  org.pastalab.fray.runtime.Runtime::onArrayLoad.name,
+                  org.anonlab.fray.runtime.Runtime::onArrayLoad.name,
                   Utils.kFunctionToJvmMethodDescriptor(
-                      org.pastalab.fray.runtime.Runtime::onArrayLoad)),
+                      org.anonlab.fray.runtime.Runtime::onArrayLoad)),
           )
         }
         if (opcode == AASTORE ||
@@ -55,8 +55,8 @@ class ArrayOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           dup2() // value, arrayref, index, arrayref, index
           invokeStatic(
               Type.getObjectType(
-                  org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
-              Utils.kFunctionToASMMethod(org.pastalab.fray.runtime.Runtime::onArrayStore),
+                  org.anonlab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+              Utils.kFunctionToASMMethod(org.anonlab.fray.runtime.Runtime::onArrayStore),
           )
           /*
            Now we have [value, arrayref, index], we need to

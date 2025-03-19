@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import java.util.concurrent.locks.AbstractQueuedSynchronizer.ConditionObject
 import org.objectweb.asm.ClassVisitor
@@ -19,12 +19,12 @@ class ConditionInstrumenter(cv: ClassVisitor) :
       val method =
           if (name == "await") {
             Pair(
-                org.pastalab.fray.runtime.Runtime::onConditionAwait,
-                org.pastalab.fray.runtime.Runtime::onConditionAwaitDone)
+                org.anonlab.fray.runtime.Runtime::onConditionAwait,
+                org.anonlab.fray.runtime.Runtime::onConditionAwaitDone)
           } else {
             Pair(
-                org.pastalab.fray.runtime.Runtime::onConditionAwaitUninterruptibly,
-                org.pastalab.fray.runtime.Runtime::onConditionAwaitUninterruptiblyDone)
+                org.anonlab.fray.runtime.Runtime::onConditionAwaitUninterruptibly,
+                org.anonlab.fray.runtime.Runtime::onConditionAwaitUninterruptiblyDone)
           }
       val eMv = MethodEnterVisitor(mv, method.first, access, name, descriptor, true, false)
       return MethodExitVisitor(eMv, method.second, access, name, descriptor, true, false, true)
@@ -33,7 +33,7 @@ class ConditionInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onConditionSignal,
+              org.anonlab.fray.runtime.Runtime::onConditionSignal,
               access,
               name,
               descriptor,
@@ -41,7 +41,7 @@ class ConditionInstrumenter(cv: ClassVisitor) :
               false)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onConditionSignalDone,
+          org.anonlab.fray.runtime.Runtime::onConditionSignalDone,
           access,
           name,
           descriptor,
@@ -53,7 +53,7 @@ class ConditionInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onConditionSignalAll,
+              org.anonlab.fray.runtime.Runtime::onConditionSignalAll,
               access,
               name,
               descriptor,
@@ -61,7 +61,7 @@ class ConditionInstrumenter(cv: ClassVisitor) :
               false)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onConditionSignalDone,
+          org.anonlab.fray.runtime.Runtime::onConditionSignalDone,
           access,
           name,
           descriptor,

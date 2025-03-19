@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
 import java.io.PrintStream
 import java.lang.invoke.CallSite
@@ -46,7 +46,7 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
     val eMv =
         MethodEnterVisitor(
             mv,
-            org.pastalab.fray.runtime.Runtime::onSkipMethod,
+            org.anonlab.fray.runtime.Runtime::onSkipMethod,
             access,
             name,
             descriptor,
@@ -55,7 +55,7 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
             preCustomizer = { push(methodSignature) })
     return MethodExitVisitor(
         eMv,
-        org.pastalab.fray.runtime.Runtime::onSkipMethodDone,
+        org.anonlab.fray.runtime.Runtime::onSkipMethodDone,
         access,
         name,
         descriptor,

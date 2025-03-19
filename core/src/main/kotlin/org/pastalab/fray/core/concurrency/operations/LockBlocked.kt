@@ -1,7 +1,7 @@
-package org.pastalab.fray.core.concurrency.operations
+package org.anonlab.fray.core.concurrency.operations
 
-import org.pastalab.fray.core.concurrency.primitives.Acquirable
-import org.pastalab.fray.core.concurrency.primitives.InterruptibleContext
+import org.anonlab.fray.core.concurrency.primitives.Acquirable
+import org.anonlab.fray.core.concurrency.primitives.InterruptibleContext
 
 class LockBlocked<T>(timed: Boolean, val interruptibleContext: T) :
     BlockedOperation(timed, interruptibleContext.resourceInfo) where

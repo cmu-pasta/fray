@@ -17,12 +17,12 @@ dependencies {
 
 tasks.named<ShadowJar>("shadowJar") {
   archiveClassifier.set("")
-  relocate("org.apache.commons", "org.pastalab.fray.apache.commons")
+  relocate("org.apache.commons", "org.anonlab.fray.apache.commons")
 }
 
 val createVersionProperties by tasks.registering(WriteProperties::class) {
   val filePath = sourceSets.main.map {
-    it.output.resourcesDir!!.resolve("org/pastalab/fray/plugins/base/version.properties")
+    it.output.resourcesDir!!.resolve("org/anonlab/fray/plugins/base/version.properties")
   }
   destinationFile = filePath
   property("version", project.version.toString())

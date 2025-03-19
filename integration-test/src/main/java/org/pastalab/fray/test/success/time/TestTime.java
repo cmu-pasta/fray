@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.success.time;
+package org.anonlab.fray.test.success.time;
 
 import java.time.Instant;
 

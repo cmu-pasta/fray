@@ -1,4 +1,4 @@
-package org.pastalab.fray.test;
+package org.anonlab.fray.test;
 
 public class ExpectedException extends RuntimeException {
     public ExpectedException() {

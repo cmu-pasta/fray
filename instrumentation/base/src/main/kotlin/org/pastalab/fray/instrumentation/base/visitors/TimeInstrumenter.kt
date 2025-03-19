@@ -1,11 +1,11 @@
-package org.pastalab.fray.instrumentation.base.visitors
+package org.anonlab.fray.instrumentation.base.visitors
 
+import org.anonlab.fray.runtime.Runtime
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
-import org.pastalab.fray.runtime.Runtime
 
 class TimeInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   override fun visitMethod(

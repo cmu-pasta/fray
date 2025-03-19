@@ -1,4 +1,4 @@
-package org.pastalab.fray.runtime;
+package org.anonlab.fray.runtime;
 
 abstract public class SyncurityCondition {
     public static int NEXT_ID = 0;

@@ -1,4 +1,4 @@
-package org.pastalab.fray.junit
+package org.anonlab.fray.junit
 
 import java.nio.file.Paths
 

@@ -1,9 +1,9 @@
-package org.pastalab.fray.idea.debugger
+package org.anonlab.fray.idea.debugger
 
 import com.intellij.openapi.project.Project
-import org.pastalab.fray.idea.objects.ThreadExecutionContext
-import org.pastalab.fray.rmi.ScheduleObserver
-import org.pastalab.fray.rmi.ThreadInfo
+import org.anonlab.fray.idea.objects.ThreadExecutionContext
+import org.anonlab.fray.rmi.ScheduleObserver
+import org.anonlab.fray.rmi.ThreadInfo
 
 class FrayScheduleObserver(val project: Project) : ScheduleObserver<ThreadInfo> {
   val observers = mutableListOf<ScheduleObserver<ThreadExecutionContext>>()

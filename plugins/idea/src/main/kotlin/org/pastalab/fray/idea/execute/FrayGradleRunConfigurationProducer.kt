@@ -1,4 +1,4 @@
-package org.pastalab.fray.idea.execute
+package org.anonlab.fray.idea.execute
 
 import com.intellij.execution.actions.ConfigurationFromContext
 import com.intellij.execution.configurations.ConfigurationFactory

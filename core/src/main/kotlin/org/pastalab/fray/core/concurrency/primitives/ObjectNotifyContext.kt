@@ -1,10 +1,10 @@
-package org.pastalab.fray.core.concurrency.primitives
+package org.anonlab.fray.core.concurrency.primitives
 
-import org.pastalab.fray.core.ThreadContext
-import org.pastalab.fray.core.concurrency.operations.InterruptionType
-import org.pastalab.fray.core.concurrency.operations.ObjectWaitBlocked
-import org.pastalab.fray.core.concurrency.operations.ObjectWakeBlocked
-import org.pastalab.fray.rmi.ThreadState
+import org.anonlab.fray.core.ThreadContext
+import org.anonlab.fray.core.concurrency.operations.InterruptionType
+import org.anonlab.fray.core.concurrency.operations.ObjectWaitBlocked
+import org.anonlab.fray.core.concurrency.operations.ObjectWakeBlocked
+import org.anonlab.fray.rmi.ThreadState
 
 class ObjectNotifyContext(lockContext: LockContext, obj: Any) : SignalContext(lockContext) {
 

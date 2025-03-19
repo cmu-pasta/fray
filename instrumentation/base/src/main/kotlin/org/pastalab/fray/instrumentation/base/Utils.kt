@@ -1,11 +1,11 @@
-package org.pastalab.fray.instrumentation.base
+package org.anonlab.fray.instrumentation.base
 
 import java.io.File
 import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
-import org.pastalab.fray.instrumentation.base.Configs.DEBUG_MODE
+import org.anonlab.fray.instrumentation.base.Configs.DEBUG_MODE
 
 object Utils {
   @OptIn(ExperimentalPathApi::class)
