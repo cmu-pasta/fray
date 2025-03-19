@@ -3,8 +3,6 @@
 [![Build](https://github.com/anon/fray/actions/workflows/main.yml/badge.svg)](https://github.com/anon/fray/actions/workflows/main.yml)
 [![Gradle](https://img.shields.io/gradle-plugin-portal/v/org.anonlab.fray.gradle)](https://plugins.gradle.org/plugin/org.anonlab.fray.gradle)
 [![Maven](https://img.shields.io/maven-central/v/org.anonlab.fray.maven/fray-plugins-maven)](https://central.sonatype.com/artifact/org.anonlab.fray.maven/fray-plugins-maven)
-[![JetBrain Plugin](https://img.shields.io/jetbrains/plugin/v/26623-fray-debugger)](https://plugins.jetbrains.com/plugin/26623-fray-debugger)
-[![Discord](https://img.shields.io/discord/1345494709807743057)](https://discord.gg/2VkNRuHUCX)
 
 
 <a href="https://github.com/anon/fray">
@@ -104,14 +102,14 @@ plugins {
 - [IDE Settings](./docs/IDE.md)
 - [Bugs Found by Fray and Testimonies](./docs/bugs.md)
 
+# Build from Source
+
+```bash
+chmod +x gradlew
+./gradlew build
+```
+
 # Contributing
 
 Contributions to Fray are both welcomed and appreciated! Please see our [contributing guide](./docs/contributing.md) for more information on how to contribute to Fray. 
 
-# Acknowledgements
-
-This material is based upon work supported by the National Science Foundation under Grant No. 2120955. 
-Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) 
-and do not necessarily reflect the views of the National Science Foundation.
-
-The Fray project was also supported by an Amazon Research Award.
