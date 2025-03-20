@@ -31,11 +31,11 @@ import org.pastalab.fray.rmi.ThreadState
 /** Panel that contains the thread selector, stack trace viewer, and scheduling controls. */
 class SchedulerControlPanel(
     val project: Project,
-    private val onThreadSelected: (ThreadExecutionContext) -> Unit,
-    private val onScheduleButtonPressed: (ThreadExecutionContext?) -> Unit
+    val onThreadSelected: (ThreadExecutionContext) -> Unit,
+    val onScheduleButtonPressed: (ThreadExecutionContext?) -> Unit
 ) : JPanel() {
   // UI Components
-  private val comboBoxModel = DefaultComboBoxModel<ThreadExecutionContext>()
+  val comboBoxModel = DefaultComboBoxModel<ThreadExecutionContext>()
   private val comboBox: ComboBox<ThreadExecutionContext>
   private val myFrameList: JBList<StackTraceElement>
   private val myFrameListModel: DefaultListModel<StackTraceElement>

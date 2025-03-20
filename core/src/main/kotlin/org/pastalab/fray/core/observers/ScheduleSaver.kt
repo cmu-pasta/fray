@@ -11,7 +11,7 @@ class ScheduleSaver(val config: Configuration) : ScheduleObserver<ThreadInfo> {
     config.saveToReportFolder(0)
   }
 
-  override fun onExecutionDone() {}
+  override fun onExecutionDone(bugFound: Boolean) {}
 
   override fun saveToReportFolder(path: String) {}
 }

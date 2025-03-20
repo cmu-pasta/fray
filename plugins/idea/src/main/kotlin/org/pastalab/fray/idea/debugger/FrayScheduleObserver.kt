@@ -20,8 +20,8 @@ class FrayScheduleObserver(val project: Project) : ScheduleObserver<ThreadInfo> 
     }
   }
 
-  override fun onExecutionDone() {
-    observers.forEach { it.onExecutionDone() }
+  override fun onExecutionDone(bugFound: Boolean) {
+    observers.forEach { it.onExecutionDone(bugFound) }
   }
 
   override fun saveToReportFolder(path: String) {

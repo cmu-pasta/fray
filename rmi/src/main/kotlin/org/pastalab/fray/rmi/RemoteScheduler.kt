@@ -36,7 +36,24 @@ data class ThreadInfo(
     val stackTraces: List<StackTraceElement>,
     val waitingFor: ResourceInfo?,
     val acquired: Set<ResourceInfo>
-) : Serializable
+) : Serializable {
+  override fun toString(): String {
+    return "Thread index: ${threadIndex}\n" +
+        "Thread name: ${threadName}\n" +
+        "Thread state: ${state}\n" +
+        if (waitingFor != null) {
+          "Thread is waiting for: ${waitingFor.resourceId}\n"
+        } else {
+          ""
+        } +
+        if (acquired.isNotEmpty()) {
+          "Thread has acquired: ${acquired.joinToString(", ") { it.resourceId.toString() }}\n"
+        } else {
+          ""
+        } +
+        "Stack trace:\n" + stackTraces.joinToString("\n")
+  }
+}
 
 interface RemoteScheduler : Remote {
   @Throws(RemoteException::class) fun scheduleNextOperation(threads: List<ThreadInfo>): Int

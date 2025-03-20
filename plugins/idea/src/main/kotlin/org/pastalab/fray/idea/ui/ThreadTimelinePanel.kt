@@ -21,7 +21,7 @@ data class ThreadExecutionHistory(
     val events: MutableList<Pair<Int, String>>
 )
 
-class ThreadTimelinePanel : JPanel(), ScheduleObserver<ThreadExecutionContext> {
+class ThreadTimelinePanel : JPanel(){
   private val threadExecutionHistory = mutableMapOf<Int, ThreadExecutionHistory>()
   private val timelineCanvas = ThreadTimelineCanvas()
   private var currentTime = 0
@@ -49,20 +49,11 @@ class ThreadTimelinePanel : JPanel(), ScheduleObserver<ThreadExecutionContext> {
     timelineCanvas.repaint()
   }
 
-  override fun onExecutionStart() {}
-
-  override fun onNewSchedule(
-      enabledSchedules: List<ThreadExecutionContext>,
+  fun onNewSchedule(
       scheduled: ThreadExecutionContext
   ) {
-    if (enabledSchedules.size > 1 || threadExecutionHistory.isEmpty()) {
-      newThreadScheduled(scheduled)
-    }
+    newThreadScheduled(scheduled)
   }
-
-  override fun onExecutionDone() {}
-
-  override fun saveToReportFolder(path: String) {}
 
   inner class ThreadTimelineCanvas : JPanel() {
     private val rowHeight = 30

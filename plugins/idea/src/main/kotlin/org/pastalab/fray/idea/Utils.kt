@@ -9,12 +9,18 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.util.ClassUtil
 
 fun StackTraceElement.getPsiFile(project: Project): PsiFile? {
+  if (lineNumber <= 0) return null
+  if (className == "ThreadStartOperation") return null
+  return getPsiFileFromClass(className, project)
+}
+
+fun getPsiFileFromClass(className: String, project: Project): PsiFile? {
   return ApplicationManager.getApplication()
       .executeOnPooledThread<PsiFile?> {
         runReadAction {
           val psiClass =
               ClassUtil.findPsiClassByJVMName(PsiManager.getInstance(project), className)
-                  ?: return@runReadAction null
+                ?: return@runReadAction null
           val fileIndex = ProjectRootManager.getInstance(project).fileIndex
           val psiFile = psiClass.containingFile
           if (!fileIndex.isInSourceContent(psiFile.virtualFile)) return@runReadAction null
