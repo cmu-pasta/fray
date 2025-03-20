@@ -38,7 +38,7 @@ class FrayDebugPanel(val project: Project, val scheduleObserver: FrayScheduleObs
 
     // Create the thread timeline panel
     threadTimelinePanel = ThreadTimelinePanel()
-//    scheduleObserver.observers.add(threadTimelinePanel)
+    //    scheduleObserver.observers.add(threadTimelinePanel)
 
     // Create the thread resource panel
     threadResourcePanel = ThreadResourcePanel()
@@ -89,12 +89,12 @@ class FrayDebugPanel(val project: Project, val scheduleObserver: FrayScheduleObs
     threadInfoUpdaters.clear()
     controlPanel.clear()
     threadResourcePanel.clear()
-//    scheduleObserver.observers.remove(threadTimelinePanel)
+    //    scheduleObserver.observers.remove(threadTimelinePanel)
   }
 
   fun schedule(
-    threads: List<ThreadExecutionContext>,
-    onThreadSelected: (ThreadExecutionContext) -> Unit
+      threads: List<ThreadExecutionContext>,
+      onThreadSelected: (ThreadExecutionContext) -> Unit
   ) {
     mcpApi.updateThreadStatus(threads)
     processThreadsForHighlighting(threads)

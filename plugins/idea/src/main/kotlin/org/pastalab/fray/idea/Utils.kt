@@ -20,7 +20,7 @@ fun getPsiFileFromClass(className: String, project: Project): PsiFile? {
         runReadAction {
           val psiClass =
               ClassUtil.findPsiClassByJVMName(PsiManager.getInstance(project), className)
-                ?: return@runReadAction null
+                  ?: return@runReadAction null
           val fileIndex = ProjectRootManager.getInstance(project).fileIndex
           val psiFile = psiClass.containingFile
           if (!fileIndex.isInSourceContent(psiFile.virtualFile)) return@runReadAction null

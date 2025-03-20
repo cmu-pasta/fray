@@ -51,7 +51,8 @@ data class ThreadInfo(
         } else {
           ""
         } +
-        "Stack trace:\n" + stackTraces.joinToString("\n")
+        "Stack trace:\n" +
+        stackTraces.joinToString("\n")
   }
 }
 

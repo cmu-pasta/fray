@@ -14,14 +14,13 @@ import java.awt.event.MouseMotionAdapter
 import javax.swing.JPanel
 import javax.swing.ToolTipManager
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
-import org.pastalab.fray.rmi.ScheduleObserver
 
 data class ThreadExecutionHistory(
     var threadName: String,
     val events: MutableList<Pair<Int, String>>
 )
 
-class ThreadTimelinePanel : JPanel(){
+class ThreadTimelinePanel : JPanel() {
   private val threadExecutionHistory = mutableMapOf<Int, ThreadExecutionHistory>()
   private val timelineCanvas = ThreadTimelineCanvas()
   private var currentTime = 0
@@ -49,9 +48,7 @@ class ThreadTimelinePanel : JPanel(){
     timelineCanvas.repaint()
   }
 
-  fun onNewSchedule(
-      scheduled: ThreadExecutionContext
-  ) {
+  fun onNewSchedule(scheduled: ThreadExecutionContext) {
     newThreadScheduled(scheduled)
   }
 
