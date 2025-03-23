@@ -13,7 +13,7 @@ class ScheduleRecorder : ScheduleObserver<ThreadInfo> {
     recordings.clear()
   }
 
-  override fun onNewSchedule(enabledSchedules: List<ThreadInfo>, scheduled: ThreadInfo) {
+  override fun onNewSchedule(allThreads: List<ThreadInfo>, scheduled: ThreadInfo) {
     var count = 0
     var operation = ""
     for (st in scheduled.stackTraces) {
@@ -24,7 +24,7 @@ class ScheduleRecorder : ScheduleObserver<ThreadInfo> {
       count += 1
       if (count == 3) break
     }
-    val enabled = enabledSchedules.map { it.threadIndex }.toList()
+    val enabled = allThreads.map { it.threadIndex }.toList()
     val scheduledIndex = scheduled.threadIndex
     val recording = ScheduleRecording(scheduledIndex, enabled, operation)
     recordings.add(recording)

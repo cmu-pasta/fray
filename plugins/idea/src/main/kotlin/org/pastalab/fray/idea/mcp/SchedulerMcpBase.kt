@@ -131,7 +131,7 @@ open class SchedulerMcpBase(val project: Project, val schedulerPanel: SchedulerC
   }
 
   override fun onNewSchedule(
-      enabledSchedules: List<ThreadExecutionContext>,
+      allThreads: List<ThreadExecutionContext>,
       scheduled: ThreadExecutionContext
   ) {}
 

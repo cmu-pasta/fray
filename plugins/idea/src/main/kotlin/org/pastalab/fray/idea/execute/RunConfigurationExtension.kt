@@ -5,6 +5,7 @@ import com.intellij.execution.RunConfigurationExtension
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
+import org.pastalab.fray.idea.FrayConstants.FRAY_DEBUGGER_KEY
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_DEBUG
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_DISABLED
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_PROPERTY_KEY
@@ -24,6 +25,7 @@ class RunConfigurationExtension : RunConfigurationExtension() {
       runnerSettings: RunnerSettings?,
       executor: Executor,
   ) {
+    configuration.putUserData(FRAY_DEBUGGER_KEY, FRAY_DEBUGGER_DISABLED)
     when (configuration) {
       is FrayGradleRunConfiguration -> {
         configuration.settings.taskNames.removeIf { it.contains(FRAY_DEBUGGER_PROPERTY_KEY) }
@@ -33,6 +35,7 @@ class RunConfigurationExtension : RunConfigurationExtension() {
       }
     }
     if (executor.id == FrayDebugExecutor.EXECUTOR_ID) {
+      configuration.putUserData(FRAY_DEBUGGER_KEY, FRAY_DEBUGGER_DEBUG)
       when (configuration) {
         is FrayGradleRunConfiguration -> {
           configuration.settings.taskNames.add("-P$FRAY_DEBUGGER_PROPERTY_KEY=$FRAY_DEBUGGER_DEBUG")
@@ -43,6 +46,7 @@ class RunConfigurationExtension : RunConfigurationExtension() {
       }
     }
     if (executor.id == FrayReplayerExecutor.EXECUTOR_ID) {
+      configuration.putUserData(FRAY_DEBUGGER_KEY, FRAY_DEBUGGER_REPLAY)
       when (configuration) {
         is FrayGradleRunConfiguration -> {
           configuration.settings.taskNames.add(

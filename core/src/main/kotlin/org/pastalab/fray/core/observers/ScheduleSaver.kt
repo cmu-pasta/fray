@@ -7,7 +7,7 @@ import org.pastalab.fray.rmi.ThreadInfo
 class ScheduleSaver(val config: Configuration) : ScheduleObserver<ThreadInfo> {
   override fun onExecutionStart() {}
 
-  override fun onNewSchedule(enabledSchedules: List<ThreadInfo>, scheduled: ThreadInfo) {
+  override fun onNewSchedule(allThreads: List<ThreadInfo>, scheduled: ThreadInfo) {
     config.saveToReportFolder(0)
   }
 

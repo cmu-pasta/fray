@@ -14,7 +14,11 @@ import org.pastalab.fray.idea.mcp.SchedulerMcpExplorer
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.rmi.ThreadState
 
-class FrayDebugPanel(val project: Project, val scheduleObserver: FrayScheduleObserver) : JPanel() {
+class FrayDebugPanel(
+    val project: Project,
+    val scheduleObserver: FrayScheduleObserver,
+    replayMode: Boolean
+) : JPanel() {
   // UI Components
   private val controlPanel: SchedulerControlPanel
   private val threadTimelinePanel: ThreadTimelinePanel
@@ -34,7 +38,8 @@ class FrayDebugPanel(val project: Project, val scheduleObserver: FrayScheduleObs
         SchedulerControlPanel(
             project,
             onThreadSelected = { threadInfo -> selected = threadInfo },
-            onScheduleButtonPressed = { selectedThread -> scheduleButtonPressed(selectedThread) })
+            onScheduleButtonPressed = { selectedThread -> scheduleButtonPressed(selectedThread) },
+            replayMode)
 
     // Create the thread timeline panel
     threadTimelinePanel = ThreadTimelinePanel()

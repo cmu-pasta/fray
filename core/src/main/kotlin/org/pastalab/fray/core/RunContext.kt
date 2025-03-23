@@ -1066,7 +1066,7 @@ class RunContext(val config: Configuration) {
           }
         }
     config.scheduleObservers.forEach {
-      it.onNewSchedule(enabledOperations.toThreadInfos(), nextThread.toThreadInfo())
+      it.onNewSchedule(registeredThreads.values.toList().toThreadInfos(), nextThread.toThreadInfo())
     }
 
     currentThreadId = nextThread.thread.id

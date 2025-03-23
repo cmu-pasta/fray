@@ -52,10 +52,10 @@ class ThreadTimelinePanel : JPanel(), ScheduleObserver<ThreadExecutionContext> {
   override fun onExecutionStart() {}
 
   override fun onNewSchedule(
-      enabledSchedules: List<ThreadExecutionContext>,
+      allThreads: List<ThreadExecutionContext>,
       scheduled: ThreadExecutionContext
   ) {
-    if (enabledSchedules.size > 1 || threadExecutionHistory.isEmpty()) {
+    if (allThreads.size > 1 || threadExecutionHistory.isEmpty()) {
       newThreadScheduled(scheduled)
     }
   }
