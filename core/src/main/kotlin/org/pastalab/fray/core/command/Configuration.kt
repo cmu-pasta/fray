@@ -29,6 +29,10 @@ import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.observers.ScheduleVerifier
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.*
+import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_DEBUG
+import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_DISABLED
+import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_PROPERTY_KEY
+import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_REPLAY
 import org.pastalab.fray.rmi.ScheduleObserver
 import org.pastalab.fray.rmi.ThreadInfo
 
@@ -268,8 +272,15 @@ data class Configuration(
       scheduleObservers.add(ScheduleRecorder())
     }
 
-    if (System.getProperty("fray.debugger", "false").toBoolean()) {
-      scheduler = FrayIdeaPluginScheduler()
+    val debuggerProperty = System.getProperty(FRAY_DEBUGGER_PROPERTY_KEY, FRAY_DEBUGGER_DISABLED)
+    if (debuggerProperty != FRAY_DEBUGGER_DISABLED) {
+      if (debuggerProperty == FRAY_DEBUGGER_DEBUG) {
+        scheduler = FrayIdeaPluginScheduler()
+      } else {
+        assert(debuggerProperty == FRAY_DEBUGGER_REPLAY) {
+          "Invalid value for $FRAY_DEBUGGER_PROPERTY_KEY: $debuggerProperty"
+        }
+      }
       scheduleObservers.add(DebuggerRegistry.getRemoteScheduleObserver())
       iter = 1
     }

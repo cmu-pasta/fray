@@ -16,13 +16,13 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) : ScheduleObserve
     index = 0
   }
 
-  override fun onNewSchedule(enabledSchedules: List<ThreadInfo>, scheduled: ThreadInfo) {
+  override fun onNewSchedule(allThreads: List<ThreadInfo>, scheduled: ThreadInfo) {
     if (index >= schedules.size) {
       return
     }
     val recording = schedules[index]
     val scheduledIndex = scheduled.threadIndex
-    val enabled = enabledSchedules.map { it.threadIndex }.toList()
+    val enabled = allThreads.map { it.threadIndex }.toList()
     var operation = ""
     var count = 0
     for (st in scheduled.stackTraces) {
@@ -48,7 +48,7 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) : ScheduleObserve
     index++
   }
 
-  override fun onExecutionDone() {}
+  override fun onExecutionDone(bugFound: Boolean) {}
 
   override fun saveToReportFolder(path: String) {}
 }

@@ -14,13 +14,17 @@ import org.pastalab.fray.rmi.Constant
 import org.pastalab.fray.rmi.RemoteScheduler
 import org.pastalab.fray.rmi.ScheduleObserver
 
-class FrayDebuggerManager(val debugSession: XDebugSession) :
+class FrayDebuggerManager(val debugSession: XDebugSession, val replayMode: Boolean) :
     XDebugSessionListener, ProcessListener {
   val scheduleObserver = FrayScheduleObserver(debugSession.project)
-  val schedulerPanel: FrayDebugPanel = FrayDebugPanel(debugSession.project, scheduleObserver)
-  val scheduler = FrayDebuggerScheduler(schedulerPanel, debugSession)
+  val schedulerPanel: FrayDebugPanel =
+      FrayDebugPanel(debugSession.project, scheduleObserver, replayMode)
+  val scheduler = FrayDebuggerScheduler(schedulerPanel, debugSession, replayMode)
 
   init {
+    if (replayMode) {
+      scheduleObserver.observers.add(scheduler)
+    }
     val schedulerStub = UnicastRemoteObject.exportObject(scheduler, 15214) as RemoteScheduler
     registry.bind(RemoteScheduler.NAME, schedulerStub)
     val observerStub = UnicastRemoteObject.exportObject(scheduleObserver, 15214) as Remote
@@ -41,6 +45,9 @@ class FrayDebuggerManager(val debugSession: XDebugSession) :
   override fun sessionPaused() {}
 
   fun stop() {
+    if (replayMode) {
+      scheduleObserver.observers.remove(scheduler)
+    }
     schedulerPanel.stop()
     registry.unbind(RemoteScheduler.NAME)
     registry.unbind(ScheduleObserver.NAME)

@@ -14,7 +14,9 @@ class FrayGradleRunConfiguration(project: Project, factory: ConfigurationFactory
   override fun getState(executor: Executor, env: ExecutionEnvironment): RunProfileState? {
     // Allow debugging for Fray
     val isStateForDebug =
-        ToolWindowId.DEBUG == executor.id || executor.id == FrayDebugExecutor.EXECUTOR_ID
+        ToolWindowId.DEBUG == executor.id ||
+            executor.id == FrayDebugExecutor.EXECUTOR_ID ||
+            executor.id == FrayReplayerExecutor.EXECUTOR_ID
     val runnableState =
         ExternalSystemRunnableState(
             settings,

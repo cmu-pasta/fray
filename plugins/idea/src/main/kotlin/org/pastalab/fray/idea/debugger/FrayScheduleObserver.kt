@@ -12,16 +12,16 @@ class FrayScheduleObserver(val project: Project) : ScheduleObserver<ThreadInfo> 
     observers.forEach { it.onExecutionStart() }
   }
 
-  override fun onNewSchedule(enabledSchedules: List<ThreadInfo>, scheduled: ThreadInfo) {
+  override fun onNewSchedule(allThreads: List<ThreadInfo>, scheduled: ThreadInfo) {
     observers.forEach {
       it.onNewSchedule(
-          enabledSchedules.map { ThreadExecutionContext(it, project) }.toList(),
+          allThreads.map { ThreadExecutionContext(it, project) }.toList(),
           ThreadExecutionContext(scheduled, project))
     }
   }
 
-  override fun onExecutionDone() {
-    observers.forEach { it.onExecutionDone() }
+  override fun onExecutionDone(bugFound: Boolean) {
+    observers.forEach { it.onExecutionDone(bugFound) }
   }
 
   override fun saveToReportFolder(path: String) {

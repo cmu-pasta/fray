@@ -25,10 +25,10 @@ class ThreadTimelinePanel : JPanel(), ScheduleObserver<ThreadExecutionContext> {
   private val threadExecutionHistory = mutableMapOf<Int, ThreadExecutionHistory>()
   private val timelineCanvas = ThreadTimelineCanvas()
   private var currentTime = 0
+  private val scrollPane = JBScrollPane(timelineCanvas)
 
   init {
     layout = BorderLayout()
-    val scrollPane = JBScrollPane(timelineCanvas)
     scrollPane.preferredSize = Dimension(300, 0) // Default width for timeline
     add(scrollPane, BorderLayout.CENTER)
 
@@ -52,21 +52,21 @@ class ThreadTimelinePanel : JPanel(), ScheduleObserver<ThreadExecutionContext> {
   override fun onExecutionStart() {}
 
   override fun onNewSchedule(
-      enabledSchedules: List<ThreadExecutionContext>,
+      allThreads: List<ThreadExecutionContext>,
       scheduled: ThreadExecutionContext
   ) {
-    if (enabledSchedules.size > 1 || threadExecutionHistory.isEmpty()) {
+    if (allThreads.size > 1 || threadExecutionHistory.isEmpty()) {
       newThreadScheduled(scheduled)
     }
   }
 
-  override fun onExecutionDone() {}
+  override fun onExecutionDone(bugFound: Boolean) {}
 
   override fun saveToReportFolder(path: String) {}
 
   inner class ThreadTimelineCanvas : JPanel() {
     private val rowHeight = 30
-    private val threadNameWidth = 100
+    private val threadNameWidth = 105
     private val eventWidth = 8
     private val eventHeight = 16
     private val eventRadius = 4
@@ -81,7 +81,7 @@ class ThreadTimelinePanel : JPanel(), ScheduleObserver<ThreadExecutionContext> {
       addMouseMotionListener(
           object : MouseMotionAdapter() {
             override fun mouseMoved(e: MouseEvent) {
-              // Detect if mouse is over an event marker
+              // Get mouse coordinates relative to the canvas
               val x = e.x
               val y = e.y
 
@@ -91,16 +91,17 @@ class ThreadTimelinePanel : JPanel(), ScheduleObserver<ThreadExecutionContext> {
 
               // Check each thread's events
               for ((threadIndex, history) in threadExecutionHistory) {
-                val threadY = threadIndex.toInt() * rowHeight + rowHeight / 2
+                val threadY =
+                    threadExecutionHistory.keys.indexOf(threadIndex) * rowHeight + rowHeight / 2
 
                 // Check if mouse is in this thread's row
-                if (y >= threadY - eventHeight / 2 && y <= threadY + eventHeight / 2) {
+                if (y >= threadY - eventHeight && y <= threadY + eventHeight) {
                   // Check each event
                   for (event in history.events) {
                     val eventX = threadNameWidth + (event.first * 20)
 
-                    // Check if mouse is over this event
-                    if (x >= eventX - eventWidth / 2 && x <= eventX + eventWidth / 2) {
+                    // Use a more generous hit area for events
+                    if (x >= eventX - eventWidth && x <= eventX + eventWidth) {
                       hoveredEvent = Pair(threadIndex, event)
                       break
                     }
@@ -111,21 +112,31 @@ class ThreadTimelinePanel : JPanel(), ScheduleObserver<ThreadExecutionContext> {
               // Repaint if hover state changed
               if (previousHoveredEvent != hoveredEvent) {
                 repaint()
+                // Force tooltip to update
+                ToolTipManager.sharedInstance()
+                    .mouseMoved(
+                        MouseEvent(
+                            this@ThreadTimelineCanvas,
+                            MouseEvent.MOUSE_MOVED,
+                            System.currentTimeMillis(),
+                            0,
+                            x,
+                            y,
+                            0,
+                            false))
               }
             }
           })
 
-      // Add tooltip support
-      toolTipText = " "
+      // Enable tooltips
+      ToolTipManager.sharedInstance().registerComponent(this)
     }
 
     override fun getToolTipText(event: MouseEvent): String? {
-      if (hoveredEvent != null) {
-        val (threadIndex, eventData) = hoveredEvent!!
+      return hoveredEvent?.let { (threadIndex, eventData) ->
         val (timeStep, frameInfo) = eventData
-        return "Thread $threadIndex - Step $timeStep:\n$frameInfo"
+        "Step: ${timeStep + 1}\n$frameInfo"
       }
-      return null
     }
 
     override fun getPreferredSize(): Dimension {
@@ -164,7 +175,13 @@ class ThreadTimelinePanel : JPanel(), ScheduleObserver<ThreadExecutionContext> {
         // Draw thread name
         g2d.color = JBColor.foreground()
         g2d.font = Font(Font.MONOSPACED, Font.PLAIN, 12)
-        g2d.drawString(history.threadName, 10, y + 5)
+        val threadName =
+            if (history.threadName.length > threadNameWidth / 10) {
+              history.threadName.substring(0, threadNameWidth / 10) + "..."
+            } else {
+              history.threadName
+            }
+        g2d.drawString(threadName, 10, y + 5)
 
         // Draw timeline for this thread
         drawThreadTimeline(g2d, threadIndex, history.events, y)

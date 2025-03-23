@@ -9,6 +9,12 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.util.ClassUtil
 
 fun StackTraceElement.getPsiFile(project: Project): PsiFile? {
+  if (lineNumber <= 0) return null
+  if (className == "ThreadStartOperation") return null
+  return getPsiFileFromClass(className, project)
+}
+
+fun getPsiFileFromClass(className: String, project: Project): PsiFile? {
   return ApplicationManager.getApplication()
       .executeOnPooledThread<PsiFile?> {
         runReadAction {

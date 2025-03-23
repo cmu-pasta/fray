@@ -236,7 +236,7 @@ class RunContext(val config: Configuration) {
     latchManager.done()
 
     registeredThreads.clear()
-    config.scheduleObservers.forEach { it.onExecutionDone() }
+    config.scheduleObservers.forEach { it.onExecutionDone(bugFound != null) }
     hashCodeMapper.done(false)
     nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
   }
@@ -1066,7 +1066,7 @@ class RunContext(val config: Configuration) {
           }
         }
     config.scheduleObservers.forEach {
-      it.onNewSchedule(enabledOperations.toThreadInfos(), nextThread.toThreadInfo())
+      it.onNewSchedule(registeredThreads.values.toList().toThreadInfos(), nextThread.toThreadInfo())
     }
 
     currentThreadId = nextThread.thread.id

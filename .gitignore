@@ -43,3 +43,4 @@ scratch
 fray-report/
 .kotlin
 .intellijPlatform
+.direnv/

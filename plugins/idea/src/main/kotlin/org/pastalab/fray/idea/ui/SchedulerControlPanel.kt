@@ -24,6 +24,7 @@ import javax.swing.JLabel
 import javax.swing.JList
 import javax.swing.JPanel
 import javax.swing.ListCellRenderer
+import org.pastalab.fray.idea.FrayBundle
 import org.pastalab.fray.idea.getPsiFile
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.rmi.ThreadState
@@ -31,11 +32,12 @@ import org.pastalab.fray.rmi.ThreadState
 /** Panel that contains the thread selector, stack trace viewer, and scheduling controls. */
 class SchedulerControlPanel(
     val project: Project,
-    private val onThreadSelected: (ThreadExecutionContext) -> Unit,
-    private val onScheduleButtonPressed: (ThreadExecutionContext?) -> Unit
+    val onThreadSelected: (ThreadExecutionContext) -> Unit,
+    val onScheduleButtonPressed: (ThreadExecutionContext?) -> Unit,
+    val replayMode: Boolean
 ) : JPanel() {
   // UI Components
-  private val comboBoxModel = DefaultComboBoxModel<ThreadExecutionContext>()
+  val comboBoxModel = DefaultComboBoxModel<ThreadExecutionContext>()
   private val comboBox: ComboBox<ThreadExecutionContext>
   private val myFrameList: JBList<StackTraceElement>
   private val myFrameListModel: DefaultListModel<StackTraceElement>
@@ -97,7 +99,13 @@ class SchedulerControlPanel(
     add(scrollPane, BorderLayout.CENTER)
 
     // Schedule button
-    scheduleButton = JButton("Schedule")
+    val message =
+        if (replayMode) {
+          FrayBundle.INSTANCE.getMessage("fray.replayer.nextStep")
+        } else {
+          FrayBundle.INSTANCE.getMessage("fray.debugger.runThread")
+        }
+    scheduleButton = JButton(message)
     scheduleButton.addActionListener { onScheduleButtonPressed(selectedThread) }
     add(scheduleButton, BorderLayout.SOUTH)
   }
@@ -115,7 +123,7 @@ class SchedulerControlPanel(
     myFrameListModel.clear()
     ApplicationManager.getApplication().invokeAndWait {
       context.threadInfo.stackTraces.forEach { myFrameListModel.addElement(it) }
-      scheduleButton.isEnabled = context.threadInfo.state == ThreadState.Runnable
+      scheduleButton.isEnabled = context.threadInfo.state == ThreadState.Runnable || replayMode
     }
 
     // Notify the parent component of the selection

@@ -5,6 +5,11 @@ import com.intellij.execution.RunConfigurationExtension
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
+import org.pastalab.fray.idea.FrayConstants.FRAY_DEBUGGER_KEY
+import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_DEBUG
+import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_DISABLED
+import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_PROPERTY_KEY
+import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_REPLAY
 
 class RunConfigurationExtension : RunConfigurationExtension() {
   override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean {
@@ -20,26 +25,35 @@ class RunConfigurationExtension : RunConfigurationExtension() {
       runnerSettings: RunnerSettings?,
       executor: Executor,
   ) {
-    val frayPropertyKey = "fray.debugger"
-    val frayGradleString = "-P${frayPropertyKey}=true"
+    configuration.putUserData(FRAY_DEBUGGER_KEY, FRAY_DEBUGGER_DISABLED)
+    when (configuration) {
+      is FrayGradleRunConfiguration -> {
+        configuration.settings.taskNames.removeIf { it.contains(FRAY_DEBUGGER_PROPERTY_KEY) }
+      }
+      else -> {
+        params.vmParametersList.addProperty(FRAY_DEBUGGER_PROPERTY_KEY, FRAY_DEBUGGER_DISABLED)
+      }
+    }
     if (executor.id == FrayDebugExecutor.EXECUTOR_ID) {
+      configuration.putUserData(FRAY_DEBUGGER_KEY, FRAY_DEBUGGER_DEBUG)
       when (configuration) {
         is FrayGradleRunConfiguration -> {
-          if (frayGradleString !in configuration.settings.taskNames) {
-            configuration.settings.taskNames.add(frayGradleString)
-          }
+          configuration.settings.taskNames.add("-P$FRAY_DEBUGGER_PROPERTY_KEY=$FRAY_DEBUGGER_DEBUG")
         }
         else -> {
-          params.vmParametersList.addProperty(frayPropertyKey, "true")
+          params.vmParametersList.addProperty(FRAY_DEBUGGER_PROPERTY_KEY, FRAY_DEBUGGER_DEBUG)
         }
       }
-    } else {
+    }
+    if (executor.id == FrayReplayerExecutor.EXECUTOR_ID) {
+      configuration.putUserData(FRAY_DEBUGGER_KEY, FRAY_DEBUGGER_REPLAY)
       when (configuration) {
         is FrayGradleRunConfiguration -> {
-          configuration.settings.taskNames.remove(frayGradleString)
+          configuration.settings.taskNames.add(
+              "-P$FRAY_DEBUGGER_PROPERTY_KEY=$FRAY_DEBUGGER_REPLAY")
         }
         else -> {
-          params.vmParametersList.addProperty(frayPropertyKey, "false")
+          params.vmParametersList.addProperty(FRAY_DEBUGGER_PROPERTY_KEY, FRAY_DEBUGGER_REPLAY)
         }
       }
     }

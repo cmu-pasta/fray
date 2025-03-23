@@ -5,6 +5,7 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemTaskD
 
 class FrayGradleDebugRunner : ExternalSystemTaskDebugRunner() {
   override fun canRun(executorId: String, profile: RunProfile): Boolean {
-    return executorId == FrayDebugExecutor.EXECUTOR_ID && profile is FrayGradleRunConfiguration
+    return (executorId == FrayDebugExecutor.EXECUTOR_ID ||
+        executorId == FrayReplayerExecutor.EXECUTOR_ID) && profile is FrayGradleRunConfiguration
   }
 }

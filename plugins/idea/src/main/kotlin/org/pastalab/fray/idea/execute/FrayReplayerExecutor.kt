@@ -4,22 +4,22 @@ import com.intellij.icons.AllIcons
 import javax.swing.Icon
 import org.pastalab.fray.idea.FrayBundle
 
-class FrayDebugExecutor : FrayExecutor() {
+class FrayReplayerExecutor : FrayExecutor() {
 
   override fun getToolWindowIcon(): Icon {
     return AllIcons.Toolwindows.ToolWindowDebugger
   }
 
   override fun getIcon(): Icon {
-    return AllIcons.Actions.StartDebugger
+    return AllIcons.Actions.RestartDebugger
   }
 
   override fun getDescription(): String {
-    return FrayBundle.INSTANCE.getMessage("fray.debugger.startActionText")
+    return FrayBundle.INSTANCE.getMessage("fray.replayer.startActionText")
   }
 
   override fun getStartActionText(): String {
-    return FrayBundle.INSTANCE.getMessage("fray.debugger.startActionText")
+    return FrayBundle.INSTANCE.getMessage("fray.replayer.startActionText")
   }
 
   override fun getId(): String {
@@ -31,6 +31,6 @@ class FrayDebugExecutor : FrayExecutor() {
   }
 
   companion object {
-    const val EXECUTOR_ID = "Debug (Fray)"
+    const val EXECUTOR_ID = "Replayer (Fray)"
   }
 }
