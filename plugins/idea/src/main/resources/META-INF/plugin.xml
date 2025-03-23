@@ -17,9 +17,10 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <runConfigurationExtension implementation="org.pastalab.fray.idea.execute.RunConfigurationExtension"/>
-        <programRunner implementation="org.pastalab.fray.idea.execute.FrayGenericDebuggerRunner"/>
+        <programRunner implementation="org.pastalab.fray.idea.execute.FrayGenericRunner"/>
         <programRunner implementation="org.pastalab.fray.idea.execute.FrayGradleDebugRunner"/>
         <executor implementation="org.pastalab.fray.idea.execute.FrayDebugExecutor"/>
+        <executor implementation="org.pastalab.fray.idea.execute.FrayReplayerExecutor"/>
         <configurationType implementation="org.pastalab.fray.idea.execute.FrayGradleRunConfigurationType" />
         <runConfigurationProducer implementation="org.pastalab.fray.idea.execute.FrayGradleRunConfigurationProducer"/>
     </extensions>

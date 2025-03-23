@@ -68,7 +68,7 @@ class FrayPlugin : Plugin<Project> {
         it.jvmArgs(
             "-Dfray.workDir=${target.layout.buildDirectory.get().asFile}/${Commons.TEST_WORK_DIR}")
         if (target.hasProperty("fray.debugger")) {
-          it.jvmArgs("-Dfray.debugger=true")
+          it.jvmArgs("-Dfray.debugger=${target.property("fray.debugger")}")
         }
         it.dependsOn(jlink)
       }

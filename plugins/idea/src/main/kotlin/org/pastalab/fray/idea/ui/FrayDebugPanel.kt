@@ -10,7 +10,7 @@ import javax.swing.JPanel
 import javax.swing.JSplitPane
 import org.pastalab.fray.idea.debugger.FrayScheduleObserver
 import org.pastalab.fray.idea.getPsiFile
-import org.pastalab.fray.idea.mcp.SchedulerMcpApi
+import org.pastalab.fray.idea.mcp.SchedulerMcpExplorer
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.rmi.ThreadState
 
@@ -38,7 +38,7 @@ class FrayDebugPanel(val project: Project, val scheduleObserver: FrayScheduleObs
 
     // Create the thread timeline panel
     threadTimelinePanel = ThreadTimelinePanel()
-    //    scheduleObserver.observers.add(threadTimelinePanel)
+    scheduleObserver.observers.add(threadTimelinePanel)
 
     // Create the thread resource panel
     threadResourcePanel = ThreadResourcePanel()
@@ -52,7 +52,7 @@ class FrayDebugPanel(val project: Project, val scheduleObserver: FrayScheduleObs
     add(mainSplitPane, BorderLayout.CENTER)
   }
 
-  private val mcpApi = SchedulerMcpApi(project, controlPanel)
+  private val mcpServer = SchedulerMcpExplorer(project, controlPanel)
 
   private fun createRightPanel(): JPanel {
     // Create a panel to hold timeline and resource panels
@@ -76,27 +76,26 @@ class FrayDebugPanel(val project: Project, val scheduleObserver: FrayScheduleObs
     threadResourcePanel.clear()
 
     if (newSelected != null) {
-      threadTimelinePanel.onNewSchedule(newSelected)
       selected = newSelected
       callback?.invoke(newSelected) // Notify callback with selected thread ID
     }
   }
 
   fun stop() {
-    mcpApi.stop()
+    mcpServer.stop()
     highlightManager.clearAll()
     threadInfoUpdaters.forEach { it.value.stop() }
     threadInfoUpdaters.clear()
     controlPanel.clear()
     threadResourcePanel.clear()
-    //    scheduleObserver.observers.remove(threadTimelinePanel)
+    scheduleObserver.observers.remove(threadTimelinePanel)
   }
 
   fun schedule(
       threads: List<ThreadExecutionContext>,
       onThreadSelected: (ThreadExecutionContext) -> Unit
   ) {
-    mcpApi.updateThreadStatus(threads)
+    mcpServer.newSchedulingRequestReceived(threads)
     processThreadsForHighlighting(threads)
 
     // We need to update the control panel after highlighting because

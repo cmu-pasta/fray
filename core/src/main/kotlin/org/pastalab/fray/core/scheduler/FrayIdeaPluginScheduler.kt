@@ -5,7 +5,7 @@ import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.debugger.DebuggerRegistry
 
 @Serializable
-class FrayIdeaPluginScheduler : Scheduler {
+class FrayIdeaPluginScheduler() : Scheduler {
   @Transient val remoteScheduler = DebuggerRegistry.getRemoteScheduler()
 
   override fun scheduleNextOperation(
