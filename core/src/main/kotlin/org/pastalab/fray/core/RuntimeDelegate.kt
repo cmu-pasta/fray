@@ -51,7 +51,14 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onThreadCreateDone(t: Thread) {
-    if (checkEntered()) return
+//    if (checkEntered()) return
+    if (Thread.currentThread() is HelperThread) {
+      return
+    }
+    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
+      return
+    }
+    entered.set(true)
     context.threadCreateDone(t)
     entered.set(false)
   }

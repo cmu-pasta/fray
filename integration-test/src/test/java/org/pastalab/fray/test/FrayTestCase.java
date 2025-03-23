@@ -13,8 +13,10 @@ import org.pastalab.fray.core.command.MethodExecutor;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
+import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.test.fail.thread.ThreadExitDeadlock;
 import org.pastalab.fray.test.success.thread.ThreadInterruptWithReentrantLockUnlock;
+import org.pastalab.fray.test.success.vthread.VirtualThreadSimple;
 
 import java.util.*;
 
@@ -67,7 +69,7 @@ public class FrayTestCase {
                     new ExecutionInfo(
                             new LambdaExecutor(() -> {
                                 try {
-                                    ThreadInterruptWithReentrantLockUnlock.main(new String[]{});
+                                    VirtualThreadSimple.main(new String[]{});
                                 } catch (Exception e) {
                                     throw new RuntimeException(e);
                                 }
@@ -80,7 +82,7 @@ public class FrayTestCase {
                     "/tmp/report2",
                     1000,
                     60,
-                    new POSScheduler(),
+                    new RandomScheduler(),
                     new ControlledRandom(),
                     true,
                     false,
