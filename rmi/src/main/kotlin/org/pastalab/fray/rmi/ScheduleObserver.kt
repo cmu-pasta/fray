@@ -8,7 +8,7 @@ interface ScheduleObserver<T> : Remote {
 
   @Throws(RemoteException::class) fun onNewSchedule(allThreads: List<T>, scheduled: T)
 
-  @Throws(RemoteException::class) fun onExecutionDone(bugFound: Boolean)
+  @Throws(RemoteException::class) fun onExecutionDone(bugFound: Throwable?)
 
   @Throws(RemoteException::class) fun saveToReportFolder(path: String)
 

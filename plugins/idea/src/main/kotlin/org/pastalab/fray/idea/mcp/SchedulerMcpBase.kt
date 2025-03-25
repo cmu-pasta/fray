@@ -29,7 +29,8 @@ open class SchedulerMcpBase(val project: Project, val schedulerPanel: SchedulerC
   var allThreads = listOf<ThreadExecutionContext>()
   var waitLatch: CountDownLatch? = null
   var finished = false
-  var bugFound = false
+  var scheduled: ThreadExecutionContext? = null
+  var bugFound: Throwable? = null
   val embeddedServer = createEmbeddedServer(8808)
   var serverThread =
       Thread {
@@ -104,8 +105,9 @@ open class SchedulerMcpBase(val project: Project, val schedulerPanel: SchedulerC
     return server
   }
 
-  fun newSchedulingRequestReceived(threads: List<ThreadExecutionContext>) {
+  fun newSchedulingRequestReceived(threads: List<ThreadExecutionContext>, scheduled: ThreadExecutionContext?) {
     allThreads = threads
+    this.scheduled = scheduled
     waitLatch?.countDown()
   }
 
@@ -127,7 +129,7 @@ open class SchedulerMcpBase(val project: Project, val schedulerPanel: SchedulerC
 
   override fun onExecutionStart() {
     finished = false
-    bugFound = false
+    bugFound = null
   }
 
   override fun onNewSchedule(
@@ -135,7 +137,7 @@ open class SchedulerMcpBase(val project: Project, val schedulerPanel: SchedulerC
       scheduled: ThreadExecutionContext
   ) {}
 
-  override fun onExecutionDone(bugFound: Boolean) {
+  override fun onExecutionDone(bugFound: Throwable?) {
     finished = true
     this.bugFound = bugFound
     waitLatch?.countDown()

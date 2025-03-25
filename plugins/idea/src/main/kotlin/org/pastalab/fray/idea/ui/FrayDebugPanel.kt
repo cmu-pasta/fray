@@ -96,8 +96,17 @@ class FrayDebugPanel(
     scheduleObserver.observers.remove(threadTimelinePanel)
   }
 
+  /**
+   * Schedules the next operation for the given threads.
+   *
+   * @param threads The list of `ThreadExecutionContext` representing the threads to be scheduled.
+   * @param scheduled The `ThreadExecutionContext` of the thread that is currently scheduled, `null`
+   *   in explore mode.
+   * @param onThreadSelected A callback function to be invoked when a thread is selected.
+   */
   fun schedule(
       threads: List<ThreadExecutionContext>,
+      scheduled: ThreadExecutionContext?,
       onThreadSelected: (ThreadExecutionContext) -> Unit
   ) {
     mcpServer.newSchedulingRequestReceived(threads)

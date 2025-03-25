@@ -52,7 +52,7 @@ class FrayDebuggerScheduler(
     cdl.await()
   }
 
-  override fun onExecutionDone(bugFound: Boolean) {}
+  override fun onExecutionDone(bugFound: Throwable?) {}
 
   override fun saveToReportFolder(path: String) {}
 }
