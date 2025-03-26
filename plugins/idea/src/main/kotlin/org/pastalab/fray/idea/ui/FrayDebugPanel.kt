@@ -8,12 +8,12 @@ import com.intellij.openapi.project.Project
 import java.awt.BorderLayout
 import javax.swing.JPanel
 import javax.swing.JSplitPane
-import org.pastalab.fray.mcp.ClassSourceProvider
-import org.pastalab.fray.mcp.SchedulerDelegate
-import org.pastalab.fray.mcp.SchedulerMcpExplorer
 import org.pastalab.fray.idea.getPsiFile
 import org.pastalab.fray.idea.getPsiFileFromClass
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
+import org.pastalab.fray.mcp.ClassSourceProvider
+import org.pastalab.fray.mcp.SchedulerDelegate
+import org.pastalab.fray.mcp.SchedulerMcpExplorer
 import org.pastalab.fray.rmi.ScheduleObserver
 import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
