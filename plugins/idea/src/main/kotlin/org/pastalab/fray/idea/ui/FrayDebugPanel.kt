@@ -8,17 +8,18 @@ import com.intellij.openapi.project.Project
 import java.awt.BorderLayout
 import javax.swing.JPanel
 import javax.swing.JSplitPane
-import org.pastalab.fray.idea.debugger.FrayScheduleObserver
+import mcp.ClassSourceProvider
+import mcp.SchedulerDelegate
+import mcp.SchedulerMcpExplorer
 import org.pastalab.fray.idea.getPsiFile
-import org.pastalab.fray.idea.mcp.SchedulerMcpExplorer
+import org.pastalab.fray.idea.getPsiFileFromClass
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.rmi.ScheduleObserver
+import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
 
-class FrayDebugPanel(
-    val project: Project,
-    replayMode: Boolean
-) : JPanel(), ScheduleObserver<ThreadExecutionContext> {
+class FrayDebugPanel(val project: Project, replayMode: Boolean) :
+    JPanel(), ScheduleObserver<ThreadExecutionContext> {
   // UI Components
   private val controlPanel: SchedulerControlPanel
   private val threadTimelinePanel: ThreadTimelinePanel
@@ -26,8 +27,8 @@ class FrayDebugPanel(
 
   // Data management
   private val threadInfoUpdaters: MutableMap<Editor, ThreadInfoUpdater> = mutableMapOf()
-  var selected: ThreadExecutionContext? = null
-  private var callback: ((ThreadExecutionContext) -> Unit)? = null
+  var selected: ThreadInfo? = null
+  private var callback: ((ThreadInfo) -> Unit)? = null
   val highlightManager = MultiThreadHighlightManager()
 
   init {
@@ -56,7 +57,19 @@ class FrayDebugPanel(
     add(mainSplitPane, BorderLayout.CENTER)
   }
 
-  private val mcpServer = SchedulerMcpExplorer(project, controlPanel, replayMode)
+  private val mcpServer =
+      SchedulerMcpExplorer(
+          object : ClassSourceProvider {
+            override fun getClassSource(className: String): String? {
+              return getPsiFileFromClass(className, project)?.text
+            }
+          },
+          object : SchedulerDelegate {
+            override fun scheduled(thread: ThreadInfo) {
+              scheduleButtonPressed(thread)
+            }
+          },
+          replayMode)
 
   private fun createRightPanel(): JPanel {
     // Create a panel to hold timeline and resource panels
@@ -72,7 +85,7 @@ class FrayDebugPanel(
     return rightPanel
   }
 
-  fun scheduleButtonPressed(newSelected: ThreadExecutionContext?) {
+  fun scheduleButtonPressed(newSelected: ThreadInfo?) {
     ApplicationManager.getApplication().invokeAndWait { highlightManager.clearAll() }
     threadInfoUpdaters.forEach { it.value.threadNameMapping.clear() }
     threadInfoUpdaters.clear()
@@ -105,14 +118,15 @@ class FrayDebugPanel(
   fun schedule(
       threads: List<ThreadExecutionContext>,
       scheduled: ThreadExecutionContext?,
-      onThreadSelected: (ThreadExecutionContext) -> Unit
+      onThreadSelected: (ThreadInfo) -> Unit
   ) {
-    mcpServer.newSchedulingRequestReceived(threads, scheduled)
+    mcpServer.newSchedulingRequestReceived(threads.map { it.threadInfo }, scheduled?.threadInfo)
     processThreadsForHighlighting(threads)
 
     // We need to update the control panel after highlighting because
     // highlighting changes the opened editors, and we need to switch back.
-    controlPanel.updateThreads(threads, selected)
+    controlPanel.updateThreads(
+        threads, threads.firstOrNull { it.threadInfo.threadIndex == selected?.threadIndex })
 
     // Update thread resource information
     threadResourcePanel.updateThreadResources(threads)
@@ -156,8 +170,8 @@ class FrayDebugPanel(
   }
 
   override fun onNewSchedule(
-    allThreads: List<ThreadExecutionContext>,
-    scheduled: ThreadExecutionContext
+      allThreads: List<ThreadExecutionContext>,
+      scheduled: ThreadExecutionContext
   ) {
     threadTimelinePanel.onNewSchedule(allThreads, scheduled)
   }
@@ -166,8 +180,7 @@ class FrayDebugPanel(
     mcpServer.onExecutionDone(bugFound)
   }
 
-  override fun saveToReportFolder(path: String) {
-  }
+  override fun saveToReportFolder(path: String) {}
 
   companion object {
     const val CONTENT_ID = "fray-scheduler"

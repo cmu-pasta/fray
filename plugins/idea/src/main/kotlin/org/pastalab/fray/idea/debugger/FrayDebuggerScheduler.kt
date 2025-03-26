@@ -23,7 +23,7 @@ class FrayDebuggerScheduler(
         threads.map { ThreadExecutionContext(it, debugSession.project) }.toList(),
         scheduledThread?.let { ThreadExecutionContext(it, debugSession.project) },
         {
-          selected = threads.indexOf(it.threadInfo)
+          selected = threads.indexOf(it)
           cdl.countDown()
         })
     UIUtil.invokeLaterIfNeeded {

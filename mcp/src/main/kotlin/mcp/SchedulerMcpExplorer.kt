@@ -1,7 +1,5 @@
-package org.pastalab.fray.idea.mcp
+package mcp
 
-import com.intellij.openapi.project.Project
-import com.jetbrains.rd.util.string.printToString
 import io.modelcontextprotocol.kotlin.sdk.CallToolRequest
 import io.modelcontextprotocol.kotlin.sdk.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.TextContent
@@ -12,20 +10,16 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
-import org.pastalab.fray.idea.objects.ThreadExecutionContext
-import org.pastalab.fray.idea.ui.SchedulerControlPanel
+import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
 
-class SchedulerMcpExplorer(
-    project: Project,
-    schedulerPanel: SchedulerControlPanel,
-    val replayMode: Boolean
-) : SchedulerMcpBase(project, schedulerPanel) {
+class SchedulerMcpExplorer(classSourceProvider: ClassSourceProvider, val schedulerDelegate: SchedulerDelegate, val replayMode: Boolean) :
+    SchedulerMcpBase(classSourceProvider) {
 
   override fun configureServer(): Server {
     val server = super.configureServer()
 
-    val (command_name, command_description, command_input) =
+    val (commandName, commandDescription, commandInput) =
         if (replayMode) {
           Triple(
               "run_thread",
@@ -47,34 +41,32 @@ class SchedulerMcpExplorer(
         }
 
     server.addTool(
-        name = command_name, description = command_description, inputSchema = command_input) {
+        name = commandName, description = commandDescription, inputSchema = commandInput) {
             request ->
           if (!replayMode) {
             processInputInExploreMode(request)?.let {
               return@addTool it
             }
-          } else {
-
           }
 
           if (finished) {
             val msg =
-                if (bugFound == null)
-                    "A bug has been found.\n Exception stack trace: ${bugFound.printToString()}"
+                if (bugFound != null)
+                    "A bug has been found.\n Exception stack trace: $bugFound"
                 else "No bug has been found."
             CallToolResult(
                 content =
                     listOf(
                         TextContent(
-                            "Thread ${scheduled?.threadInfo?.threadIndex} is successfully scheduled. The program has finished. $msg"),
+                            "Thread ${scheduled?.threadIndex} is successfully scheduled. The program has finished. $msg"),
                     ))
           } else {
             CallToolResult(
                 content =
                     listOf(
                         TextContent(
-                            "Thread ${scheduled?.threadInfo?.threadIndex} is successfully schedule. New thread states are shown below."),
-                    ) + allThreads.map { TextContent(it.threadInfo.toString()) },
+                            "Thread ${scheduled?.threadIndex} is successfully schedule. New thread states are shown below."),
+                    ) + allThreads.map { TextContent(it.toString()) },
             )
           }
         }
@@ -88,13 +80,13 @@ class SchedulerMcpExplorer(
           content = listOf(TextContent("Missing thread_id argument.")),
       )
     }
-    val thread = allThreads.find { it.threadInfo.threadIndex == threadId }
+    val thread = allThreads.find { it.threadIndex == threadId }
     if (thread == null) {
       return CallToolResult(
           content = listOf(TextContent("No thread found with ID $threadId.")),
       )
     }
-    if (thread.threadInfo.state != ThreadState.Runnable) {
+    if (thread.state != ThreadState.Runnable) {
       return CallToolResult(
           content = listOf(TextContent("The selected thread is not runnable.")),
       )
@@ -104,10 +96,9 @@ class SchedulerMcpExplorer(
     return null
   }
 
-  fun scheduleAndWait(thread: ThreadExecutionContext) {
+  fun scheduleAndWait(thread: ThreadInfo) {
     waitLatch = CountDownLatch(1)
-    schedulerPanel.comboBoxModel.selectedItem = thread
-    schedulerPanel.onScheduleButtonPressed(thread)
+    schedulerDelegate.scheduled(thread)
     try {
       waitLatch?.await()
     } catch (e: InterruptedException) {}
