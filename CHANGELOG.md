@@ -21,6 +21,7 @@
 
 - Fix Fray hang when security manager is enabled. 
 - Fix wrong hover position calculation in the Fray Debugger plugin.
+- Fix concurrent modification exception in the `ThreadTimelinePanel`.
 
 ### Security
 

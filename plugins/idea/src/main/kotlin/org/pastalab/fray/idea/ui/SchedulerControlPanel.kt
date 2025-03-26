@@ -27,13 +27,14 @@ import javax.swing.ListCellRenderer
 import org.pastalab.fray.idea.FrayBundle
 import org.pastalab.fray.idea.getPsiFile
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
+import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
 
 /** Panel that contains the thread selector, stack trace viewer, and scheduling controls. */
 class SchedulerControlPanel(
     val project: Project,
-    val onThreadSelected: (ThreadExecutionContext) -> Unit,
-    val onScheduleButtonPressed: (ThreadExecutionContext?) -> Unit,
+    val onThreadSelected: (ThreadInfo) -> Unit,
+    val onScheduleButtonPressed: (ThreadInfo?) -> Unit,
     val replayMode: Boolean
 ) : JPanel() {
   // UI Components
@@ -106,7 +107,7 @@ class SchedulerControlPanel(
           FrayBundle.INSTANCE.getMessage("fray.debugger.runThread")
         }
     scheduleButton = JButton(message)
-    scheduleButton.addActionListener { onScheduleButtonPressed(selectedThread) }
+    scheduleButton.addActionListener { onScheduleButtonPressed(selectedThread?.threadInfo) }
     add(scheduleButton, BorderLayout.SOUTH)
   }
 
@@ -127,7 +128,7 @@ class SchedulerControlPanel(
     }
 
     // Notify the parent component of the selection
-    onThreadSelected(context)
+    onThreadSelected(context.threadInfo)
   }
 
   /** Updates the panel with new thread information */

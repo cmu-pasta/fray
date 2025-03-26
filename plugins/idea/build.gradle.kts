@@ -23,7 +23,7 @@ repositories {
 // https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
   implementation(project(":rmi"))
-  implementation("io.modelcontextprotocol:kotlin-sdk:0.3.0")
+  implementation(project(":mcp"))
 
   // IntelliJ Platform Gradle Plugin Dependencies Extension - read more:
   // https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html

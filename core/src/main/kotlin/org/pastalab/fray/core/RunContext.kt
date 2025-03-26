@@ -236,7 +236,7 @@ class RunContext(val config: Configuration) {
     latchManager.done()
 
     registeredThreads.clear()
-    config.scheduleObservers.forEach { it.onExecutionDone(bugFound != null) }
+    config.scheduleObservers.forEach { it.onExecutionDone(bugFound) }
     hashCodeMapper.done(false)
     nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
   }
@@ -1059,7 +1059,7 @@ class RunContext(val config: Configuration) {
         } else {
           try {
             config.scheduler.scheduleNextOperation(
-                enabledOperations.reversed(), registeredThreads.values.toList())
+                enabledOperations, registeredThreads.values.toList())
           } catch (e: Throwable) {
             reportError(e)
             enabledOperations.first()

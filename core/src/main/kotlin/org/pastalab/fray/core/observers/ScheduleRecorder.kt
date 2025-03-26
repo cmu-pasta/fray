@@ -30,7 +30,7 @@ class ScheduleRecorder : ScheduleObserver<ThreadInfo> {
     recordings.add(recording)
   }
 
-  override fun onExecutionDone(bugFound: Boolean) {}
+  override fun onExecutionDone(bugFound: Throwable?) {}
 
   override fun saveToReportFolder(path: String) {
     File("$path/recording.json").writeText(Json.encodeToString(recordings))

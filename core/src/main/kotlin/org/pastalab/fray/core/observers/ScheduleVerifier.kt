@@ -48,7 +48,7 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) : ScheduleObserve
     index++
   }
 
-  override fun onExecutionDone(bugFound: Boolean) {}
+  override fun onExecutionDone(bugFound: Throwable?) {}
 
   override fun saveToReportFolder(path: String) {}
 }

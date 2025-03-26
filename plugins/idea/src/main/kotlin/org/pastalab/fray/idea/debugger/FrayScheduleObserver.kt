@@ -20,7 +20,7 @@ class FrayScheduleObserver(val project: Project) : ScheduleObserver<ThreadInfo> 
     }
   }
 
-  override fun onExecutionDone(bugFound: Boolean) {
+  override fun onExecutionDone(bugFound: Throwable?) {
     observers.forEach { it.onExecutionDone(bugFound) }
   }
 
