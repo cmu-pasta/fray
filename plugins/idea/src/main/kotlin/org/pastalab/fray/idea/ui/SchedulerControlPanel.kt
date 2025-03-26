@@ -11,7 +11,6 @@ import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
-import mcp.SchedulerDelegate
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
@@ -33,10 +32,10 @@ import org.pastalab.fray.rmi.ThreadState
 
 /** Panel that contains the thread selector, stack trace viewer, and scheduling controls. */
 class SchedulerControlPanel(
-  val project: Project,
-  val onThreadSelected: (ThreadInfo) -> Unit,
-  val onScheduleButtonPressed: (ThreadInfo?) -> Unit,
-  val replayMode: Boolean
+    val project: Project,
+    val onThreadSelected: (ThreadInfo) -> Unit,
+    val onScheduleButtonPressed: (ThreadInfo?) -> Unit,
+    val replayMode: Boolean
 ) : JPanel() {
   // UI Components
   val comboBoxModel = DefaultComboBoxModel<ThreadExecutionContext>()

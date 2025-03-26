@@ -1,5 +1,7 @@
 package org.pastalab.fray.core.utils
 
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 import kotlin.math.ceil
 import kotlin.math.ln
 import org.pastalab.fray.core.FrayInternalError
@@ -16,7 +18,9 @@ object Utils {
     verifyOrReport(condition, "Internal error")
   }
 
+  @OptIn(ExperimentalContracts::class)
   fun verifyOrReport(condition: Boolean, message: String) {
+    contract { returns() implies condition }
     if (!condition) {
       val e = FrayInternalError(message)
       Runtime.onReportError(e)

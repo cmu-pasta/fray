@@ -16,7 +16,9 @@ class FrayIdeaPluginScheduler(val scheduler: Scheduler?) : Scheduler {
       return threads.first()
     }
     val thread = scheduler?.scheduleNextOperation(threads, allThreads)
-    val index = remoteScheduler.scheduleNextOperation(allThreads.map { it.toThreadInfo() }, thread?.toThreadInfo())
+    val index =
+        remoteScheduler.scheduleNextOperation(
+            allThreads.map { it.toThreadInfo() }, thread?.toThreadInfo())
     return allThreads[index]
   }
 

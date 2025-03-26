@@ -13,8 +13,11 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
 
-class SchedulerMcpExplorer(classSourceProvider: ClassSourceProvider, val schedulerDelegate: SchedulerDelegate, val replayMode: Boolean) :
-    SchedulerMcpBase(classSourceProvider) {
+class SchedulerMcpExplorer(
+    classSourceProvider: ClassSourceProvider,
+    val schedulerDelegate: SchedulerDelegate,
+    val replayMode: Boolean
+) : SchedulerMcpBase(classSourceProvider) {
 
   override fun configureServer(): Server {
     val server = super.configureServer()
@@ -41,8 +44,8 @@ class SchedulerMcpExplorer(classSourceProvider: ClassSourceProvider, val schedul
         }
 
     server.addTool(
-        name = commandName, description = commandDescription, inputSchema = commandInput) {
-            request ->
+        name = commandName, description = commandDescription, inputSchema = commandInput) { request
+          ->
           if (!replayMode) {
             processInputInExploreMode(request)?.let {
               return@addTool it
@@ -51,8 +54,7 @@ class SchedulerMcpExplorer(classSourceProvider: ClassSourceProvider, val schedul
 
           if (finished) {
             val msg =
-                if (bugFound != null)
-                    "A bug has been found.\n Exception stack trace: $bugFound"
+                if (bugFound != null) "A bug has been found.\n Exception stack trace: $bugFound"
                 else "No bug has been found."
             CallToolResult(
                 content =

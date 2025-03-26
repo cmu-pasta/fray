@@ -97,10 +97,7 @@ open class SchedulerMcpBase(val classSourceProvider: ClassSourceProvider) {
     return server
   }
 
-  fun newSchedulingRequestReceived(
-    threads: List<ThreadInfo>,
-    scheduled: ThreadInfo?
-  ) {
+  fun newSchedulingRequestReceived(threads: List<ThreadInfo>, scheduled: ThreadInfo?) {
     allThreads = threads
     this.scheduled = scheduled
     waitLatch?.countDown()

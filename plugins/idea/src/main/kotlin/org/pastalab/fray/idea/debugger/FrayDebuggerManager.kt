@@ -17,8 +17,7 @@ import org.pastalab.fray.rmi.ScheduleObserver
 class FrayDebuggerManager(val debugSession: XDebugSession, val replayMode: Boolean) :
     XDebugSessionListener, ProcessListener {
   val scheduleObserver = FrayScheduleObserver(debugSession.project)
-  val schedulerPanel: FrayDebugPanel =
-      FrayDebugPanel(debugSession.project, replayMode)
+  val schedulerPanel: FrayDebugPanel = FrayDebugPanel(debugSession.project, replayMode)
   val scheduler = FrayDebuggerScheduler(schedulerPanel, debugSession, replayMode)
 
   init {
