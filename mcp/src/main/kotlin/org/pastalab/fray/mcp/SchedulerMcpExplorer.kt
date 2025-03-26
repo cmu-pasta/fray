@@ -1,4 +1,4 @@
-package mcp
+package org.pastalab.fray.mcp
 
 import io.modelcontextprotocol.kotlin.sdk.CallToolRequest
 import io.modelcontextprotocol.kotlin.sdk.CallToolResult

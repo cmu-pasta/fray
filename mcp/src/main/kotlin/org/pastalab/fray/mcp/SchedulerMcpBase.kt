@@ -1,4 +1,4 @@
-package mcp
+package org.pastalab.fray.mcp
 
 import io.ktor.server.cio.CIO
 import io.ktor.server.cio.CIOApplicationEngine

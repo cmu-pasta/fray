@@ -1,5 +1,6 @@
-package mcp.standalone
+package org.pastalab.fray.mcp.standalone
 
+import com.sun.jdi.ArrayReference
 import com.sun.jdi.ArrayType
 import com.sun.jdi.Bootstrap
 import com.sun.jdi.ObjectReference
@@ -106,7 +107,7 @@ class RemoteVMConnector(val hostname: String, val port: Int) {
     return when {
       value.type().name().startsWith("java.lang.") -> value.toString()
       (value.type() is ArrayType) -> {
-        val arrayRef = value as com.sun.jdi.ArrayReference
+        val arrayRef = value as ArrayReference
         val size = arrayRef.length()
         val elements = (0 until size).map { i -> formatValue(arrayRef.getValue(i)) }
         "[${elements.joinToString(", ")}]"

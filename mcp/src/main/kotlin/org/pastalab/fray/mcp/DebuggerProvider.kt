@@ -1,4 +1,4 @@
-package mcp
+package org.pastalab.fray.mcp
 
 interface DebuggerProvider {
   fun getLocalVariableValue(
