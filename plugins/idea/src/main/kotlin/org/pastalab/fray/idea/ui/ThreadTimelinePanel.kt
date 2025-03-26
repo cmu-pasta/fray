@@ -2,6 +2,7 @@ package org.pastalab.fray.idea.ui
 
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBScrollPane
+import com.jetbrains.rd.util.ConcurrentHashMap
 import java.awt.BasicStroke
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -14,7 +15,6 @@ import java.awt.event.MouseMotionAdapter
 import javax.swing.JPanel
 import javax.swing.ToolTipManager
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
-import org.pastalab.fray.rmi.ScheduleObserver
 
 data class ThreadExecutionHistory(
     var threadName: String,
@@ -22,7 +22,7 @@ data class ThreadExecutionHistory(
 )
 
 class ThreadTimelinePanel : JPanel() {
-  private val threadExecutionHistory = mutableMapOf<Int, ThreadExecutionHistory>()
+  private val threadExecutionHistory = ConcurrentHashMap<Int, ThreadExecutionHistory>()
   private val timelineCanvas = ThreadTimelineCanvas()
   private var currentTime = 0
   private val scrollPane = JBScrollPane(timelineCanvas)
@@ -49,10 +49,7 @@ class ThreadTimelinePanel : JPanel() {
     timelineCanvas.repaint()
   }
 
-  fun onNewSchedule(
-      allThreads: List<ThreadExecutionContext>,
-      scheduled: ThreadExecutionContext
-  ) {
+  fun onNewSchedule(allThreads: List<ThreadExecutionContext>, scheduled: ThreadExecutionContext) {
     if (allThreads.size > 1 || threadExecutionHistory.isEmpty()) {
       newThreadScheduled(scheduled)
     }
@@ -177,7 +174,7 @@ class ThreadTimelinePanel : JPanel() {
             }
         g2d.drawString(threadName, 10, y + 5)
 
-        // Draw timeline for this thread
+        // Draw timeline for this thread, copy list to avoid concurrent modification.
         drawThreadTimeline(g2d, threadIndex, history.events, y)
       }
     }
