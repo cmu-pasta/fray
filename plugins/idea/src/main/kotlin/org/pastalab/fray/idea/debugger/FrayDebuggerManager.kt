@@ -18,12 +18,12 @@ class FrayDebuggerManager(val debugSession: XDebugSession, val replayMode: Boole
     XDebugSessionListener, ProcessListener {
   val scheduleObserver = FrayScheduleObserver(debugSession.project)
   val schedulerPanel: FrayDebugPanel =
-      FrayDebugPanel(debugSession.project, scheduleObserver, replayMode)
+      FrayDebugPanel(debugSession.project, replayMode)
   val scheduler = FrayDebuggerScheduler(schedulerPanel, debugSession, replayMode)
 
   init {
     if (replayMode) {
-      scheduleObserver.observers.add(scheduler)
+      scheduleObserver.observers.add(schedulerPanel)
     }
     val schedulerStub = UnicastRemoteObject.exportObject(scheduler, 15214) as RemoteScheduler
     registry.bind(RemoteScheduler.NAME, schedulerStub)
@@ -46,7 +46,7 @@ class FrayDebuggerManager(val debugSession: XDebugSession, val replayMode: Boole
 
   fun stop() {
     if (replayMode) {
-      scheduleObserver.observers.remove(scheduler)
+      scheduleObserver.observers.remove(schedulerPanel)
     }
     schedulerPanel.stop()
     registry.unbind(RemoteScheduler.NAME)

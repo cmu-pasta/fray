@@ -5,7 +5,7 @@ import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.debugger.DebuggerRegistry
 
 @Serializable
-class FrayIdeaPluginScheduler() : Scheduler {
+class FrayIdeaPluginScheduler(val scheduler: Scheduler?) : Scheduler {
   @Transient val remoteScheduler = DebuggerRegistry.getRemoteScheduler()
 
   override fun scheduleNextOperation(
@@ -15,7 +15,8 @@ class FrayIdeaPluginScheduler() : Scheduler {
     if (threads.size == 1) {
       return threads.first()
     }
-    val index = remoteScheduler.scheduleNextOperation(allThreads.map { it.toThreadInfo() })
+    val thread = scheduler?.scheduleNextOperation(threads, allThreads)
+    val index = remoteScheduler.scheduleNextOperation(allThreads.map { it.toThreadInfo() }, thread?.toThreadInfo())
     return allThreads[index]
   }
 

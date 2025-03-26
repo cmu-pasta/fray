@@ -19,7 +19,7 @@ import org.pastalab.fray.rmi.ThreadState
 class SchedulerMcpExplorer(
     project: Project,
     schedulerPanel: SchedulerControlPanel,
-    val replayMode: Boolean = false
+    val replayMode: Boolean
 ) : SchedulerMcpBase(project, schedulerPanel) {
 
   override fun configureServer(): Server {
@@ -66,14 +66,14 @@ class SchedulerMcpExplorer(
                 content =
                     listOf(
                         TextContent(
-                            "Thread $threadId is successfully scheduled. The program has finished. $msg"),
+                            "Thread ${scheduled?.threadInfo?.threadIndex} is successfully scheduled. The program has finished. $msg"),
                     ))
           } else {
             CallToolResult(
                 content =
                     listOf(
                         TextContent(
-                            "Thread $threadId is successfully schedule. New thread states are shown below."),
+                            "Thread ${scheduled?.threadInfo?.threadIndex} is successfully schedule. New thread states are shown below."),
                     ) + allThreads.map { TextContent(it.threadInfo.toString()) },
             )
           }
@@ -99,6 +99,7 @@ class SchedulerMcpExplorer(
           content = listOf(TextContent("The selected thread is not runnable.")),
       )
     }
+    scheduled = thread
     scheduleAndWait(thread)
     return null
   }

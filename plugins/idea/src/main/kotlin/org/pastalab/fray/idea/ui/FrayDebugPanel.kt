@@ -12,13 +12,13 @@ import org.pastalab.fray.idea.debugger.FrayScheduleObserver
 import org.pastalab.fray.idea.getPsiFile
 import org.pastalab.fray.idea.mcp.SchedulerMcpExplorer
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
+import org.pastalab.fray.rmi.ScheduleObserver
 import org.pastalab.fray.rmi.ThreadState
 
 class FrayDebugPanel(
     val project: Project,
-    val scheduleObserver: FrayScheduleObserver,
     replayMode: Boolean
-) : JPanel() {
+) : JPanel(), ScheduleObserver<ThreadExecutionContext> {
   // UI Components
   private val controlPanel: SchedulerControlPanel
   private val threadTimelinePanel: ThreadTimelinePanel
@@ -43,7 +43,6 @@ class FrayDebugPanel(
 
     // Create the thread timeline panel
     threadTimelinePanel = ThreadTimelinePanel()
-    scheduleObserver.observers.add(threadTimelinePanel)
 
     // Create the thread resource panel
     threadResourcePanel = ThreadResourcePanel()
@@ -57,7 +56,7 @@ class FrayDebugPanel(
     add(mainSplitPane, BorderLayout.CENTER)
   }
 
-  private val mcpServer = SchedulerMcpExplorer(project, controlPanel)
+  private val mcpServer = SchedulerMcpExplorer(project, controlPanel, replayMode)
 
   private fun createRightPanel(): JPanel {
     // Create a panel to hold timeline and resource panels
@@ -93,7 +92,6 @@ class FrayDebugPanel(
     threadInfoUpdaters.clear()
     controlPanel.clear()
     threadResourcePanel.clear()
-    scheduleObserver.observers.remove(threadTimelinePanel)
   }
 
   /**
@@ -109,7 +107,7 @@ class FrayDebugPanel(
       scheduled: ThreadExecutionContext?,
       onThreadSelected: (ThreadExecutionContext) -> Unit
   ) {
-    mcpServer.newSchedulingRequestReceived(threads)
+    mcpServer.newSchedulingRequestReceived(threads, scheduled)
     processThreadsForHighlighting(threads)
 
     // We need to update the control panel after highlighting because
@@ -151,6 +149,24 @@ class FrayDebugPanel(
         }
       }
     }
+  }
+
+  override fun onExecutionStart() {
+    mcpServer.onExecutionStart()
+  }
+
+  override fun onNewSchedule(
+    allThreads: List<ThreadExecutionContext>,
+    scheduled: ThreadExecutionContext
+  ) {
+    threadTimelinePanel.onNewSchedule(allThreads, scheduled)
+  }
+
+  override fun onExecutionDone(bugFound: Throwable?) {
+    mcpServer.onExecutionDone(bugFound)
+  }
+
+  override fun saveToReportFolder(path: String) {
   }
 
   companion object {

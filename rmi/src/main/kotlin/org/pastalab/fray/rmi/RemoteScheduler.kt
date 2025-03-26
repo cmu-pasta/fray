@@ -57,7 +57,7 @@ data class ThreadInfo(
 }
 
 interface RemoteScheduler : Remote {
-  @Throws(RemoteException::class) fun scheduleNextOperation(threads: List<ThreadInfo>): Int
+  @Throws(RemoteException::class) fun scheduleNextOperation(threads: List<ThreadInfo>, selectedThread: ThreadInfo?): Int
 
   companion object {
     const val NAME = "RemoteScheduler"

@@ -23,8 +23,7 @@ import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.idea.ui.SchedulerControlPanel
 import org.pastalab.fray.rmi.ScheduleObserver
 
-open class SchedulerMcpBase(val project: Project, val schedulerPanel: SchedulerControlPanel) :
-    ScheduleObserver<ThreadExecutionContext> {
+open class SchedulerMcpBase(val project: Project, val schedulerPanel: SchedulerControlPanel) {
 
   var allThreads = listOf<ThreadExecutionContext>()
   var waitLatch: CountDownLatch? = null
@@ -127,21 +126,14 @@ open class SchedulerMcpBase(val project: Project, val schedulerPanel: SchedulerC
     }
   }
 
-  override fun onExecutionStart() {
+  fun onExecutionStart() {
     finished = false
     bugFound = null
   }
 
-  override fun onNewSchedule(
-      allThreads: List<ThreadExecutionContext>,
-      scheduled: ThreadExecutionContext
-  ) {}
-
-  override fun onExecutionDone(bugFound: Throwable?) {
+  fun onExecutionDone(bugFound: Throwable?) {
     finished = true
     this.bugFound = bugFound
     waitLatch?.countDown()
   }
-
-  override fun saveToReportFolder(path: String) {}
 }

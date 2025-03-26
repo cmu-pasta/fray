@@ -275,11 +275,12 @@ data class Configuration(
     val debuggerProperty = System.getProperty(FRAY_DEBUGGER_PROPERTY_KEY, FRAY_DEBUGGER_DISABLED)
     if (debuggerProperty != FRAY_DEBUGGER_DISABLED) {
       if (debuggerProperty == FRAY_DEBUGGER_DEBUG) {
-        scheduler = FrayIdeaPluginScheduler()
+        scheduler = FrayIdeaPluginScheduler(null)
       } else {
         assert(debuggerProperty == FRAY_DEBUGGER_REPLAY) {
           "Invalid value for $FRAY_DEBUGGER_PROPERTY_KEY: $debuggerProperty"
         }
+        scheduler = FrayIdeaPluginScheduler(scheduler)
       }
       scheduleObservers.add(DebuggerRegistry.getRemoteScheduleObserver())
       iter = 1
