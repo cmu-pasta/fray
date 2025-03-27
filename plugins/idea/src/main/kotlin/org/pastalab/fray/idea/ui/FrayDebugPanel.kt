@@ -1,12 +1,12 @@
 package org.pastalab.fray.idea.ui
 
 import com.intellij.debugger.engine.JavaDebugProcess
+import com.intellij.debugger.engine.events.DebuggerCommandImpl
 import com.intellij.debugger.jdi.VirtualMachineProxyImpl
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
-import com.intellij.openapi.project.Project
 import com.intellij.xdebugger.XDebugSession
 import com.sun.jdi.ThreadReference
 import java.awt.BorderLayout
@@ -16,7 +16,6 @@ import org.pastalab.fray.idea.getPsiFile
 import org.pastalab.fray.idea.getPsiFileFromClass
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.mcp.ClassSourceProvider
-import org.pastalab.fray.mcp.DebuggerProvider
 import org.pastalab.fray.mcp.RemoteVMConnector
 import org.pastalab.fray.mcp.SchedulerDelegate
 import org.pastalab.fray.mcp.SchedulerServer
@@ -77,15 +76,23 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
               scheduleButtonPressed(thread)
             }
           },
-          RemoteVMConnector(object: VirtualMachineProxy {
-            override fun allThreads(): List<ThreadReference> {
-              val process = debugSession.debugProcess
-              val proxyImpl = if (process is JavaDebugProcess) {
-                process.debuggerSession.process.virtualMachineProxy
-              } else null
-              return proxyImpl?.allThreads()?.map { it.threadReference } ?: emptyList()
-            }
-          }),
+          RemoteVMConnector(
+              object : VirtualMachineProxy {
+                override fun allThreads(): List<ThreadReference> {
+                  val process = debugSession.debugProcess
+                  var proxyImpl: VirtualMachineProxyImpl? = null
+                  if (process is JavaDebugProcess) {
+                    val command =
+                        object : DebuggerCommandImpl() {
+                          override fun action() {
+                            proxyImpl = process.debuggerSession.process.virtualMachineProxy
+                          }
+                        }
+                    process.debuggerSession.process.managerThread.invokeAndWait(command)
+                  }
+                  return proxyImpl?.virtualMachine?.allThreads() ?: emptyList()
+                }
+              }),
           replayMode)
 
   private fun createRightPanel(): JPanel {
@@ -103,14 +110,6 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
   }
 
   fun scheduleButtonPressed(newSelected: ThreadInfo?) {
-    println(mcpServer.debuggerProvider.getLocalVariableValue(
-        1,
-        "BankAccountTest",
-        "withdraw",
-        16,
-        "this",
-        "balance"
-    ))
     threadInfoUpdaters.forEach { it.value.threadNameMapping.clear() }
     threadInfoUpdaters.clear()
     controlPanel.clear()

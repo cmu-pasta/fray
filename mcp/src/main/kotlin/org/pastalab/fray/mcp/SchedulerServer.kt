@@ -164,11 +164,11 @@ class SchedulerServer(
           // Extract all arguments with simplified code
           val threadId =
               request.getIntArg("thread_id") ?: return@addTool missingArgError("thread_id")
-          val jvmThreadId = allThreads.firstOrNull {
-            it.threadIndex == threadId
-          }?.jvmThreadIndex ?: return@addTool CallToolResult(
-              content = listOf(TextContent("The thread with ID $threadId is not found.")),
-          )
+          val jvmThreadId =
+              allThreads.firstOrNull { it.threadIndex == threadId }?.jvmThreadIndex
+                  ?: return@addTool CallToolResult(
+                      content = listOf(TextContent("The thread with ID $threadId is not found.")),
+                  )
 
           val className =
               request.getStringArg("class_name") ?: return@addTool missingArgError("class_name")
