@@ -32,6 +32,7 @@ data class ResourceInfo(val resourceId: Int, val resourceType: ResourceType) : S
 data class ThreadInfo(
     val threadName: String,
     val threadIndex: Int,
+    val jvmThreadIndex: Long,
     val state: ThreadState,
     val stackTraces: List<StackTraceElement>,
     val waitingFor: ResourceInfo?,
