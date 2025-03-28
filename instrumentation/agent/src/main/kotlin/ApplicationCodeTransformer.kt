@@ -40,6 +40,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
                 //                dotClassName.contains("NamespacedHierarchicalStore") ||
                 dotClassName.contains("LauncherConfigurationParameters"))) ||
         dotClassName.startsWith("org.gradle.") ||
+        dotClassName.startsWith("org.jetbrains.") ||
         dotClassName.startsWith("worker.org.gradle.") ||
         dotClassName.startsWith(
             "com.github.ajalt",
