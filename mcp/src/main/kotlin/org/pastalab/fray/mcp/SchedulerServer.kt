@@ -194,7 +194,7 @@ class SchedulerServer(
         }
 
     val (commandName, commandDescription, commandInput) =
-        if (replayMode) {
+        if (!replayMode) {
           Triple(
               "run_thread",
               "Pick one thread to run.",
@@ -222,24 +222,30 @@ class SchedulerServer(
               return@addTool it
             }
           }
+          val scheduledThread = scheduled!!
+          schedule(scheduledThread, true)
 
           if (finished) {
             val msg =
-                if (bugFound != null) "A bug has been found.\n Exception stack trace: $bugFound"
+                if (bugFound != null)
+                    "A bug has been found.\n Exception: $bugFound\n stacktrace: ${bugFound!!.stackTraceToString()}"
                 else "No bug has been found."
             CallToolResult(
                 content =
                     listOf(
                         TextContent(
-                            "Thread ${scheduled?.threadIndex} is successfully scheduled. The program has finished. $msg"),
+                            "Thread ${scheduledThread.threadIndex} is successfully scheduled. The program has finished. $msg"),
                     ))
           } else {
             CallToolResult(
                 content =
                     listOf(
                         TextContent(
-                            "Thread ${scheduled?.threadIndex} is successfully schedule. New thread states are shown below."),
-                    ) + allThreads.map { TextContent(it.toString()) },
+                            "Thread ${scheduledThread.threadIndex} is successfully schedule. The latest state of the schedule thread is shown below."),
+                    ) +
+                        allThreads
+                            .filter { it.threadIndex == scheduledThread.threadIndex }
+                            .map { TextContent(it.toString()) },
             )
           }
         }
@@ -261,21 +267,28 @@ class SchedulerServer(
       )
     }
     scheduled = thread
-    scheduleAndWait(thread)
     return null
   }
 
-  fun scheduleAndWait(thread: ThreadInfo) {
-    waitLatch = CountDownLatch(1)
+  fun schedule(thread: ThreadInfo, shouldWait: Boolean) {
     schedulerDelegate.scheduled(thread)
-    try {
-      waitLatch?.await()
-    } catch (e: InterruptedException) {}
-    waitLatch = null
+    if (shouldWait) {
+      waitLatch = CountDownLatch(1)
+      try {
+        waitLatch?.await()
+      } catch (e: InterruptedException) {} finally {
+        waitLatch = null
+      }
+    }
   }
 
   fun newSchedulingRequestReceived(threads: List<ThreadInfo>, scheduled: ThreadInfo?) {
     allThreads = threads
+    if (this.scheduled?.threadIndex == scheduled?.threadIndex && replayMode) {
+      // In reply mode we only notify the LLM when a context switch happens.
+      schedule(scheduled!!, false)
+      return
+    }
     this.scheduled = scheduled
     waitLatch?.countDown()
   }

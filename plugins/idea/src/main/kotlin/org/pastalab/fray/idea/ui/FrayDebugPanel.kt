@@ -143,7 +143,6 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
       scheduled: ThreadExecutionContext?,
       onThreadSelected: (ThreadInfo) -> Unit
   ) {
-    mcpServer.newSchedulingRequestReceived(threads.map { it.threadInfo }, scheduled?.threadInfo)
     processThreadsForHighlighting(threads)
 
     // We need to update the control panel after highlighting because
@@ -156,6 +155,7 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
 
     // Store the callback
     callback = onThreadSelected
+    mcpServer.newSchedulingRequestReceived(threads.map { it.threadInfo }, scheduled?.threadInfo)
   }
 
   /** Process thread information and add editor highlighting */
