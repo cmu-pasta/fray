@@ -1,10 +1,14 @@
 package org.pastalab.fray.idea.ui
 
+import com.intellij.debugger.engine.JavaDebugProcess
+import com.intellij.debugger.engine.events.DebuggerCommandImpl
+import com.intellij.debugger.jdi.VirtualMachineProxyImpl
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
-import com.intellij.openapi.project.Project
+import com.intellij.xdebugger.XDebugSession
+import com.sun.jdi.ThreadReference
 import java.awt.BorderLayout
 import javax.swing.JPanel
 import javax.swing.JSplitPane
@@ -12,14 +16,17 @@ import org.pastalab.fray.idea.getPsiFile
 import org.pastalab.fray.idea.getPsiFileFromClass
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.mcp.ClassSourceProvider
+import org.pastalab.fray.mcp.RemoteVMConnector
 import org.pastalab.fray.mcp.SchedulerDelegate
-import org.pastalab.fray.mcp.SchedulerMcpExplorer
+import org.pastalab.fray.mcp.SchedulerServer
+import org.pastalab.fray.mcp.VirtualMachineProxy
 import org.pastalab.fray.rmi.ScheduleObserver
 import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
 
-class FrayDebugPanel(val project: Project, replayMode: Boolean) :
+class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
     JPanel(), ScheduleObserver<ThreadExecutionContext> {
+  private val project = debugSession.project
   // UI Components
   private val controlPanel: SchedulerControlPanel
   private val threadTimelinePanel: ThreadTimelinePanel
@@ -58,7 +65,7 @@ class FrayDebugPanel(val project: Project, replayMode: Boolean) :
   }
 
   private val mcpServer =
-      SchedulerMcpExplorer(
+      SchedulerServer(
           object : ClassSourceProvider {
             override fun getClassSource(className: String): String? {
               return getPsiFileFromClass(className, project)?.text
@@ -69,6 +76,23 @@ class FrayDebugPanel(val project: Project, replayMode: Boolean) :
               scheduleButtonPressed(thread)
             }
           },
+          RemoteVMConnector(
+              object : VirtualMachineProxy {
+                override fun allThreads(): List<ThreadReference> {
+                  val process = debugSession.debugProcess
+                  var proxyImpl: VirtualMachineProxyImpl? = null
+                  if (process is JavaDebugProcess) {
+                    val command =
+                        object : DebuggerCommandImpl() {
+                          override fun action() {
+                            proxyImpl = process.debuggerSession.process.virtualMachineProxy
+                          }
+                        }
+                    process.debuggerSession.process.managerThread.invokeAndWait(command)
+                  }
+                  return proxyImpl?.virtualMachine?.allThreads() ?: emptyList()
+                }
+              }),
           replayMode)
 
   private fun createRightPanel(): JPanel {
@@ -86,7 +110,6 @@ class FrayDebugPanel(val project: Project, replayMode: Boolean) :
   }
 
   fun scheduleButtonPressed(newSelected: ThreadInfo?) {
-    ApplicationManager.getApplication().invokeAndWait { highlightManager.clearAll() }
     threadInfoUpdaters.forEach { it.value.threadNameMapping.clear() }
     threadInfoUpdaters.clear()
     controlPanel.clear()
@@ -120,7 +143,6 @@ class FrayDebugPanel(val project: Project, replayMode: Boolean) :
       scheduled: ThreadExecutionContext?,
       onThreadSelected: (ThreadInfo) -> Unit
   ) {
-    mcpServer.newSchedulingRequestReceived(threads.map { it.threadInfo }, scheduled?.threadInfo)
     processThreadsForHighlighting(threads)
 
     // We need to update the control panel after highlighting because
@@ -133,6 +155,7 @@ class FrayDebugPanel(val project: Project, replayMode: Boolean) :
 
     // Store the callback
     callback = onThreadSelected
+    mcpServer.newSchedulingRequestReceived(threads.map { it.threadInfo }, scheduled?.threadInfo)
   }
 
   /** Process thread information and add editor highlighting */

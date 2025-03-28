@@ -56,6 +56,7 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext, par
     return ThreadInfo(
         thread.name,
         index,
+        thread.id,
         state,
         stackTraces,
         blockedBy,

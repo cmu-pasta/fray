@@ -1,29 +1,34 @@
-package org.pastalab.fray.mcp.standalone
+package org.pastalab.fray.mcp
 
 import com.sun.jdi.ArrayReference
 import com.sun.jdi.ArrayType
 import com.sun.jdi.Bootstrap
 import com.sun.jdi.ObjectReference
+import com.sun.jdi.PrimitiveType
 import com.sun.jdi.StackFrame
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.Value
-import com.sun.jdi.VirtualMachine
-import java.net.InetSocketAddress
 
-class RemoteVMConnector(val hostname: String, val port: Int) {
-  val vm: VirtualMachine
+fun removeVMConnectorWithHostAndPort(hostAndPort: String): RemoteVMConnector {
+  val (hostname, port) = hostAndPort.split(":")
+  //  return RemoteVMConnector(hostname, port.toInt())
+  val connectors = Bootstrap.virtualMachineManager().attachingConnectors()
+  val connector = connectors.first { it.name() == "com.sun.jdi.SocketAttach" }
+  val arguments = connector.defaultArguments()
+  arguments["hostname"]?.setValue(hostname)
+  arguments["port"]?.setValue(port.toString())
+  val vm = connector.attach(arguments)
+  return RemoteVMConnector(
+      object : VirtualMachineProxy {
+        override fun allThreads(): List<ThreadReference> {
+          return vm.allThreads()
+        }
+      })
+}
 
-  init {
-    val socketAddress = InetSocketAddress(hostname, port)
-    val connectors = Bootstrap.virtualMachineManager().attachingConnectors()
-    val connector = connectors.first { it.name() == "com.sun.jdi.SocketAttach" }
-    val arguments = connector.defaultArguments()
-    arguments["hostname"]?.setValue(hostname)
-    arguments["port"]?.setValue(port.toString())
-    vm = connector.attach(arguments)
-  }
+class RemoteVMConnector(val vm: VirtualMachineProxy) : DebuggerProvider {
 
-  fun getLocalVariableValue(
+  override fun getLocalVariableValue(
       threadId: Long,
       className: String,
       methodName: String,
@@ -32,7 +37,7 @@ class RemoteVMConnector(val hostname: String, val port: Int) {
       field: String?
   ): Result<String> {
     return runCatching {
-      val thread = vm.allThreads().find { it.uniqueID() == threadId }
+      val thread = vm.allThreads().find { fromObjectField(it, "tid") == threadId.toString() }
 
       requireNotNull(thread) { "The thread with ID $threadId is not found." }
 
@@ -106,7 +111,8 @@ class RemoteVMConnector(val hostname: String, val port: Int) {
     if (value == null) return "null"
     return when {
       value.type().name().startsWith("java.lang.") -> value.toString()
-      (value.type() is ArrayType) -> {
+      value.type() is PrimitiveType -> value.toString()
+      value.type() is ArrayType -> {
         val arrayRef = value as ArrayReference
         val size = arrayRef.length()
         val elements = (0 until size).map { i -> formatValue(arrayRef.getValue(i)) }
