@@ -27,6 +27,9 @@ class FrayExtension(
       invocationContext: ReflectiveInvocationContext<Constructor<T>>,
       extensionContext: ExtensionContext
   ): T {
+    // The test class constructor is called even if the test is `disabled()`
+    // So we need to skip the constructor interception if the test is disabled.
+    if (frayJupiterContext.bugFound) return invocation.proceed()
     frayContext.config.currentIteration = index
     if (frayContext.config.currentIteration != 1) {
       frayContext.config.scheduler = frayContext.config.scheduler.nextIteration()
