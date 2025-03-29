@@ -1,9 +1,10 @@
 package org.pastalab.fray.junit.internal.thread;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pastalab.fray.junit.junit5.FrayTestExtension;
 import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(FrayTestExtension.class)
 public class ShutdownHookTest {
@@ -15,6 +16,6 @@ public class ShutdownHookTest {
 
     @ConcurrencyTest
     public void testShutdownHookWithFailureInBeforeEach() {
-        assert(false);
+        fail("Intentional failure.");
     }
 }
