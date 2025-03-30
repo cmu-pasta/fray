@@ -35,7 +35,6 @@ import org.pastalab.fray.core.concurrency.primitives.SignalContext
 import org.pastalab.fray.core.concurrency.primitives.StampedLockContext
 import org.pastalab.fray.core.concurrency.primitives.WriteLockContext
 import org.pastalab.fray.core.scheduler.FrayIdeaPluginScheduler
-import org.pastalab.fray.core.scheduler.SURWScheduler
 import org.pastalab.fray.core.syncurity.SyncurityEvaluationContext
 import org.pastalab.fray.core.syncurity.SyncurityEvaluationDelegate
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
@@ -1054,16 +1053,12 @@ class RunContext(val config: Configuration) {
     }
 
     val nextThread =
-        if (enabledOperations.size == 1 && config.scheduler !is SURWScheduler) {
+        try {
+          config.scheduler.scheduleNextOperation(
+              enabledOperations, registeredThreads.values.toList())
+        } catch (e: Throwable) {
+          reportError(e)
           enabledOperations.first()
-        } else {
-          try {
-            config.scheduler.scheduleNextOperation(
-                enabledOperations, registeredThreads.values.toList())
-          } catch (e: Throwable) {
-            reportError(e)
-            enabledOperations.first()
-          }
         }
     config.scheduleObservers.forEach {
       it.onNewSchedule(registeredThreads.values.toList().toThreadInfos(), nextThread.toThreadInfo())

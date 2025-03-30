@@ -256,6 +256,7 @@ data class Configuration(
           "$report/recording"
         }
     Paths.get(path).createDirectories()
+    if (scheduler is FrayIdeaPluginScheduler) return path
     File("$path/schedule.json").writeText(Json.encodeToString(scheduler))
     File("$path/random.json").writeText(Json.encodeToString(randomnessProvider))
     scheduleObservers.forEach { it.saveToReportFolder(path) }

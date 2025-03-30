@@ -11,6 +11,8 @@
 
 ### Changed
 
+- Simplify the timeline visualization in replay mode.
+
 ### Deprecated
 
 ### Removed

@@ -13,11 +13,7 @@ class FrayScheduleObserver(val project: Project) : ScheduleObserver<ThreadInfo> 
   }
 
   override fun onNewSchedule(allThreads: List<ThreadInfo>, scheduled: ThreadInfo) {
-    observers.forEach {
-      it.onNewSchedule(
-          allThreads.map { ThreadExecutionContext(it, project) }.toList(),
-          ThreadExecutionContext(scheduled, project))
-    }
+    // Disable this callback for now to improve the performance.
   }
 
   override fun onExecutionDone(bugFound: Throwable?) {

@@ -22,7 +22,7 @@ data class ThreadExecutionHistory(
 )
 
 class ThreadTimelinePanel : JPanel() {
-  private val threadExecutionHistory = ConcurrentHashMap<Int, ThreadExecutionHistory>()
+  val threadExecutionHistory = ConcurrentHashMap<Int, ThreadExecutionHistory>()
   private val timelineCanvas = ThreadTimelineCanvas()
   private var currentTime = 0
   private val scrollPane = JBScrollPane(timelineCanvas)
@@ -175,7 +175,7 @@ class ThreadTimelinePanel : JPanel() {
         g2d.drawString(threadName, 10, y + 5)
 
         // Draw timeline for this thread, copy list to avoid concurrent modification.
-        drawThreadTimeline(g2d, threadIndex, history.events, y)
+        drawThreadTimeline(g2d, threadIndex, history.events.toList(), y)
       }
     }
 
