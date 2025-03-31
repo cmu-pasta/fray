@@ -20,12 +20,12 @@ import org.pastalab.fray.mcp.RemoteVMConnector
 import org.pastalab.fray.mcp.SchedulerDelegate
 import org.pastalab.fray.mcp.SchedulerServer
 import org.pastalab.fray.mcp.VirtualMachineProxy
-import org.pastalab.fray.rmi.ScheduleObserver
+import org.pastalab.fray.rmi.TestStatusObserver
 import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
 
 class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
-    JPanel(), ScheduleObserver<ThreadExecutionContext> {
+    JPanel(), TestStatusObserver {
   private val project = debugSession.project
   // UI Components
   private val controlPanel: SchedulerControlPanel
@@ -192,11 +192,6 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
   override fun onExecutionStart() {
     mcpServer.onExecutionStart()
   }
-
-  override fun onNewSchedule(
-      allThreads: List<ThreadExecutionContext>,
-      scheduled: ThreadExecutionContext
-  ) {}
 
   override fun onExecutionDone(bugFound: Throwable?) {
     mcpServer.onExecutionDone(bugFound)

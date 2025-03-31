@@ -222,7 +222,7 @@ class RunContext(val config: Configuration) {
     mainThreadId = t.id
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this, -1)
     registeredThreads[t.id]?.state = ThreadState.Runnable
-    config.scheduleObservers.forEach { it.onExecutionStart() }
+    config.testStatusObservers.forEach { it.onExecutionStart() }
     scheduleNextOperation(true)
   }
 
@@ -235,7 +235,7 @@ class RunContext(val config: Configuration) {
     latchManager.done()
 
     registeredThreads.clear()
-    config.scheduleObservers.forEach { it.onExecutionDone(bugFound) }
+    config.testStatusObservers.forEach { it.onExecutionDone(bugFound) }
     hashCodeMapper.done(false)
     nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
   }

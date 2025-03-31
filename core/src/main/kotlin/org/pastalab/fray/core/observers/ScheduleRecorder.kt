@@ -4,9 +4,10 @@ import java.io.File
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.pastalab.fray.rmi.ScheduleObserver
+import org.pastalab.fray.rmi.TestStatusObserver
 import org.pastalab.fray.rmi.ThreadInfo
 
-class ScheduleRecorder : ScheduleObserver<ThreadInfo> {
+class ScheduleRecorder : ScheduleObserver<ThreadInfo>, TestStatusObserver {
   val recordings = mutableListOf<ScheduleRecording>()
 
   override fun onExecutionStart() {

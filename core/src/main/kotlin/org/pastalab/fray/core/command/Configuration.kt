@@ -34,6 +34,7 @@ import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_DISABLED
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_PROPERTY_KEY
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_REPLAY
 import org.pastalab.fray.rmi.ScheduleObserver
+import org.pastalab.fray.rmi.TestStatusObserver
 import org.pastalab.fray.rmi.ThreadInfo
 
 @Serializable
@@ -224,6 +225,7 @@ class MainCommand : CliktCommand() {
             dummyRun)
     if (s.third != null) {
       configuration.scheduleObservers.add(s.third!!)
+      configuration.testStatusObservers.add(s.third!!)
     }
     return configuration
   }
@@ -244,6 +246,7 @@ data class Configuration(
     val dummyRun: Boolean,
 ) {
   val scheduleObservers = mutableListOf<ScheduleObserver<ThreadInfo>>()
+  val testStatusObservers = mutableListOf<TestStatusObserver>()
   var nextSavedIndex = 0
   var currentIteration = 0
   val startTime = TimeSource.Monotonic.markNow()
@@ -259,7 +262,7 @@ data class Configuration(
     if (scheduler is FrayIdeaPluginScheduler) return path
     File("$path/schedule.json").writeText(Json.encodeToString(scheduler))
     File("$path/random.json").writeText(Json.encodeToString(randomnessProvider))
-    scheduleObservers.forEach { it.saveToReportFolder(path) }
+    testStatusObservers.forEach { it.saveToReportFolder(path) }
     return path
   }
 
@@ -270,6 +273,7 @@ data class Configuration(
       prepareReportPath(report)
     }
     if (System.getProperty("fray.recordSchedule", "false").toBoolean()) {
+      testStatusObservers.add(ScheduleRecorder())
       scheduleObservers.add(ScheduleRecorder())
     }
 
@@ -283,7 +287,7 @@ data class Configuration(
         }
         scheduler = FrayIdeaPluginScheduler(scheduler)
       }
-      scheduleObservers.add(DebuggerRegistry.getRemoteScheduleObserver())
+      testStatusObservers.add(DebuggerRegistry.getRemoteScheduleObserver())
       iter = 1
     }
   }
