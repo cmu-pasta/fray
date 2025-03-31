@@ -8,6 +8,7 @@
 - Add `stackTraceHash` to `RacingOperations` to track the creation location of racing operations.
 - Implement the MCP server for the Fray Debugger plugin.
 - Introduce replay mode for the Fray debugger plugin.
+- Introduce schedule replayer.
 
 ### Changed
 

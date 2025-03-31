@@ -165,8 +165,10 @@ class RunContext(val config: Configuration) {
       )
       config.frayLogger.info(sw.toString())
       val recordingIndex = config.nextSavedIndex++
-      val path = config.saveToReportFolder(recordingIndex)
-      config.frayLogger.info("The recording is saved to $path")
+      if (!config.isReplay) {
+        val path = config.saveToReportFolder(recordingIndex)
+        config.frayLogger.info("The recording is saved to $path")
+      }
       if (config.exploreMode || config.noExitWhenBugFound) {
         return
       }
