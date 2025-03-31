@@ -3,9 +3,11 @@ package org.pastalab.fray.core.observers
 import java.io.File
 import kotlinx.serialization.json.Json
 import org.pastalab.fray.rmi.ScheduleObserver
+import org.pastalab.fray.rmi.TestStatusObserver
 import org.pastalab.fray.rmi.ThreadInfo
 
-class ScheduleVerifier(val schedules: List<ScheduleRecording>) : ScheduleObserver<ThreadInfo> {
+class ScheduleVerifier(val schedules: List<ScheduleRecording>) :
+    ScheduleObserver<ThreadInfo>, TestStatusObserver {
   constructor(
       path: String
   ) : this(Json.decodeFromString<List<ScheduleRecording>>(File(path).readText()))

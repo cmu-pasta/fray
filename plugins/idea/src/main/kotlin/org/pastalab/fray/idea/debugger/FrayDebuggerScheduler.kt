@@ -19,8 +19,9 @@ class FrayDebuggerScheduler(
     assert(replayMode || scheduledThread == null)
     val cdl = CountDownLatch(1)
     var selected = 0
+    val threadContexts = threads.map { ThreadExecutionContext(it, debugSession.project) }.toList()
     schedulerPanel.schedule(
-        threads.map { ThreadExecutionContext(it, debugSession.project) }.toList(),
+        threadContexts,
         scheduledThread?.let { ThreadExecutionContext(it, debugSession.project) },
         {
           selected = threads.indexOf(it)
@@ -31,10 +32,14 @@ class FrayDebuggerScheduler(
       debugSession.ui.selectAndFocus(content, false, false)
     }
     cdl.await()
-    return if (scheduledThread != null) {
-      threads.indexOf(scheduledThread)
-    } else {
-      selected
-    }
+    val nextThreadIndex =
+        if (scheduledThread != null) {
+          threads.indexOf(scheduledThread)
+        } else {
+          selected
+        }
+    schedulerPanel.threadTimelinePanel.onNewSchedule(
+        threadContexts, threadContexts[nextThreadIndex])
+    return nextThreadIndex
   }
 }

@@ -12,22 +12,22 @@ import java.rmi.server.UnicastRemoteObject
 import org.pastalab.fray.idea.ui.FrayDebugPanel
 import org.pastalab.fray.rmi.Constant
 import org.pastalab.fray.rmi.RemoteScheduler
-import org.pastalab.fray.rmi.ScheduleObserver
+import org.pastalab.fray.rmi.TestStatusObserver
 
 class FrayDebuggerManager(val debugSession: XDebugSession, val replayMode: Boolean) :
     XDebugSessionListener, ProcessListener {
-  val scheduleObserver = FrayScheduleObserver(debugSession.project)
+  val testStatusObserver = FrayRemoteTestObserver(debugSession.project)
   val schedulerPanel: FrayDebugPanel = FrayDebugPanel(debugSession, replayMode)
   val scheduler = FrayDebuggerScheduler(schedulerPanel, debugSession, replayMode)
 
   init {
     if (replayMode) {
-      scheduleObserver.observers.add(schedulerPanel)
+      testStatusObserver.observers.add(schedulerPanel)
     }
     val schedulerStub = UnicastRemoteObject.exportObject(scheduler, 15214) as RemoteScheduler
     registry.bind(RemoteScheduler.NAME, schedulerStub)
-    val observerStub = UnicastRemoteObject.exportObject(scheduleObserver, 15214) as Remote
-    registry.bind(ScheduleObserver.NAME, observerStub)
+    val observerStub = UnicastRemoteObject.exportObject(testStatusObserver, 15214) as Remote
+    registry.bind(TestStatusObserver.NAME, observerStub)
   }
 
   override fun startNotified(event: ProcessEvent) {
@@ -45,13 +45,13 @@ class FrayDebuggerManager(val debugSession: XDebugSession, val replayMode: Boole
 
   fun stop() {
     if (replayMode) {
-      scheduleObserver.observers.remove(schedulerPanel)
+      testStatusObserver.observers.remove(schedulerPanel)
     }
     schedulerPanel.stop()
     registry.unbind(RemoteScheduler.NAME)
-    registry.unbind(ScheduleObserver.NAME)
+    registry.unbind(TestStatusObserver.NAME)
     UnicastRemoteObject.unexportObject(scheduler, true)
-    UnicastRemoteObject.unexportObject(scheduleObserver, true)
+    UnicastRemoteObject.unexportObject(testStatusObserver, true)
   }
 
   companion object {

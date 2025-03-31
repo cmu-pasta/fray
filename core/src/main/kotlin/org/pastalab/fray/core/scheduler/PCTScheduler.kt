@@ -24,6 +24,9 @@ class PCTScheduler(val rand: ControlledRandom, val numSwitchPoints: Int, var max
       threads: List<ThreadContext>,
       allThreads: List<ThreadContext>
   ): ThreadContext {
+    if (threads.size == 1) {
+      return threads[0]
+    }
     currentStep += 1
     for (thread in threads) {
       if (!threadPriorityQueue.contains(thread)) {

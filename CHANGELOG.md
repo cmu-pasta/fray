@@ -11,6 +11,9 @@
 
 ### Changed
 
+- Simplify the timeline visualization in replay mode.
+- Disable the `onNewSchedule` for the Fray debugger plugin to improve the performance.
+
 ### Deprecated
 
 ### Removed
