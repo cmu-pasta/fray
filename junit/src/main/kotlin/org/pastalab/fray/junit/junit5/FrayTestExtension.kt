@@ -15,7 +15,9 @@ import org.pastalab.fray.core.RunContext
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.command.ExecutionInfo
 import org.pastalab.fray.core.command.LambdaExecutor
+import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.randomness.ControlledRandom
+import org.pastalab.fray.core.scheduler.ReplayScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
 import org.pastalab.fray.junit.Common.WORK_DIR
 import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest
@@ -42,12 +44,20 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
     }
     val (scheduler, random) =
         if (concurrencyTest.replay.isNotEmpty()) {
-          val path = concurrencyTest.replay
-          val randomPath = "${path}/random.json"
-          val schedulerPath = "${path}/schedule.json"
+          val path = getPath(concurrencyTest.replay)
+          val randomPath = "${path.absolutePath}/random.json"
+          val recordingPath = "${path.absolutePath}/recording.json"
+          val scheduler =
+              if (concurrencyTest.scheduler.java == ReplayScheduler::class.java) {
+                val scheduleRecordings =
+                    Json.decodeFromString<List<ScheduleRecording>>(File(recordingPath).readText())
+                ReplayScheduler(scheduleRecordings)
+              } else {
+                val schedulerPath = "${path.absolutePath}/schedule.json"
+                Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
+              }
           val randomnessProvider =
               Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
-          val scheduler = Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
           Pair(scheduler, randomnessProvider)
         } else {
           val scheduler = concurrencyTest.scheduler.java.getConstructor().newInstance()
@@ -69,7 +79,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             false,
             false,
             true,
-            false,
+            concurrencyTest.replay.isNotEmpty(),
             false,
             true,
         )
@@ -84,7 +94,8 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
   private fun totalRepetition(concurrencyTest: ConcurrencyTest, method: Method): Int {
     // If the user guide the program execution through IDE plugin, the repetition is set to 1
     val repetition =
-        if (System.getProperty("fray.debugger", "false").toBoolean()) {
+        if (System.getProperty("fray.debugger", "false").toBoolean() ||
+            concurrencyTest.replay.isNotEmpty()) {
           1
         } else {
           concurrencyTest.iterations
@@ -93,5 +104,17 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
       "Configuration error: @ConcurrencyTest on method [$method] must be declared with a positive 'value'."
     }
     return repetition
+  }
+
+  fun getPath(resourceLocation: String): File {
+    val classPathPrefix = "classpath:"
+    return if (resourceLocation.startsWith(classPathPrefix)) {
+      val classPathPath = resourceLocation.substring(classPathPrefix.length)
+      val classLoader = Thread.currentThread().getContextClassLoader()
+      val url = classLoader.getResource(classPathPath)
+      File(url.toURI())
+    } else {
+      File(resourceLocation)
+    }
   }
 }

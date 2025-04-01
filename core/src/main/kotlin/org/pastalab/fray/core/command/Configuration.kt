@@ -96,25 +96,40 @@ class JsonExecutionConfig : ExecutionConfig("json") {
   }
 }
 
-sealed class ScheduleAlgorithm(name: String) : OptionGroup(name) {
+sealed class ScheduleAlgorithm(name: String, val isReplay: Boolean) : OptionGroup(name) {
   open fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
     return Triple(FifoScheduler(), ControlledRandom(), null)
   }
 }
 
-class Fifo : ScheduleAlgorithm("fifo") {
+class Fifo : ScheduleAlgorithm("fifo", false) {
   override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
     return Triple(FifoScheduler(), ControlledRandom(), null)
   }
 }
 
-class POS : ScheduleAlgorithm("pos") {
+class POS : ScheduleAlgorithm("pos", false) {
   override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
     return Triple(POSScheduler(), ControlledRandom(), null)
   }
 }
 
-class Replay : ScheduleAlgorithm("replay") {
+class ReplayFromRecordings : ScheduleAlgorithm("replay-from-recordings", true) {
+  val path by option("--path").file().required()
+
+  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
+    val randomPath = "${path.absolutePath}/random.json"
+    val recordingPath = "${path.absolutePath}/recording.json"
+    val scheduleRecordings =
+        Json.decodeFromString<List<ScheduleRecording>>(File(recordingPath).readText())
+    val scheduler = ReplayScheduler(scheduleRecordings)
+    val randomnessProvider = Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
+
+    return Triple(scheduler, randomnessProvider, null)
+  }
+}
+
+class Replay : ScheduleAlgorithm("replay", true) {
   val path by option("--path").file().required()
 
   override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
@@ -136,13 +151,13 @@ class Replay : ScheduleAlgorithm("replay") {
   }
 }
 
-class Rand : ScheduleAlgorithm("random") {
+class Rand : ScheduleAlgorithm("random", false) {
   override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
     return Triple(RandomScheduler(), ControlledRandom(), null)
   }
 }
 
-class PCT : ScheduleAlgorithm("pct") {
+class PCT : ScheduleAlgorithm("pct", false) {
   val numSwitchPoints by option().int().default(3)
 
   override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
@@ -150,7 +165,7 @@ class PCT : ScheduleAlgorithm("pct") {
   }
 }
 
-class SURW : ScheduleAlgorithm("surw") {
+class SURW : ScheduleAlgorithm("surw", false) {
   override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
     return Triple(SURWScheduler(), ControlledRandom(), null)
   }
@@ -177,6 +192,7 @@ class MainCommand : CliktCommand() {
               "random" to Rand(),
               "pct" to PCT(),
               "surw" to SURW(),
+              "replay-from-recordings" to ReplayFromRecordings(),
               "replay" to Replay())
           .defaultByName("random")
   val noFray by option("--no-fray", help = "Runnning in no-Fray mode.").flag()
@@ -220,7 +236,7 @@ class MainCommand : CliktCommand() {
             fullSchedule,
             exploreMode,
             noExitWhenBugFound,
-            scheduler is Replay,
+            scheduler.isReplay,
             noFray,
             dummyRun)
     if (s.third != null) {
@@ -259,7 +275,6 @@ data class Configuration(
           "$report/recording"
         }
     Paths.get(path).createDirectories()
-    if (scheduler is FrayIdeaPluginScheduler) return path
     File("$path/schedule.json").writeText(Json.encodeToString(scheduler))
     File("$path/random.json").writeText(Json.encodeToString(randomnessProvider))
     testStatusObservers.forEach { it.saveToReportFolder(path) }
@@ -273,8 +288,9 @@ data class Configuration(
       prepareReportPath(report)
     }
     if (System.getProperty("fray.recordSchedule", "false").toBoolean()) {
-      testStatusObservers.add(ScheduleRecorder())
-      scheduleObservers.add(ScheduleRecorder())
+      val scheduleRecorder = ScheduleRecorder()
+      testStatusObservers.add(scheduleRecorder)
+      scheduleObservers.add(scheduleRecorder)
     }
 
     val debuggerProperty = System.getProperty(FRAY_DEBUGGER_PROPERTY_KEY, FRAY_DEBUGGER_DISABLED)
