@@ -8,7 +8,7 @@ import org.objectweb.asm.Type
 import org.objectweb.asm.commons.GeneratorAdapter
 import org.pastalab.fray.runtime.Runtime
 
-// As for JDK 24, the `Usafe.park` is only used in `ForkJoinPool` and let's only
+// As for JDK 24, the `Unsafe.park` is only used in `ForkJoinPool` and let's only
 // instrument `ForkJoinPool`. For other use cases, we have already instrumented
 // its higher level APIs, such as `LockSupport` and `Condition`.
 class UnsafeParkInstrumenter(cv: ClassVisitor) :
