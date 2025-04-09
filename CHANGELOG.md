@@ -4,6 +4,20 @@
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 0.4.0 - 2025-04-09
+
+### Added
+
 - Implement [SURW](https://dl.acm.org/doi/10.1145/3669940.3707214) algorithm
 - Add `stackTraceHash` to `RacingOperations` to track the creation location of racing operations.
 - Implement the MCP server for the Fray Debugger plugin.
@@ -16,8 +30,6 @@
 - Simplify the timeline visualization in replay mode.
 - Disable the `onNewSchedule` for the Fray debugger plugin to improve the performance.
 
-### Deprecated
-
 ### Removed
 
 - Move deadlock empire to a separate repository.
@@ -29,8 +41,6 @@
 - Fix concurrent modification exception in the `ThreadTimelinePanel`.
 - Fix replay when Intellij debugger is attached.
 - Fix `ObjectInstrumenter` visitor visits `methodExitLabel` twice exception.
-
-### Security
 
 ## 0.3.1 - 2025-03-11
 
