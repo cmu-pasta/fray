@@ -3,16 +3,12 @@ package org.pastalab.fray.junit.internal.syncurity;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pastalab.fray.junit.junit5.FrayTestExtension;
 import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
-import org.pastalab.fray.junit.syncurity.ConditionFactory;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.pastalab.fray.junit.syncurity.ConditionFactoryKt.await;
 
 @ExtendWith(FrayTestExtension.class)
