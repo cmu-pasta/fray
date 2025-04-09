@@ -14,6 +14,7 @@ import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.test.fail.thread.ThreadExitDeadlock;
+import org.pastalab.fray.test.success.network.SelectorTest;
 import org.pastalab.fray.test.success.thread.ThreadInterruptWithReentrantLockUnlock;
 
 import java.util.*;
@@ -62,35 +63,35 @@ public class FrayTestCase {
 
     @Test
     public void testOne() throws Throwable {
-            System.setProperty("fray.recordSchedule", "true");
-            Configuration config = new Configuration(
-                    new ExecutionInfo(
-                            new LambdaExecutor(() -> {
-                                try {
-                                    ThreadInterruptWithReentrantLockUnlock.main(new String[]{});
-                                } catch (Exception e) {
-                                    throw new RuntimeException(e);
-                                }
-                                return null;
-                            }),
-                            false,
-                            false,
-                            -1
-                    ),
-                    "/tmp/report2",
-                    1000,
-                    60,
-                    new POSScheduler(),
-                    new ControlledRandom(),
-                    true,
-                    false,
-                    true,
-                    false,
-                    false,
-                    false
-            );
-            TestRunner runner = new TestRunner(config);
-            runner.run();
+        System.setProperty("fray.recordSchedule", "true");
+        Configuration config = new Configuration(
+                new ExecutionInfo(
+                        new LambdaExecutor(() -> {
+                            try {
+                                SelectorTest.main(new String[]{});
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                            return null;
+                        }),
+                        false,
+                        false,
+                        -1
+                ),
+                "/tmp/report2",
+                1000,
+                60,
+                new POSScheduler(),
+                new ControlledRandom(),
+                true,
+                false,
+                true,
+                false,
+                false,
+                false
+        );
+        TestRunner runner = new TestRunner(config);
+        runner.run();
     }
 
     @TestFactory
