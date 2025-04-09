@@ -40,7 +40,6 @@ class ObjectInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Object::class.
 
         override fun onMethodExit(opcode: Int) {
           if (opcode != ATHROW) {
-            visitLabel(methodExitLabel)
             loadThis()
             invokeStatic(
                 Type.getObjectType(
@@ -51,6 +50,7 @@ class ObjectInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Object::class.
         }
 
         override fun visitMaxs(maxStack: Int, maxLocals: Int) {
+          visitLabel(methodExitLabel)
           catchException(
               methodEnterLabel, methodExitLabel, Type.getObjectType("java/lang/Throwable"))
           val locals = getLocals()

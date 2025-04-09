@@ -182,6 +182,10 @@ public class Runtime {
         DELEGATE.onThreadPark();
     }
 
+    public static void onUnsafeThreadParkTimed(boolean isAbsolute, long time) {
+        DELEGATE.onUnsafeThreadParkTimed(isAbsolute, time);
+    }
+
     public static void onThreadParkDone() {
         DELEGATE.onThreadParkDone();
     }
