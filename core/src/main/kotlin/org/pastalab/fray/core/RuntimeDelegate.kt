@@ -471,6 +471,14 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     onThreadParkImpl()
   }
 
+  override fun onUnsafeThreadParkTimed(isAbsolute: Boolean, time: Long) {
+    if (isAbsolute) {
+      onThreadParkUntil(time)
+    } else {
+      onThreadParkNanos(time)
+    }
+  }
+
   fun onThreadParkDoneImpl(timed: Boolean) {
     if (!onSkipMethodDone("Thread.park")) {
       return

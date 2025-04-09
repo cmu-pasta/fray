@@ -40,6 +40,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = SkipMethodInstrumenter(cv)
     cv = ObjectInstrumenter(cv)
     cv = ForkJoinPoolInstrumenter(cv)
+    cv = UnsafeParkInstrumenter(cv)
     //    cv = ObjectHashCodeInstrumenter(cv, true)
     cv = SemaphoreInstrumenter(cv)
     cv = StampedLockInstrumenter(cv)
@@ -89,7 +90,7 @@ fun instrumentModuleInfo(inputStream: InputStream, packages: List<String>): Byte
 
 /**
  * To run this main method you need to add --patch-module org.pastalab.fray.instrumentation.base=
- * PATH_TO_FRAY/instrumentation/base/build/classes
+ * PATH_TO_FRAY/instrumentation/base/build/classes/kotlin/main
  */
 fun main(args: Array<String>) {
   val inputStream = File(args[0]).inputStream()

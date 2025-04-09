@@ -9,6 +9,7 @@
 - Implement the MCP server for the Fray Debugger plugin.
 - Introduce replay mode for the Fray debugger plugin.
 - Introduce schedule replayer.
+- Support Java 23
 
 ### Changed
 
@@ -27,6 +28,7 @@
 - Fix wrong hover position calculation in the Fray Debugger plugin.
 - Fix concurrent modification exception in the `ThreadTimelinePanel`.
 - Fix replay when Intellij debugger is attached.
+- Fix `ObjectInstrumenter` visitor visits `methodExitLabel` twice exception.
 
 ### Security
 

@@ -139,20 +139,20 @@ class FrayWorkspaceInitializer(
   fun getDownloadUrl(osName: String): String {
     return when {
       osName.contains("win") ->
-          "https://corretto.aws/downloads/resources/21.0.6.7.1/amazon-corretto-21.0.6.7.1-windows-x64-jdk.zip"
+          "https://corretto.aws/downloads/resources/23.0.2.7.1/amazon-corretto-23.0.2.7.1-windows-x64-jdk.zip"
       osName.contains("linux") ->
-          "https://corretto.aws/downloads/resources/21.0.6.7.1/amazon-corretto-21.0.6.7.1-linux-x64.tar.gz"
+          "https://corretto.aws/downloads/resources/23.0.2.7.1/amazon-corretto-23.0.2.7.1-linux-x64.tar.gz"
       osName.contains("mac") ->
-          "https://corretto.aws/downloads/resources/21.0.6.7.1/amazon-corretto-21.0.6.7.1-macosx-aarch64.tar.gz"
+          "https://corretto.aws/downloads/resources/23.0.2.7.1/amazon-corretto-23.0.2.7.1-macosx-aarch64.tar.gz"
       else -> throw RuntimeException("Unsupported OS: $osName")
     }
   }
 
   fun getJDKFolderName(osName: String): String {
     return when {
-      osName.contains("win") -> "jdk21.0.6_7"
-      osName.contains("linux") -> "amazon-corretto-21.0.6.7.1-linux-x64"
-      osName.contains("mac") -> "amazon-corretto-21.jdk/Contents/Home"
+      osName.contains("win") -> "jdk23.0.6_7"
+      osName.contains("linux") -> "amazon-corretto-23.0.6.7.1-linux-x64"
+      osName.contains("mac") -> "amazon-corretto-23.jdk/Contents/Home"
       else -> throw RuntimeException("Unsupported OS: $osName")
     }
   }
