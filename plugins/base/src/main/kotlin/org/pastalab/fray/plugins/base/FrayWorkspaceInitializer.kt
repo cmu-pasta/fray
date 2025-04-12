@@ -156,7 +156,9 @@ class FrayWorkspaceInitializer(
 
   fun getJDKFolderName(osName: String): String {
     return when {
-      osName.contains("win") -> "jdk$jdkMajorVersion.$jdkMinorVersion.${jdkSecurityVersions[0]}" + if (jdkSecurityVersions.size > 1) "_${jdkSecurityVersions[1]}" else ""
+      osName.contains("win") ->
+          "jdk$jdkMajorVersion.$jdkMinorVersion.${jdkSecurityVersions[0]}" +
+              if (jdkSecurityVersions.size > 1) "_${jdkSecurityVersions[1]}" else ""
       osName.contains("linux") -> "amazon-corretto-$jdkVersion-linux-x64"
       osName.contains("mac") -> "amazon-corretto-$jdkMajorVersion.jdk/Contents/Home"
       else -> throw RuntimeException("Unsupported OS: $osName")
