@@ -38,9 +38,6 @@
             gradle
           ];
 
-          gradleEnv = {
-            JAVA_HOME = "${pkgs.jdk}";
-          };
           deps = ./deps.json;
         };
         in
