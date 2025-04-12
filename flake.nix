@@ -30,7 +30,15 @@
             cmake
             gradle
             jdk
+            jdk11
+            jdk21
           ];
+          shellHook = ''
+            export JDK11="${pkgs.jdk11.home}"
+            export JDK21="${pkgs.jdk21.home}"
+            export JRE="${pkgs.jdk.home}"
+            export JAVA_HOME="${pkgs.jdk.home}"
+          '';
         };
       });
     };
