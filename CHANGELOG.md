@@ -12,6 +12,8 @@
 
 ### Fixed
 
+- Fix JDK folder detection on Linux and improve JDK version handling.
+
 ### Security
 
 ## 0.4.0 - 2025-04-09
