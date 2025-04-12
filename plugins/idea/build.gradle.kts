@@ -46,7 +46,12 @@ dependencies {
     pluginVerifier()
     zipSigner()
     testFramework(TestFrameworkType.Platform)
-    jetbrainsRuntime()
+    val jetbrainsRuntime = System.getenv("JETBRAINS_JDK_HOME")
+    if (jetbrainsRuntime != null) {
+      jetbrainsRuntimeLocal(jetbrainsRuntime)
+    } else {
+      jetbrainsRuntime()
+    }
   }
 }
 
