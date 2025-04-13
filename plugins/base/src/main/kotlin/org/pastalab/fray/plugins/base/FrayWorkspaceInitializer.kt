@@ -53,8 +53,21 @@ class FrayWorkspaceInitializer(
     }
   }
 
+  private fun isRunningOnNixOS(): Boolean {
+    return File("/etc/NIXOS").exists()
+  }
+
   private fun downloadJDK(): String {
     val osName = System.getProperty("os.name").lowercase()
+    if (osName.contains("linux") && isRunningOnNixOS()) {
+      val nixJdkHome = System.getenv("JDK23_HOME")
+      println("Running on NixOS, using system JDK: $nixJdkHome")
+      if (nixJdkHome != null) {
+        return nixJdkHome
+      } else {
+        throw RuntimeException("Running on NixOS but JDK23_HOME is not set.")
+      }
+    }
     val downloadUrl = getDownloadUrl(osName)
     val fileName = "$workDir/${downloadUrl.substringAfterLast("/")}"
     val jdkFolder = File("$workDir/${getJDKFolderName(osName)}")
