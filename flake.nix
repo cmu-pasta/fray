@@ -55,6 +55,7 @@
             jdk
             jdk11
             jdk21
+          ] ++ lib.optionals (pkgs.stdenv.isLinux) [
             jetbrains.jdk
           ];
           shellHook = ''
@@ -62,7 +63,9 @@
             export JDK21="${pkgs.jdk21.home}"
             export JRE="${pkgs.jdk.home}"
             export JAVA_HOME="${pkgs.jdk.home}"
-            export JETBRAINS_JDK_HOME="${pkgs.jetbrains.jdk.home}"
+            ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
+              export JETBRAINS_JDK_HOME="${pkgs.jetbrains.jdk.home}"
+            ''}
           '';
         };
       });
