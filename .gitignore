@@ -44,3 +44,4 @@ fray-report/
 .kotlin
 .intellijPlatform
 .direnv/
+kls_database.db
