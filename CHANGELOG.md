@@ -12,6 +12,9 @@
 
 ### Fixed
 
+- Fix JDK folder detection on Linux and improve JDK version handling.
+- Fix build on NixOS.
+
 ### Security
 
 ## 0.4.0 - 2025-04-09
