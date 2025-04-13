@@ -14,6 +14,7 @@
 
 - Fix JDK folder detection on Linux and improve JDK version handling.
 - Fix build on NixOS.
+- Use system JDK when running on NixOS.
 
 ### Security
 
