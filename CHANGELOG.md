@@ -12,11 +12,15 @@
 
 ### Fixed
 
+### Security
+
+## 0.4.1 - 2025-04-13
+
+### Fixed
+
 - Fix JDK folder detection on Linux and improve JDK version handling.
 - Fix build on NixOS.
 - Use system JDK when running on NixOS.
-
-### Security
 
 ## 0.4.0 - 2025-04-09
 
