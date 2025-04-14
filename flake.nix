@@ -2,7 +2,7 @@
   description = "A Nix-flake-based Java development environment";
 
   inputs = {
-    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.*.tar.gz";
+    nixpkgs.url = "github:aoli-al/nixpkgs/jcef-macos";
     gradle2nix.url = "github:tadfisher/gradle2nix/v2";
   };
   outputs = { self, nixpkgs, gradle2nix }:
@@ -11,7 +11,7 @@
 
       supportedSystems = [ "x86_64-linux" "aarch64-darwin" ];
       forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
-        pkgs = import nixpkgs { inherit system; overlays = [ self.overlays.default ]; };
+        pkgs = import nixpkgs { inherit system; overlays = [ self.overlays.default ];  config.allowUnfree = true; };
       });
     in
     {
@@ -55,7 +55,6 @@
             jdk
             jdk11
             jdk21
-          ] ++ lib.optionals (pkgs.stdenv.isLinux) [
             jetbrains.jdk
           ];
           shellHook = ''
@@ -63,9 +62,7 @@
             export JDK21="${pkgs.jdk21.home}"
             export JRE="${pkgs.jdk.home}"
             export JAVA_HOME="${pkgs.jdk.home}"
-            ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
-              export JETBRAINS_JDK_HOME="${pkgs.jetbrains.jdk.home}"
-            ''}
+            export JETBRAINS_JDK_HOME="${pkgs.jetbrains.jdk.home}"
           '';
         };
       });
