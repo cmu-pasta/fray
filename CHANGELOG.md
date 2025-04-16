@@ -6,6 +6,8 @@
 
 ### Changed
 
+- Link libc++ and libgcc statically.
+
 ### Deprecated
 
 ### Removed
@@ -44,7 +46,7 @@
 
 ### Fixed
 
-- Fix Fray hang when security manager is enabled. 
+- Fix Fray hang when security manager is enabled.
 - Fix wrong hover position calculation in the Fray Debugger plugin.
 - Fix concurrent modification exception in the `ThreadTimelinePanel`.
 - Fix replay when Intellij debugger is attached.
@@ -73,19 +75,19 @@
 ### Added
 
 - Pass the `ResourceInfo` to the operations that may block a
-thread's execution.
+  thread's execution.
 - Add `ThreadResourcePanel` to the Fray Debugger plugin. The panel visualizes the concurrency resources of each thread.
 
 ### Changed
 
 - Refine the timeline construction logic. Pass timeline information through
-schedule observers.
-- Improve the condition/object wait blocking by using the original lock instead 
-of the while loop.
+  schedule observers.
+- Improve the condition/object wait blocking by using the original lock instead
+  of the while loop.
 
 ### Fixed
 
-- Disable Fray instrumentation when `System.exit` is called. This avoids 
+- Disable Fray instrumentation when `System.exit` is called. This avoids
   deadlock when a new thread is created during the shutdown process.
 - Fixed Github release action including the wrong changelog.
 - Prevent Fray hangs by properly removing threads from read/write lock waiters
@@ -107,8 +109,8 @@ of the while loop.
 ### Fixed
 
 - Fix deadlock while evaluating syncurity conditions. This happens if the condition
-contains synchronization primitives. The solution is to switch Runtime delegate to 
-a special syncurity delegate that does not call RunContext directly.
+  contains synchronization primitives. The solution is to switch Runtime delegate to
+  a special syncurity delegate that does not call RunContext directly.
 
 ## 0.2.7 - 2025-02-24
 
