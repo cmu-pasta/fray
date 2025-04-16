@@ -6,8 +6,6 @@
 
 ### Changed
 
-- Link libc++ and libgcc statically.
-
 ### Deprecated
 
 ### Removed
@@ -15,6 +13,12 @@
 ### Fixed
 
 ### Security
+
+## 0.4.2 - 2025-04-16
+
+### Changed
+
+- Link libc++ and libgcc statically.
 
 ## 0.4.1 - 2025-04-13
 
