@@ -9,6 +9,7 @@ import static org.junit.platform.testkit.engine.EventConditions.*;
 public class ReplaySchedulerTest {
     @Test
     public void testBankAccountReplay() {
+        System.setProperty("fray.recordSchedule", "true");
         EngineTestKit
                 .engine("junit-jupiter")
                 .selectors(selectClass(org.pastalab.fray.junit.internal.scheduler.ReplaySchedulerTest.class))
