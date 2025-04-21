@@ -287,7 +287,7 @@ data class Configuration(
     if (!isReplay || !Paths.get(report).exists()) {
       prepareReportPath(report)
     }
-    if (System.getProperty("fray.recordSchedule", "true").toBoolean()) {
+    if (System.getProperty("fray.recordSchedule", "false").toBoolean()) {
       val scheduleRecorder = ScheduleRecorder()
       testStatusObservers.add(scheduleRecorder)
       scheduleObservers.add(scheduleRecorder)
