@@ -65,6 +65,11 @@ class FrayPlugin : Plugin<Project> {
         it.jvmArgs("--add-opens", "java.base/java.io=ALL-UNNAMED")
         it.jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
         it.jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
+
+        // Organize test results by test class and method
+        it.systemProperty("fray.organize.by.test", "true")
+
+        // Set base directory for fray tests
         it.jvmArgs(
             "-Dfray.workDir=${target.layout.buildDirectory.get().asFile}/${Commons.TEST_WORK_DIR}")
         if (target.hasProperty("fray.debugger")) {
