@@ -12,6 +12,8 @@
 
 ### Fixed
 
+- Fix fray command line duplicate `--path` exception.
+
 ### Security
 
 ## 0.4.2 - 2025-04-16
