@@ -115,7 +115,7 @@ class POS : ScheduleAlgorithm("pos", false) {
 }
 
 class ReplayFromRecordings : ScheduleAlgorithm("replay-from-recordings", true) {
-  val path by option("--path").file().required()
+  val path by option("--path-to-recordings").file().required()
 
   override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
     val randomPath = "${path.absolutePath}/random.json"
@@ -129,8 +129,8 @@ class ReplayFromRecordings : ScheduleAlgorithm("replay-from-recordings", true) {
   }
 }
 
-class Replay : ScheduleAlgorithm("replay", true) {
-  val path by option("--path").file().required()
+class Replay : ScheduleAlgorithm("replay-from-scheduler", true) {
+  val path by option("--path-to-scheduler").file().required()
 
   override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
     val randomPath = "${path.absolutePath}/random.json"
