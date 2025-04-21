@@ -66,8 +66,64 @@ class FrayPlugin : Plugin<Project> {
         it.jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
         it.jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
 
+        // Enable test output in Gradle logs
+        it.testLogging { it.showStandardStreams = true }
+
         // Organize test results by test class and method
         it.systemProperty("fray.organize.by.test", "true")
+
+        // Apply configuration from the extension or project properties or system properties
+
+        // Helper function to get property from project property, system property, or extension
+        fun <T> getProperty(name: String, extensionValue: T?): Any? {
+          return target.findProperty(name)
+              ?: // Check project property (-P)
+              System.getProperty(name)
+              ?: // Check system property (-D)
+              extensionValue
+        }
+
+        // Record schedule
+        val recordSchedule = getProperty("fray.recordSchedule", null)
+        if (recordSchedule != null) {
+          it.systemProperty("fray.recordSchedule", recordSchedule.toString())
+        }
+
+        // Scheduler
+        val scheduler = getProperty("fray.scheduler", extension.scheduler)
+        if (scheduler != null) {
+          it.systemProperty("fray.scheduler", scheduler.toString())
+        }
+
+        // Iterations
+        val iterations = getProperty("fray.iterations", extension.iterations)
+        if (iterations != null) {
+          it.systemProperty("fray.iterations", iterations.toString())
+        }
+
+        // Replay directory
+        val replayDir = getProperty("fray.replayDir", extension.replayDir)
+        if (replayDir != null) {
+          it.systemProperty("fray.replayDir", replayDir.toString())
+        }
+
+        // Timeout
+        val timeout = getProperty("fray.timeout", extension.timeout)
+        if (timeout != null) {
+          it.systemProperty("fray.timeout", timeout.toString())
+        }
+
+        // Explore mode
+        val exploreMode = getProperty("fray.exploreMode", extension.exploreMode)
+        if (exploreMode.toString().toBoolean()) {
+          it.systemProperty("fray.exploreMode", "true")
+        }
+
+        // Number of switch points (for PCT)
+        val numSwitchPoints = getProperty("fray.numSwitchPoints", extension.numSwitchPoints)
+        if (numSwitchPoints != null) {
+          it.systemProperty("fray.numSwitchPoints", numSwitchPoints.toString())
+        }
 
         // Set base directory for fray tests
         it.jvmArgs(

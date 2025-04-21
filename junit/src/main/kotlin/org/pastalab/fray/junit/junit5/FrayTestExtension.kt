@@ -48,13 +48,24 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
       testDir.toFile().mkdirs()
     }
 
+    // Check for command-line overrides of the scheduler, iterations, etc.
+    val customSchedulerName = System.getProperty("fray.scheduler")
+    val customIterations = System.getProperty("fray.iterations")?.toIntOrNull()
+    val customNumSwitchPoints = System.getProperty("fray.numSwitchPoints")?.toIntOrNull()
+    val customReplayDir = System.getProperty("fray.replayDir")
+    val customTimeout = System.getProperty("fray.timeout")?.toIntOrNull()
+    val exploreMode = System.getProperty("fray.exploreMode")?.toBoolean() ?: false
+
     val (scheduler, random) =
-        if (concurrencyTest.replay.isNotEmpty()) {
-          val path = getPath(concurrencyTest.replay)
+        if (customReplayDir != null || concurrencyTest.replay.isNotEmpty()) {
+          val replayPath = customReplayDir ?: concurrencyTest.replay
+          val path = getPath(replayPath)
           val randomPath = "${path.absolutePath}/random.json"
           val recordingPath = "${path.absolutePath}/recording.json"
           val scheduler =
-              if (concurrencyTest.scheduler.java == ReplayScheduler::class.java) {
+              if ((customSchedulerName == null &&
+                  concurrencyTest.scheduler.java == ReplayScheduler::class.java) ||
+                  customSchedulerName == "replay") {
                 val scheduleRecordings =
                     Json.decodeFromString<List<ScheduleRecording>>(File(recordingPath).readText())
                 ReplayScheduler(scheduleRecordings)
@@ -66,9 +77,40 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
               Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
           Pair(scheduler, randomnessProvider)
         } else {
-          val scheduler = concurrencyTest.scheduler.java.getConstructor().newInstance()
-          Pair(scheduler, ControlledRandom())
+          // Use custom scheduler if provided
+          val schedulerInstance =
+              when (customSchedulerName) {
+                "pct" ->
+                    Class.forName("org.pastalab.fray.core.scheduler.PCTScheduler")
+                        .getConstructor(Int::class.java)
+                        .newInstance(customNumSwitchPoints ?: 3)
+                "random" ->
+                    Class.forName("org.pastalab.fray.core.scheduler.RandomScheduler")
+                        .getConstructor()
+                        .newInstance()
+                "surw" ->
+                    Class.forName("org.pastalab.fray.core.scheduler.SURWScheduler")
+                        .getConstructor()
+                        .newInstance()
+                "pos" ->
+                    Class.forName("org.pastalab.fray.core.scheduler.POSScheduler")
+                        .getConstructor()
+                        .newInstance()
+                else ->
+                    Class.forName("org.pastalab.fray.core.scheduler.RandomScheduler")
+                        .getConstructor()
+                        .newInstance()
+              }
+
+          Pair(schedulerInstance as Scheduler, ControlledRandom())
         }
+
+    // Use the custom iterations if provided, otherwise use the value from the annotation
+    val iterations = customIterations ?: totalRepetition(concurrencyTest, testMethod)
+
+    // Use the custom timeout if provided, otherwise use the default value
+    val timeout = customTimeout ?: 60
+
     val config =
         Configuration(
             ExecutionInfo(
@@ -78,17 +120,23 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
                 -1,
             ),
             testDir.toString(),
-            totalRepetition(concurrencyTest, testMethod),
-            60,
+            iterations,
+            timeout,
             scheduler,
             random,
             false,
-            false,
+            exploreMode,
             true,
-            concurrencyTest.replay.isNotEmpty(),
+            (customReplayDir != null || concurrencyTest.replay.isNotEmpty()),
             false,
             true,
         )
+    config.frayLogger.info("System property for fray.scheduler: $customSchedulerName")
+    config.frayLogger.info("System property for fray.iterations: $customIterations")
+    config.frayLogger.info("System property for fray.numSwitchPoints: $customNumSwitchPoints")
+    config.frayLogger.info("System property for fray.replayDir: $customReplayDir")
+    config.frayLogger.info("System property for fray.timeout: $customTimeout")
+    config.frayLogger.info("System property for fray.exploreMode: $exploreMode")
     val frayContext = RunContext(config)
     val frayJupiterContext = FrayJupiterContext()
     return Stream.iterate(1, { it + 1 })

@@ -292,6 +292,10 @@ data class Configuration(
       testStatusObservers.add(scheduleRecorder)
       scheduleObservers.add(scheduleRecorder)
     }
+    frayLogger.info("Fray started with configuration: ${this}")
+    frayLogger.info("  Executor: ${executionInfo.executor}")
+    frayLogger.info("  Scheduler: $scheduler")
+    frayLogger.info("  Randomness provider: $randomnessProvider")
 
     val debuggerProperty = System.getProperty(FRAY_DEBUGGER_PROPERTY_KEY, FRAY_DEBUGGER_DISABLED)
     if (debuggerProperty != FRAY_DEBUGGER_DISABLED) {
