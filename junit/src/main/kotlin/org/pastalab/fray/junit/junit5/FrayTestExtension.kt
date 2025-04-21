@@ -3,7 +3,6 @@ package org.pastalab.fray.junit.junit5
 import java.io.File
 import java.lang.reflect.Method
 import java.util.stream.Stream
-import kotlin.io.path.absolutePathString
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.TestTemplateInvocationContext
@@ -19,7 +18,6 @@ import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.ReplayScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
-import org.pastalab.fray.junit.Common.WORK_DIR
 import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest
 
 class FrayTestExtension : TestTemplateInvocationContextProvider {
@@ -33,15 +31,23 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
   ): Stream<TestTemplateInvocationContext> {
     val testMethod = context.requiredTestMethod
     val displayName = context.displayName
+    val testClass = context.requiredTestClass
     val concurrencyTest: ConcurrencyTest =
         AnnotationSupport.findAnnotation(
                 testMethod,
                 ConcurrencyTest::class.java,
             )
             .get()
-    if (!WORK_DIR.toFile().exists()) {
-      WORK_DIR.toFile().mkdirs()
+
+    // Use the test class and method names for the report directory
+    val className = testClass.name
+    val methodName = testMethod.name
+    val testDir = org.pastalab.fray.junit.Common.getTestDir(className, methodName)
+
+    if (!testDir.toFile().exists()) {
+      testDir.toFile().mkdirs()
     }
+
     val (scheduler, random) =
         if (concurrencyTest.replay.isNotEmpty()) {
           val path = getPath(concurrencyTest.replay)
@@ -71,7 +77,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
                 false,
                 -1,
             ),
-            WORK_DIR.absolutePathString(),
+            testDir.toString(),
             totalRepetition(concurrencyTest, testMethod),
             60,
             scheduler,
