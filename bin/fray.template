@@ -5,6 +5,7 @@ import sys
 import subprocess
 import argparse
 import re
+import shutil
 from typing import List
 
 
@@ -13,6 +14,7 @@ JAVA_PATH = os.path.join(BASE, "instrumentation", "jdk", "build", "java-inst", "
 JVMTI_PATH = "#JVM_TI_PATH#"
 AGENT_PATH = "#AGENT_PATH#"
 CORE_PATH = "#CORE_PATH#"
+REPORT_PATH = "/tmp/fray-report" # Default report path
 
 def resolve_classpaths(classpaths: List[str]) -> List[str]:
     resolved_paths = []
@@ -76,6 +78,8 @@ def main():
             "--args",
             ":".join(args.args)
         ])
+    if os.path.exists(REPORT_PATH):
+        shutil.rmtree(REPORT_PATH)
     subprocess.run(command)
 
 
