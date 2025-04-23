@@ -13,6 +13,7 @@
 ### Fixed
 
 - Fix fray command line duplicate `--path` exception.
+- Delete fray log file when fray command line is run, fixing stale logs.
 
 ### Security
 
