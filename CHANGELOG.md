@@ -4,6 +4,8 @@
 
 ### Added
 
+- Skip interleavings inside MethodHandle\[s\].
+
 ### Changed
 
 ### Deprecated
@@ -14,6 +16,7 @@
 
 - Fix fray command line duplicate `--path` exception.
 - Delete fray log file when fray command line is run, fixing stale logs.
+- Use gcc to build jvmti.so on Darwin as well.
 
 ### Security
 
