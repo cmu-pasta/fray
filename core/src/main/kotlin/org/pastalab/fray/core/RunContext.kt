@@ -34,9 +34,9 @@ import org.pastalab.fray.core.concurrency.primitives.SemaphoreContext
 import org.pastalab.fray.core.concurrency.primitives.SignalContext
 import org.pastalab.fray.core.concurrency.primitives.StampedLockContext
 import org.pastalab.fray.core.concurrency.primitives.WriteLockContext
+import org.pastalab.fray.core.ranger.RangerEvaluationContext
+import org.pastalab.fray.core.ranger.RangerEvaluationDelegate
 import org.pastalab.fray.core.scheduler.FrayIdeaPluginScheduler
-import org.pastalab.fray.core.syncurity.SyncurityEvaluationContext
-import org.pastalab.fray.core.syncurity.SyncurityEvaluationDelegate
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.core.utils.toThreadInfos
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
@@ -44,9 +44,9 @@ import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.runtime.DeadlockException
 import org.pastalab.fray.runtime.Delegate
 import org.pastalab.fray.runtime.LivenessException
+import org.pastalab.fray.runtime.RangerCondition
 import org.pastalab.fray.runtime.Runtime
 import org.pastalab.fray.runtime.Runtime.onReportError
-import org.pastalab.fray.runtime.SyncurityCondition
 
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 class RunContext(val config: Configuration) {
@@ -907,13 +907,13 @@ class RunContext(val config: Configuration) {
     scheduleNextOperation(true)
   }
 
-  fun evaluateSyncurityCondition(condition: SyncurityCondition): Boolean {
+  fun evaluateRangerCondition(condition: RangerCondition): Boolean {
     val currentRuntimeDelegate = Runtime.DELEGATE
     val result =
         try {
-          val syncurityEvaluationContext = SyncurityEvaluationContext(this)
+          val rangerEvaluationContext = RangerEvaluationContext(this)
           Runtime.DELEGATE =
-              SyncurityEvaluationDelegate(syncurityEvaluationContext, Thread.currentThread())
+              RangerEvaluationDelegate(rangerEvaluationContext, Thread.currentThread())
           condition.satisfied()
         } catch (e: Throwable) {
           false
@@ -923,21 +923,20 @@ class RunContext(val config: Configuration) {
     return result
   }
 
-  fun syncurityCondition(condition: SyncurityCondition) {
+  fun rangerCondition(condition: RangerCondition) {
     val context = registeredThreads[Thread.currentThread().id]!!
-    while (!evaluateSyncurityCondition(condition)) {
-      context.pendingOperation = SyncurityWaitOperation(condition, context)
+    while (!evaluateRangerCondition(condition)) {
+      context.pendingOperation = RangerWaitOperation(condition, context)
       context.state = ThreadState.Blocked
       scheduleNextOperation(true)
     }
   }
 
-  fun checkAndUnblockSyncurityOperations() {
+  fun checkAndUnblockRangerOperations() {
     for (thread in registeredThreads.values) {
-      if (thread.state == ThreadState.Blocked &&
-          thread.pendingOperation is SyncurityWaitOperation) {
-        val condition = (thread.pendingOperation as SyncurityWaitOperation).condition
-        if (evaluateSyncurityCondition(condition)) {
+      if (thread.state == ThreadState.Blocked && thread.pendingOperation is RangerWaitOperation) {
+        val condition = (thread.pendingOperation as RangerWaitOperation).condition
+        if (evaluateRangerCondition(condition)) {
           thread.pendingOperation = ThreadResumeOperation(true)
           thread.state = ThreadState.Runnable
         }
@@ -1012,7 +1011,7 @@ class RunContext(val config: Configuration) {
       throw RuntimeException()
     }
 
-    checkAndUnblockSyncurityOperations()
+    checkAndUnblockRangerOperations()
     var enabledOperations =
         registeredThreads.values
             .toList()

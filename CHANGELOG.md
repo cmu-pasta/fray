@@ -8,6 +8,8 @@
 
 ### Changed
 
+- Rename syncurity to ranger.
+
 ### Deprecated
 
 ### Removed

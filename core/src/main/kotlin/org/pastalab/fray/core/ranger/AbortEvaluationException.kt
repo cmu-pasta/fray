@@ -1,4 +1,4 @@
-package org.pastalab.fray.core.syncurity
+package org.pastalab.fray.core.ranger
 
 class AbortEvaluationException : RuntimeException {
   constructor() : super()
