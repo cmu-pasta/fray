@@ -1,13 +1,13 @@
-package org.pastalab.fray.core.syncurity
+package org.pastalab.fray.core.ranger
 
 import java.util.concurrent.CountDownLatch
 import org.pastalab.fray.core.RunContext
 
-class SyncurityEvaluationContext(val runContext: RunContext) {
+class RangerEvaluationContext(val runContext: RunContext) {
   fun latchAwait(latch: CountDownLatch) {
     val context = runContext.latchManager.getContext(latch)
     if (context.count > 0) {
-      throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
+      throw AbortEvaluationException("Abort ranger condition evaluation because of deadlock.")
     }
   }
 
@@ -16,7 +16,7 @@ class SyncurityEvaluationContext(val runContext: RunContext) {
   ) {
     val lockContext = runContext.lockManager.getContext(lock)
     if (!lockContext.canLock(Thread.currentThread().id)) {
-      throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
+      throw AbortEvaluationException("Abort ranger condition evaluation because of deadlock.")
     } else {
       return
     }

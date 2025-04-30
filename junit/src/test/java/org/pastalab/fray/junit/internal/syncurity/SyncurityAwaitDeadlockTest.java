@@ -8,7 +8,7 @@ import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.pastalab.fray.junit.syncurity.ConditionFactoryKt.await;
+import static org.pastalab.fray.junit.ranger.ConditionFactoryKt.await;
 
 @ExtendWith(FrayTestExtension.class)
 public class SyncurityAwaitDeadlockTest {

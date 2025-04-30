@@ -1,4 +1,4 @@
-package org.pastalab.fray.core.syncurity
+package org.pastalab.fray.core.ranger
 
 import java.util.Date
 import java.util.concurrent.CountDownLatch
@@ -7,8 +7,8 @@ import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import org.pastalab.fray.runtime.Delegate
 
-class SyncurityEvaluationDelegate(
-    val syncurityRunContext: SyncurityEvaluationContext,
+class RangerEvaluationDelegate(
+    val rangerRunContext: RangerEvaluationContext,
     val evaluatingThread: Thread
 ) : Delegate() {
   var entered = ThreadLocal.withInitial { false }
@@ -32,43 +32,43 @@ class SyncurityEvaluationDelegate(
   override fun onConditionAwait(l: Condition) {
     if (checkEntered()) return
     entered.set(false)
-    throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
+    throw AbortEvaluationException("Abort ranger condition evaluation because of deadlock.")
   }
 
   override fun onConditionAwaitTime(condition: Condition, time: Long, unit: TimeUnit): Boolean {
     if (checkEntered()) return condition.await(time, unit)
     entered.set(false)
-    throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
+    throw AbortEvaluationException("Abort ranger condition evaluation because of deadlock.")
   }
 
   override fun onConditionAwaitNanos(condition: Condition, nanos: Long): Long {
     if (checkEntered()) return condition.awaitNanos(nanos)
     entered.set(false)
-    throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
+    throw AbortEvaluationException("Abort ranger condition evaluation because of deadlock.")
   }
 
   override fun onConditionAwaitUninterruptibly(condition: Condition) {
     if (checkEntered()) return
     entered.set(false)
-    throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
+    throw AbortEvaluationException("Abort ranger condition evaluation because of deadlock.")
   }
 
   override fun onConditionAwaitUntil(condition: Condition, deadline: Date?): Boolean {
     if (checkEntered()) return condition.awaitUntil(deadline)
     entered.set(false)
-    throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
+    throw AbortEvaluationException("Abort ranger condition evaluation because of deadlock.")
   }
 
   override fun onObjectWait(o: Any, timeout: Long) {
     if (checkEntered()) return
     entered.set(false)
-    throw AbortEvaluationException("Abort syncurity condition evaluation because of deadlock.")
+    throw AbortEvaluationException("Abort ranger condition evaluation because of deadlock.")
   }
 
   override fun onLatchAwait(latch: CountDownLatch) {
     if (checkEntered()) return
     try {
-      syncurityRunContext.latchAwait(latch)
+      rangerRunContext.latchAwait(latch)
     } finally {
       entered.set(false)
     }
@@ -77,7 +77,7 @@ class SyncurityEvaluationDelegate(
   override fun onMonitorEnter(o: Any) {
     if (checkEntered()) return
     try {
-      syncurityRunContext.lockImpl(o)
+      rangerRunContext.lockImpl(o)
     } finally {
       entered.set(false)
     }
@@ -89,7 +89,7 @@ class SyncurityEvaluationDelegate(
       return
     }
     try {
-      syncurityRunContext.lockImpl(l)
+      rangerRunContext.lockImpl(l)
     } finally {
       entered.set(false)
       onSkipMethod("Lock.lock")
@@ -106,7 +106,7 @@ class SyncurityEvaluationDelegate(
       return timeout
     }
     try {
-      syncurityRunContext.lockImpl(l)
+      rangerRunContext.lockImpl(l)
     } finally {
       entered.set(false)
       onSkipMethod("Lock.tryLock")

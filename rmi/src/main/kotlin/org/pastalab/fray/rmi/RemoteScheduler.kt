@@ -20,7 +20,7 @@ enum class ResourceType {
   SEMAPHORE,
   CDL,
   PARK,
-  SYNCURITY_CONDITION,
+  RANGER_CONDITION,
 }
 
 data class ResourceInfo(val resourceId: Int, val resourceType: ResourceType) : Serializable {

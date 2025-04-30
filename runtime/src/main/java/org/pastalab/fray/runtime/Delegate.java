@@ -367,7 +367,7 @@ public class Delegate {
     public void onStampedLockSkip() {
     }
 
-    public void onSyncurityCondition(SyncurityCondition condition) {
+    public void onRangerCondition(RangerCondition condition) {
     }
 }
 
