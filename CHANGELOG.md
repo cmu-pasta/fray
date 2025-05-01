@@ -9,6 +9,7 @@
 ### Changed
 
 - Rename syncurity to ranger.
+- Support Intellij 252.
 
 ### Deprecated
 
