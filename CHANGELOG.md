@@ -4,12 +4,7 @@
 
 ### Added
 
-- Skip interleavings inside MethodHandle\[s\].
-
 ### Changed
-
-- Rename syncurity to ranger.
-- Support Intellij 252.
 
 ### Deprecated
 
@@ -17,11 +12,24 @@
 
 ### Fixed
 
+### Security
+
+## 0.4.3 - 2025-05-01
+
+### Added
+
+- Skip interleavings inside MethodHandle\[s\].
+
+### Changed
+
+- Rename syncurity to ranger.
+- Support Intellij 252.
+
+### Fixed
+
 - Fix fray command line duplicate `--path` exception.
 - Delete fray log file when fray command line is run, fixing stale logs.
 - Use gcc to build jvmti.so on Darwin as well.
-
-### Security
 
 ## 0.4.2 - 2025-04-16
 
