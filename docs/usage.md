@@ -139,3 +139,19 @@ Next, you may replay the failure using Fray by providing the recording path:
         replay = "PATH_TO_FRAY_REPORT/recording"
 )
 ```
+
+## NixOS
+
+Fray downloads Corretto JDK 23 and runs `ConcurrencyTest` with it by default. However, NixOS cannot run dynamically 
+linked executables. To run Fray on NixOS, you can provide environment variable `JDK23_HOME` and Fray will use provided 
+JDK 23 instead of downloading it.
+
+```nix
+packages = with pkgs; [
+  ...
+  jdk23
+];
+shellHook = ''
+  export JDK23_HOME="${pkgs.jdk23.home}"
+''
+```

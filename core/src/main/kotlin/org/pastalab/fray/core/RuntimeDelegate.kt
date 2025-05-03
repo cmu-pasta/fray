@@ -14,7 +14,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.StampedLock
 import org.pastalab.fray.core.concurrency.HelperThread
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
-import org.pastalab.fray.runtime.SyncurityCondition
+import org.pastalab.fray.runtime.RangerCondition
 
 class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Delegate() {
 
@@ -469,6 +469,14 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
 
   override fun onThreadPark() {
     onThreadParkImpl()
+  }
+
+  override fun onUnsafeThreadParkTimed(isAbsolute: Boolean, time: Long) {
+    if (isAbsolute) {
+      onThreadParkUntil(time)
+    } else {
+      onThreadParkNanos(time)
+    }
   }
 
   fun onThreadParkDoneImpl(timed: Boolean) {
@@ -1125,13 +1133,13 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     return 0
   }
 
-  override fun onSyncurityCondition(condition: SyncurityCondition) {
+  override fun onRangerCondition(condition: RangerCondition) {
     if (checkEntered()) {
       verifyOrReport(false, "This method should never be called recursively")
       return
     }
     try {
-      context.syncurityCondition(condition)
+      context.rangerCondition(condition)
     } finally {
       entered.set(false)
     }

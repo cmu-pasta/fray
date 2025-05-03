@@ -53,8 +53,21 @@ class FrayWorkspaceInitializer(
     }
   }
 
+  private fun isRunningOnNixOS(): Boolean {
+    return File("/etc/NIXOS").exists()
+  }
+
   private fun downloadJDK(): String {
     val osName = System.getProperty("os.name").lowercase()
+    if (osName.contains("linux") && isRunningOnNixOS()) {
+      val nixJdkHome = System.getenv("JDK23_HOME")
+      println("Running on NixOS, using system JDK: $nixJdkHome")
+      if (nixJdkHome != null) {
+        return nixJdkHome
+      } else {
+        throw RuntimeException("Running on NixOS but JDK23_HOME is not set.")
+      }
+    }
     val downloadUrl = getDownloadUrl(osName)
     val fileName = "$workDir/${downloadUrl.substringAfterLast("/")}"
     val jdkFolder = File("$workDir/${getJDKFolderName(osName)}")
@@ -136,23 +149,31 @@ class FrayWorkspaceInitializer(
     }
   }
 
+  val jdkMajorVersion = "23"
+  val jdkMinorVersion = "0"
+  val jdkSecurityVersions = arrayOf("2", "7", "1")
+
+  val jdkVersion = "$jdkMajorVersion.$jdkMinorVersion.${jdkSecurityVersions.joinToString(".")}"
+
   fun getDownloadUrl(osName: String): String {
     return when {
       osName.contains("win") ->
-          "https://corretto.aws/downloads/resources/21.0.6.7.1/amazon-corretto-21.0.6.7.1-windows-x64-jdk.zip"
+          "https://corretto.aws/downloads/resources/$jdkVersion/amazon-corretto-$jdkVersion-windows-x64-jdk.zip"
       osName.contains("linux") ->
-          "https://corretto.aws/downloads/resources/21.0.6.7.1/amazon-corretto-21.0.6.7.1-linux-x64.tar.gz"
+          "https://corretto.aws/downloads/resources/$jdkVersion/amazon-corretto-$jdkVersion-linux-x64.tar.gz"
       osName.contains("mac") ->
-          "https://corretto.aws/downloads/resources/21.0.6.7.1/amazon-corretto-21.0.6.7.1-macosx-aarch64.tar.gz"
+          "https://corretto.aws/downloads/resources/$jdkVersion/amazon-corretto-$jdkVersion-macosx-aarch64.tar.gz"
       else -> throw RuntimeException("Unsupported OS: $osName")
     }
   }
 
   fun getJDKFolderName(osName: String): String {
     return when {
-      osName.contains("win") -> "jdk21.0.6_7"
-      osName.contains("linux") -> "amazon-corretto-21.0.6.7.1-linux-x64"
-      osName.contains("mac") -> "amazon-corretto-21.jdk/Contents/Home"
+      osName.contains("win") ->
+          "jdk$jdkMajorVersion.$jdkMinorVersion.${jdkSecurityVersions[0]}" +
+              if (jdkSecurityVersions.size > 1) "_${jdkSecurityVersions[1]}" else ""
+      osName.contains("linux") -> "amazon-corretto-$jdkVersion-linux-x64"
+      osName.contains("mac") -> "amazon-corretto-$jdkMajorVersion.jdk/Contents/Home"
       else -> throw RuntimeException("Unsupported OS: $osName")
     }
   }

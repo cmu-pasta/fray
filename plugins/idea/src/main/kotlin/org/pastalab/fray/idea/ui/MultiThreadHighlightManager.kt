@@ -6,7 +6,6 @@ import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
-import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import java.awt.Color
 import java.awt.Font
@@ -26,9 +25,8 @@ class MultiThreadHighlightManager {
       threadContext: ThreadExecutionContext,
       editor: Editor,
       document: Document,
-      project: Project
   ): RangeHighlighter {
-    val existingHighlighter = lineHighlightersMap.getOrPut(line) { mutableMapOf() }.get(editor)
+    val existingHighlighter = lineHighlightersMap.getOrPut(line) { mutableMapOf() }[editor]
 
     val start = document.getLineStartOffset(line - 1)
     val end = document.getLineEndOffset(line - 1)
@@ -49,7 +47,7 @@ class MultiThreadHighlightManager {
     return highlighter
   }
 
-  fun clearAll() {
+  fun clear() {
     // For each line and editor, remove highlighters
     lineHighlightersMap.forEach { (line, editorMap) ->
       editorMap.forEach { (editor, highlighter) ->

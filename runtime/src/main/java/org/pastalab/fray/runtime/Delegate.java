@@ -138,6 +138,14 @@ public class Delegate {
     public void onThreadPark() {
     }
 
+    public void onUnsafeThreadParkTimed(boolean isAbsolute, long time) {
+        if (isAbsolute) {
+            LockSupport.parkUntil(time);
+        } else {
+            LockSupport.parkNanos(time);
+        }
+    }
+
     public void onThreadParkDone() {
     }
 
@@ -359,7 +367,7 @@ public class Delegate {
     public void onStampedLockSkip() {
     }
 
-    public void onSyncurityCondition(SyncurityCondition condition) {
+    public void onRangerCondition(RangerCondition condition) {
     }
 }
 

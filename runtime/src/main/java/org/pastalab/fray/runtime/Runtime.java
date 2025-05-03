@@ -182,6 +182,10 @@ public class Runtime {
         DELEGATE.onThreadPark();
     }
 
+    public static void onUnsafeThreadParkTimed(boolean isAbsolute, long time) {
+        DELEGATE.onUnsafeThreadParkTimed(isAbsolute, time);
+    }
+
     public static void onThreadParkDone() {
         DELEGATE.onThreadParkDone();
     }
@@ -474,7 +478,7 @@ public class Runtime {
         DELEGATE.onStampedLockSkip();
     }
 
-    public static void onSyncurityCondition(SyncurityCondition condition) {
-        DELEGATE.onSyncurityCondition(condition);
+    public static void onRangerCondition(RangerCondition condition) {
+        DELEGATE.onRangerCondition(condition);
     }
 }

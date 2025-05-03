@@ -1,9 +1,9 @@
 package org.pastalab.fray.runtime;
 
-abstract public class SyncurityCondition {
+abstract public class RangerCondition {
     public static int NEXT_ID = 0;
 
-    public SyncurityCondition() {
+    public RangerCondition() {
         id = NEXT_ID++;
     }
 
@@ -11,6 +11,6 @@ abstract public class SyncurityCondition {
 
     abstract public boolean satisfied();
     public void await() {
-        Runtime.onSyncurityCondition(this);
+        Runtime.onRangerCondition(this);
     }
 }

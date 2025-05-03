@@ -1,3 +1,4 @@
+.java-version
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
@@ -44,3 +45,4 @@ fray-report/
 .kotlin
 .intellijPlatform
 .direnv/
+kls_database.db

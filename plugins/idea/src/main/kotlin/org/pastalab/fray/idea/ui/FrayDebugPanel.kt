@@ -20,16 +20,16 @@ import org.pastalab.fray.mcp.RemoteVMConnector
 import org.pastalab.fray.mcp.SchedulerDelegate
 import org.pastalab.fray.mcp.SchedulerServer
 import org.pastalab.fray.mcp.VirtualMachineProxy
-import org.pastalab.fray.rmi.ScheduleObserver
+import org.pastalab.fray.rmi.TestStatusObserver
 import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
 
 class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
-    JPanel(), ScheduleObserver<ThreadExecutionContext> {
+    JPanel(), TestStatusObserver {
   private val project = debugSession.project
   // UI Components
   private val controlPanel: SchedulerControlPanel
-  private val threadTimelinePanel: ThreadTimelinePanel
+  val threadTimelinePanel: ThreadTimelinePanel
   private val threadResourcePanel: ThreadResourcePanel
 
   // Data management
@@ -114,6 +114,7 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
     threadInfoUpdaters.clear()
     controlPanel.clear()
     threadResourcePanel.clear()
+    highlightManager.clear()
 
     if (newSelected != null) {
       selected = newSelected
@@ -123,7 +124,7 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
 
   fun stop() {
     mcpServer.stop()
-    highlightManager.clearAll()
+    highlightManager.clear()
     threadInfoUpdaters.forEach { it.value.stop() }
     threadInfoUpdaters.clear()
     controlPanel.clear()
@@ -164,14 +165,14 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
       if (threadExecutionContext.threadInfo.state == ThreadState.Completed) return@forEach
       threadExecutionContext.threadInfo.stackTraces.reversed().forEach { stackTraceElement ->
         val psiFile = stackTraceElement.getPsiFile(project) ?: return@forEach
-        val document = psiFile.fileDocument
-        val vFile = psiFile.virtualFile
-        ApplicationManager.getApplication().invokeLater {
+        ApplicationManager.getApplication().invokeAndWait {
+          val document = psiFile.fileDocument
+          val vFile = psiFile.virtualFile
           FileEditorManager.getInstance(project).openFile(vFile, false).forEach { fileEditor ->
             if (fileEditor is TextEditor) {
               val editor = fileEditor.editor
               highlightManager.addThreadToLine(
-                  stackTraceElement.lineNumber, threadExecutionContext, editor, document, project)
+                  stackTraceElement.lineNumber, threadExecutionContext, editor, document)
               threadInfoUpdaters
                   .getOrPut(editor) {
                     val updater = ThreadInfoUpdater(editor)
@@ -190,13 +191,6 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
 
   override fun onExecutionStart() {
     mcpServer.onExecutionStart()
-  }
-
-  override fun onNewSchedule(
-      allThreads: List<ThreadExecutionContext>,
-      scheduled: ThreadExecutionContext
-  ) {
-    threadTimelinePanel.onNewSchedule(allThreads, scheduled)
   }
 
   override fun onExecutionDone(bugFound: Throwable?) {

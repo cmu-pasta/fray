@@ -2,6 +2,8 @@ package org.pastalab.fray.instrumentation.base.visitors
 
 import java.io.PrintStream
 import java.lang.invoke.CallSite
+import java.lang.invoke.MethodHandle
+import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
 import java.net.JarURLConnection
 import java.net.URLClassLoader
@@ -28,6 +30,8 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
         "sun.reflect.annotation.AnnotationParser",
         "java.lang.ProcessImpl",
         "jdk.internal.misc.TerminatingThreadLocal",
+        MethodHandle::class.java.name,
+        MethodHandles::class.java.name,
         CallSite::class.java.name,
     ) {
 

@@ -223,7 +223,7 @@ class SchedulerServer(
             }
           }
           val scheduledThread = scheduled!!
-          schedule(scheduledThread, true)
+          schedule(scheduledThread)
 
           if (finished) {
             val msg =
@@ -270,25 +270,18 @@ class SchedulerServer(
     return null
   }
 
-  fun schedule(thread: ThreadInfo, shouldWait: Boolean) {
+  fun schedule(thread: ThreadInfo) {
     schedulerDelegate.scheduled(thread)
-    if (shouldWait) {
-      waitLatch = CountDownLatch(1)
-      try {
-        waitLatch?.await()
-      } catch (e: InterruptedException) {} finally {
-        waitLatch = null
-      }
+    waitLatch = CountDownLatch(1)
+    try {
+      waitLatch?.await()
+    } catch (e: InterruptedException) {} finally {
+      waitLatch = null
     }
   }
 
   fun newSchedulingRequestReceived(threads: List<ThreadInfo>, scheduled: ThreadInfo?) {
     allThreads = threads
-    if (this.scheduled?.threadIndex == scheduled?.threadIndex && replayMode) {
-      // In reply mode we only notify the LLM when a context switch happens.
-      schedule(scheduled!!, false)
-      return
-    }
     this.scheduled = scheduled
     waitLatch?.countDown()
   }

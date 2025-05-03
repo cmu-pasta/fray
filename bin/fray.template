@@ -5,6 +5,7 @@ import sys
 import subprocess
 import argparse
 import re
+import shutil
 from typing import List
 
 
@@ -13,6 +14,7 @@ JAVA_PATH = os.path.join(BASE, "instrumentation", "jdk", "build", "java-inst", "
 JVMTI_PATH = "#JVM_TI_PATH#"
 AGENT_PATH = "#AGENT_PATH#"
 CORE_PATH = "#CORE_PATH#"
+REPORT_PATH = "/tmp/report" # Default report path
 
 def resolve_classpaths(classpaths: List[str]) -> List[str]:
     resolved_paths = []
@@ -38,6 +40,7 @@ def main():
     parser.add_argument("-cp", "--class-path",
                         help="class search path of directories and zip/jar files. A : separated list of directories, JAR archives, and ZIP archives to search for class files.",
                         default="")
+    parser.add_argument("--system-props", help="System properties passed to JVM", type=str, default="")
     parser.add_argument("--replay", help="Replay a trace file", type=str, default="")
     parser.add_argument("clazz", help="Main class to run")
     parser.add_argument("args", nargs=argparse.REMAINDER,
@@ -50,6 +53,7 @@ def main():
     class_path = ":".join(resolve_classpaths(class_path.split(":")))
     command = [
         JAVA_PATH,
+    ] + args.system_props.split() + [
         "-ea",
         "-cp", class_path,
         "-agentpath:" + JVMTI_PATH,
@@ -65,8 +69,8 @@ def main():
     if args.replay:
         command.extend([
             "--scheduler",
-            "replay",
-            "--path",
+            "replay-from-recordings",
+            "--path-to-recordings",
             args.replay
         ])
     if args.args:
@@ -74,6 +78,9 @@ def main():
             "--args",
             ":".join(args.args)
         ])
+    fray_log_path = os.path.join(REPORT_PATH, "fray.log")
+    if os.path.exists(fray_log_path):
+        os.remove(fray_log_path)
     subprocess.run(command)
 
 

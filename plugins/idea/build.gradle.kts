@@ -16,7 +16,10 @@ repositories {
 
   // IntelliJ Platform Gradle Plugin Repositories Extension - read more:
   // https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
-  intellijPlatform { defaultRepositories() }
+  intellijPlatform { 
+    defaultRepositories() 
+    jetbrainsRuntime()
+  }
 }
 
 // Dependencies are managed with Gradle version catalog - read more:
@@ -43,6 +46,12 @@ dependencies {
     pluginVerifier()
     zipSigner()
     testFramework(TestFrameworkType.Platform)
+    val jetbrainsRuntime = System.getenv("JETBRAINS_JDK_HOME")
+    if (jetbrainsRuntime != null) {
+      jetbrainsRuntimeLocal(jetbrainsRuntime)
+    } else {
+      jetbrainsRuntime()
+    }
   }
 }
 

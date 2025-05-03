@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.pastalab.fray.junit.syncurity.ConditionFactoryKt.await;
+import static org.pastalab.fray.junit.ranger.ConditionFactoryKt.await;
 
 @ExtendWith(FrayTestExtension.class)
 public class SyncurityAwaitTest {

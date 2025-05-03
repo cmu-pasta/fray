@@ -2,13 +2,13 @@ package org.pastalab.fray.junit.tests;
 
 import org.junit.jupiter.api.Test;
 import org.junit.platform.testkit.engine.EngineTestKit;
-import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlockInConditionTest;
+import org.pastalab.fray.junit.internal.syncurity.RangerAwaitDeadlockInConditionTest;
 import org.pastalab.fray.junit.internal.syncurity.SyncurityAwaitDeadlockTest;
 
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.*;
 
-public class SyncurityAwaitTest {
+public class RangerAwaitTest {
 
     @Test
     public void testSyncurityAwaitTest() {
@@ -46,7 +46,7 @@ public class SyncurityAwaitTest {
     public void testSyncurityAwaitDeadlockInCondition() {
         EngineTestKit
                 .engine("junit-jupiter")
-                .selectors(selectClass(SyncurityAwaitDeadlockInConditionTest.class))
+                .selectors(selectClass(RangerAwaitDeadlockInConditionTest.class))
                 .execute()
                 .allEvents()
                 .assertThatEvents()

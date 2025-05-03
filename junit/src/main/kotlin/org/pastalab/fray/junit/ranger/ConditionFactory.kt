@@ -1,9 +1,9 @@
-package org.pastalab.fray.junit.syncurity
+package org.pastalab.fray.junit.ranger
 
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Supplier
 import org.hamcrest.Matcher
-import org.pastalab.fray.junit.syncurity.conditions.CallableHamcrestCondition
+import org.pastalab.fray.junit.ranger.conditions.CallableHamcrestCondition
 
 fun await(): ConditionFactory {
   return ConditionFactory()
