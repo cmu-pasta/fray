@@ -15,16 +15,7 @@ public class SelectorTest {
     private static final String SERVER_ADDRESS = "localhost";
     
     public static void main(String[] args) throws IOException, InterruptedException {
-        Thread serverThread = new Thread(() -> {
-            try {
-                runServer();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-        serverThread.start();
-        
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 1; i++) {
             final int clientId = i;
             new Thread(() -> {
                 try {
@@ -34,30 +25,40 @@ public class SelectorTest {
                 }
             }).start();
         }
+
+        Thread serverThread = new Thread(() -> {
+            try {
+                runServer();
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        });
+        serverThread.start();
+        
     }
     
-    private static void runServer() throws IOException {
+    private static void runServer() throws IOException, InterruptedException {
         Selector selector = Selector.open();
-        
+
         ServerSocketChannel serverChannel = ServerSocketChannel.open();
         serverChannel.configureBlocking(false);
-        serverChannel.socket().bind(new InetSocketAddress(PORT));
+        serverChannel.bind(new InetSocketAddress(PORT));
+        Thread.sleep(1000);
         serverChannel.register(selector, SelectionKey.OP_ACCEPT);
-        
+
         System.out.println("Server started on port " + PORT);
         
         ByteBuffer buffer = ByteBuffer.allocate(256);
         int messageReceived = 0;
         
         while (messageReceived < 3) {
-            selector.select();
-            
+            System.out.println(selector.select());
+
             Set<SelectionKey> selectedKeys = selector.selectedKeys();
             Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
             
             while (keyIterator.hasNext()) {
                 SelectionKey key = keyIterator.next();
-                
                 if (key.isAcceptable()) {
                     ServerSocketChannel server = (ServerSocketChannel) key.channel();
                     SocketChannel client = server.accept();
@@ -92,21 +93,26 @@ public class SelectorTest {
     private static void runClient(int clientId) throws IOException {
         SocketChannel channel = SocketChannel.open();
         channel.configureBlocking(true); // Clients use blocking mode for simplicity
-        
+
         channel.connect(new InetSocketAddress(SERVER_ADDRESS, PORT));
-        System.out.println("Client " + clientId + " connected to server");
-        
-        String message = "Hello from client " + clientId;
-        ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
-        channel.write(buffer);
-        
-        buffer.clear();
-        channel.read(buffer);
-        buffer.flip();
-        byte[] bytes = new byte[buffer.remaining()];
-        buffer.get(bytes);
-        System.out.println("Client " + clientId + " received: " + new String(bytes));
-        
+//        System.out.println("Client " + clientId + " connected to server");
+//
+//        String message = "Hello from client " + clientId;
+//        ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
+//        channel.write(buffer);
+//
+//        buffer.clear();
+//        channel.read(buffer);
+//        buffer.flip();
+//        byte[] bytes = new byte[buffer.remaining()];
+//        buffer.get(bytes);
+//        System.out.println("Client " + clientId + " received: " + new String(bytes));
+
+        try {
+            Thread.sleep(1000000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         channel.close();
     }
 }

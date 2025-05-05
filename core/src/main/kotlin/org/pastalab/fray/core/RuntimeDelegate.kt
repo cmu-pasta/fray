@@ -12,7 +12,7 @@ import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.StampedLock
-import org.pastalab.fray.core.concurrency.HelperThread
+import org.pastalab.fray.core.utils.HelperThread
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.runtime.RangerCondition
 

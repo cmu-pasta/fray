@@ -1,6 +1,6 @@
 package org.pastalab.fray.core.concurrency.operations
 
-import org.pastalab.fray.core.concurrency.primitives.ObjectNotifyContext
+import org.pastalab.fray.core.concurrency.context.ObjectNotifyContext
 import org.pastalab.fray.rmi.ResourceInfo
 import org.pastalab.fray.rmi.ResourceType
 

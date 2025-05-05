@@ -1,13 +1,12 @@
-package org.pastalab.fray.core.concurrency
+package org.pastalab.fray.core.utils
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.locks.ReentrantReadWriteLock
-import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
-import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
-import org.pastalab.fray.core.concurrency.primitives.ReferencedContextManager
+import org.pastalab.fray.core.concurrency.ReferencedContextManager
 
 /**
- * We need a static object to store the [ReadLock] and [WriteLock] because if the lock is created
+ * We need a static object to store the [java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock]
+ * and [java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock] because if the lock is created
  * statically, we may lose track of the lock owner across test runs.
  */
 object ReentrantReadWriteLockCache {

@@ -1,4 +1,4 @@
-package org.pastalab.fray.core.concurrency.primitives
+package org.pastalab.fray.core.concurrency.context
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.locks.Condition
