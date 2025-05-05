@@ -70,7 +70,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                SyncClientExceptionWithoutServer.main(new String[]{});
+                                AsyncServerAsyncClient.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }

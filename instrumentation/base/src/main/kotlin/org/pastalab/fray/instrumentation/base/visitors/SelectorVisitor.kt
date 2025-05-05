@@ -11,6 +11,7 @@ class SelectorVisitor(cv: ClassVisitor) :
         cv,
         "sun/nio/ch/SelectorImpl",
         "sun/nio/ch/KQueueSelectorImpl",
+        "sun/nio/ch/EPollSelectorImpl",
         AbstractSelector::class.java.name) {
   override fun instrumentMethod(
       mv: MethodVisitor,
