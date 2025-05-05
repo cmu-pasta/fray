@@ -1,11 +1,10 @@
 package org.pastalab.fray.core.concurrency.context
 
 import java.nio.channels.SelectionKey
-import java.nio.channels.Selector
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
 
-class SelectorContext(val selector: Selector) : InterruptibleContext {
+class SelectorContext() : InterruptibleContext {
   val selectableChannelsToEventType = mutableMapOf<SelectableChannelContext, Int>()
   val waitingThreads = mutableListOf<ThreadContext>()
 
@@ -14,15 +13,29 @@ class SelectorContext(val selector: Selector) : InterruptibleContext {
     selectableChannelContext.registeredSelectors.add(this)
   }
 
-  fun select(): Boolean {
+  fun select(threadContext: ThreadContext): Boolean {
     for ((context, type) in selectableChannelsToEventType) {
       if (context is ServerSocketChannelContext) {
-        if (type and SelectionKey.OP_ACCEPT != 0 && context.pendingConnects > 0) {}
+        if (type and SelectionKey.OP_ACCEPT != 0 && context.pendingConnects > 0) {
+          return false
+        }
+      }
+      if (context is SocketChannelContext) {
+        if (type and SelectionKey.OP_CONNECT != 0 &&
+            context.channelReference.get()?.isOpen == true &&
+            context.channelReference.get()?.remoteAddress != null) {
+          return false
+        }
       }
     }
+    waitingThreads.add(threadContext)
+    return true
   }
 
-  fun register() {}
+  fun cancel(context: SelectableChannelContext) {
+    selectableChannelsToEventType.remove(context)
+    context.registeredSelectors.remove(this)
+  }
 
   override fun unblockThread(tid: Long, type: InterruptionType): Boolean {
     TODO("Not yet implemented")

@@ -5,6 +5,8 @@ import java.io.StringWriter
 import java.lang.Thread.UncaughtExceptionHandler
 import java.net.InetSocketAddress
 import java.net.SocketAddress
+import java.nio.channels.SelectionKey
+import java.nio.channels.Selector
 import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
 import java.time.Instant
@@ -22,8 +24,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 import java.util.concurrent.locks.StampedLock
 import kotlin.system.exitProcess
 import org.pastalab.fray.core.command.Configuration
+import org.pastalab.fray.core.concurrency.NioContextManager
 import org.pastalab.fray.core.concurrency.ReferencedContextManager
-import org.pastalab.fray.core.concurrency.SocketContextManager
 import org.pastalab.fray.core.concurrency.context.ConditionSignalContext
 import org.pastalab.fray.core.concurrency.context.CountDownLatchContext
 import org.pastalab.fray.core.concurrency.context.LockContext
@@ -71,7 +73,7 @@ class RunContext(val config: Configuration) {
     verifyOrReport(it is CountDownLatch) { "CDL Manager only accepts CountDownLatch objects" }
     CountDownLatchContext(it as CountDownLatch, syncManager)
   }
-  val socketContextManager = SocketContextManager()
+  val nioContextManager = NioContextManager()
   val lockManager =
       ReferencedContextManager<LockContext> {
         when (it) {
@@ -241,6 +243,7 @@ class RunContext(val config: Configuration) {
     stampedLockManager.done()
     semaphoreManager.done()
     latchManager.done()
+    nioContextManager.done()
 
     registeredThreads.clear()
     config.testStatusObservers.forEach { it.onExecutionDone(bugFound) }
@@ -905,17 +908,49 @@ class RunContext(val config: Configuration) {
     syncManager.wait(latch)
   }
 
+  fun selectorSetEventOps(selector: Selector, key: SelectionKey) {
+    val selectorContext = nioContextManager.getSelectorContext(selector)
+    val channelContext = nioContextManager.getChannelContext(key.channel()) ?: return
+    selectorContext.setEventOp(channelContext, key.interestOps())
+  }
+
+  fun selectorCancelKey(selector: Selector, key: SelectionKey) {
+    val selectorContext = nioContextManager.getSelectorContext(selector)
+    val channelContext = nioContextManager.getChannelContext(key.channel()) ?: return
+    selectorContext.cancel(channelContext)
+  }
+
+  fun selectorSelect(selector: Selector) {
+    val threadContext = registeredThreads[Thread.currentThread().id]!!
+    val selectorContext = nioContextManager.getSelectorContext(selector)
+    threadContext.state = ThreadState.Runnable
+    threadContext.pendingOperation = SelectorSelectOperation(selectorContext)
+    scheduleNextOperation(true)
+    while (selectorContext.select(threadContext)) {
+      threadContext.state = ThreadState.Blocked
+      threadContext.pendingOperation = SelectorSelectBlocked(selectorContext)
+      scheduleNextOperation(true)
+    }
+  }
+
   fun serverSocketChannelBindDone(serverSocketChannel: ServerSocketChannel) {
-    socketContextManager.serverSocketChannelBind(serverSocketChannel)
+    nioContextManager.serverSocketChannelBind(serverSocketChannel)
+  }
+
+  fun serverSocketChannelCloseDone(socketChannel: SocketChannel) {
+    nioContextManager.serverSocketChannelClose(socketChannel)
   }
 
   fun serverSocketChannelAccept(serverSocketChannel: ServerSocketChannel) {
     val serverSocketChannelContext =
-        socketContextManager.getServerSocketChannelContext(serverSocketChannel)
+        nioContextManager.getServerSocketChannelContext(serverSocketChannel)
     val context = registeredThreads[Thread.currentThread().id]!!
+    context.state = ThreadState.Runnable
+    context.pendingOperation = ServerSocketChannelAcceptOperation(serverSocketChannelContext)
+    scheduleNextOperation(true)
     while (serverSocketChannelContext.accept(context)) {
       context.state = ThreadState.Blocked
-      context.pendingOperation = ServerSocketChannelAcceptBlocking(serverSocketChannelContext)
+      context.pendingOperation = ServerSocketChannelAcceptBlocked(serverSocketChannelContext)
       scheduleNextOperation(true)
     }
     if (serverSocketChannelContext.pendingConnects > 0) {
@@ -925,16 +960,16 @@ class RunContext(val config: Configuration) {
 
   fun serverSocketChannelAcceptDone(
       serverSocketChannel: ServerSocketChannel,
-      socketChannel: SocketChannel
+      socketChannel: SocketChannel?
   ) {}
 
   fun socketChannelConnect(socketChannel: SocketChannel, address: SocketAddress) {
     if (address !is InetSocketAddress) {
       throw IllegalArgumentException("Only InetSocketAddress is supported for now.")
     }
-    val socketChannelContext = socketContextManager.getSocketChannelContext(socketChannel)
+    val socketChannelContext = nioContextManager.getSocketChannelContext(socketChannel)
     val serverSocketChannelContext =
-        socketContextManager.getServerSocketChannelAtPort(address.port) ?: return
+        nioContextManager.getServerSocketChannelAtPort(address.port) ?: return
     socketChannelContext.connect(serverSocketChannelContext)
   }
 

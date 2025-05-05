@@ -4,6 +4,9 @@
 
 ### Added
 
+- Implement support for non-blocking and blocking I/O operations using ServerSocketChannel, SocketChannel, 
+and Selector classes, enabling connect and accept operations.
+
 ### Changed
 
 ### Deprecated

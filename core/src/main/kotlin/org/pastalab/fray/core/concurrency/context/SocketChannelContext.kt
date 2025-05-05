@@ -10,12 +10,14 @@ import org.pastalab.fray.rmi.ThreadState
 
 class SocketChannelContext(socketChannel: SocketChannel) : SelectableChannelContext() {
   val channelReference = WeakReference(socketChannel)
-  var isBlocking = true
   var hasPendingWrite = false
   var waitingThread: ThreadContext? = null
 
   fun connect(serverSocketChannelContext: ServerSocketChannelContext?) {
     if (serverSocketChannelContext == null) {
+      return
+    }
+    if (channelReference.get()?.isConnected == true) {
       return
     }
     serverSocketChannelContext.pendingConnects += 1
@@ -27,7 +29,8 @@ class SocketChannelContext(socketChannel: SocketChannel) : SelectableChannelCont
       }
     } else {
       for (selectorContext in serverSocketChannelContext.registeredSelectors) {
-        verifyOrReport(selectorContext.selectableChannelsToEventType[this] != null)
+        verifyOrReport(
+            selectorContext.selectableChannelsToEventType[serverSocketChannelContext] != null)
         // Server does not register the socket channel for OP_CONNECT, so we skip.
         if (selectorContext.selectableChannelsToEventType[serverSocketChannelContext]!! and
             SelectionKey.OP_ACCEPT == 0)
@@ -38,22 +41,6 @@ class SocketChannelContext(socketChannel: SocketChannel) : SelectableChannelCont
         }
         selectorContext.waitingThreads.clear()
       }
-    }
-  }
-
-  fun read(): Boolean {
-    if (hasPendingWrite || !isBlocking) {
-      return false
-    }
-    return true
-  }
-
-  fun writeReceived() {
-    hasPendingWrite = true
-    if (waitingThread != null) {
-      waitingThread!!.state = ThreadState.Runnable
-      waitingThread!!.pendingOperation = ThreadResumeOperation(true)
-      waitingThread = null
     }
   }
 }

@@ -1,14 +1,23 @@
 package org.pastalab.fray.core.concurrency
 
 import java.net.InetSocketAddress
+import java.nio.channels.SelectableChannel
+import java.nio.channels.Selector
 import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
+import org.pastalab.fray.core.concurrency.context.SelectableChannelContext
+import org.pastalab.fray.core.concurrency.context.SelectorContext
 import org.pastalab.fray.core.concurrency.context.ServerSocketChannelContext
 import org.pastalab.fray.core.concurrency.context.ServerSocketChannelContext.Companion.SERVER_PORT_NO_BIND
 import org.pastalab.fray.core.concurrency.context.SocketChannelContext
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
-class SocketContextManager {
+class NioContextManager {
+  private val selectorContextManager =
+      ReferencedContextManager<SelectorContext> {
+        verifyOrReport(it is Selector) { "Selector expected" }
+        SelectorContext()
+      }
   private val serverSocketChannelContextManager =
       ReferencedContextManager<ServerSocketChannelContext> {
         verifyOrReport(it is ServerSocketChannel) { "ServerSocketChannel expected" }
@@ -32,7 +41,15 @@ class SocketContextManager {
   private val portToServerSocketChannelContext: MutableMap<Int, ServerSocketChannelContext> =
       mutableMapOf()
 
-  fun getSocketChannelAtPort() {}
+  fun getChannelContext(channel: SelectableChannel): SelectableChannelContext? {
+    return if (channel is SocketChannel) {
+      getSocketChannelContext(channel)
+    } else if (channel is ServerSocketChannel) {
+      getServerSocketChannelContext(channel)
+    } else {
+      null
+    }
+  }
 
   fun getServerSocketChannelAtPort(port: Int): ServerSocketChannelContext? {
     if (portToServerSocketChannelContext.containsKey(port)) {
@@ -46,6 +63,10 @@ class SocketContextManager {
     return socketChannelContextManager.getContext(channel)
   }
 
+  fun getSelectorContext(selector: Selector): SelectorContext {
+    return selectorContextManager.getContext(selector)
+  }
+
   fun getServerSocketChannelContext(channel: ServerSocketChannel): ServerSocketChannelContext {
     return serverSocketChannelContextManager.getContext(channel)
   }
@@ -56,10 +77,32 @@ class SocketContextManager {
     verifyOrReport(context.port != SERVER_PORT_NO_BIND) {
       "Server socket channel is already bound to port ${context.port}"
     }
+    if (newPort == context.port) {
+      return
+    }
     verifyOrReport(!portToServerSocketChannelContext.containsKey(newPort)) {
       "Port $newPort is already bound to another server socket channel"
     }
     context.port = newPort
     portToServerSocketChannelContext[newPort] = context
+  }
+
+  fun serverSocketChannelClose(channel: SocketChannel) {
+    if (serverSocketChannelContextManager.hasContext(channel)) {
+      val context = serverSocketChannelContextManager.getContext(channel)
+      if (context.port != SERVER_PORT_NO_BIND) {
+        portToServerSocketChannelContext.remove(context.port)
+        context.port = SERVER_PORT_NO_BIND
+      }
+    }
+  }
+
+  fun done() {
+    portToServerSocketChannelContext.values.forEach { it.channelReference.get()?.close() }
+    serverSocketChannelContextManager.objMap.values.forEach {
+      it.first.channelReference.get()?.close()
+    }
+    socketChannelContextManager.objMap.values.forEach { it.first.channelReference.get()?.close() }
+    portToServerSocketChannelContext.clear()
   }
 }

@@ -16,7 +16,7 @@ enum class ThreadState {
 
 enum class ResourceType {
   LOCK,
-  SOCKET,
+  NETWORK,
   CONDITION,
   SEMAPHORE,
   CDL,

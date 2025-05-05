@@ -1,5 +1,10 @@
 package org.pastalab.fray.runtime;
 
+import java.net.SocketAddress;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -368,6 +373,34 @@ public class Delegate {
     }
 
     public void onRangerCondition(RangerCondition condition) {
+    }
+
+    public void onSelectorSetEventOpsDone(Selector selector, SelectionKey key) {
+    }
+
+    public void onSelectorCancelKeyDone(Selector selector, SelectionKey key) {}
+
+    public void onSelectorSelect(Selector selector) {
+    }
+
+    public void onSelectorSelectDone(Selector selector) {}
+
+    public void onServerSocketChannelBindDone(ServerSocketChannel channel) {
+    }
+
+    public void onServerSocketChannelAccept(ServerSocketChannel channel) {
+    }
+
+    public void onServerSocketChannelAcceptDone(ServerSocketChannel channel, SocketChannel client) {
+    }
+
+    public void onSocketChannelCloseDone(SocketChannel channel) {
+    }
+
+    public void onSocketChannelConnect(SocketChannel channel, SocketAddress remoteAddress) {
+    }
+
+    public void onSocketChannelConnectDone(SocketChannel channel, boolean success) {
     }
 }
 

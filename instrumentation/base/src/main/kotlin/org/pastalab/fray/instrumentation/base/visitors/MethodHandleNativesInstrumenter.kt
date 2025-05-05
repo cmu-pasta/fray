@@ -33,8 +33,8 @@ class MethodHandleNativesInstrumenter(cv: ClassVisitor) :
           descriptor,
           false,
           false,
-          true) {
-            it.push(methodSignature)
+          true) { mv, isFinalBlock ->
+            mv.push(methodSignature)
           }
     }
     return super.instrumentMethod(mv, access, name, descriptor, signature, exceptions)

@@ -34,7 +34,7 @@ class ClassConstructorInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           false,
           false,
           true,
-          { it.push(methodSignature) })
+          { mv, isFinalBlock -> mv.push(methodSignature) })
     }
     return mv
   }
