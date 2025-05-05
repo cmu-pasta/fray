@@ -1,4 +1,4 @@
-package org.pastalab.fray.core.concurrency.primitives
+package org.pastalab.fray.core.concurrency.context
 
 import org.pastalab.fray.core.ThreadContext
 

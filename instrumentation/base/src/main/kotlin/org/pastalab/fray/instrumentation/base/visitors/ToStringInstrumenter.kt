@@ -37,7 +37,7 @@ class ToStringInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           false,
           false,
           true,
-          customizer = { it.push("toString") })
+          customizer = { mv, isFinalBlock -> push("toString") })
     } else {
       mv
     }

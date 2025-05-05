@@ -3,6 +3,12 @@ package org.pastalab.fray.core
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.Thread.UncaughtExceptionHandler
+import java.net.InetSocketAddress
+import java.net.SocketAddress
+import java.nio.channels.SelectionKey
+import java.nio.channels.Selector
+import java.nio.channels.ServerSocketChannel
+import java.nio.channels.SocketChannel
 import java.time.Instant
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ForkJoinPool
@@ -18,25 +24,26 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 import java.util.concurrent.locks.StampedLock
 import kotlin.system.exitProcess
 import org.pastalab.fray.core.command.Configuration
-import org.pastalab.fray.core.concurrency.HelperThread
-import org.pastalab.fray.core.concurrency.ReentrantReadWriteLockCache
-import org.pastalab.fray.core.concurrency.SynchronizationManager
+import org.pastalab.fray.core.concurrency.NioContextManager
+import org.pastalab.fray.core.concurrency.ReferencedContextManager
+import org.pastalab.fray.core.concurrency.context.ConditionSignalContext
+import org.pastalab.fray.core.concurrency.context.CountDownLatchContext
+import org.pastalab.fray.core.concurrency.context.LockContext
+import org.pastalab.fray.core.concurrency.context.ObjectNotifyContext
+import org.pastalab.fray.core.concurrency.context.ReadLockContext
+import org.pastalab.fray.core.concurrency.context.ReentrantLockContext
+import org.pastalab.fray.core.concurrency.context.SemaphoreContext
+import org.pastalab.fray.core.concurrency.context.SignalContext
+import org.pastalab.fray.core.concurrency.context.StampedLockContext
+import org.pastalab.fray.core.concurrency.context.WriteLockContext
 import org.pastalab.fray.core.concurrency.operations.*
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
-import org.pastalab.fray.core.concurrency.primitives.ConditionSignalContext
-import org.pastalab.fray.core.concurrency.primitives.CountDownLatchContext
-import org.pastalab.fray.core.concurrency.primitives.LockContext
-import org.pastalab.fray.core.concurrency.primitives.ObjectNotifyContext
-import org.pastalab.fray.core.concurrency.primitives.ReadLockContext
-import org.pastalab.fray.core.concurrency.primitives.ReentrantLockContext
-import org.pastalab.fray.core.concurrency.primitives.ReferencedContextManager
-import org.pastalab.fray.core.concurrency.primitives.SemaphoreContext
-import org.pastalab.fray.core.concurrency.primitives.SignalContext
-import org.pastalab.fray.core.concurrency.primitives.StampedLockContext
-import org.pastalab.fray.core.concurrency.primitives.WriteLockContext
 import org.pastalab.fray.core.ranger.RangerEvaluationContext
 import org.pastalab.fray.core.ranger.RangerEvaluationDelegate
 import org.pastalab.fray.core.scheduler.FrayIdeaPluginScheduler
+import org.pastalab.fray.core.utils.HelperThread
+import org.pastalab.fray.core.utils.ReentrantReadWriteLockCache
+import org.pastalab.fray.core.utils.SynchronizationManager
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.core.utils.toThreadInfos
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
@@ -66,6 +73,7 @@ class RunContext(val config: Configuration) {
     verifyOrReport(it is CountDownLatch) { "CDL Manager only accepts CountDownLatch objects" }
     CountDownLatchContext(it as CountDownLatch, syncManager)
   }
+  val nioContextManager = NioContextManager()
   val lockManager =
       ReferencedContextManager<LockContext> {
         when (it) {
@@ -235,6 +243,7 @@ class RunContext(val config: Configuration) {
     stampedLockManager.done()
     semaphoreManager.done()
     latchManager.done()
+    nioContextManager.done()
 
     registeredThreads.clear()
     config.testStatusObservers.forEach { it.onExecutionDone(bugFound) }
@@ -897,6 +906,71 @@ class RunContext(val config: Configuration) {
 
   fun latchCountDownDone(latch: CountDownLatch) {
     syncManager.wait(latch)
+  }
+
+  fun selectorSetEventOps(selector: Selector, key: SelectionKey) {
+    val selectorContext = nioContextManager.getSelectorContext(selector)
+    val channelContext = nioContextManager.getChannelContext(key.channel()) ?: return
+    selectorContext.setEventOp(channelContext, key.interestOps())
+  }
+
+  fun selectorCancelKey(selector: Selector, key: SelectionKey) {
+    val selectorContext = nioContextManager.getSelectorContext(selector)
+    val channelContext = nioContextManager.getChannelContext(key.channel()) ?: return
+    selectorContext.cancel(channelContext)
+  }
+
+  fun selectorSelect(selector: Selector) {
+    val threadContext = registeredThreads[Thread.currentThread().id]!!
+    val selectorContext = nioContextManager.getSelectorContext(selector)
+    threadContext.state = ThreadState.Runnable
+    threadContext.pendingOperation = SelectorSelectOperation(selectorContext)
+    scheduleNextOperation(true)
+    while (selectorContext.select(threadContext)) {
+      threadContext.state = ThreadState.Blocked
+      threadContext.pendingOperation = SelectorSelectBlocked(selectorContext)
+      scheduleNextOperation(true)
+    }
+  }
+
+  fun serverSocketChannelBindDone(serverSocketChannel: ServerSocketChannel) {
+    nioContextManager.serverSocketChannelBind(serverSocketChannel)
+  }
+
+  fun serverSocketChannelCloseDone(socketChannel: SocketChannel) {
+    nioContextManager.serverSocketChannelClose(socketChannel)
+  }
+
+  fun serverSocketChannelAccept(serverSocketChannel: ServerSocketChannel) {
+    val serverSocketChannelContext =
+        nioContextManager.getServerSocketChannelContext(serverSocketChannel)
+    val context = registeredThreads[Thread.currentThread().id]!!
+    context.state = ThreadState.Runnable
+    context.pendingOperation = ServerSocketChannelAcceptOperation(serverSocketChannelContext)
+    scheduleNextOperation(true)
+    while (serverSocketChannelContext.accept(context)) {
+      context.state = ThreadState.Blocked
+      context.pendingOperation = ServerSocketChannelAcceptBlocked(serverSocketChannelContext)
+      scheduleNextOperation(true)
+    }
+    if (serverSocketChannelContext.pendingConnects > 0) {
+      serverSocketChannelContext.pendingConnects--
+    }
+  }
+
+  fun serverSocketChannelAcceptDone(
+      serverSocketChannel: ServerSocketChannel,
+      socketChannel: SocketChannel?
+  ) {}
+
+  fun socketChannelConnect(socketChannel: SocketChannel, address: SocketAddress) {
+    if (address !is InetSocketAddress) {
+      throw IllegalArgumentException("Only InetSocketAddress is supported for now.")
+    }
+    val socketChannelContext = nioContextManager.getSocketChannelContext(socketChannel)
+    val serverSocketChannelContext =
+        nioContextManager.getServerSocketChannelAtPort(address.port) ?: return
+    socketChannelContext.connect(serverSocketChannelContext)
   }
 
   fun threadSleepOperation() {

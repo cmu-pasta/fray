@@ -1,6 +1,6 @@
 package org.pastalab.fray.core.concurrency.operations
 
-import org.pastalab.fray.core.concurrency.primitives.CountDownLatchContext
+import org.pastalab.fray.core.concurrency.context.CountDownLatchContext
 import org.pastalab.fray.rmi.ResourceInfo
 import org.pastalab.fray.rmi.ResourceType
 

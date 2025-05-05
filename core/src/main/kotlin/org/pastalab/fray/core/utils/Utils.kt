@@ -14,7 +14,9 @@ object Utils {
     return ceil(ln(1 - rand) / ln(1 - p)).toInt()
   }
 
+  @OptIn(ExperimentalContracts::class)
   fun verifyOrReport(condition: Boolean) {
+    contract { returns() implies condition }
     verifyOrReport(condition, "Internal error")
   }
 
@@ -27,7 +29,9 @@ object Utils {
     }
   }
 
+  @OptIn(ExperimentalContracts::class)
   fun verifyOrReport(condition: Boolean, message: () -> String) {
+    contract { returns() implies condition }
     verifyOrReport(condition, message())
   }
 }

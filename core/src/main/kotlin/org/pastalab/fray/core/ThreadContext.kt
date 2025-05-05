@@ -1,10 +1,10 @@
 package org.pastalab.fray.core
 
-import org.pastalab.fray.core.concurrency.Sync
+import org.pastalab.fray.core.concurrency.context.Acquirable
 import org.pastalab.fray.core.concurrency.operations.BlockedOperation
 import org.pastalab.fray.core.concurrency.operations.Operation
 import org.pastalab.fray.core.concurrency.operations.ThreadStartOperation
-import org.pastalab.fray.core.concurrency.primitives.Acquirable
+import org.pastalab.fray.core.utils.Sync
 import org.pastalab.fray.core.utils.isFrayInternals
 import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState

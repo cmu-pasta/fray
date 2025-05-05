@@ -1,5 +1,10 @@
 package org.pastalab.fray.runtime;
 
+import java.net.SocketAddress;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -28,8 +33,7 @@ public class Runtime {
         DELEGATE.onThreadStartDone(t);
     }
 
-    // onThreadEnd and onThreadRun will only be called from JVM
-    // so no recursion check is necessary.
+    // onThreadEnd and onThreadRun will only be called from JVM.
     public static void onThreadEnd() {
         DELEGATE.onThreadEnd();
     }
@@ -480,5 +484,46 @@ public class Runtime {
 
     public static void onRangerCondition(RangerCondition condition) {
         DELEGATE.onRangerCondition(condition);
+    }
+
+
+    public static void onSelectorSelect(Selector selector) {
+        DELEGATE.onSelectorSelect(selector);
+    }
+
+    public static void onServerSocketChannelBindDone(ServerSocketChannel channel) {
+        DELEGATE.onServerSocketChannelBindDone(channel);
+    }
+
+    public static void onServerSocketChannelAccept(ServerSocketChannel channel) {
+        DELEGATE.onServerSocketChannelAccept(channel);
+    }
+
+    public static void onSocketChannelConnect(SocketChannel channel, SocketAddress remoteAddress) {
+        DELEGATE.onSocketChannelConnect(channel, remoteAddress);
+    }
+
+    public static void onSelectorSetEventOpsDone(Selector selector, SelectionKey key) {
+        DELEGATE.onSelectorSetEventOpsDone(selector, key);
+    }
+
+    public static void onSelectorCancelKeyDone(Selector selector, SelectionKey key) {
+        DELEGATE.onSelectorCancelKeyDone(selector, key);
+    }
+
+    public static void onSelectorSelectDone(Selector selector) {
+        DELEGATE.onSelectorSelectDone(selector);
+    }
+
+    public static void onServerSocketChannelAcceptDone(ServerSocketChannel channel, SocketChannel client) {
+        DELEGATE.onServerSocketChannelAcceptDone(channel, client);
+    }
+
+    public static void onSocketChannelCloseDone(SocketChannel channel) {
+        DELEGATE.onSocketChannelCloseDone(channel);
+    }
+
+    public static void onSocketChannelConnectDone(SocketChannel channel, boolean success) {
+        DELEGATE.onSocketChannelConnectDone(channel, success);
     }
 }

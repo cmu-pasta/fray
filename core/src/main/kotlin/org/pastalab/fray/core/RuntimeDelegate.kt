@@ -1,5 +1,10 @@
 package org.pastalab.fray.core
 
+import java.net.SocketAddress
+import java.nio.channels.SelectionKey
+import java.nio.channels.Selector
+import java.nio.channels.ServerSocketChannel
+import java.nio.channels.SocketChannel
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -12,7 +17,7 @@ import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.StampedLock
-import org.pastalab.fray.core.concurrency.HelperThread
+import org.pastalab.fray.core.utils.HelperThread
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.runtime.RangerCondition
 
@@ -1143,5 +1148,99 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     } finally {
       entered.set(false)
     }
+  }
+
+  override fun onSelectorCancelKeyDone(selector: Selector, key: SelectionKey) {
+    if (checkEntered()) {
+      return
+    }
+    try {
+      context.selectorCancelKey(selector, key)
+    } finally {
+      entered.set(false)
+    }
+  }
+
+  override fun onSelectorSelect(selector: Selector) {
+    if (checkEntered()) {
+      onSkipMethod("Selector.select")
+      return
+    }
+    try {
+      context.selectorSelect(selector)
+    } finally {
+      entered.set(false)
+      onSkipMethod("Selector.select")
+    }
+  }
+
+  override fun onSelectorSelectDone(selector: Selector?) {
+    onSkipMethodDone("Selector.select")
+  }
+
+  override fun onSelectorSetEventOpsDone(selector: Selector, key: SelectionKey) {
+    if (checkEntered()) {
+      return
+    }
+    try {
+      context.selectorSetEventOps(selector, key)
+    } finally {
+      entered.set(false)
+    }
+  }
+
+  override fun onServerSocketChannelAccept(channel: ServerSocketChannel) {
+    if (checkEntered()) {
+      onSkipMethod("ServerSocketChannel.accept")
+      return
+    }
+    try {
+      context.serverSocketChannelAccept(channel)
+    } finally {
+      entered.set(false)
+      onSkipMethod("ServerSocketChannel.accept")
+    }
+  }
+
+  override fun onServerSocketChannelAcceptDone(
+      channel: ServerSocketChannel,
+      client: SocketChannel?
+  ) {
+    onSkipMethodDone("ServerSocketChannel.accept")
+    if (checkEntered()) return
+    try {
+      context.serverSocketChannelAcceptDone(channel, client)
+    } finally {
+      entered.set(false)
+    }
+  }
+
+  override fun onSocketChannelCloseDone(channel: SocketChannel) {
+    if (checkEntered()) return
+    context.serverSocketChannelCloseDone(channel)
+    entered.set(false)
+  }
+
+  override fun onSocketChannelConnect(channel: SocketChannel, remoteAddress: SocketAddress) {
+    if (checkEntered()) {
+      onSkipMethod("SocketChannel.connect")
+      return
+    }
+    try {
+      context.socketChannelConnect(channel, remoteAddress)
+    } finally {
+      entered.set(false)
+      onSkipMethod("SocketChannel.connect")
+    }
+  }
+
+  override fun onSocketChannelConnectDone(channel: SocketChannel, success: Boolean) {
+    onSkipMethodDone("SocketChannel.connect")
+  }
+
+  override fun onServerSocketChannelBindDone(channel: ServerSocketChannel) {
+    if (checkEntered()) return
+    context.serverSocketChannelBindDone(channel)
+    entered.set(false)
   }
 }
