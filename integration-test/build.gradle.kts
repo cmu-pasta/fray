@@ -1,6 +1,5 @@
 plugins {
   id("java")
-    kotlin("jvm")
 }
 
 group = "org.pastalab.fray.test"
@@ -15,7 +14,6 @@ dependencies {
   testImplementation(project(":core"))
   testImplementation("io.github.classgraph:classgraph:4.8.177")
   testCompileOnly(project(":runtime"))
-    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks.test {
@@ -31,7 +29,4 @@ tasks.test {
   dependsOn(":instrumentation:jdk:build")
   dependsOn(":instrumentation:agent:build")
   dependsOn(":jvmti:build")
-}
-kotlin {
-    jvmToolchain(11)
 }
