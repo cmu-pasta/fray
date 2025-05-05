@@ -27,32 +27,32 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 public class FrayTestCase {
 
     private DynamicTest populateTest(String className, boolean testShouldFail) {
-        Configuration config = new Configuration(
-                new ExecutionInfo(
-                        new MethodExecutor(className,
-                                "main",
-                                new ArrayList<>(),
-                                new ArrayList<>(),
-                                new HashMap<>()
-                        ),
-                        false,
-                        false,
-                        -1
-                ),
-                "/tmp/report",
-                1000,
-                60,
-                new PCTScheduler(),
-                new ControlledRandom(),
-                true,
-                false,
-                true,
-                false,
-                false,
-                false
-        );
-        TestRunner runner = new TestRunner(config);
         return dynamicTest("Test: " + className, () -> {
+            Configuration config = new Configuration(
+                    new ExecutionInfo(
+                            new MethodExecutor(className,
+                                    "main",
+                                    new ArrayList<>(),
+                                    new ArrayList<>(),
+                                    new HashMap<>()
+                            ),
+                            false,
+                            false,
+                            -1
+                    ),
+                    "/tmp/report",
+                    1000,
+                    60,
+                    new PCTScheduler(),
+                    new ControlledRandom(),
+                    true,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false
+            );
+            TestRunner runner = new TestRunner(config);
             Throwable result = runner.run();
             if (testShouldFail) {
                 assertFalse(result instanceof FrayInternalError);
