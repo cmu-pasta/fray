@@ -1,45 +1,64 @@
 package org.pastalab.fray.core.concurrency.context
 
 import java.lang.ref.WeakReference
-import java.nio.channels.SelectionKey
 import java.nio.channels.SocketChannel
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.rmi.ThreadState
+import java.net.InetSocketAddress
+import java.nio.channels.SelectionKey
 
-class SocketChannelContext(socketChannel: SocketChannel) : SelectableChannelContext() {
+open class SocketChannelContext(socketChannel: SocketChannel) : SelectableChannelContext() {
   val channelReference = WeakReference(socketChannel)
-  var hasPendingWrite = false
-  var waitingThread: ThreadContext? = null
+  var pendingBytes = 0L
+  var waitingThreads = mutableListOf<ThreadContext>()
 
-  fun connect(serverSocketChannelContext: ServerSocketChannelContext?) {
-    if (serverSocketChannelContext == null) {
-      return
+  fun read(thread: ThreadContext): Boolean {
+    if (pendingBytes != 0L) return false
+    if (channelReference.get()?.isOpen != true) {
+      return false
     }
-    if (channelReference.get()?.isConnected == true) {
-      return
+    if (channelReference.get()?.isBlocking == true) {
+      waitingThreads.add(thread)
+      return true
+    } else {
+      return false
     }
-    serverSocketChannelContext.pendingConnects += 1
-    if (serverSocketChannelContext.channelReference.get()?.isBlocking == true) {
-      val thread = serverSocketChannelContext.waitingThread
-      if (thread != null) {
+  }
+
+  fun readDone(bytesRead: Long) {
+    verifyOrReport(pendingBytes > bytesRead) {
+      "Pending bytes $pendingBytes is less than bytes read $bytesRead"
+    }
+    pendingBytes -= bytesRead
+  }
+
+
+  /**
+   * Bytes received from remote peer. [bytesWritten] will be -1 if the remote peer is closed.
+   */
+  fun writeReceived(bytesWritten: Long) {
+    if (bytesWritten == -1L) {
+      pendingBytes = -1
+    } else {
+      pendingBytes += bytesWritten
+    }
+    if (channelReference.get()?.isBlocking == true) {
+      for (thread in waitingThreads) {
         thread.state = ThreadState.Runnable
         thread.pendingOperation = ThreadResumeOperation(true)
       }
+      waitingThreads.clear()
     } else {
-      for (selectorContext in serverSocketChannelContext.registeredSelectors) {
-        verifyOrReport(
-            selectorContext.selectableChannelsToEventType[serverSocketChannelContext] != null)
-        // Server does not register the socket channel for OP_CONNECT, so we skip.
-        if (selectorContext.selectableChannelsToEventType[serverSocketChannelContext]!! and
-            SelectionKey.OP_ACCEPT == 0)
-            continue
-        for (context in selectorContext.waitingThreads) {
-          context.state = ThreadState.Runnable
-          context.pendingOperation = ThreadResumeOperation(true)
+      for (selectorContext in registeredSelectors) {
+        if (selectorContext.selectableChannelsToEventType[this]?.and(SelectionKey.OP_READ) != 0) {
+          for (context in selectorContext.waitingThreads) {
+            context.state = ThreadState.Runnable
+            context.pendingOperation = ThreadResumeOperation(true)
+          }
+          selectorContext.waitingThreads.clear()
         }
-        selectorContext.waitingThreads.clear()
       }
     }
   }

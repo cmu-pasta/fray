@@ -402,5 +402,14 @@ public class Delegate {
 
     public void onSocketChannelConnectDone(SocketChannel channel, boolean success) {
     }
+
+    public void onSocketChannelRead(SocketChannel channel) {
+    }
+
+    public void onSocketChannelReadDone(SocketChannel channel, long bytesRead) {
+    }
+
+    public void onSocketChannelWriteDone(SocketChannel channel, long bytesWritten) {
+    }
 }
 

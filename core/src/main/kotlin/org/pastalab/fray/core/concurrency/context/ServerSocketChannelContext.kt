@@ -3,12 +3,18 @@ package org.pastalab.fray.core.concurrency.context
 import java.lang.ref.WeakReference
 import java.nio.channels.ServerSocketChannel
 import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
+import org.pastalab.fray.core.utils.Utils.verifyOrReport
+import org.pastalab.fray.rmi.ThreadState
+import java.nio.channels.SelectionKey
 
 class ServerSocketChannelContext(channel: ServerSocketChannel) : SelectableChannelContext() {
   val channelReference = WeakReference(channel)
+  // This list stores all socket channels created by server through the accept method.
+  val acceptedSocketChannels = mutableListOf<SocketChannelContext>()
   var pendingConnects = 0
   var port = SERVER_PORT_NO_BIND
-  var waitingThread: ThreadContext? = null
+  var waitingThreads = mutableListOf<ThreadContext>()
 
   /**
    * Determine if this operation will block the current thread. If multiple clients are trying to
@@ -29,11 +35,37 @@ class ServerSocketChannelContext(channel: ServerSocketChannel) : SelectableChann
     }
     if (pendingConnects == 0) {
       if (channel.isBlocking) {
-        waitingThread = thread
+        waitingThreads.add(thread)
       }
       return channel.isBlocking
     }
     return false
+  }
+
+  fun connectReceived() {
+    pendingConnects += 1
+    if (channelReference.get()?.isBlocking == true) {
+      for (thread in waitingThreads) {
+        thread.state = ThreadState.Runnable
+        thread.pendingOperation = ThreadResumeOperation(true)
+      }
+      waitingThreads.clear()
+    } else {
+      for (selectorContext in registeredSelectors) {
+        verifyOrReport(
+            selectorContext.selectableChannelsToEventType[this] != null)
+        // Server does not register the socket channel for OP_CONNECT, so we skip.
+        if (selectorContext.selectableChannelsToEventType[this]!! and
+          SelectionKey.OP_ACCEPT == 0)
+          continue
+        for (context in selectorContext.waitingThreads) {
+          context.state = ThreadState.Runnable
+          context.pendingOperation = ThreadResumeOperation(true)
+        }
+        selectorContext.waitingThreads.clear()
+      }
+    }
+
   }
 
   companion object {

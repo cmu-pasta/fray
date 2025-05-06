@@ -526,4 +526,17 @@ public class Runtime {
     public static void onSocketChannelConnectDone(SocketChannel channel, boolean success) {
         DELEGATE.onSocketChannelConnectDone(channel, success);
     }
+
+
+    public static void onSocketChannelRead(SocketChannel channel) {
+        DELEGATE.onSocketChannelRead(channel);
+    }
+
+    public static void onSocketChannelReadDone(SocketChannel channel, long bytesRead) {
+        DELEGATE.onSocketChannelReadDone(channel, bytesRead);
+    }
+
+    public static void onSocketChannelWriteDone(SocketChannel channel, long bytesWritten) {
+        DELEGATE.onSocketChannelWriteDone(channel, bytesWritten);
+    }
 }

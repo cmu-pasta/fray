@@ -26,6 +26,9 @@ class SelectorContext() : InterruptibleContext {
             context.channelReference.get()?.remoteAddress != null) {
           return false
         }
+        if (type and SelectionKey.OP_READ != 0 && context.pendingBytes != 0L) {
+          return false
+        }
       }
     }
     waitingThreads.add(threadContext)

@@ -1215,9 +1215,41 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     }
   }
 
+  override fun onSocketChannelRead(channel: SocketChannel) {
+    if (checkEntered()) {
+      onSkipMethod("SocketChannel.read")
+      return
+    }
+    try {
+      context.socketChannelRead(channel)
+    } finally {
+      entered.set(false)
+      onSkipMethod("SocketChannel.read")
+    }
+  }
+
+  override fun onSocketChannelReadDone(channel: SocketChannel, bytesRead: Long) {
+    onSkipMethodDone("SocketChannel.read")
+    if (checkEntered()) return
+    try {
+      context.socketChannelReadDone(channel, bytesRead)
+    } finally {
+      entered.set(false)
+    }
+  }
+
+  override fun onSocketChannelWriteDone(channel: SocketChannel, bytesWritten: Long) {
+    if (checkEntered()) return
+    try {
+      context.socketChannelWriteDone(channel, bytesWritten)
+    } finally {
+      entered.set(false)
+    }
+  }
+
   override fun onSocketChannelCloseDone(channel: SocketChannel) {
     if (checkEntered()) return
-    context.serverSocketChannelCloseDone(channel)
+    context.socketChannelClose(channel)
     entered.set(false)
   }
 
@@ -1236,6 +1268,12 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
 
   override fun onSocketChannelConnectDone(channel: SocketChannel, success: Boolean) {
     onSkipMethodDone("SocketChannel.connect")
+    if (checkEntered()) return
+    try {
+      context.socketChannelConnectDone(channel, success)
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onServerSocketChannelBindDone(channel: ServerSocketChannel) {

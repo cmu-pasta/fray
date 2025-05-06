@@ -37,7 +37,11 @@ class NioContextManager {
         val context = SocketChannelContext(socketChannel)
         context
       }
-  private val portToSocketChannelContext: MutableMap<Int, SocketChannelContext> = mutableMapOf()
+  /*
+   * Connected sockets meaning sockets that are created by clients and connects to a server
+   * through [SocketChannel.connect].
+   */
+  private val portToConnectedSockets: MutableMap<Int, SocketChannelContext> = mutableMapOf()
   private val portToServerSocketChannelContext: MutableMap<Int, ServerSocketChannelContext> =
       mutableMapOf()
 
@@ -59,6 +63,18 @@ class NioContextManager {
     }
   }
 
+  fun getSocketChannelAtPort(port: Int, localPort: Int): SocketChannelContext? {
+    if (portToConnectedSockets.containsKey(port)) {
+      return portToConnectedSockets[port]
+    } else if (portToServerSocketChannelContext.containsKey(port)) {
+      val serverSocketChannelContext = portToServerSocketChannelContext[port]!!
+      return serverSocketChannelContext.acceptedSocketChannels.firstOrNull {
+        (it.channelReference.get()?.remoteAddress as? InetSocketAddress)?.port == localPort
+      }
+    }
+    return null
+  }
+
   fun getSocketChannelContext(channel: SocketChannel): SocketChannelContext {
     return socketChannelContextManager.getContext(channel)
   }
@@ -69,6 +85,15 @@ class NioContextManager {
 
   fun getServerSocketChannelContext(channel: ServerSocketChannel): ServerSocketChannelContext {
     return serverSocketChannelContextManager.getContext(channel)
+  }
+
+  fun socketChannelConnected(channel: SocketChannel) {
+    val context = socketChannelContextManager.getContext(channel)
+    val port = (channel.localAddress as? InetSocketAddress)?.port ?: return
+    verifyOrReport(!portToConnectedSockets.containsKey(port)) {
+      "Socket channel is already connected to port $port"
+    }
+    portToConnectedSockets[port] = context
   }
 
   fun serverSocketChannelBind(channel: ServerSocketChannel) {
@@ -87,13 +112,37 @@ class NioContextManager {
     portToServerSocketChannelContext[newPort] = context
   }
 
-  fun serverSocketChannelClose(channel: SocketChannel) {
+  fun socketChannelClose(channel: SocketChannel) {
     if (serverSocketChannelContextManager.hasContext(channel)) {
       val context = serverSocketChannelContextManager.getContext(channel)
       if (context.port != SERVER_PORT_NO_BIND) {
         portToServerSocketChannelContext.remove(context.port)
         context.port = SERVER_PORT_NO_BIND
       }
+      return
+    }
+    val localPort = (channel.localAddress as? InetSocketAddress)?.port ?: return
+    val remotePort = (channel.remoteAddress as? InetSocketAddress)?.port ?: return
+    // This channel is initiated by the server socket channel.
+    if (portToConnectedSockets.containsKey(remotePort)) {
+      // So we need to notify the client that the connection is closed.
+      portToConnectedSockets[remotePort]?.writeReceived(-1L)
+      verifyOrReport(portToServerSocketChannelContext.containsKey(localPort))
+      portToServerSocketChannelContext[localPort]?.acceptedSocketChannels?.removeIf {
+        (it.channelReference.get()?.remoteAddress as? InetSocketAddress)?.port == remotePort
+      }
+    }
+    // This channel is initiated by the client.
+    if (portToServerSocketChannelContext.containsKey(remotePort)) {
+      // So we need to notify the server that the connection is closed.
+      val serverSocketChannel = portToServerSocketChannelContext[remotePort]!!
+      serverSocketChannel.acceptedSocketChannels
+          .firstOrNull {
+            (it.channelReference.get()?.remoteAddress as? InetSocketAddress)?.port == localPort
+          }
+          ?.writeReceived(-1L)
+      verifyOrReport(portToConnectedSockets.containsKey(localPort))
+      portToConnectedSockets.remove(localPort)
     }
   }
 
