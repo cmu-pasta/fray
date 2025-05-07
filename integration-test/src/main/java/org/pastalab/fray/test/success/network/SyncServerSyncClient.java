@@ -3,6 +3,7 @@ package org.pastalab.fray.test.success.network;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.CountDownLatch;
@@ -40,6 +41,15 @@ public class SyncServerSyncClient {
         serverChannel.bind(new InetSocketAddress(PORT));
         latch.countDown();
         SocketChannel client = serverChannel.accept();
+        client.configureBlocking(true);
+        client.write(ByteBuffer.wrap("World".getBytes()));
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        client.read(buffer);
+        buffer.flip();
+        byte[] data = new byte[buffer.remaining()];
+        buffer.get(data);
+        String message = new String(data);
+        System.out.println("Server received: " + message);
         serverChannel.close();
     }
 
@@ -48,6 +58,14 @@ public class SyncServerSyncClient {
         channel.configureBlocking(true);
         latch.await();
         channel.connect(new InetSocketAddress(SERVER_ADDRESS, PORT));
+        channel.write(ByteBuffer.wrap("Hello".getBytes()));
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        channel.read(buffer);
+        buffer.flip();
+        byte[] data = new byte[buffer.remaining()];
+        buffer.get(data);
+        String message = new String(data);
+        System.out.println("Client received: " + message);
         channel.close();
     }
 }

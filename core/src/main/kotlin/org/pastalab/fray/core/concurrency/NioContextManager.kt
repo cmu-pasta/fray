@@ -1,5 +1,6 @@
 package org.pastalab.fray.core.concurrency
 
+import java.lang.ref.WeakReference
 import java.net.InetSocketAddress
 import java.nio.channels.SelectableChannel
 import java.nio.channels.Selector
@@ -8,7 +9,7 @@ import java.nio.channels.SocketChannel
 import org.pastalab.fray.core.concurrency.context.SelectableChannelContext
 import org.pastalab.fray.core.concurrency.context.SelectorContext
 import org.pastalab.fray.core.concurrency.context.ServerSocketChannelContext
-import org.pastalab.fray.core.concurrency.context.ServerSocketChannelContext.Companion.SERVER_PORT_NO_BIND
+import org.pastalab.fray.core.concurrency.context.ServerSocketChannelContext.Companion.SERVER_PORT_UNDEF
 import org.pastalab.fray.core.concurrency.context.SocketChannelContext
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
@@ -16,7 +17,7 @@ class NioContextManager {
   private val selectorContextManager =
       ReferencedContextManager<SelectorContext> {
         verifyOrReport(it is Selector) { "Selector expected" }
-        SelectorContext()
+        SelectorContext(it)
       }
   private val serverSocketChannelContextManager =
       ReferencedContextManager<ServerSocketChannelContext> {
@@ -68,9 +69,7 @@ class NioContextManager {
       return portToConnectedSockets[port]
     } else if (portToServerSocketChannelContext.containsKey(port)) {
       val serverSocketChannelContext = portToServerSocketChannelContext[port]!!
-      return serverSocketChannelContext.acceptedSocketChannels.firstOrNull {
-        (it.channelReference.get()?.remoteAddress as? InetSocketAddress)?.port == localPort
-      }
+      return serverSocketChannelContext.getOrCreateSocketContextAtPort(localPort)
     }
     return null
   }
@@ -87,9 +86,32 @@ class NioContextManager {
     return serverSocketChannelContextManager.getContext(channel)
   }
 
+  fun socketChannelAccepted(
+      serverSocketChannel: ServerSocketChannel,
+      socketChannel: SocketChannel
+  ) {
+    val serverSocketChannelContext = getServerSocketChannelContext(serverSocketChannel)
+    val socketChannelContext =
+        serverSocketChannelContext.acceptedSocketChannels.firstOrNull {
+          it.remotePort == (socketChannel.remoteAddress as? InetSocketAddress)?.port
+        }
+    // This port has received write operation before accept. So we need to re-initialize it.
+    if (socketChannelContext != null) {
+      socketChannelContext.localPort =
+          (socketChannel.localAddress as? InetSocketAddress)?.port ?: SERVER_PORT_UNDEF
+      socketChannelContext.channelReference = WeakReference(socketChannel)
+      socketChannelContextManager.addContext(socketChannel, socketChannelContext)
+    } else {
+      val newContext = getSocketChannelContext(socketChannel)
+      serverSocketChannelContext.acceptedSocketChannels.add(newContext)
+    }
+  }
+
   fun socketChannelConnected(channel: SocketChannel) {
     val context = socketChannelContextManager.getContext(channel)
     val port = (channel.localAddress as? InetSocketAddress)?.port ?: return
+    context.remotePort = (channel.remoteAddress as? InetSocketAddress)?.port ?: SERVER_PORT_UNDEF
+    context.localPort = port
     verifyOrReport(!portToConnectedSockets.containsKey(port)) {
       "Socket channel is already connected to port $port"
     }
@@ -99,7 +121,7 @@ class NioContextManager {
   fun serverSocketChannelBind(channel: ServerSocketChannel) {
     val context = serverSocketChannelContextManager.getContext(channel)
     val newPort = (channel.localAddress as InetSocketAddress?)?.port ?: -1
-    verifyOrReport(context.port != SERVER_PORT_NO_BIND) {
+    verifyOrReport(context.port != SERVER_PORT_UNDEF) {
       "Server socket channel is already bound to port ${context.port}"
     }
     if (newPort == context.port) {
@@ -112,35 +134,39 @@ class NioContextManager {
     portToServerSocketChannelContext[newPort] = context
   }
 
-  fun socketChannelClose(channel: SocketChannel) {
-    if (serverSocketChannelContextManager.hasContext(channel)) {
-      val context = serverSocketChannelContextManager.getContext(channel)
-      if (context.port != SERVER_PORT_NO_BIND) {
-        portToServerSocketChannelContext.remove(context.port)
-        context.port = SERVER_PORT_NO_BIND
-      }
-      return
+  fun selectorClose(selector: Selector) {
+    val selectorContext = selectorContextManager.getContext(selector)
+    selectorContext.unblockWaitingThreads()
+  }
+
+  fun serverSocketChannelClose(channel: ServerSocketChannel) {
+    val context = serverSocketChannelContextManager.getContext(channel)
+    context.unblockWaitingThreads()
+    if (context.port != SERVER_PORT_UNDEF) {
+      portToServerSocketChannelContext.remove(context.port)
+      context.port = SERVER_PORT_UNDEF
     }
-    val localPort = (channel.localAddress as? InetSocketAddress)?.port ?: return
-    val remotePort = (channel.remoteAddress as? InetSocketAddress)?.port ?: return
+  }
+
+  fun socketChannelClose(channel: SocketChannel) {
+    val context = socketChannelContextManager.getContext(channel)
+    context.unblockWaitingThreads()
+    val remotePort = context.remotePort
+    val localPort = context.localPort
     // This channel is initiated by the server socket channel.
     if (portToConnectedSockets.containsKey(remotePort)) {
       // So we need to notify the client that the connection is closed.
       portToConnectedSockets[remotePort]?.writeReceived(-1L)
       verifyOrReport(portToServerSocketChannelContext.containsKey(localPort))
       portToServerSocketChannelContext[localPort]?.acceptedSocketChannels?.removeIf {
-        (it.channelReference.get()?.remoteAddress as? InetSocketAddress)?.port == remotePort
+        it.remotePort == remotePort
       }
     }
     // This channel is initiated by the client.
     if (portToServerSocketChannelContext.containsKey(remotePort)) {
       // So we need to notify the server that the connection is closed.
       val serverSocketChannel = portToServerSocketChannelContext[remotePort]!!
-      serverSocketChannel.acceptedSocketChannels
-          .firstOrNull {
-            (it.channelReference.get()?.remoteAddress as? InetSocketAddress)?.port == localPort
-          }
-          ?.writeReceived(-1L)
+      serverSocketChannel.getOrCreateSocketContextAtPort(localPort).writeReceived(-1L)
       verifyOrReport(portToConnectedSockets.containsKey(localPort))
       portToConnectedSockets.remove(localPort)
     }
@@ -153,5 +179,6 @@ class NioContextManager {
     }
     socketChannelContextManager.objMap.values.forEach { it.first.channelReference.get()?.close() }
     portToServerSocketChannelContext.clear()
+    selectorContextManager.objMap.values.forEach { it.first.selectorReference.get()?.close() }
   }
 }

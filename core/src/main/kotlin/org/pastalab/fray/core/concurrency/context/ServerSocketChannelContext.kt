@@ -1,19 +1,19 @@
 package org.pastalab.fray.core.concurrency.context
 
 import java.lang.ref.WeakReference
+import java.nio.channels.SelectionKey
 import java.nio.channels.ServerSocketChannel
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.rmi.ThreadState
-import java.nio.channels.SelectionKey
 
 class ServerSocketChannelContext(channel: ServerSocketChannel) : SelectableChannelContext() {
   val channelReference = WeakReference(channel)
   // This list stores all socket channels created by server through the accept method.
   val acceptedSocketChannels = mutableListOf<SocketChannelContext>()
   var pendingConnects = 0
-  var port = SERVER_PORT_NO_BIND
+  var port = (channel.localAddress as? java.net.InetSocketAddress)?.port ?: SERVER_PORT_UNDEF
   var waitingThreads = mutableListOf<ThreadContext>()
 
   /**
@@ -28,7 +28,7 @@ class ServerSocketChannelContext(channel: ServerSocketChannel) : SelectableChann
     if (!channel.isOpen) {
       return false
     }
-    if (port == SERVER_PORT_NO_BIND) {
+    if (port == SERVER_PORT_UNDEF) {
       // if the server socket channel is not bound, we do nothing since the
       // following call will fail.
       return false
@@ -42,33 +42,47 @@ class ServerSocketChannelContext(channel: ServerSocketChannel) : SelectableChann
     return false
   }
 
+  /*
+   * This method returns a socket channel context given a port number.
+   * The server may receive bytes even if the server did not call accept. So
+   * we need to track these socket channels manually.
+   */
+  fun getOrCreateSocketContextAtPort(port: Int): SocketChannelContext {
+    for (socketChannelContext in acceptedSocketChannels) {
+      if (socketChannelContext.remotePort == port) {
+        return socketChannelContext
+      }
+    }
+    val socketChannelContext = SocketChannelContext(null)
+    socketChannelContext.remotePort = port
+    acceptedSocketChannels.add(socketChannelContext)
+    return socketChannelContext
+  }
+
+  fun unblockWaitingThreads() {
+    for (thread in waitingThreads) {
+      thread.state = ThreadState.Runnable
+      thread.pendingOperation = ThreadResumeOperation(true)
+    }
+    waitingThreads.clear()
+  }
+
   fun connectReceived() {
     pendingConnects += 1
     if (channelReference.get()?.isBlocking == true) {
-      for (thread in waitingThreads) {
-        thread.state = ThreadState.Runnable
-        thread.pendingOperation = ThreadResumeOperation(true)
-      }
-      waitingThreads.clear()
+      unblockWaitingThreads()
     } else {
       for (selectorContext in registeredSelectors) {
-        verifyOrReport(
-            selectorContext.selectableChannelsToEventType[this] != null)
+        verifyOrReport(selectorContext.selectableChannelsToEventType[this] != null)
         // Server does not register the socket channel for OP_CONNECT, so we skip.
-        if (selectorContext.selectableChannelsToEventType[this]!! and
-          SelectionKey.OP_ACCEPT == 0)
-          continue
-        for (context in selectorContext.waitingThreads) {
-          context.state = ThreadState.Runnable
-          context.pendingOperation = ThreadResumeOperation(true)
-        }
-        selectorContext.waitingThreads.clear()
+        if (selectorContext.selectableChannelsToEventType[this]!! and SelectionKey.OP_ACCEPT == 0)
+            continue
+        selectorContext.unblockWaitingThreads()
       }
     }
-
   }
 
   companion object {
-    const val SERVER_PORT_NO_BIND: Int = -1
+    const val SERVER_PORT_UNDEF: Int = -1
   }
 }

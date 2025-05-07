@@ -26,9 +26,9 @@ class ReferencedContextManager<T>(val contextProducer: (Any) -> T) {
     return objMap.containsKey(id)
   }
 
-  fun addContext(lock: Any, context: T) {
-    val id = System.identityHashCode(lock)
-    objMap[id] = Pair(context, IdentityPhantomReference(lock, queue))
+  fun addContext(obj: Any, context: T) {
+    val id = System.identityHashCode(obj)
+    objMap[id] = Pair(context, IdentityPhantomReference(obj, queue))
     gc()
   }
 

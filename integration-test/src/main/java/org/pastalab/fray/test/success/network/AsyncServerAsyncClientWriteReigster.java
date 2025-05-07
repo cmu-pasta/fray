@@ -2,6 +2,7 @@ package org.pastalab.fray.test.success.network;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -41,9 +42,10 @@ public class AsyncServerAsyncClientWriteReigster {
         serverChannel.bind(new InetSocketAddress(PORT));
         latch.countDown();
         serverChannel.register(selector, SelectionKey.OP_ACCEPT);
-
         selector.select();
         serverChannel.accept();
+        serverChannel.close();
+        selector.close();
     }
 
     private static void runClient(int clientId) throws IOException, InterruptedException {
@@ -53,13 +55,11 @@ public class AsyncServerAsyncClientWriteReigster {
         channel.register(selector, SelectionKey.OP_CONNECT);
         latch.await();
         channel.connect(new InetSocketAddress(SERVER_ADDRESS, PORT));
-
         selector.select();
         if (channel.isConnectionPending()) {
             channel.finishConnect();
         }
         channel.register(selector, SelectionKey.OP_WRITE);
-        selector.select();
         selector.select();
     }
 }

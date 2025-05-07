@@ -5,6 +5,7 @@ import java.nio.channels.SelectionKey
 import java.nio.channels.Selector
 import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
+import java.nio.channels.spi.AbstractInterruptibleChannel
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -1178,6 +1179,12 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     onSkipMethodDone("Selector.select")
   }
 
+  override fun onSelectorCloseDone(selector: Selector) {
+    if (checkEntered()) return
+    context.selectorClose(selector)
+    entered.set(false)
+  }
+
   override fun onSelectorSetEventOpsDone(selector: Selector, key: SelectionKey) {
     if (checkEntered()) {
       return
@@ -1247,9 +1254,13 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     }
   }
 
-  override fun onSocketChannelCloseDone(channel: SocketChannel) {
+  override fun onSocketChannelCloseDone(channel: AbstractInterruptibleChannel) {
     if (checkEntered()) return
-    context.socketChannelClose(channel)
+    if (channel is ServerSocketChannel) {
+      context.serverSocketChannelClose(channel)
+    } else if (channel is SocketChannel) {
+      context.socketChannelClose(channel)
+    }
     entered.set(false)
   }
 
@@ -1263,6 +1274,15 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     } finally {
       entered.set(false)
       onSkipMethod("SocketChannel.connect")
+    }
+  }
+
+  override fun onSocketChannelFinishConnectDone(channel: SocketChannel, success: Boolean) {
+    if (checkEntered()) return
+    try {
+      context.socketChannelConnectDone(channel, success)
+    } finally {
+      entered.set(false)
     }
   }
 

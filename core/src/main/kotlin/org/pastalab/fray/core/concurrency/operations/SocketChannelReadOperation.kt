@@ -1,6 +1,5 @@
 package org.pastalab.fray.core.concurrency.operations
 
-import org.pastalab.fray.core.concurrency.context.ServerSocketChannelContext
 import org.pastalab.fray.core.concurrency.context.SocketChannelContext
 import org.pastalab.fray.runtime.MemoryOpType
 

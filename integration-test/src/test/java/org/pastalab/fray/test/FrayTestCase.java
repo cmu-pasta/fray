@@ -13,11 +13,11 @@ import org.pastalab.fray.core.command.MethodExecutor;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
+import org.pastalab.fray.test.fail.network.AsyncClientNoConnectWriteDeadlock;
 import org.pastalab.fray.test.fail.network.AsyncClientSelectNoConnectDeadlock;
 import org.pastalab.fray.test.fail.network.SyncClientExceptionWithoutServer;
 import org.pastalab.fray.test.fail.network.SyncServerAcceptDeadlock;
-import org.pastalab.fray.test.success.network.AsyncServerAsyncClient;
-import org.pastalab.fray.test.success.network.SyncServerSyncClient;
+import org.pastalab.fray.test.success.network.*;
 
 import java.util.*;
 

@@ -46,7 +46,6 @@ public class SyncServerSyncClientConcurrentRead {
             client.write(buffer);
         }
         System.out.println("Server sent: " + MESSAGE);
-        Thread.sleep(1000000);
         client.close();
         serverChannel.close();
     }
@@ -64,24 +63,21 @@ public class SyncServerSyncClientConcurrentRead {
             String receivedMessage = new String(buffer.array(), 0, bytesRead, StandardCharsets.UTF_8);
             System.out.println("Client received: " + receivedMessage);
         }
-//        for (int i = 0; i < 3; i++) {
-//
-//            new Thread(() -> {
-//                ByteBuffer buffer = ByteBuffer.allocate(1024);
-//                int bytesRead = 0;
-//                try {
-//                    bytesRead = channel.read(buffer);
-//                } catch (IOException e) {
-//                    throw new RuntimeException(e);
-//                }
-//                buffer.flip();
-//                String receivedMessage = new String(buffer.array(), 0, bytesRead, StandardCharsets.UTF_8);
-//                System.out.println("Client received: " + receivedMessage);
-//            }).start();
-//        }
-//        {
-//        }
-        Thread.sleep(100000);
+        for (int i = 0; i < 3; i++) {
+            new Thread(() -> {
+                ByteBuffer buffer = ByteBuffer.allocate(1024);
+                int bytesRead = 0;
+                try {
+                    bytesRead = channel.read(buffer);
+                } catch (IOException e) {
+                }
+                if (bytesRead > 0) {
+                    buffer.flip();
+                    String receivedMessage = new String(buffer.array(), 0, bytesRead, StandardCharsets.UTF_8);
+                    System.out.println("Client received: " + receivedMessage);
+                }
+            }).start();
+        }
         channel.close();
     }
 }

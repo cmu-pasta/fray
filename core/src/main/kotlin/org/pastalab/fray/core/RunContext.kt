@@ -933,12 +933,20 @@ class RunContext(val config: Configuration) {
     }
   }
 
+  fun selectorClose(selector: Selector) {
+    nioContextManager.selectorClose(selector)
+  }
+
   fun serverSocketChannelBindDone(serverSocketChannel: ServerSocketChannel) {
     nioContextManager.serverSocketChannelBind(serverSocketChannel)
   }
 
   fun socketChannelClose(socketChannel: SocketChannel) {
     nioContextManager.socketChannelClose(socketChannel)
+  }
+
+  fun serverSocketChannelClose(serverSocketChannel: ServerSocketChannel) {
+    nioContextManager.serverSocketChannelClose(serverSocketChannel)
   }
 
   fun socketChannelRead(socketChannel: SocketChannel) {
@@ -981,10 +989,7 @@ class RunContext(val config: Configuration) {
       socketChannel: SocketChannel?
   ) {
     if (socketChannel != null) {
-      val socketChannelContext = nioContextManager.getSocketChannelContext(socketChannel)
-      val serverSocketChannelContext =
-          nioContextManager.getServerSocketChannelContext(serverSocketChannel)
-      serverSocketChannelContext.acceptedSocketChannels.add(socketChannelContext)
+      nioContextManager.socketChannelAccepted(serverSocketChannel, socketChannel)
     }
   }
 
@@ -1159,7 +1164,7 @@ class RunContext(val config: Configuration) {
     }
 
     step += 1
-    if (config.executionInfo.maxScheduledStep in 1..<step &&
+    if (config.executionInfo.maxScheduledStep in 1 ..< step &&
         !currentThread.isExiting &&
         Thread.currentThread() !is HelperThread &&
         currentThread.state != ThreadState.MainExiting) {

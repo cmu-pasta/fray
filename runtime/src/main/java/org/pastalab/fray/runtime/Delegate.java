@@ -5,6 +5,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.AbstractInterruptibleChannel;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -383,6 +384,9 @@ public class Delegate {
     public void onSelectorSelect(Selector selector) {
     }
 
+    public void onSelectorCloseDone(Selector selector) {
+    }
+
     public void onSelectorSelectDone(Selector selector) {}
 
     public void onServerSocketChannelBindDone(ServerSocketChannel channel) {
@@ -394,13 +398,16 @@ public class Delegate {
     public void onServerSocketChannelAcceptDone(ServerSocketChannel channel, SocketChannel client) {
     }
 
-    public void onSocketChannelCloseDone(SocketChannel channel) {
+    public void onSocketChannelCloseDone(AbstractInterruptibleChannel channel) {
     }
 
     public void onSocketChannelConnect(SocketChannel channel, SocketAddress remoteAddress) {
     }
 
     public void onSocketChannelConnectDone(SocketChannel channel, boolean success) {
+    }
+
+    public void onSocketChannelFinishConnectDone(SocketChannel channel, boolean success) {
     }
 
     public void onSocketChannelRead(SocketChannel channel) {
