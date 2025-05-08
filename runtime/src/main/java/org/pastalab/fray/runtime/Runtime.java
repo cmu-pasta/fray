@@ -5,6 +5,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.AbstractInterruptibleChannel;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -491,6 +492,14 @@ public class Runtime {
         DELEGATE.onSelectorSelect(selector);
     }
 
+    public static void onSelectorClose(Selector selector) {
+        DELEGATE.onSelectorClose(selector);
+    }
+
+    public static void onSelectorCloseDone(Selector selector) {
+        DELEGATE.onSelectorCloseDone(selector);
+    }
+
     public static void onServerSocketChannelBindDone(ServerSocketChannel channel) {
         DELEGATE.onServerSocketChannelBindDone(channel);
     }
@@ -519,11 +528,44 @@ public class Runtime {
         DELEGATE.onServerSocketChannelAcceptDone(channel, client);
     }
 
-    public static void onSocketChannelCloseDone(SocketChannel channel) {
+    public static void onSocketChannelClose(AbstractInterruptibleChannel channel) {
+        DELEGATE.onSocketChannelClose(channel);
+    }
+
+    public static void onSocketChannelCloseDone(AbstractInterruptibleChannel channel) {
         DELEGATE.onSocketChannelCloseDone(channel);
     }
 
     public static void onSocketChannelConnectDone(SocketChannel channel, boolean success) {
         DELEGATE.onSocketChannelConnectDone(channel, success);
+    }
+
+    public static void onSocketChannelFinishConnectDone(SocketChannel channel, boolean success) {
+        DELEGATE.onSocketChannelFinishConnectDone(channel, success);
+    }
+
+    public static void onSocketChannelFinishConnect(SocketChannel channel) {
+        DELEGATE.onSocketChannelFinishConnect(channel);
+    }
+
+
+    public static void onSocketChannelRead(SocketChannel channel) {
+        DELEGATE.onSocketChannelRead(channel);
+    }
+
+    public static void onSocketChannelReadDoneInt(int bytesRead, SocketChannel channel) {
+        DELEGATE.onSocketChannelReadDone(channel, bytesRead);
+    }
+
+    public static void onSocketChannelReadDone(long bytesRead, SocketChannel channel) {
+        DELEGATE.onSocketChannelReadDone(channel, bytesRead);
+    }
+
+    public static void onSocketChannelWriteDoneInt(int bytesWritten, SocketChannel channel) {
+        DELEGATE.onSocketChannelWriteDone(channel, bytesWritten);
+    }
+
+    public static void onSocketChannelWriteDone(long bytesWritten, SocketChannel channel) {
+        DELEGATE.onSocketChannelWriteDone(channel, bytesWritten);
     }
 }

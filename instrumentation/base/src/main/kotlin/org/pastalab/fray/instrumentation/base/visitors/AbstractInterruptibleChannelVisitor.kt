@@ -16,8 +16,11 @@ class AbstractInterruptibleChannelVisitor(cv: ClassVisitor) :
       exceptions: Array<out String>?
   ): MethodVisitor {
     if (name == "close") {
+      val eMv =
+          MethodEnterVisitor(
+              mv, Runtime::onSocketChannelClose, access, name, descriptor, true, false)
       return MethodExitVisitor(
-          mv, Runtime::onSocketChannelCloseDone, access, name, descriptor, true, false, false)
+          eMv, Runtime::onSocketChannelCloseDone, access, name, descriptor, true, false, false)
     }
     return mv
   }

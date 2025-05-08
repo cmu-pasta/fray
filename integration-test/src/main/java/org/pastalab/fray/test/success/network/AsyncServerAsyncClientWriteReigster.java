@@ -1,16 +1,18 @@
 package org.pastalab.fray.test.success.network;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.CountDownLatch;
 
-public class SyncServerSyncClient {
+public class AsyncServerAsyncClientWriteReigster {
     private static final int PORT = 12345;
     private static final String SERVER_ADDRESS = "localhost";
+    private static final String MESSAGE = "Hello from Server";
     private static CountDownLatch latch;
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -27,45 +29,37 @@ public class SyncServerSyncClient {
             try {
                 runServer();
             } catch (Throwable e) {
-                e.printStackTrace();
                 throw new RuntimeException(e);
             }
         });
         serverThread.start();
-
     }
 
     private static void runServer() throws IOException, InterruptedException {
+        Selector selector = Selector.open();
         ServerSocketChannel serverChannel = ServerSocketChannel.open();
-        serverChannel.configureBlocking(true);
+        serverChannel.configureBlocking(false);
         serverChannel.bind(new InetSocketAddress(PORT));
         latch.countDown();
-        SocketChannel client = serverChannel.accept();
-        client.configureBlocking(true);
-        client.write(ByteBuffer.wrap("World".getBytes()));
-        ByteBuffer buffer = ByteBuffer.allocate(1024);
-        client.read(buffer);
-        buffer.flip();
-        byte[] data = new byte[buffer.remaining()];
-        buffer.get(data);
-        String message = new String(data);
-        System.out.println("Server received: " + message);
+        serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+        selector.select();
+        serverChannel.accept();
         serverChannel.close();
+        selector.close();
     }
 
     private static void runClient(int clientId) throws IOException, InterruptedException {
         SocketChannel channel = SocketChannel.open();
-        channel.configureBlocking(true);
+        channel.configureBlocking(false);
+        Selector selector = Selector.open();
+        channel.register(selector, SelectionKey.OP_CONNECT);
         latch.await();
         channel.connect(new InetSocketAddress(SERVER_ADDRESS, PORT));
-        channel.write(ByteBuffer.wrap("Hello".getBytes()));
-        ByteBuffer buffer = ByteBuffer.allocate(1024);
-        channel.read(buffer);
-        buffer.flip();
-        byte[] data = new byte[buffer.remaining()];
-        buffer.get(data);
-        String message = new String(data);
-        System.out.println("Client received: " + message);
-        channel.close();
+        selector.select();
+        if (channel.isConnectionPending()) {
+            channel.finishConnect();
+        }
+        channel.register(selector, SelectionKey.OP_WRITE);
+        selector.select();
     }
 }

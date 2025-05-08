@@ -5,6 +5,7 @@ import java.nio.channels.SelectionKey
 import java.nio.channels.Selector
 import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
+import java.nio.channels.spi.AbstractInterruptibleChannel
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -1178,6 +1179,17 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     onSkipMethodDone("Selector.select")
   }
 
+  override fun onSelectorClose(selector: Selector?) {
+    onSkipMethod("Selector.close")
+  }
+
+  override fun onSelectorCloseDone(selector: Selector) {
+    onSkipMethodDone("Selector.close")
+    if (checkEntered()) return
+    context.selectorClose(selector)
+    entered.set(false)
+  }
+
   override fun onSelectorSetEventOpsDone(selector: Selector, key: SelectionKey) {
     if (checkEntered()) {
       return
@@ -1215,9 +1227,50 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     }
   }
 
-  override fun onSocketChannelCloseDone(channel: SocketChannel) {
+  override fun onSocketChannelRead(channel: SocketChannel) {
+    if (checkEntered()) {
+      onSkipMethod("SocketChannel.read")
+      return
+    }
+    try {
+      context.socketChannelRead(channel)
+    } finally {
+      entered.set(false)
+      onSkipMethod("SocketChannel.read")
+    }
+  }
+
+  override fun onSocketChannelReadDone(channel: SocketChannel, bytesRead: Long) {
+    onSkipMethodDone("SocketChannel.read")
     if (checkEntered()) return
-    context.serverSocketChannelCloseDone(channel)
+    try {
+      context.socketChannelReadDone(channel, bytesRead)
+    } finally {
+      entered.set(false)
+    }
+  }
+
+  override fun onSocketChannelWriteDone(channel: SocketChannel, bytesWritten: Long) {
+    if (checkEntered()) return
+    try {
+      context.socketChannelWriteDone(channel, bytesWritten)
+    } finally {
+      entered.set(false)
+    }
+  }
+
+  override fun onSocketChannelClose(channel: AbstractInterruptibleChannel?) {
+    onSkipMethod("SocketChannel.close")
+  }
+
+  override fun onSocketChannelCloseDone(channel: AbstractInterruptibleChannel) {
+    onSkipMethodDone("SocketChannel.close")
+    if (checkEntered()) return
+    if (channel is ServerSocketChannel) {
+      context.serverSocketChannelClose(channel)
+    } else if (channel is SocketChannel) {
+      context.socketChannelClose(channel)
+    }
     entered.set(false)
   }
 
@@ -1234,8 +1287,28 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     }
   }
 
+  override fun onSocketChannelFinishConnect(channel: SocketChannel?) {
+    onSkipMethod("SocketChannel.finishConnect")
+  }
+
+  override fun onSocketChannelFinishConnectDone(channel: SocketChannel, success: Boolean) {
+    onSkipMethodDone("SocketChannel.finishConnect")
+    if (checkEntered()) return
+    try {
+      context.socketChannelConnectDone(channel, success)
+    } finally {
+      entered.set(false)
+    }
+  }
+
   override fun onSocketChannelConnectDone(channel: SocketChannel, success: Boolean) {
     onSkipMethodDone("SocketChannel.connect")
+    if (checkEntered()) return
+    try {
+      context.socketChannelConnectDone(channel, success)
+    } finally {
+      entered.set(false)
+    }
   }
 
   override fun onServerSocketChannelBindDone(channel: ServerSocketChannel) {

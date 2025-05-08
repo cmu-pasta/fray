@@ -18,7 +18,6 @@ class SocketChannelVisitor(cv: ClassVisitor) :
       exceptions: Array<out String>?
   ): MethodVisitor {
     if (name == "connect" && descriptor.startsWith("(Ljava/net/SocketAddress;)")) {
-
       val eMv =
           MethodEnterVisitor(
               mv, Runtime::onSocketChannelConnect, access, name, descriptor, true, true)
@@ -31,6 +30,89 @@ class SocketChannelVisitor(cv: ClassVisitor) :
             } else {
               dup2()
               pop()
+            }
+          }
+    }
+    if (name == "finishConnect") {
+      val eMv =
+          MethodEnterVisitor(
+              mv, Runtime::onSocketChannelFinishConnect, access, name, descriptor, true, false)
+      return MethodExitVisitor(
+          eMv,
+          Runtime::onSocketChannelFinishConnectDone,
+          access,
+          name,
+          descriptor,
+          true,
+          false,
+          true) { mv, isFinalBlock ->
+            if (isFinalBlock) {
+              push(false)
+            } else {
+              dup2()
+              pop()
+            }
+          }
+    }
+    if (name == "write" && descriptor.startsWith("(Ljava/nio/ByteBuffer;)")) {
+      return MethodExitVisitor(
+          mv, Runtime::onSocketChannelWriteDoneInt, access, name, descriptor, false, false, true) {
+              mv,
+              isFinalBlock ->
+            if (isFinalBlock) {
+              push(0)
+              loadThis()
+            } else {
+              dup()
+              loadThis()
+            }
+          }
+    }
+    if (name == "write" && descriptor.startsWith("([Ljava/nio/ByteBuffer;II)")) {
+      return MethodExitVisitor(
+          mv, Runtime::onSocketChannelWriteDone, access, name, descriptor, false, false, true) {
+              mv,
+              isFinalBlock ->
+            if (isFinalBlock) {
+              push(0L)
+              loadThis()
+            } else {
+              dup2()
+              loadThis()
+            }
+          }
+    }
+    if (name == "read" && descriptor.startsWith("(Ljava/nio/ByteBuffer;)")) {
+      val eMv =
+          MethodEnterVisitor(
+              mv, Runtime::onSocketChannelRead, access, name, descriptor, true, false)
+      return MethodExitVisitor(
+          eMv, Runtime::onSocketChannelReadDoneInt, access, name, descriptor, false, false, true) {
+              mv,
+              isFinalBlock ->
+            if (isFinalBlock) {
+              push(0)
+              loadThis()
+            } else {
+              dup()
+              loadThis()
+            }
+          }
+    }
+    if (name == "read" && descriptor.startsWith("([Ljava/nio/ByteBuffer;II)")) {
+      val eMv =
+          MethodEnterVisitor(
+              mv, Runtime::onSocketChannelRead, access, name, descriptor, true, false)
+      return MethodExitVisitor(
+          eMv, Runtime::onSocketChannelReadDone, access, name, descriptor, false, false, true) {
+              mv,
+              isFinalBlock ->
+            if (isFinalBlock) {
+              push(0L)
+              loadThis()
+            } else {
+              dup2()
+              loadThis()
             }
           }
     }

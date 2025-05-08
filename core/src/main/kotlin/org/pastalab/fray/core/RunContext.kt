@@ -933,12 +933,38 @@ class RunContext(val config: Configuration) {
     }
   }
 
+  fun selectorClose(selector: Selector) {
+    nioContextManager.selectorClose(selector)
+  }
+
   fun serverSocketChannelBindDone(serverSocketChannel: ServerSocketChannel) {
     nioContextManager.serverSocketChannelBind(serverSocketChannel)
   }
 
-  fun serverSocketChannelCloseDone(socketChannel: SocketChannel) {
-    nioContextManager.serverSocketChannelClose(socketChannel)
+  fun socketChannelClose(socketChannel: SocketChannel) {
+    nioContextManager.socketChannelClose(socketChannel)
+  }
+
+  fun serverSocketChannelClose(serverSocketChannel: ServerSocketChannel) {
+    nioContextManager.serverSocketChannelClose(serverSocketChannel)
+  }
+
+  fun socketChannelRead(socketChannel: SocketChannel) {
+    val socketChannelContext = nioContextManager.getSocketChannelContext(socketChannel)
+    val context = registeredThreads[Thread.currentThread().id]!!
+    context.state = ThreadState.Runnable
+    context.pendingOperation = SocketChannelReadOperation(socketChannelContext)
+    scheduleNextOperation(true)
+    while (socketChannelContext.read(context)) {
+      context.state = ThreadState.Blocked
+      context.pendingOperation = SocketChannelReadBlocked(socketChannelContext)
+      scheduleNextOperation(true)
+    }
+  }
+
+  fun socketChannelReadDone(socketChannel: SocketChannel, bytesRead: Long) {
+    val socketChannelContext = nioContextManager.getSocketChannelContext(socketChannel)
+    socketChannelContext.readDone(bytesRead)
   }
 
   fun serverSocketChannelAccept(serverSocketChannel: ServerSocketChannel) {
@@ -961,16 +987,37 @@ class RunContext(val config: Configuration) {
   fun serverSocketChannelAcceptDone(
       serverSocketChannel: ServerSocketChannel,
       socketChannel: SocketChannel?
-  ) {}
+  ) {
+    if (socketChannel != null) {
+      nioContextManager.socketChannelAccepted(serverSocketChannel, socketChannel)
+    }
+  }
 
   fun socketChannelConnect(socketChannel: SocketChannel, address: SocketAddress) {
     if (address !is InetSocketAddress) {
       throw IllegalArgumentException("Only InetSocketAddress is supported for now.")
     }
-    val socketChannelContext = nioContextManager.getSocketChannelContext(socketChannel)
+    if (socketChannel.isConnected) {
+      return
+    }
     val serverSocketChannelContext =
         nioContextManager.getServerSocketChannelAtPort(address.port) ?: return
-    socketChannelContext.connect(serverSocketChannelContext)
+    if (serverSocketChannelContext == null) {
+      return
+    }
+    serverSocketChannelContext.connectReceived()
+  }
+
+  fun socketChannelWriteDone(socketChannel: SocketChannel, bytesWritten: Long) {
+    val port = (socketChannel.remoteAddress as? InetSocketAddress)?.port ?: return
+    val localPort = (socketChannel.localAddress as? InetSocketAddress)?.port ?: return
+    nioContextManager.getSocketChannelAtPort(port, localPort)?.writeReceived(bytesWritten)
+  }
+
+  fun socketChannelConnectDone(socketChannel: SocketChannel, success: Boolean) {
+    if (success) {
+      nioContextManager.socketChannelConnected(socketChannel)
+    }
   }
 
   fun threadSleepOperation() {
