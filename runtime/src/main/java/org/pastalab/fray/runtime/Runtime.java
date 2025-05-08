@@ -492,6 +492,10 @@ public class Runtime {
         DELEGATE.onSelectorSelect(selector);
     }
 
+    public static void onSelectorClose(Selector selector) {
+        DELEGATE.onSelectorClose(selector);
+    }
+
     public static void onSelectorCloseDone(Selector selector) {
         DELEGATE.onSelectorCloseDone(selector);
     }

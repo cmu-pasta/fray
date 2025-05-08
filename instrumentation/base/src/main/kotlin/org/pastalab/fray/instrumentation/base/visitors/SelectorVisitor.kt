@@ -28,8 +28,10 @@ class SelectorVisitor(cv: ClassVisitor) :
           eMv, Runtime::onSelectorSelectDone, access, name, descriptor, true, false, true)
     }
     if (name == "close" && access and Opcodes.ACC_ABSTRACT == 0) {
+      val eMv =
+          MethodEnterVisitor(mv, Runtime::onSelectorClose, access, name, descriptor, true, false)
       return MethodExitVisitor(
-          mv, Runtime::onSelectorCloseDone, access, name, descriptor, true, false, true)
+          eMv, Runtime::onSelectorCloseDone, access, name, descriptor, true, false, true)
     }
     if (name == "setEventOps" && access and Opcodes.ACC_ABSTRACT == 0) {
       return MethodExitVisitor(

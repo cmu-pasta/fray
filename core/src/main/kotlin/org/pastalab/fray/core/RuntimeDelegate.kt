@@ -1179,7 +1179,12 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     onSkipMethodDone("Selector.select")
   }
 
+  override fun onSelectorClose(selector: Selector?) {
+    onSkipMethod("Selector.close")
+  }
+
   override fun onSelectorCloseDone(selector: Selector) {
+    onSkipMethodDone("Selector.close")
     if (checkEntered()) return
     context.selectorClose(selector)
     entered.set(false)

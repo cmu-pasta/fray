@@ -384,6 +384,8 @@ public class Delegate {
     public void onSelectorSelect(Selector selector) {
     }
 
+    public void onSelectorClose(Selector selector) {}
+
     public void onSelectorCloseDone(Selector selector) {
     }
 
