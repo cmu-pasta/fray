@@ -34,8 +34,11 @@ class SocketChannelVisitor(cv: ClassVisitor) :
           }
     }
     if (name == "finishConnect") {
+      val eMv =
+          MethodEnterVisitor(
+              mv, Runtime::onSocketChannelFinishConnect, access, name, descriptor, true, false)
       return MethodExitVisitor(
-          mv,
+          eMv,
           Runtime::onSocketChannelFinishConnectDone,
           access,
           name,

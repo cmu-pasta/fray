@@ -528,6 +528,10 @@ public class Runtime {
         DELEGATE.onServerSocketChannelAcceptDone(channel, client);
     }
 
+    public static void onSocketChannelClose(AbstractInterruptibleChannel channel) {
+        DELEGATE.onSocketChannelClose(channel);
+    }
+
     public static void onSocketChannelCloseDone(AbstractInterruptibleChannel channel) {
         DELEGATE.onSocketChannelCloseDone(channel);
     }
@@ -538,6 +542,10 @@ public class Runtime {
 
     public static void onSocketChannelFinishConnectDone(SocketChannel channel, boolean success) {
         DELEGATE.onSocketChannelFinishConnectDone(channel, success);
+    }
+
+    public static void onSocketChannelFinishConnect(SocketChannel channel) {
+        DELEGATE.onSocketChannelFinishConnect(channel);
     }
 
 

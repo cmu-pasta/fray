@@ -1259,7 +1259,12 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     }
   }
 
+  override fun onSocketChannelClose(channel: AbstractInterruptibleChannel?) {
+    onSkipMethod("SocketChannel.close")
+  }
+
   override fun onSocketChannelCloseDone(channel: AbstractInterruptibleChannel) {
+    onSkipMethodDone("SocketChannel.close")
     if (checkEntered()) return
     if (channel is ServerSocketChannel) {
       context.serverSocketChannelClose(channel)
@@ -1282,7 +1287,12 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     }
   }
 
+  override fun onSocketChannelFinishConnect(channel: SocketChannel?) {
+    onSkipMethod("SocketChannel.finishConnect")
+  }
+
   override fun onSocketChannelFinishConnectDone(channel: SocketChannel, success: Boolean) {
+    onSkipMethodDone("SocketChannel.finishConnect")
     if (checkEntered()) return
     try {
       context.socketChannelConnectDone(channel, success)

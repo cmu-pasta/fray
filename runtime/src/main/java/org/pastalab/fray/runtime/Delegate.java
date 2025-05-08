@@ -400,6 +400,9 @@ public class Delegate {
     public void onServerSocketChannelAcceptDone(ServerSocketChannel channel, SocketChannel client) {
     }
 
+    public void onSocketChannelClose(AbstractInterruptibleChannel channel) {
+    }
+
     public void onSocketChannelCloseDone(AbstractInterruptibleChannel channel) {
     }
 
@@ -407,6 +410,10 @@ public class Delegate {
     }
 
     public void onSocketChannelConnectDone(SocketChannel channel, boolean success) {
+    }
+
+
+    public void onSocketChannelFinishConnect(SocketChannel channel) {
     }
 
     public void onSocketChannelFinishConnectDone(SocketChannel channel, boolean success) {
