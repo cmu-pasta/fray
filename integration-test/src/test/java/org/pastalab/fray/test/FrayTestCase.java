@@ -70,7 +70,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                AsyncSelectorAsyncClose.main(new String[]{});
+                                AsyncServerAsyncClient.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -81,7 +81,7 @@ public class FrayTestCase {
                         -1
                 ),
                 "/tmp/report2",
-                1000,
+                100000,
                 60,
                 new POSScheduler(),
                 new ControlledRandom(),

@@ -168,8 +168,8 @@ class NioContextManager {
       val serverSocketChannel = portToServerSocketChannelContext[remotePort]!!
       serverSocketChannel.getOrCreateSocketContextAtPort(localPort).writeReceived(-1L)
       verifyOrReport(portToConnectedSockets.containsKey(localPort))
-      portToConnectedSockets.remove(localPort)
     }
+    portToConnectedSockets.remove(localPort)
   }
 
   fun done() {
@@ -180,5 +180,7 @@ class NioContextManager {
     socketChannelContextManager.objMap.values.forEach { it.first.channelReference.get()?.close() }
     portToServerSocketChannelContext.clear()
     selectorContextManager.objMap.values.forEach { it.first.selectorReference.get()?.close() }
+    portToConnectedSockets.values.forEach { it.channelReference.get()?.close() }
+    portToConnectedSockets.clear()
   }
 }
