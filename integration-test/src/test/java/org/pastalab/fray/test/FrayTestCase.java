@@ -18,6 +18,7 @@ import org.pastalab.fray.test.fail.network.AsyncClientSelectAfterCloseDeadlock;
 import org.pastalab.fray.test.fail.network.AsyncClientSelectNoConnectDeadlock;
 import org.pastalab.fray.test.fail.network.SyncClientExceptionWithoutServer;
 import org.pastalab.fray.test.fail.network.SyncServerAcceptDeadlock;
+import org.pastalab.fray.test.fail.stampedlock.StampedLockConversionDeadlock;
 import org.pastalab.fray.test.success.network.*;
 
 import java.util.*;
@@ -71,7 +72,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                AsyncClientSelectAfterCloseDeadlock.main(new String[]{});
+                                StampedLockConversionDeadlock.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }

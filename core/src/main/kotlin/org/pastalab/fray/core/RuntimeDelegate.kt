@@ -445,13 +445,9 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
         return false
       }
-      if (stackTrace.get().isEmpty()) {
-        return false
-      }
+      verifyOrReport(!stackTrace.get().isEmpty())
       val last = stackTrace.get().removeLast()
-      if (last != signature) {
-        return false
-      }
+      verifyOrReport(last == signature)
       skipFunctionEntered.set(skipFunctionEntered.get() - 1)
       return true
     } finally {
@@ -960,6 +956,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     }
     context.stampedLockLock(lock, true, false, false, true)
     entered.set(false)
+    onSkipMethod("StampedLock")
   }
 
   override fun onStampedLockWriteLock(lock: StampedLock) {
@@ -969,6 +966,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     }
     context.stampedLockLock(lock, true, false, false, false)
     entered.set(false)
+    onSkipMethod("StampedLock")
   }
 
   override fun onStampedLockSkipDone() {
@@ -988,6 +986,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       context.stampedLockLock(lock, true, true, false, true)
     } finally {
       entered.set(false)
+      onSkipMethod("StampedLock")
     }
   }
 
@@ -1000,6 +999,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       context.stampedLockLock(lock, true, true, false, false)
     } finally {
       entered.set(false)
+      onSkipMethod("StampedLock")
     }
   }
 
@@ -1094,6 +1094,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     }
     context.stampedLockLock(lock, false, false, false, true)
     entered.set(false)
+    onSkipMethod("StampedLock")
   }
 
   override fun onStampedLockWriteLockTryLock(lock: StampedLock) {
@@ -1103,6 +1104,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     }
     context.stampedLockLock(lock, false, false, false, false)
     entered.set(false)
+    onSkipMethod("StampedLock")
   }
 
   override fun onStampedLockReadLockTryLockTimeout(
@@ -1118,6 +1120,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       context.stampedLockLock(lock, true, true, true, true)
     } finally {
       entered.set(false)
+      onSkipMethod("StampedLock")
     }
     return 0
   }
@@ -1135,6 +1138,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       context.stampedLockLock(lock, true, true, true, false)
     } finally {
       entered.set(false)
+      onSkipMethod("StampedLock")
     }
     return 0
   }

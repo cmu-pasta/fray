@@ -16,6 +16,8 @@ and Selector classes, enabling connect and accept operations.
 
 ### Fixed
 
+- Fix Stamped Lock missing `onSkipMethod` instrumentation.
+
 ### Security
 
 ## 0.4.3 - 2025-05-01
