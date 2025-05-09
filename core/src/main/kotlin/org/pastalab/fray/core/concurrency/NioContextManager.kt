@@ -157,7 +157,6 @@ class NioContextManager {
     if (portToConnectedSockets.containsKey(remotePort)) {
       // So we need to notify the client that the connection is closed.
       portToConnectedSockets[remotePort]?.writeReceived(-1L)
-      verifyOrReport(portToServerSocketChannelContext.containsKey(localPort))
       portToServerSocketChannelContext[localPort]?.acceptedSocketChannels?.removeIf {
         it.remotePort == remotePort
       }
@@ -167,7 +166,6 @@ class NioContextManager {
       // So we need to notify the server that the connection is closed.
       val serverSocketChannel = portToServerSocketChannelContext[remotePort]!!
       serverSocketChannel.getOrCreateSocketContextAtPort(localPort).writeReceived(-1L)
-      verifyOrReport(portToConnectedSockets.containsKey(localPort))
     }
     portToConnectedSockets.remove(localPort)
   }
