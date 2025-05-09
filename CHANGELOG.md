@@ -10,6 +10,8 @@ and Selector classes, enabling connect and accept operations.
 
 ### Changed
 
+- Remove assertions in `NioContextManager` as channels can be safely closed multiple times.
+
 ### Deprecated
 
 ### Removed
