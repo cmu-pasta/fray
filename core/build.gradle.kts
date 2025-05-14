@@ -47,6 +47,14 @@ tasks.create("genRunner") {
     file.writeText(runner)
     file.setExecutable(true)
   }
+  doLast {
+    configurations
+        .filter { it.isCanBeResolved }
+        .flatMap { it.files }
+        .sorted()
+        .distinct()
+        .forEach { println(it) }
+}
 }
 
 tasks.register<Copy>("copyDependencies") {

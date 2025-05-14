@@ -37,28 +37,29 @@
       packages = forEachSupportedSystem (
         { pkgs }:
         let
-          project = (gradle2nix.builders.${pkgs.system}.buildGradlePackage {
-            pname = "fray";
-            version = "0.4.4-SNAPSHOT";
+          project =
+            (gradle2nix.builders.${pkgs.system}.buildGradlePackage {
+              pname = "fray";
+              version = "0.4.4-SNAPSHOT";
 
-            src = ./.;
+              src = ./.;
 
-            nativeBuildInputs = with pkgs; [
-              jdk
-              # gradle
-            ];
+              nativeBuildInputs = with pkgs; [
+                jdk
+                # gradle
+              ];
 
-            lockFile = ./gradle.lock;
-            gradleFlags = [ "build" "-x" "test" ];
-          }).overrideAttrs (_: prev: {
-            gradleFlags = pkgs.lib.lists.remove "--console=plain" prev.gradleFlags;
-            installPhase = ''
-              runHook preInstall
-              mkdir -p $out/lib
-              cp --verbose core/build/libs/*.jar $out/lib
-              runHook postInstall
-            '';
-          });
+              lockFile = ./gradle.lock;
+              gradleFlags = [ "publish" "-x" "test" "--no-daemon" "--offline" ];
+            }).overrideAttrs (_: prev: {
+              gradleFlags = pkgs.lib.lists.remove "--console=plain" prev.gradleFlags;
+              installPhase = ''
+                runHook preInstall
+                mkdir -p $out/lib
+                cp --verbose core/build/libs/*.jar $out/lib
+                runHook postInstall
+              '';
+            });
         in
         {
           default = project;

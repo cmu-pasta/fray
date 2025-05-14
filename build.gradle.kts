@@ -6,7 +6,7 @@ plugins {
   kotlin("jvm") version "2.1.20"
   id("maven-publish")
   id("com.ncorti.ktfmt.gradle") version "0.17.0"
-  id("org.jreleaser") version "1.16.0"
+  id("org.jreleaser") version "1.18.0"
   id("com.gradleup.shadow") version "9.0.0-beta7"
   id("org.jetbrains.dokka") version "2.0.0"
   id("org.jetbrains.dokka-javadoc") version "2.0.0"
