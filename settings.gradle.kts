@@ -1,7 +1,8 @@
 pluginManagement {
   repositories {
-    mavenLocal()
-    gradlePluginPortal()
+    maven {
+      url = uri("file://nix/store/rmdxr1v0sw2r98iq1gm3cn7n882dapjg-gradle-maven-repo")
+    }
   }
 }
 plugins {

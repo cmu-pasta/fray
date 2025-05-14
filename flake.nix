@@ -44,15 +44,46 @@
 
               src = ./.;
 
-              nativeBuildInputs = with pkgs; [
-                jdk
-                # gradle
-              ];
+              nativeBuildInputs = with pkgs;
+                [
+                  gcc
+                  jdk
+                  jdk11
+                  jdk21
+                ]
+                ++ lib.optionals (pkgs.stdenv.isLinux) [
+                  jetbrains.jdk
+                ];
 
               lockFile = ./gradle.lock;
               gradleFlags = [ "publish" "-x" "test" "--no-daemon" "--offline" ];
+              env = {
+                CC = "${pkgs.gcc}/bin/gcc";
+                CXX = "${pkgs.gcc}/bin/g++";
+                JDK11 = "${pkgs.jdk11.home}";
+                JDK21 = "${pkgs.jdk21.home}";
+                JRE = "${pkgs.jdk.home}";
+                JAVA_HOME = "${pkgs.jdk.home}";
+                JETBRAINS_JDK_HOME = "${pkgs.jetbrains.jdk.home}";
+              };
             }).overrideAttrs (_: prev: {
               gradleFlags = pkgs.lib.lists.remove "--console=plain" prev.gradleFlags;
+              buildPhase = ''
+                runHook preBuild
+                  export CC="${pkgs.gcc}/bin/gcc"
+                  export CXX="${pkgs.gcc}/bin/g++"
+                  export JDK11="${pkgs.jdk11.home}"
+                  export JDK21="${pkgs.jdk21.home}"
+                  export JRE="${pkgs.jdk.home}"
+                  export JAVA_HOME="${pkgs.jdk.home}"
+                  ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
+                  export JETBRAINS_JDK_HOME="${pkgs.jetbrains.jdk.home}"
+                ''}
+                gradle --version
+                  gradle build
+                runHook postBuild
+              '';
+              checkPhase = "";
               installPhase = ''
                 runHook preInstall
                 mkdir -p $out/lib
