@@ -32,14 +32,15 @@
         {
           inherit jdk;
           gradle = prev.gradle.override { java = jdk; };
+          gradle2nix = gradle2nix.builders.x86_64-linux;
         };
 
       packages = forEachSupportedSystem (
         { pkgs }:
         let
-          project = pkgs.gradle2nix.buildGradlePackage {
+          project = (pkgs.gradle2nix.buildGradlePackage {
             pname = "fray";
-            version = "0.4.0";
+            version = "0.4.4-SNAPSHOT";
 
             src = ./.;
 
@@ -48,7 +49,15 @@
               gradle
             ];
 
-            deps = ./deps.json;
+            lockFile = ./gradle.lock;
+            gradleBuildFlags = [ "build" ];
+          }).overrideAttrs {
+            installPhase = ''
+              runHook preInstall
+              mkdir -p $out/lib
+              cp --verbose core/build/libs/*.jar $out/lib
+              runHook postInstall
+            '';
           };
         in
         {
