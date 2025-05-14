@@ -3,7 +3,7 @@
 
   inputs = {
     nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.*.tar.gz";
-    gradle2nix.url = "github:tadfisher/gradle2nix/v2";
+    gradle2nix.url = "github:tadfisher/gradle2nix/6e37e6e3f91701a633c53a6f06937f714cdcc530";
   };
   outputs =
     { self
@@ -32,13 +32,12 @@
         {
           inherit jdk;
           gradle = prev.gradle.override { java = jdk; };
-          gradle2nix = gradle2nix.builders.x86_64-linux;
         };
 
       packages = forEachSupportedSystem (
         { pkgs }:
         let
-          project = (pkgs.gradle2nix.buildGradlePackage {
+          project = (gradle2nix.builders.${pkgs.system}.buildGradlePackage {
             pname = "fray";
             version = "0.4.4-SNAPSHOT";
 
@@ -46,19 +45,20 @@
 
             nativeBuildInputs = with pkgs; [
               jdk
-              gradle
+              # gradle
             ];
 
             lockFile = ./gradle.lock;
-            gradleBuildFlags = [ "build" ];
-          }).overrideAttrs {
+            gradleFlags = [ "build" "-x" "test" ];
+          }).overrideAttrs (_: prev: {
+            gradleFlags = pkgs.lib.lists.remove "--console=plain" prev.gradleFlags;
             installPhase = ''
               runHook preInstall
               mkdir -p $out/lib
               cp --verbose core/build/libs/*.jar $out/lib
               runHook postInstall
             '';
-          };
+          });
         in
         {
           default = project;
