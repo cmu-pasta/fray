@@ -4,6 +4,20 @@
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 0.4.4 - 2025-05-12
+
+### Added
+
 - Implement support for non-blocking and blocking I/O operations using ServerSocketChannel, SocketChannel, 
 and Selector classes, enabling connect and accept operations.
 - Support NIO write and read operations.
@@ -13,15 +27,9 @@ and Selector classes, enabling connect and accept operations.
 
 - Remove assertions in `NioContextManager` as channels can be safely closed multiple times.
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 
 - Fix Stamped Lock missing `onSkipMethod` instrumentation.
-
-### Security
 
 ## 0.4.3 - 2025-05-01
 
