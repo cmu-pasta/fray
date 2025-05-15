@@ -66,12 +66,13 @@
               installPhase = ''
                 runHook preInstall
                 mkdir -p $out/libs
+                mkdir -p $out/bin
                 cp core/build/libs/*.jar $out/libs
                 cp instrumentation/agent/build/libs/*.jar $out/libs
                 cp -r instrumentation/jdk/build/java-inst $out/
                 cp -r jvmti/build/native-libs $out/
                 gradle --no-daemon -Pfray.installDir=$out/ genRunner
-                cp bin/fray $out/
+                cp bin/fray $out/bin/
                 runHook postInstall
               '';
             });
