@@ -1,88 +1,130 @@
-#!/usr/bin/python3
+#!bash
 
-import os
-import sys
-import subprocess
-import argparse
-import re
-import shutil
-from typing import List
+JAVA_PATH="#JAVA_PATH#"
+JVMTI_PATH="#JVM_TI_PATH#"
+AGENT_PATH="#AGENT_PATH#"
+CORE_PATH="#CORE_PATH#"
+REPORT_PATH="/tmp/report" # Default report path
 
+# Function to resolve classpaths with wildcard support
+resolve_classpaths() {
+  local IFS=":"
+  local resolved_paths=""
 
-BASE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
-JAVA_PATH = os.path.join(BASE, "instrumentation", "jdk", "build", "java-inst", "bin", "java")
-JVMTI_PATH = "#JVM_TI_PATH#"
-AGENT_PATH = "#AGENT_PATH#"
-CORE_PATH = "#CORE_PATH#"
-REPORT_PATH = "/tmp/report" # Default report path
+  for path in $1; do
+    if [[ "$path" == *"*"* ]]; then
+      dir_path=$(dirname "$path")
+      pattern=$(basename "$path" | sed 's/\*/.*/')
 
-def resolve_classpaths(classpaths: List[str]) -> List[str]:
-    resolved_paths = []
-    for path in classpaths:
-        if '*' in path:
-            dir_path = os.path.dirname(path)
-            pattern = os.path.basename(path).replace('*', '.*')
-            regex = re.compile(pattern)
+      if [[ -d "$dir_path" ]]; then
+        for entry in "$dir_path"/*; do
+          if [[ "$(basename "$entry")" =~ $pattern ]]; then
+            if [[ -z "$resolved_paths" ]]; then
+              resolved_paths="$entry"
+            else
+              resolved_paths="$resolved_paths:$entry"
+            fi
+          fi
+        done
+      fi
+    else
+      new_path=$(realpath "$path")
+      if [[ "$path" == */ ]]; then
+        new_path="${new_path}/"
+      fi
 
-            if os.path.exists(dir_path) and os.path.isdir(dir_path):
-                for entry in os.listdir(dir_path):
-                    if regex.match(entry):
-                        resolved_paths.append(os.path.join(dir_path, entry))
-        else:
-            new_path = os.path.abspath(path)
-            if path.endswith('/'):
-                new_path += '/'
-            resolved_paths.append(new_path)
-    return resolved_paths
+      if [[ -z "$resolved_paths" ]]; then
+        resolved_paths="$new_path"
+      else
+        resolved_paths="$resolved_paths:$new_path"
+      fi
+    fi
+  done
 
-def main():
-    parser = argparse.ArgumentParser(description="Fray Fuzzer")
-    parser.add_argument("-cp", "--class-path",
-                        help="class search path of directories and zip/jar files. A : separated list of directories, JAR archives, and ZIP archives to search for class files.",
-                        default="")
-    parser.add_argument("--system-props", help="System properties passed to JVM", type=str, default="")
-    parser.add_argument("--replay", help="Replay a trace file", type=str, default="")
-    parser.add_argument("clazz", help="Main class to run")
-    parser.add_argument("args", nargs=argparse.REMAINDER,
-                        help="Arguments to pass to the target")
-    args = parser.parse_args()
+  echo "$resolved_paths"
+}
 
-    class_path = CORE_PATH
-    if args.class_path:
-        class_path = class_path + ":" + args.class_path
-    class_path = ":".join(resolve_classpaths(class_path.split(":")))
-    command = [
-        JAVA_PATH,
-    ] + args.system_props.split() + [
-        "-ea",
-        "-cp", class_path,
-        "-agentpath:" + JVMTI_PATH,
-        "-javaagent:" + AGENT_PATH,
-        "org.pastalab.fray.core.MainKt",
-        "--run-config",
-        "cli",
-        "--clazz",
-        args.clazz,
-        "--method",
-        "main",
-    ]
-    if args.replay:
-        command.extend([
-            "--scheduler",
-            "replay-from-recordings",
-            "--path-to-recordings",
-            args.replay
-        ])
-    if args.args:
-        command.extend([
-            "--args",
-            ":".join(args.args)
-        ])
-    fray_log_path = os.path.join(REPORT_PATH, "fray.log")
-    if os.path.exists(fray_log_path):
-        os.remove(fray_log_path)
-    subprocess.run(command)
+# Process command line arguments
+CLASS_PATH=""
+SYSTEM_PROPS=""
+REPLAY=""
+CLASS=""
+ARGS=()
 
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -cp|--class-path)
+      CLASS_PATH="$2"
+      shift 2
+      ;;
+    --system-props)
+      SYSTEM_PROPS="$2"
+      shift 2
+      ;;
+    --replay)
+      REPLAY="$2"
+      shift 2
+      ;;
+    -*)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+    *)
+      if [[ -z "$CLASS" ]]; then
+        CLASS="$1"
+        shift
+      else
+        ARGS+=("$1")
+        shift
+      fi
+      ;;
+  esac
+done
 
-if __name__ == "__main__":
-    main()
+# Set up class path
+if [[ -n "$CLASS_PATH" ]]; then
+  FULL_CLASS_PATH="${CORE_PATH}:${CLASS_PATH}"
+else
+  FULL_CLASS_PATH="${CORE_PATH}"
+fi
+
+RESOLVED_CLASS_PATH=$(resolve_classpaths "$FULL_CLASS_PATH")
+
+# Build command
+COMMAND=("$JAVA_PATH")
+
+# Add system properties
+if [[ -n "$SYSTEM_PROPS" ]]; then
+  read -ra PROPS <<< "$SYSTEM_PROPS"
+  COMMAND+=("${PROPS[@]}")
+fi
+
+# Add remaining JVM arguments
+COMMAND+=("-ea")
+COMMAND+=("-cp" "$RESOLVED_CLASS_PATH")
+COMMAND+=("-agentpath:$JVMTI_PATH")
+COMMAND+=("-javaagent:$AGENT_PATH")
+COMMAND+=("org.pastalab.fray.core.MainKt")
+COMMAND+=("--run-config" "cli")
+COMMAND+=("--clazz" "$CLASS")
+COMMAND+=("--method" "main")
+
+# Add replay if specified
+if [[ -n "$REPLAY" ]]; then
+  COMMAND+=("--scheduler" "replay-from-recordings" "--path-to-recordings" "$REPLAY")
+fi
+
+# Add args if any
+if [[ ${#ARGS[@]} -gt 0 ]]; then
+  ARGS_JOINED=$(IFS=:; echo "${ARGS[*]}")
+  COMMAND+=("--args" "$ARGS_JOINED")
+fi
+
+# Remove fray log if it exists
+FRAY_LOG_PATH="${REPORT_PATH}/fray.log"
+if [[ -f "$FRAY_LOG_PATH" ]]; then
+  rm "$FRAY_LOG_PATH"
+fi
+
+# Execute command
+"${COMMAND[@]}"

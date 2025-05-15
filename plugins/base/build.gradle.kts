@@ -5,10 +5,6 @@ plugins {
   id("com.gradleup.shadow")
 }
 
-repositories {
-  mavenCentral()
-}
-
 dependencies {
   implementation("org.apache.commons:commons-compress:1.27.1")
   testImplementation(platform("org.junit:junit-bom:5.10.0"))

@@ -1,12 +1,8 @@
-import java.util.regex.Pattern
-
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
   kotlin("jvm")
   kotlin("plugin.serialization") version "2.0.0"
-}
-
-repositories {
-  mavenCentral()
+  id("com.gradleup.shadow")
 }
 
 dependencies {
@@ -26,23 +22,32 @@ tasks.test {
 }
 
 tasks.named("build") {
+  dependsOn("shadowJar")
   finalizedBy("genRunner")
-  finalizedBy("copyDependencies")
 }
 
-tasks.create("genRunner") {
+tasks.register("genRunner") {
   doLast {
-    val instrumentationTask = evaluationDependsOn(":instrumentation:agent")
-        .tasks.named("shadowJar").get()
-    val instrumentation = instrumentationTask.outputs.files.first().absolutePath
-    val core = tasks.named("jar").get().outputs.files.first().absolutePath
-    val dependencies = configurations.runtimeClasspath.get().files.joinToString(":") + ":$core"
-    val jvmti = project(":jvmti")
     val binDir = "${rootProject.projectDir.absolutePath}/bin"
     var runner = file("${binDir}/fray.template").readText()
-    runner = runner.replace("#JVM_TI_PATH#", "${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
-    runner = runner.replace("#AGENT_PATH#", instrumentation)
-    runner = runner.replace("#CORE_PATH#", dependencies)
+    if (project.hasProperty("fray.installDir")) {
+      val installDir = project.property("fray.installDir")
+      runner = runner.replace("#JAVA_PATH#", "$installDir/java-inst/bin/java")
+      runner = runner.replace("#JVM_TI_PATH#", "$installDir/native-libs/libjvmti.so")
+      runner = runner.replace("#AGENT_PATH#", "$installDir/libs/fray-instrumentation-agent-$version.jar")
+      runner = runner.replace("#CORE_PATH#", "$installDir/libs/fray-core-$version.jar")
+    } else {
+      val instrumentationTask = evaluationDependsOn(":instrumentation:agent")
+          .tasks.named("shadowJar").get()
+      val instrumentation = instrumentationTask.outputs.files.first().absolutePath
+      val core = tasks.named("shadowJar").get().outputs.files.first().absolutePath
+      val jvmti = project(":jvmti")
+      val jdk = project(":instrumentation:jdk")
+      runner = runner.replace("#JAVA_PATH#", "${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
+      runner = runner.replace("#JVM_TI_PATH#", "${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
+      runner = runner.replace("#AGENT_PATH#", instrumentation)
+      runner = runner.replace("#CORE_PATH#", core)
+    }
     val file = File("${binDir}/fray")
     file.writeText(runner)
     file.setExecutable(true)
@@ -53,3 +58,18 @@ tasks.register<Copy>("copyDependencies") {
   from(configurations.runtimeClasspath)
   into("${layout.buildDirectory.get().asFile}/dependency")
 }
+
+tasks.jar {
+  enabled = false
+}
+
+tasks.named<ShadowJar>("shadowJar") {
+  archiveClassifier.set("")
+  relocate("org.objectweb.asm", "org.pastalab.fray.instrumentation.agent.asm")
+}
+
+tasks.register<Jar>("sourceJar") {
+  archiveClassifier.set("sources")
+  from(sourceSets.main.get().allSource)
+}
+

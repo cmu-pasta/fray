@@ -70,6 +70,7 @@ jobs:
           sed -i "s/id(\"org.pastalab.fray.gradle\") version \".*\"/id(\"org.pastalab.fray.gradle\") version \"$LATEST_VERSION\"/" README.md
           sed -i "s|<version>.*</version>|<version>$LATEST_VERSION</version>|" README.md
           sed -i "s/^version=.*/version=$NEW_VERSION/" gradle.properties
+          sed -i 's/\(\s*version\s*=\s*\)"[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*.*";/\1"$NEW_VERSION";/' flake.nix
           ./gradlew patchChangelog -Pversion=$LATEST_VERSION
       - name: Get changelog
         id: get-changelog

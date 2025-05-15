@@ -28,11 +28,6 @@ dokka {
   }
 }
 
-
-repositories {
-  mavenCentral()
-}
-
 tasks {
   wrapper {
     gradleVersion = "8.10.2"
@@ -79,12 +74,16 @@ jreleaser {
 }
 
 
-configure(allprojects - rootProject -
-    project(":instrumentation") -
-    project(":plugins") -
-    project(":plugins:gradle") -
-    project(":plugins:idea") -
-    project(":integration-test")) {
+configure(allprojects.filter { 
+  it != rootProject && 
+  it.path !in listOf(
+    ":instrumentation", 
+    ":plugins", 
+    ":plugins:gradle", 
+    ":plugins:idea", 
+    ":integration-test"
+  )
+}) {
   plugins.apply("maven-publish")
   plugins.apply("org.jetbrains.dokka")
   plugins.apply("org.jetbrains.dokka-javadoc")

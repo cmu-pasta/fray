@@ -4,6 +4,8 @@
 
 ### Added
 
+- Reenable nix flake build.
+
 ### Changed
 
 ### Deprecated
