@@ -2,6 +2,7 @@
   description = "Fray Flake Configuration";
 
   inputs = {
+    flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
     nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.*.tar.gz";
     gradle2nix.url = "github:tadfisher/gradle2nix/v2";
   };
@@ -9,6 +10,7 @@
     { self
     , nixpkgs
     , gradle2nix
+    , flake-compat
     ,
     }:
     let
