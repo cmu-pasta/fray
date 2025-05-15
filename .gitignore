@@ -46,3 +46,4 @@ fray-report/
 .intellijPlatform
 .direnv/
 kls_database.db
+result
