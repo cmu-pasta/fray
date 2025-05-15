@@ -6,13 +6,9 @@ plugins {
   kotlin("plugin.serialization") version "2.0.0"
 }
 
-repositories {
-  mavenCentral()
-}
-
 dependencies {
   api("org.hamcrest:hamcrest:3.0")
-  implementation(project(":core"))
+  implementation(project(":core", configuration = "shadow"))
   compileOnly(project(":runtime"))
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
   compileOnly("org.junit.platform:junit-platform-engine:1.11.3")

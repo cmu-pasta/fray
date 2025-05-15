@@ -5,10 +5,6 @@ plugins {
 
 group = "org.pastalab.fray.maven"
 
-repositories {
-  mavenCentral()
-}
-
 dependencies {
   implementation("org.apache.maven:maven-plugin-api:3.0")
   implementation("org.apache.maven.shared:maven-dependency-tree:3.3.0")

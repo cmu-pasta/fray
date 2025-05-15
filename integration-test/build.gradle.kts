@@ -4,14 +4,10 @@ plugins {
 
 group = "org.pastalab.fray.test"
 
-repositories {
-  mavenCentral()
-}
-
 dependencies {
   testImplementation(platform("org.junit:junit-bom:5.10.0"))
   testImplementation("org.junit.jupiter:junit-jupiter")
-  testImplementation(project(":core"))
+  testImplementation(project(":core", configuration = "shadow"))
   testImplementation("io.github.classgraph:classgraph:4.8.177")
   testCompileOnly(project(":runtime"))
 }

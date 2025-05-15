@@ -24,17 +24,17 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1721150565,
-        "narHash": "sha256-UzEoAsNnwXqwGT+tnWl1Pz3OeGOB98zq17WFQrEkP+4=",
+        "lastModified": 1743629487,
+        "narHash": "sha256-MjnEgT9MhO2HknLhrx7GvBRVxdOzSKydIJMyzawe2Fk=",
         "owner": "tadfisher",
         "repo": "gradle2nix",
-        "rev": "6e37e6e3f91701a633c53a6f06937f714cdcc530",
+        "rev": "293ecbdc10d32d9d4bdc2d23213b9be09ce247ee",
         "type": "github"
       },
       "original": {
         "owner": "tadfisher",
+        "ref": "v2",
         "repo": "gradle2nix",
-        "rev": "6e37e6e3f91701a633c53a6f06937f714cdcc530",
         "type": "github"
       }
     },

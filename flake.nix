@@ -1,9 +1,9 @@
 {
-  description = "A Nix-flake-based Java development environment";
+  description = "Fray Flake Configuration";
 
   inputs = {
     nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.*.tar.gz";
-    gradle2nix.url = "github:tadfisher/gradle2nix/6e37e6e3f91701a633c53a6f06937f714cdcc530";
+    gradle2nix.url = "github:tadfisher/gradle2nix/v2";
   };
   outputs =
     { self
@@ -12,8 +12,6 @@
     ,
     }:
     let
-      javaVersion = 23; # Change this value to update the whole stack
-
       supportedSystems = [ "x86_64-linux" "aarch64-darwin" ];
       forEachSupportedSystem = f:
         nixpkgs.lib.genAttrs supportedSystems (system:
@@ -25,40 +23,58 @@
           });
     in
     {
-      overlays.default = final: prev:
-        let
-          jdk = prev."jdk${toString javaVersion}";
-        in
-        {
-          inherit jdk;
-          gradle = prev.gradle.override { java = jdk; };
-        };
+      overlays.default = final: prev: {
+        jdk = prev.jdk23;
+        java = prev.jdk23;
+      };
 
       packages = forEachSupportedSystem (
         { pkgs }:
         let
-          project = (gradle2nix.builders.${pkgs.system}.buildGradlePackage {
-            pname = "fray";
-            version = "0.4.4-SNAPSHOT";
+          project =
+            (gradle2nix.builders.${pkgs.system}.buildGradlePackage {
+              pname = "fray";
+              version = "0.4.4-SNAPSHOT";
 
-            src = ./.;
-
-            nativeBuildInputs = with pkgs; [
-              jdk
-              # gradle
-            ];
-
-            lockFile = ./gradle.lock;
-            gradleFlags = [ "build" "-x" "test" ];
-          }).overrideAttrs (_: prev: {
-            gradleFlags = pkgs.lib.lists.remove "--console=plain" prev.gradleFlags;
-            installPhase = ''
-              runHook preInstall
-              mkdir -p $out/lib
-              cp --verbose core/build/libs/*.jar $out/lib
-              runHook postInstall
-            '';
-          });
+              src = ./.;
+              lockFile = ./gradle.lock;
+              gradleBuildFlags = [
+                "-Porg.gradle.java.installations.paths=${pkgs.jdk11.home},${pkgs.jdk23.home}"
+                "build"
+                "-x"
+                "test"
+              ];
+              buildInputs = with pkgs; [
+                jdk23
+                jdk11
+                gcc
+                cmake
+              ];
+              preBuild = ''
+                export CC="${pkgs.gcc}/bin/gcc"
+                export CXX="${pkgs.gcc}/bin/g++"
+                export JDK11="${pkgs.jdk11.home}"
+                export JRE="${pkgs.jdk23.home}"
+                export JAVA_HOME="${pkgs.jdk23.home}"
+                ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
+                  export JETBRAINS_JDK_HOME="${pkgs.jetbrains.jdk.home}"
+                ''}
+                sed -i '/include("plugins/d' settings.gradle.kts
+              '';
+            }).overrideAttrs (_: prev: {
+              gradleFlags = pkgs.lib.lists.remove "--console=plain" prev.gradleFlags;
+              installPhase = ''
+                runHook preInstall
+                mkdir -p $out/libs
+                cp core/build/libs/*.jar $out/libs
+                cp instrumentation/agent/build/libs/*.jar $out/libs
+                cp -r instrumentation/jdk/build/java-inst $out/
+                cp -r jvmti/build/native-libs $out/
+                gradle --no-daemon -Pfray.installDir=$out/ genRunner
+                cp bin/fray $out/
+                runHook postInstall
+              '';
+            });
         in
         {
           default = project;
@@ -72,9 +88,8 @@
               gcc
               cmake
               gradle
-              jdk
+              jdk23
               jdk11
-              jdk21
             ]
             ++ lib.optionals (pkgs.stdenv.isLinux) [
               jetbrains.jdk
@@ -83,9 +98,8 @@
             export CC="${pkgs.gcc}/bin/gcc"
             export CXX="${pkgs.gcc}/bin/g++"
             export JDK11="${pkgs.jdk11.home}"
-            export JDK21="${pkgs.jdk21.home}"
-            export JRE="${pkgs.jdk.home}"
-            export JAVA_HOME="${pkgs.jdk.home}"
+            export JRE="${pkgs.jdk23.home}"
+            export JAVA_HOME="${pkgs.jdk23.home}"
             ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
               export JETBRAINS_JDK_HOME="${pkgs.jetbrains.jdk.home}"
             ''}

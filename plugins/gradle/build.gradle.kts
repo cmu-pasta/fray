@@ -8,10 +8,6 @@ dependencies {
   implementation(project(":plugins:base", configuration = "shadow"))
 }
 
-repositories {
-  mavenCentral()
-}
-
 tasks.test {
   useJUnitPlatform()
 }

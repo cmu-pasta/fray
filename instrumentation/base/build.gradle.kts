@@ -3,10 +3,6 @@ plugins {
   kotlin("jvm")
 }
 
-repositories {
-  mavenCentral()
-}
-
 dependencies {
   api("org.ow2.asm:asm:9.8")
   api("org.ow2.asm:asm-tree:9.8")

@@ -3,10 +3,6 @@ plugins {
     java
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   implementation(project(":runtime"))
