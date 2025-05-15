@@ -4,6 +4,8 @@
 
 ### Added
 
+- Reenable nix flake build.
+
 ### Changed
 
 ### Deprecated
@@ -21,7 +23,6 @@
 - Implement support for non-blocking and blocking I/O operations using ServerSocketChannel, SocketChannel, 
 and Selector classes, enabling connect and accept operations.
 - Support NIO write and read operations.
-- Reenable nix flake build.
 
 ### Changed
 
