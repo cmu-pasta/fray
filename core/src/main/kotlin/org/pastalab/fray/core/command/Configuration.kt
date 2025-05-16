@@ -171,6 +171,15 @@ class SURW : ScheduleAlgorithm("surw", false) {
   }
 }
 
+class Dynamic : ScheduleAlgorithm("dynamic", false) {
+  val schedulerName by option("--scheduler-name")
+  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
+    val clazz = this::class.java.classLoader.loadClass(schedulerName)
+    val scheduler = clazz.getConstructor().newInstance() as Scheduler;
+    return Triple(scheduler, ControlledRandom(), null)
+  }
+}
+
 class MainCommand : CliktCommand() {
   val report by option("-o", "--output", help = "Report output directory.").default("/tmp/report")
   val timeout by
@@ -192,6 +201,7 @@ class MainCommand : CliktCommand() {
               "random" to Rand(),
               "pct" to PCT(),
               "surw" to SURW(),
+              "dynamic" to Dynamic(),
               "replay-from-recordings" to ReplayFromRecordings(),
               "replay" to Replay())
           .defaultByName("random")
