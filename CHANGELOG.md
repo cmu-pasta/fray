@@ -8,6 +8,8 @@
 
 ### Changed
 
+- Make Fray Debugger adaptive to the IDE settings.
+
 ### Deprecated
 
 ### Removed
