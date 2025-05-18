@@ -16,8 +16,8 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionAdapter
 import javax.swing.JPanel
 import javax.swing.ToolTipManager
-import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import kotlin.math.abs
+import org.pastalab.fray.idea.objects.ThreadExecutionContext
 
 data class ThreadExecutionHistory(
     var threadName: String,
@@ -76,20 +76,21 @@ class ThreadTimelinePanel : JPanel() {
       // Set a preferred size to make panel scrollable
       preferredSize = Dimension(JBUI.scale(800), JBUI.scale(500))
 
-      addMouseListener(object : java.awt.event.MouseAdapter() {
-        override fun mousePressed(e: MouseEvent) {
-          // Check if click is near the separator
-          if (abs(e.x - separatorPosition) <= separatorDragTolerance) {
-            isDraggingSeparator = true
-            setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.E_RESIZE_CURSOR))
-          }
-        }
+      addMouseListener(
+          object : java.awt.event.MouseAdapter() {
+            override fun mousePressed(e: MouseEvent) {
+              // Check if click is near the separator
+              if (abs(e.x - separatorPosition) <= separatorDragTolerance) {
+                isDraggingSeparator = true
+                setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.E_RESIZE_CURSOR))
+              }
+            }
 
-        override fun mouseReleased(e: MouseEvent) {
-          isDraggingSeparator = false
-          setCursor(java.awt.Cursor.getDefaultCursor())
-        }
-      })
+            override fun mouseReleased(e: MouseEvent) {
+              isDraggingSeparator = false
+              setCursor(java.awt.Cursor.getDefaultCursor())
+            }
+          })
 
       // Add mouse listeners for interaction
       addMouseMotionListener(
@@ -173,7 +174,8 @@ class ThreadTimelinePanel : JPanel() {
           threadExecutionHistory.values.flatMap { it.events }.maxOfOrNull { it.first } ?: 0
       val width =
           maxOf(
-              JBUI.scale(800), separatorPosition + (maxTimeStep + 1) * eventSpacing + JBUI.scale(100))
+              JBUI.scale(800),
+              separatorPosition + (maxTimeStep + 1) * eventSpacing + JBUI.scale(100))
       return Dimension(width, height)
     }
 
