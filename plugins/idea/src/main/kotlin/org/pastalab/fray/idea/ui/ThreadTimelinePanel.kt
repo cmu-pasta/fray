@@ -3,6 +3,7 @@ package org.pastalab.fray.idea.ui
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.scale.JBUIScale
+import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import com.jetbrains.rd.util.ConcurrentHashMap
@@ -199,8 +200,6 @@ class ThreadTimelinePanel : JPanel() {
         g2d.drawLine(0, y, width, y)
       }
 
-      val monospaceFont = UIUtil.getFont(UIUtil.FontSize.NORMAL, UIUtil.getLabelFont())
-
       threadExecutionHistory.entries.forEachIndexed { index, entry ->
         val threadIndex = entry.key
         val history = entry.value
@@ -208,7 +207,7 @@ class ThreadTimelinePanel : JPanel() {
 
         // Draw thread name
         g2d.color = JBColor.foreground()
-        g2d.font = monospaceFont
+        g2d.font = JBUI.Fonts.create(JBFont.MONOSPACED, JBUI.scaleFontSize(12.0f))
         val metrics = g2d.fontMetrics
         val maxChars = (separatorPosition - padding * 2) / metrics.charWidth('m')
         val threadName =
