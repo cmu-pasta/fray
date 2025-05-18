@@ -8,6 +8,9 @@
 
 ### Changed
 
+- Make Fray Debugger adaptive to the IDE settings.
+- Enable resizable separator to display complete thread names.
+
 ### Deprecated
 
 ### Removed
