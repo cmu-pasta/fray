@@ -2,11 +2,14 @@ package org.pastalab.fray.idea.ui
 
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.scale.JBUIScale
+import com.intellij.util.ui.JBFont
+import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.UIUtil
 import com.jetbrains.rd.util.ConcurrentHashMap
 import java.awt.BasicStroke
 import java.awt.BorderLayout
 import java.awt.Dimension
-import java.awt.Font
 import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.RenderingHints
@@ -14,6 +17,7 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionAdapter
 import javax.swing.JPanel
 import javax.swing.ToolTipManager
+import kotlin.math.abs
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 
 data class ThreadExecutionHistory(
@@ -56,42 +60,67 @@ class ThreadTimelinePanel : JPanel() {
   }
 
   inner class ThreadTimelineCanvas : JPanel() {
-    private val rowHeight = 30
-    private val threadNameWidth = 105
-    private val eventWidth = 8
-    private val eventHeight = 16
-    private val eventRadius = 4
+    private val rowHeight = JBUI.scale(30)
+    private val eventWidth = JBUI.scale(8)
+    private val eventHeight = JBUI.scale(16)
+    private val eventRadius = JBUI.scale(4)
+    private val eventSpacing = JBUI.scale(20)
+    private val padding = JBUI.scale(10)
 
     private var hoveredEvent: Pair<Int, Pair<Int, String>>? = null
+    private var separatorPosition = JBUI.scale(105)
+
+    private val separatorDragTolerance = JBUI.scale(5)
+    private var isDraggingSeparator = false
 
     init {
       // Set a preferred size to make panel scrollable
-      preferredSize = Dimension(800, 500)
+      preferredSize = Dimension(JBUI.scale(800), JBUI.scale(500))
+
+      addMouseListener(
+          object : java.awt.event.MouseAdapter() {
+            override fun mousePressed(e: MouseEvent) {
+              // Check if click is near the separator
+              if (abs(e.x - separatorPosition) <= separatorDragTolerance) {
+                isDraggingSeparator = true
+                setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.E_RESIZE_CURSOR))
+              }
+            }
+
+            override fun mouseReleased(e: MouseEvent) {
+              isDraggingSeparator = false
+              setCursor(java.awt.Cursor.getDefaultCursor())
+            }
+          })
 
       // Add mouse listeners for interaction
       addMouseMotionListener(
           object : MouseMotionAdapter() {
+
+            override fun mouseDragged(e: MouseEvent) {
+              if (isDraggingSeparator) {
+                val minWidth = JBUI.scale(50)
+                val newPosition = maxOf(minWidth, e.x)
+                updateSeparatorPosition(newPosition)
+                repaint()
+              }
+            }
+
             override fun mouseMoved(e: MouseEvent) {
-              // Get mouse coordinates relative to the canvas
               val x = e.x
               val y = e.y
 
-              // Clear previous hover state
               val previousHoveredEvent = hoveredEvent
               hoveredEvent = null
 
-              // Check each thread's events
               for ((threadIndex, history) in threadExecutionHistory) {
                 val threadY =
                     threadExecutionHistory.keys.indexOf(threadIndex) * rowHeight + rowHeight / 2
 
-                // Check if mouse is in this thread's row
                 if (y >= threadY - eventHeight && y <= threadY + eventHeight) {
-                  // Check each event
                   for (event in history.events) {
-                    val eventX = threadNameWidth + (event.first * 20)
+                    val eventX = separatorPosition + (event.first * eventSpacing)
 
-                    // Use a more generous hit area for events
                     if (x >= eventX - eventWidth && x <= eventX + eventWidth) {
                       hoveredEvent = Pair(threadIndex, event)
                       break
@@ -100,10 +129,8 @@ class ThreadTimelinePanel : JPanel() {
                 }
               }
 
-              // Repaint if hover state changed
               if (previousHoveredEvent != hoveredEvent) {
                 repaint()
-                // Force tooltip to update
                 ToolTipManager.sharedInstance()
                     .mouseMoved(
                         MouseEvent(
@@ -116,11 +143,23 @@ class ThreadTimelinePanel : JPanel() {
                             0,
                             false))
               }
+
+              if (abs(e.x - separatorPosition) <= separatorDragTolerance) {
+                setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.E_RESIZE_CURSOR))
+              } else {
+                setCursor(java.awt.Cursor.getDefaultCursor())
+              }
             }
           })
 
       // Enable tooltips
       ToolTipManager.sharedInstance().registerComponent(this)
+    }
+
+    fun updateSeparatorPosition(newPosition: Int) {
+      separatorPosition = newPosition
+      revalidate()
+      repaint()
     }
 
     override fun getToolTipText(event: MouseEvent): String? {
@@ -131,10 +170,13 @@ class ThreadTimelinePanel : JPanel() {
     }
 
     override fun getPreferredSize(): Dimension {
-      val height = maxOf(500, (threadExecutionHistory.size + 1) * rowHeight)
+      val height = maxOf(JBUI.scale(500), (threadExecutionHistory.size + 1) * rowHeight)
       val maxTimeStep =
           threadExecutionHistory.values.flatMap { it.events }.maxOfOrNull { it.first } ?: 0
-      val width = maxOf(800, threadNameWidth + (maxTimeStep + 1) * 20 + 100)
+      val width =
+          maxOf(
+              JBUI.scale(800),
+              separatorPosition + (maxTimeStep + 1) * eventSpacing + JBUI.scale(100))
       return Dimension(width, height)
     }
 
@@ -149,7 +191,7 @@ class ThreadTimelinePanel : JPanel() {
 
       // Draw vertical separator for thread names
       g2d.color = JBColor.border()
-      g2d.drawLine(threadNameWidth, 0, threadNameWidth, height)
+      g2d.drawLine(separatorPosition, 0, separatorPosition, height)
 
       // Draw horizontal lines for each thread
       for (i in 0..threadExecutionHistory.size) {
@@ -165,14 +207,16 @@ class ThreadTimelinePanel : JPanel() {
 
         // Draw thread name
         g2d.color = JBColor.foreground()
-        g2d.font = Font(Font.MONOSPACED, Font.PLAIN, 12)
+        g2d.font = JBUI.Fonts.create(JBFont.MONOSPACED, JBUI.scaleFontSize(12.0f))
+        val metrics = g2d.fontMetrics
+        val maxChars = (separatorPosition - padding * 2) / metrics.charWidth('m')
         val threadName =
-            if (history.threadName.length > threadNameWidth / 10) {
-              history.threadName.substring(0, threadNameWidth / 10) + "..."
+            if (history.threadName.length > maxChars) {
+              history.threadName.substring(0, maxChars) + "..."
             } else {
               history.threadName
             }
-        g2d.drawString(threadName, 10, y + 5)
+        g2d.drawString(threadName, padding, y + metrics.height / 2 - 1)
 
         // Draw timeline for this thread, copy list to avoid concurrent modification.
         drawThreadTimeline(g2d, threadIndex, history.events.toList(), y)
@@ -191,9 +235,9 @@ class ThreadTimelinePanel : JPanel() {
       // Draw connecting line for this thread's events
       if (events.size > 1) {
         g2d.color = threadColor.darker()
-        g2d.stroke = BasicStroke(1.5f)
+        g2d.stroke = BasicStroke(JBUIScale.scale(1.5f))
 
-        val points = events.map { threadNameWidth + (it.first * 20) }
+        val points = events.map { separatorPosition + (it.first * eventSpacing) }
         for (i in 0 until points.size - 1) {
           g2d.drawLine(points[i], y, points[i + 1], y)
         }
@@ -202,7 +246,7 @@ class ThreadTimelinePanel : JPanel() {
       // Draw each execution event
       events.forEachIndexed { index, event ->
         val timeStep = event.first
-        val x = threadNameWidth + (timeStep * 20)
+        val x = separatorPosition + (timeStep * eventSpacing)
 
         // Draw event marker
         val isHovered =
@@ -213,19 +257,19 @@ class ThreadTimelinePanel : JPanel() {
           g2d.color = JBColor.YELLOW
           g2d.fillOval(x - eventWidth / 2, y - eventHeight / 2, eventWidth, eventHeight)
           g2d.color = threadColor.darker()
-          g2d.stroke = BasicStroke(2f)
+          g2d.stroke = BasicStroke(JBUIScale.scale(2f))
           g2d.drawOval(x - eventWidth / 2, y - eventHeight / 2, eventWidth, eventHeight)
         } else {
           // Draw normal event
           g2d.color = threadColor
           g2d.fillOval(x - eventRadius, y - eventRadius, eventRadius * 2, eventRadius * 2)
           g2d.color = threadColor.darker()
-          g2d.stroke = BasicStroke(1f)
+          g2d.stroke = BasicStroke(JBUIScale.scale(1f))
           g2d.drawOval(x - eventRadius, y - eventRadius, eventRadius * 2, eventRadius * 2)
         }
 
         g2d.color = JBColor.foreground()
-        g2d.font = Font(Font.MONOSPACED, Font.PLAIN, 9)
+        g2d.font = UIUtil.getFont(UIUtil.FontSize.SMALL, UIUtil.getLabelFont())
         g2d.drawString("${index+1}", x - 3, y + eventHeight)
       }
     }
