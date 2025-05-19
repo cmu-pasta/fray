@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 import org.pastalab.fray.core.TestRunner
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.command.ExecutionInfo
+import org.pastalab.fray.core.command.InterceptedFeatures
 import org.pastalab.fray.core.command.LambdaExecutor
 import org.pastalab.fray.core.observers.ScheduleVerifier
 import org.pastalab.fray.core.randomness.ControlledRandom
@@ -46,7 +47,7 @@ object FrayInTestLauncher {
             isReplay,
             false,
             false,
-        )
+            InterceptedFeatures.entries.toSet())
     additionalConfigs(config)
     val runner = TestRunner(config)
     runner.run()?.let { throw it }
