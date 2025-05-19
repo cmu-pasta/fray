@@ -8,18 +8,21 @@ class FrayLogger(location: String) {
   val logFile = File(location)
 
   @Synchronized
-  fun log(level: String, message: String) {
+  fun log(level: String, message: String, printToStdIO: Boolean) {
     val currentDateTime =
         LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
     val logMessage = "$currentDateTime [$level]: $message\n"
     logFile.appendText(logMessage)
+    if (printToStdIO) {
+      println(logMessage)
+    }
   }
 
-  fun info(message: String) {
-    log("INFO", message)
+  fun info(message: String, printToStdIO: Boolean = false) {
+    log("INFO", message, printToStdIO)
   }
 
-  fun error(message: String) {
-    log("ERROR", message)
+  fun error(message: String, printToStdIO: Boolean = false) {
+    log("ERROR", message, printToStdIO)
   }
 }

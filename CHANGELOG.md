@@ -5,6 +5,7 @@
 ### Added
 
 - Reenable nix flake build.
+- Better stdout and allow customized schedulers.
 
 ### Changed
 

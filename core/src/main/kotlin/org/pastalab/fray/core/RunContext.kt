@@ -166,16 +166,15 @@ class RunContext(val config: Configuration) {
         config.nextSavedIndex++
         return
       }
-
       config.frayLogger.info(
           "Error found at iter: ${config.currentIteration}, step: $step, " +
               "Elapsed time: ${config.elapsedTime()}ms",
-      )
+          true)
       config.frayLogger.info(sw.toString())
       val recordingIndex = config.nextSavedIndex++
       if (!config.isReplay) {
         val path = config.saveToReportFolder(recordingIndex)
-        config.frayLogger.info("The recording is saved to $path")
+        config.frayLogger.info("The recording is saved to $path", true)
       }
       if (config.exploreMode || config.noExitWhenBugFound) {
         return

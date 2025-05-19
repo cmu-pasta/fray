@@ -61,7 +61,7 @@ class TestRunner(val config: Configuration) {
     context.shutDown()
     config.frayLogger.info(
         "Run finished. Total iter: ${config.currentIteration}, Elapsed time: ${config.elapsedTime()}ms",
-    )
+        true)
     config.executionInfo.executor.afterExecution()
     return context.bugFound
   }
