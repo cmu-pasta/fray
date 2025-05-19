@@ -6,20 +6,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 import org.pastalab.fray.core.FrayInternalError;
 import org.pastalab.fray.core.TestRunner;
-import org.pastalab.fray.core.command.Configuration;
-import org.pastalab.fray.core.command.ExecutionInfo;
-import org.pastalab.fray.core.command.LambdaExecutor;
-import org.pastalab.fray.core.command.MethodExecutor;
+import org.pastalab.fray.core.command.*;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
-import org.pastalab.fray.test.fail.network.AsyncClientNoConnectWriteDeadlock;
-import org.pastalab.fray.test.fail.network.AsyncClientSelectAfterCloseDeadlock;
-import org.pastalab.fray.test.fail.network.AsyncClientSelectNoConnectDeadlock;
-import org.pastalab.fray.test.fail.network.SyncClientExceptionWithoutServer;
-import org.pastalab.fray.test.fail.network.SyncServerAcceptDeadlock;
 import org.pastalab.fray.test.fail.stampedlock.StampedLockConversionDeadlock;
-import org.pastalab.fray.test.success.network.*;
 
 import java.util.*;
 
@@ -52,7 +43,8 @@ public class FrayTestCase {
                     true,
                     false,
                     false,
-                    false
+                    false,
+                    new HashSet<>(InterceptedFeatures.getEntries())
             );
             TestRunner runner = new TestRunner(config);
             Throwable result = runner.run();
@@ -92,7 +84,8 @@ public class FrayTestCase {
                 true,
                 false,
                 false,
-                false
+                false,
+                new HashSet<>(InterceptedFeatures.getEntries())
         );
         TestRunner runner = new TestRunner(config);
         runner.run();
@@ -104,11 +97,9 @@ public class FrayTestCase {
         new ClassGraph().acceptPackages("org.pastalab.fray.test").scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
             String name = classInfo.getName();
             boolean shouldFail = true;
-            if (name.contains("fail")) {
-                shouldFail = true;
-            } else if (name.contains("success")) {
+            if (name.contains("success")) {
                 shouldFail = false;
-            } else {
+            } else if (!name.contains("fail")) {
                 return;
             }
             tests.add(populateTest(classInfo.getName(), shouldFail));

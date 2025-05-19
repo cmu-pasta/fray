@@ -18,22 +18,31 @@ import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.StampedLock
+import org.pastalab.fray.core.command.InterceptedFeatures
 import org.pastalab.fray.core.utils.HelperThread
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
+import org.pastalab.fray.runtime.Delegate
+import org.pastalab.fray.runtime.MemoryOpType
 import org.pastalab.fray.runtime.RangerCondition
 
-class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Delegate() {
+class RuntimeDelegate(val context: RunContext) : Delegate() {
 
-  var entered = ThreadLocal.withInitial { false }
-  var skipFunctionEntered = ThreadLocal.withInitial { 0 }
-  val stackTrace = ThreadLocal.withInitial { mutableListOf<String>() }
+  var entered: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
+  var skipFunctionEntered: ThreadLocal<Int> = ThreadLocal.withInitial { 0 }
+  val stackTrace: ThreadLocal<MutableList<String>> =
+      ThreadLocal.withInitial { mutableListOf<String>() }
+  val enabledFeatures = context.config.enabledFeatures
 
-  private fun checkEntered(): Boolean {
+  private fun checkEntered(feature: InterceptedFeatures = InterceptedFeatures.CORE): Boolean {
 
     if (entered.get()) {
       return true
     }
     entered.set(true)
+
+    if (!enabledFeatures.contains(feature)) {
+      return true
+    }
     if (skipFunctionEntered.get() > 0) {
       entered.set(false)
       return true
@@ -214,7 +223,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     onSkipMethodDone("Lock.lock")
   }
 
-  override fun onAtomicOperation(o: Any, type: org.pastalab.fray.runtime.MemoryOpType) {
+  override fun onAtomicOperation(o: Any, type: MemoryOpType) {
     if (checkEntered()) {
       onSkipMethod("AtomicOperation")
       return
@@ -348,7 +357,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     if (o == null) return
     if (checkEntered()) return
     try {
-      context.unsafeOperation(o, offset, org.pastalab.fray.runtime.MemoryOpType.MEMORY_READ)
+      context.unsafeOperation(o, offset, MemoryOpType.MEMORY_READ)
     } finally {
       entered.set(false)
     }
@@ -358,7 +367,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     if (o == null) return
     if (checkEntered()) return
     try {
-      context.unsafeOperation(o, offset, org.pastalab.fray.runtime.MemoryOpType.MEMORY_WRITE)
+      context.unsafeOperation(o, offset, MemoryOpType.MEMORY_WRITE)
     } finally {
       entered.set(false)
     }
@@ -368,7 +377,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     if (o == null) return
     if (checkEntered()) return
     try {
-      context.fieldOperation(o, owner, name, org.pastalab.fray.runtime.MemoryOpType.MEMORY_READ)
+      context.fieldOperation(o, owner, name, MemoryOpType.MEMORY_READ)
     } finally {
       entered.set(false)
     }
@@ -378,7 +387,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     if (o == null) return
     if (checkEntered()) return
     try {
-      context.fieldOperation(o, owner, name, org.pastalab.fray.runtime.MemoryOpType.MEMORY_WRITE)
+      context.fieldOperation(o, owner, name, MemoryOpType.MEMORY_WRITE)
     } finally {
       entered.set(false)
     }
@@ -387,7 +396,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   override fun onStaticFieldRead(owner: String, name: String, descriptor: String) {
     if (checkEntered()) return
     try {
-      context.fieldOperation(null, owner, name, org.pastalab.fray.runtime.MemoryOpType.MEMORY_READ)
+      context.fieldOperation(null, owner, name, MemoryOpType.MEMORY_READ)
     } finally {
       entered.set(false)
     }
@@ -396,7 +405,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   override fun onStaticFieldWrite(owner: String, name: String, descriptor: String) {
     if (checkEntered()) return
     try {
-      context.fieldOperation(null, owner, name, org.pastalab.fray.runtime.MemoryOpType.MEMORY_WRITE)
+      context.fieldOperation(null, owner, name, MemoryOpType.MEMORY_WRITE)
     } finally {
       entered.set(false)
     }
@@ -726,7 +735,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     if (o == null) return
     if (checkEntered()) return
     try {
-      context.arrayOperation(o, index, org.pastalab.fray.runtime.MemoryOpType.MEMORY_READ)
+      context.arrayOperation(o, index, MemoryOpType.MEMORY_READ)
     } finally {
       entered.set(false)
     }
@@ -736,7 +745,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     if (o == null) return
     if (checkEntered()) return
     try {
-      context.arrayOperation(o, index, org.pastalab.fray.runtime.MemoryOpType.MEMORY_WRITE)
+      context.arrayOperation(o, index, MemoryOpType.MEMORY_WRITE)
     } finally {
       entered.set(false)
     }
@@ -1155,8 +1164,13 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     }
   }
 
+  /**
+   * ******************************************
+   * Network Interception Begin *
+   * *******************************************
+   */
   override fun onSelectorCancelKeyDone(selector: Selector, key: SelectionKey) {
-    if (checkEntered()) {
+    if (checkEntered(InterceptedFeatures.NETWORK)) {
       return
     }
     try {
@@ -1167,7 +1181,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onSelectorSelect(selector: Selector) {
-    if (checkEntered()) {
+    if (checkEntered(InterceptedFeatures.NETWORK)) {
       onSkipMethod("Selector.select")
       return
     }
@@ -1189,13 +1203,13 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
 
   override fun onSelectorCloseDone(selector: Selector) {
     onSkipMethodDone("Selector.close")
-    if (checkEntered()) return
+    if (checkEntered(InterceptedFeatures.NETWORK)) return
     context.selectorClose(selector)
     entered.set(false)
   }
 
   override fun onSelectorSetEventOpsDone(selector: Selector, key: SelectionKey) {
-    if (checkEntered()) {
+    if (checkEntered(InterceptedFeatures.NETWORK)) {
       return
     }
     try {
@@ -1206,7 +1220,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onServerSocketChannelAccept(channel: ServerSocketChannel) {
-    if (checkEntered()) {
+    if (checkEntered(InterceptedFeatures.NETWORK)) {
       onSkipMethod("ServerSocketChannel.accept")
       return
     }
@@ -1223,7 +1237,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       client: SocketChannel?
   ) {
     onSkipMethodDone("ServerSocketChannel.accept")
-    if (checkEntered()) return
+    if (checkEntered(InterceptedFeatures.NETWORK)) return
     try {
       context.serverSocketChannelAcceptDone(channel, client)
     } finally {
@@ -1232,7 +1246,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onSocketChannelRead(channel: SocketChannel) {
-    if (checkEntered()) {
+    if (checkEntered(InterceptedFeatures.NETWORK)) {
       onSkipMethod("SocketChannel.read")
       return
     }
@@ -1246,7 +1260,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
 
   override fun onSocketChannelReadDone(channel: SocketChannel, bytesRead: Long) {
     onSkipMethodDone("SocketChannel.read")
-    if (checkEntered()) return
+    if (checkEntered(InterceptedFeatures.NETWORK)) return
     try {
       context.socketChannelReadDone(channel, bytesRead)
     } finally {
@@ -1255,7 +1269,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onSocketChannelWriteDone(channel: SocketChannel, bytesWritten: Long) {
-    if (checkEntered()) return
+    if (checkEntered(InterceptedFeatures.NETWORK)) return
     try {
       context.socketChannelWriteDone(channel, bytesWritten)
     } finally {
@@ -1269,7 +1283,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
 
   override fun onSocketChannelCloseDone(channel: AbstractInterruptibleChannel) {
     onSkipMethodDone("SocketChannel.close")
-    if (checkEntered()) return
+    if (checkEntered(InterceptedFeatures.NETWORK)) return
     if (channel is ServerSocketChannel) {
       context.serverSocketChannelClose(channel)
     } else if (channel is SocketChannel) {
@@ -1279,7 +1293,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onSocketChannelConnect(channel: SocketChannel, remoteAddress: SocketAddress) {
-    if (checkEntered()) {
+    if (checkEntered(InterceptedFeatures.NETWORK)) {
       onSkipMethod("SocketChannel.connect")
       return
     }
@@ -1297,7 +1311,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
 
   override fun onSocketChannelFinishConnectDone(channel: SocketChannel, success: Boolean) {
     onSkipMethodDone("SocketChannel.finishConnect")
-    if (checkEntered()) return
+    if (checkEntered(InterceptedFeatures.NETWORK)) return
     try {
       context.socketChannelConnectDone(channel, success)
     } finally {
@@ -1307,7 +1321,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
 
   override fun onSocketChannelConnectDone(channel: SocketChannel, success: Boolean) {
     onSkipMethodDone("SocketChannel.connect")
-    if (checkEntered()) return
+    if (checkEntered(InterceptedFeatures.NETWORK)) return
     try {
       context.socketChannelConnectDone(channel, success)
     } finally {
@@ -1316,8 +1330,14 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onServerSocketChannelBindDone(channel: ServerSocketChannel) {
-    if (checkEntered()) return
+    if (checkEntered(InterceptedFeatures.NETWORK)) return
     context.serverSocketChannelBindDone(channel)
     entered.set(false)
   }
+
+  /**
+   * ******************************************
+   * Network Interception End *
+   * *******************************************
+   */
 }
