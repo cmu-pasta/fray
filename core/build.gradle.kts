@@ -15,6 +15,7 @@ dependencies {
   testImplementation(project(":runtime"))
   testImplementation(project(":instrumentation:base"))
   testImplementation(kotlin("test"))
+  implementation("com.antithesis:sdk:1.4.3")
 }
 
 tasks.test {
