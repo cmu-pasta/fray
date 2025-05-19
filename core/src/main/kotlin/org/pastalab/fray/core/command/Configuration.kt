@@ -173,9 +173,10 @@ class SURW : ScheduleAlgorithm("surw", false) {
 
 class Dynamic : ScheduleAlgorithm("dynamic", false) {
   val schedulerName by option("--scheduler-name")
+
   override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
     val clazz = this::class.java.classLoader.loadClass(schedulerName)
-    val scheduler = clazz.getConstructor().newInstance() as Scheduler;
+    val scheduler = clazz.getConstructor().newInstance() as Scheduler
     return Triple(scheduler, ControlledRandom(), null)
   }
 }

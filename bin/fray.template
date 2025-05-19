@@ -49,6 +49,7 @@ CLASS_PATH=""
 SYSTEM_PROPS=""
 REPLAY=""
 CLASS=""
+ITER="1"
 ARGS=()
 
 while [[ $# -gt 0 ]]; do
@@ -63,6 +64,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --replay)
       REPLAY="$2"
+      shift 2
+      ;;
+    --iter)
+      ITER="$2"
       shift 2
       ;;
     -*)
@@ -105,6 +110,7 @@ COMMAND+=("-cp" "$RESOLVED_CLASS_PATH")
 COMMAND+=("-agentpath:$JVMTI_PATH")
 COMMAND+=("-javaagent:$AGENT_PATH")
 COMMAND+=("org.pastalab.fray.core.MainKt")
+COMMAND+=("--iter" "$ITER")
 COMMAND+=("--run-config" "cli")
 COMMAND+=("--clazz" "$CLASS")
 COMMAND+=("--method" "main")
