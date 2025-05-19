@@ -252,7 +252,7 @@ class MainCommand : CliktCommand() {
     enabledFeatures -=
         disableFeature.split(",").mapNotNull {
           try {
-            InterceptedFeatures.valueOf(it)
+            InterceptedFeatures.valueOf(it.trim())
           } catch (e: IllegalArgumentException) {
             null
           }
