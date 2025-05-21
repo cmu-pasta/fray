@@ -20,552 +20,560 @@ import java.util.concurrent.locks.StampedLock;
 
 // No recursion is allowed in Runtime
 public class Runtime {
-    public static Delegate DELEGATE = new Delegate();
+    public static Delegate LOCK_DELEGATE = new Delegate();
+    public static NetworkDelegate NETWORK_DELEGATE = new NetworkDelegate();
+    public static TimeDelegate TIME_DELEGATE = new TimeDelegate();
+
+    public static void resetAllDelegate() {
+        LOCK_DELEGATE = new Delegate();
+        NETWORK_DELEGATE = new NetworkDelegate();
+        TIME_DELEGATE = new TimeDelegate();
+    }
 
     public static void onThreadCreateDone(Thread t) {
-        DELEGATE.onThreadCreateDone(t);
+        LOCK_DELEGATE.onThreadCreateDone(t);
     }
 
     public static void onThreadStart(Thread t) {
-        DELEGATE.onThreadStart(t);
+        LOCK_DELEGATE.onThreadStart(t);
     }
 
     public static void onThreadStartDone(Thread t) {
-        DELEGATE.onThreadStartDone(t);
+        LOCK_DELEGATE.onThreadStartDone(t);
     }
 
     // onThreadEnd and onThreadRun will only be called from JVM.
     public static void onThreadEnd() {
-        DELEGATE.onThreadEnd();
+        LOCK_DELEGATE.onThreadEnd();
     }
 
     public static void onThreadRun() {
-        DELEGATE.onThreadRun();
+        LOCK_DELEGATE.onThreadRun();
     }
 
     public static void onLockTryLock(Lock l) {
-        DELEGATE.onLockTryLock(l);
+        LOCK_DELEGATE.onLockTryLock(l);
     }
 
     public static long onLockTryLockInterruptibly(Lock l, long timeout, TimeUnit unit) {
-        return DELEGATE.onLockTryLockInterruptibly(l, timeout);
+        return LOCK_DELEGATE.onLockTryLockInterruptibly(l, timeout);
     }
 
     public static void onLockTryLockInterruptiblyDone(Lock l) {
-        DELEGATE.onLockTryLockInterruptiblyDone(l);
+        LOCK_DELEGATE.onLockTryLockInterruptiblyDone(l);
     }
 
     public static void onLockTryLockDone(Lock l) {
-        DELEGATE.onLockTryLockDone(l);
+        LOCK_DELEGATE.onLockTryLockDone(l);
     }
 
     public static void onLockLock(Lock l) {
-        DELEGATE.onLockLock(l);
+        LOCK_DELEGATE.onLockLock(l);
     }
 
     public static void onLockLockDone() {
-        DELEGATE.onLockLockDone();
+        LOCK_DELEGATE.onLockLockDone();
     }
 
     public static void onLockUnlock(Lock l) {
-        DELEGATE.onLockUnlock(l);
+        LOCK_DELEGATE.onLockUnlock(l);
     }
 
     public static void onLockUnlockDone(Lock l) {
-        DELEGATE.onLockUnlockDone(l);
+        LOCK_DELEGATE.onLockUnlockDone(l);
     }
 
     public static void onLockNewCondition(Condition c, Lock l) {
-        DELEGATE.onLockNewCondition(c, l);
+        LOCK_DELEGATE.onLockNewCondition(c, l);
     }
 
     public static void onObjectWait(Object o, long timeout) {
-        DELEGATE.onObjectWait(o, timeout);
+        LOCK_DELEGATE.onObjectWait(o, timeout);
     }
 
     public static void onObjectWaitDone(Object o) {
-        DELEGATE.onObjectWaitDone(o);
+        LOCK_DELEGATE.onObjectWaitDone(o);
     }
 
     public static void onObjectNotify(Object o) {
-        DELEGATE.onObjectNotify(o);
+        LOCK_DELEGATE.onObjectNotify(o);
     }
 
     public static void onObjectNotifyAll(Object o) {
-        DELEGATE.onObjectNotifyAll(o);
+        LOCK_DELEGATE.onObjectNotifyAll(o);
     }
 
     public static void onConditionAwait(Condition o) {
-        DELEGATE.onConditionAwait(o);
+        LOCK_DELEGATE.onConditionAwait(o);
     }
 
     public static void onConditionAwaitDone(Condition o) {
-        DELEGATE.onConditionAwaitDone(o);
+        LOCK_DELEGATE.onConditionAwaitDone(o);
     }
 
     public static void onConditionSignal(Condition o) {
-        DELEGATE.onConditionSignal(o);
+        LOCK_DELEGATE.onConditionSignal(o);
     }
 
     public static void onConditionSignalDone(Condition o) {
-        DELEGATE.onConditionSignalDone(o);
+        LOCK_DELEGATE.onConditionSignalDone(o);
     }
 
     public static void onConditionSignalAll(Condition o) {
-        DELEGATE.onConditionSignalAll(o);
+        LOCK_DELEGATE.onConditionSignalAll(o);
     }
 
     public static void onAtomicOperation(Object o, MemoryOpType type) {
-        DELEGATE.onAtomicOperation(o, type);
+        LOCK_DELEGATE.onAtomicOperation(o, type);
     }
 
     public static void onAtomicOperationDone() {
-        DELEGATE.onAtomicOperationDone();
+        LOCK_DELEGATE.onAtomicOperationDone();
     }
 
     public static void onArrayLoad(Object o, int index) {
-        DELEGATE.onArrayLoad(o, index);
+        LOCK_DELEGATE.onArrayLoad(o, index);
     }
 
     public static void onArrayStore(Object o, int index) {
-        DELEGATE.onArrayStore(o, index);
+        LOCK_DELEGATE.onArrayStore(o, index);
     }
 
     public static void onFieldRead(Object o, String owner, String name, String descriptor) {
-        DELEGATE.onFieldRead(o, owner, name, descriptor);
+        LOCK_DELEGATE.onFieldRead(o, owner, name, descriptor);
     }
 
     public static void onFieldWrite(Object o, String owner, String name, String descriptor) {
-        DELEGATE.onFieldWrite(o, owner, name, descriptor);
+        LOCK_DELEGATE.onFieldWrite(o, owner, name, descriptor);
     }
 
     public static void onStaticFieldRead(String owner, String name, String descriptor) {
-        DELEGATE.onStaticFieldRead(owner, name, descriptor);
+        LOCK_DELEGATE.onStaticFieldRead(owner, name, descriptor);
     }
 
     public static void onStaticFieldWrite(String owner, String name, String descriptor) {
-        DELEGATE.onStaticFieldWrite(owner, name, descriptor);
+        LOCK_DELEGATE.onStaticFieldWrite(owner, name, descriptor);
     }
 
     public static void onMonitorEnter(Object o) {
-        DELEGATE.onMonitorEnter(o);
+        LOCK_DELEGATE.onMonitorEnter(o);
     }
 
     public static void onMonitorExit(Object o) {
-        DELEGATE.onMonitorExit(o);
+        LOCK_DELEGATE.onMonitorExit(o);
     }
 
     public static void onMonitorExitDone(Object o) {
-        DELEGATE.onMonitorExitDone(o);
+        LOCK_DELEGATE.onMonitorExitDone(o);
     }
 
     public static void onExit(int code) {
-        DELEGATE.onExit(code);
+        LOCK_DELEGATE.onExit(code);
     }
 
     public static void onYield() {
-        DELEGATE.onYield();
+        LOCK_DELEGATE.onYield();
     }
 
     public static void onSkipMethod(String signature) {
-        DELEGATE.onSkipMethod(signature);
+        LOCK_DELEGATE.onSkipMethod(signature);
     }
 
     public static void onSkipMethodDone(String signature) {
-        DELEGATE.onSkipMethodDone(signature);
+        LOCK_DELEGATE.onSkipMethodDone(signature);
     }
 
     public static void start() {
-        DELEGATE.start();
+        LOCK_DELEGATE.start();
     }
 
     public static void onMainExit() {
-        DELEGATE.onMainExit();
+        LOCK_DELEGATE.onMainExit();
     }
 
     public static void onThreadPark() {
-        DELEGATE.onThreadPark();
+        LOCK_DELEGATE.onThreadPark();
     }
 
     public static void onUnsafeThreadParkTimed(boolean isAbsolute, long time) {
-        DELEGATE.onUnsafeThreadParkTimed(isAbsolute, time);
+        LOCK_DELEGATE.onUnsafeThreadParkTimed(isAbsolute, time);
     }
 
     public static void onThreadParkDone() {
-        DELEGATE.onThreadParkDone();
+        LOCK_DELEGATE.onThreadParkDone();
     }
 
     public static void onThreadUnpark(Thread t) {
-        DELEGATE.onThreadUnpark(t);
+        LOCK_DELEGATE.onThreadUnpark(t);
     }
 
     public static void onThreadUnparkDone(Thread t) {
-        DELEGATE.onThreadUnparkDone(t);
+        LOCK_DELEGATE.onThreadUnparkDone(t);
     }
 
     public static void onThreadInterrupt(Thread t) {
-        DELEGATE.onThreadInterrupt(t);
+        LOCK_DELEGATE.onThreadInterrupt(t);
     }
 
     public static void onThreadInterruptDone(Thread t) {
-        DELEGATE.onThreadInterruptDone(t);
+        LOCK_DELEGATE.onThreadInterruptDone(t);
     }
 
     public static Thread.State onThreadGetState(Thread.State state, Thread t) {
-        return DELEGATE.onThreadGetState(t, state);
+        return LOCK_DELEGATE.onThreadGetState(t, state);
     }
 
     public static boolean onThreadGetAndClearInterrupt(boolean originValue, Thread t) {
-        return DELEGATE.onThreadClearInterrupt(originValue, t);
+        return LOCK_DELEGATE.onThreadClearInterrupt(originValue, t);
     }
 
     public static void onThreadClearInterrupt(Thread t) {
-        DELEGATE.onThreadClearInterrupt(false, t);
+        LOCK_DELEGATE.onThreadClearInterrupt(false, t);
     }
 
     public static void onReentrantReadWriteLockInit(ReentrantReadWriteLock lock) {
-        DELEGATE.onReentrantReadWriteLockInit(lock);
+        LOCK_DELEGATE.onReentrantReadWriteLockInit(lock);
     }
 
     public static void onSemaphoreInit(Semaphore sem) {
-        DELEGATE.onSemaphoreInit(sem);
+        LOCK_DELEGATE.onSemaphoreInit(sem);
     }
 
     public static void onSemaphoreAcquirePermits(Semaphore sem, int permits) {
-        DELEGATE.onSemaphoreAcquire(sem, permits);
+        LOCK_DELEGATE.onSemaphoreAcquire(sem, permits);
     }
 
     public static void onSemaphoreAcquire(Semaphore sem) {
-        DELEGATE.onSemaphoreAcquire(sem, 1);
+        LOCK_DELEGATE.onSemaphoreAcquire(sem, 1);
     }
 
     public static void onSemaphoreTryAcquire(Semaphore sem) {
-        DELEGATE.onSemaphoreTryAcquire(sem, 1);
+        LOCK_DELEGATE.onSemaphoreTryAcquire(sem, 1);
     }
 
     public static void onSemaphoreTryAcquirePermits(Semaphore sem, int permits) {
-        DELEGATE.onSemaphoreTryAcquire(sem, permits);
+        LOCK_DELEGATE.onSemaphoreTryAcquire(sem, permits);
     }
 
     public static long onSemaphoreTryAcquirePermitsTimeout(Semaphore sem, int permits, long timeout, TimeUnit unit) {
-        return DELEGATE.onSemaphoreTryAcquirePermitsTimeout(sem, permits, timeout, unit);
+        return LOCK_DELEGATE.onSemaphoreTryAcquirePermitsTimeout(sem, permits, timeout, unit);
     }
 
     public static long onSemaphoreTryAcquireTimeout(Semaphore sem, long timeout, TimeUnit unit) {
-        return DELEGATE.onSemaphoreTryAcquirePermitsTimeout(sem, 1, timeout, unit);
+        return LOCK_DELEGATE.onSemaphoreTryAcquirePermitsTimeout(sem, 1, timeout, unit);
     }
 
     public static void onSemaphoreAcquireUninterruptibly(Semaphore sem) {
-        DELEGATE.onSemaphoreAcquireUninterruptibly(sem, 1);
+        LOCK_DELEGATE.onSemaphoreAcquireUninterruptibly(sem, 1);
     }
 
     public static void onSemaphoreAcquireDone() {
-        DELEGATE.onSemaphoreAcquireDone();
+        LOCK_DELEGATE.onSemaphoreAcquireDone();
     }
 
     public static void onSemaphoreReleasePermits(Semaphore sem, int permits) {
-        DELEGATE.onSemaphoreRelease(sem, permits);
+        LOCK_DELEGATE.onSemaphoreRelease(sem, permits);
     }
 
     public static void onSemaphoreRelease(Semaphore sem) {
-        DELEGATE.onSemaphoreRelease(sem, 1);
+        LOCK_DELEGATE.onSemaphoreRelease(sem, 1);
     }
 
     public static void onSemaphoreReleaseDone() {
-        DELEGATE.onSemaphoreReleaseDone();
+        LOCK_DELEGATE.onSemaphoreReleaseDone();
     }
 
     public static void onSemaphoreDrainPermitsDone() {
-        DELEGATE.onSemaphoreDrainPermitsDone();
+        LOCK_DELEGATE.onSemaphoreDrainPermitsDone();
     }
 
     public static void onSemaphoreReducePermits(Semaphore sem, int permits) {
-        DELEGATE.onSemaphoreReducePermits(sem, permits);
+        LOCK_DELEGATE.onSemaphoreReducePermits(sem, permits);
     }
 
     public static void onSemaphoreReducePermitsDone() {
-        DELEGATE.onSemaphoreReducePermitsDone();
+        LOCK_DELEGATE.onSemaphoreReducePermitsDone();
     }
 
     public static void onSemaphoreDrainPermits(Semaphore sem) {
-        DELEGATE.onSemaphoreDrainPermits(sem);
+        LOCK_DELEGATE.onSemaphoreDrainPermits(sem);
     }
 
     public static void onLatchAwait(CountDownLatch latch) {
-        DELEGATE.onLatchAwait(latch);
+        LOCK_DELEGATE.onLatchAwait(latch);
     }
 
     public static boolean onLatchAwaitTimeout(CountDownLatch latch, long timeout, TimeUnit unit) throws InterruptedException {
-        return DELEGATE.onLatchAwaitTimeout(latch, timeout, unit);
+        return LOCK_DELEGATE.onLatchAwaitTimeout(latch, timeout, unit);
     }
 
     public static void onLatchAwaitDone(CountDownLatch latch) {
-        DELEGATE.onLatchAwaitDone(latch);
+        LOCK_DELEGATE.onLatchAwaitDone(latch);
     }
 
     public static void onLatchCountDown(CountDownLatch latch) {
-        DELEGATE.onLatchCountDown(latch);
+        LOCK_DELEGATE.onLatchCountDown(latch);
     }
 
     public static void onLatchCountDownDone(CountDownLatch latch) {
-        DELEGATE.onLatchCountDownDone(latch);
+        LOCK_DELEGATE.onLatchCountDownDone(latch);
     }
 
     public static void onReportError(Throwable e) {
-        DELEGATE.onReportError(e);
+        LOCK_DELEGATE.onReportError(e);
     }
 
     public static void onSemaphoreAcquirePermitsUninterruptibly(Semaphore sem, int permits) {
-        DELEGATE.onSemaphoreAcquireUninterruptibly(sem, permits);
+        LOCK_DELEGATE.onSemaphoreAcquireUninterruptibly(sem, permits);
     }
 
     public static void onLockLockInterruptibly(Lock l) {
-        DELEGATE.onLockLockInterruptibly(l);
+        LOCK_DELEGATE.onLockLockInterruptibly(l);
     }
 
     public static void onUnsafeReadVolatile(Object o, long offset) {
-        DELEGATE.onUnsafeReadVolatile(o, offset);
+        LOCK_DELEGATE.onUnsafeReadVolatile(o, offset);
     }
 
     public static void onUnsafeWriteVolatile(Object o, long offset) {
-        DELEGATE.onUnsafeWriteVolatile(o, offset);
+        LOCK_DELEGATE.onUnsafeWriteVolatile(o, offset);
     }
 
     public static void onThreadParkNanos(long nanos) {
-        DELEGATE.onThreadParkNanos(nanos);
+        LOCK_DELEGATE.onThreadParkNanos(nanos);
     }
 
     public static void onThreadParkUntil(long deadline) {
-        DELEGATE.onThreadParkUntil(deadline);
+        LOCK_DELEGATE.onThreadParkUntil(deadline);
     }
 
     public static void onThreadParkNanosWithBlocker(Object blocker, long nanos) {
-        DELEGATE.onThreadParkNanosWithBlocker(blocker, nanos);
+        LOCK_DELEGATE.onThreadParkNanosWithBlocker(blocker, nanos);
     }
 
     public static void onThreadParkUntilWithBlocker(Object blocker, long deadline) {
-        DELEGATE.onThreadParkUntilWithBlocker(blocker, deadline);
+        LOCK_DELEGATE.onThreadParkUntilWithBlocker(blocker, deadline);
     }
 
     public static long onConditionAwaitNanos(Condition object, long nanos) throws InterruptedException {
-        return DELEGATE.onConditionAwaitNanos(object, nanos);
+        return LOCK_DELEGATE.onConditionAwaitNanos(object, nanos);
     }
 
     public static boolean onConditionAwaitTime(Condition object, long time, TimeUnit unit) throws InterruptedException {
-        return DELEGATE.onConditionAwaitTime(object, time, unit);
+        return LOCK_DELEGATE.onConditionAwaitTime(object, time, unit);
     }
 
     public static boolean onConditionAwaitUntil(Condition object, Date deadline) throws InterruptedException {
-        return DELEGATE.onConditionAwaitUntil(object, deadline);
+        return LOCK_DELEGATE.onConditionAwaitUntil(object, deadline);
     }
 
     public static void onConditionAwaitUninterruptibly(Condition object) {
-        DELEGATE.onConditionAwaitUninterruptibly(object);
+        LOCK_DELEGATE.onConditionAwaitUninterruptibly(object);
     }
 
     public static void onConditionAwaitUninterruptiblyDone(Condition object) {
-        DELEGATE.onConditionAwaitUninterruptiblyDone(object);
+        LOCK_DELEGATE.onConditionAwaitUninterruptiblyDone(object);
     }
 
     public static boolean onThreadIsInterrupted(boolean result, Thread t) {
-        return DELEGATE.onThreadIsInterrupted(result, t);
+        return LOCK_DELEGATE.onThreadIsInterrupted(result, t);
     }
 
     public static boolean onLockHasQueuedThreads(boolean result, Lock l) {
-        return DELEGATE.onLockHasQueuedThreads(l, result);
+        return LOCK_DELEGATE.onLockHasQueuedThreads(l, result);
     }
 
     public static boolean onLockHasQueuedThread(boolean result, Lock l, Thread t) {
-        return DELEGATE.onLockHasQueuedThread(l, t, result);
+        return LOCK_DELEGATE.onLockHasQueuedThread(l, t, result);
     }
 
     public static long onNanoTime() {
-        return DELEGATE.onNanoTime();
+        return TIME_DELEGATE.onNanoTime();
     }
 
     public static long onCurrentTimeMillis() {
-        return DELEGATE.onCurrentTimeMillis();
+        return TIME_DELEGATE.onCurrentTimeMillis();
     }
 
     public static Instant onInstantNow() {
-        return DELEGATE.onInstantNow();
+        return TIME_DELEGATE.onInstantNow();
     }
 
     public static int onObjectHashCode(Object t) {
-        return DELEGATE.onObjectHashCode(t);
+        return LOCK_DELEGATE.onObjectHashCode(t);
     }
 
     public static ForkJoinPool onForkJoinPoolCommonPool(ForkJoinPool pool) {
-        return DELEGATE.onForkJoinPoolCommonPool(pool);
+        return LOCK_DELEGATE.onForkJoinPoolCommonPool(pool);
     }
 
     public static int onThreadLocalRandomGetProbe(int probe) {
-        return DELEGATE.onThreadLocalRandomGetProbe(probe);
+        return LOCK_DELEGATE.onThreadLocalRandomGetProbe(probe);
     }
 
     public static void onThreadSleepMillis(long millis) throws InterruptedException {
-        DELEGATE.onThreadSleepMillis(millis);
+        LOCK_DELEGATE.onThreadSleepMillis(millis);
     }
 
     public static void onThreadSleepDuration(Duration duration) throws InterruptedException {
-        DELEGATE.onThreadSleepDuration(duration);
+        LOCK_DELEGATE.onThreadSleepDuration(duration);
     }
 
     public static void onThreadSleepMillisNanos(long millis, int nanos) throws InterruptedException {
-        DELEGATE.onThreadSleepMillisNanos(millis, nanos);
+        LOCK_DELEGATE.onThreadSleepMillisNanos(millis, nanos);
     }
 
     public static void onStampedLockReadLock(StampedLock lock) {
-        DELEGATE.onStampedLockReadLock(lock);
+        LOCK_DELEGATE.onStampedLockReadLock(lock);
     }
 
     public static void onStampedLockSkipDone() {
-        DELEGATE.onStampedLockSkipDone();
+        LOCK_DELEGATE.onStampedLockSkipDone();
     }
 
     public static void onStampedLockWriteLock(StampedLock lock) {
-        DELEGATE.onStampedLockWriteLock(lock);
+        LOCK_DELEGATE.onStampedLockWriteLock(lock);
     }
 
     public static void onStampedLockReadLockInterruptibly(StampedLock lock) {
-        DELEGATE.onStampedLockReadLockInterruptibly(lock);
+        LOCK_DELEGATE.onStampedLockReadLockInterruptibly(lock);
     }
 
     public static void onStampedLockWriteLockInterruptibly(StampedLock lock) {
-        DELEGATE.onStampedLockWriteLockInterruptibly(lock);
+        LOCK_DELEGATE.onStampedLockWriteLockInterruptibly(lock);
     }
 
     public static void onStampedLockReadLockTryLock(StampedLock lock) {
-        DELEGATE.onStampedLockReadLockTryLock(lock);
+        LOCK_DELEGATE.onStampedLockReadLockTryLock(lock);
     }
 
     public static void onStampedLockWriteLockTryLock(StampedLock lock) {
-        DELEGATE.onStampedLockWriteLockTryLock(lock);
+        LOCK_DELEGATE.onStampedLockWriteLockTryLock(lock);
     }
 
     public static long onStampedLockReadLockTryLockTimeout(StampedLock lock, long timeout, TimeUnit unit) {
-        return DELEGATE.onStampedLockReadLockTryLockTimeout(lock, timeout, unit);
+        return LOCK_DELEGATE.onStampedLockReadLockTryLockTimeout(lock, timeout, unit);
     }
 
     public static long onStampedLockWriteLockTryLockTimeout(StampedLock lock, long timeout, TimeUnit unit) {
-        return DELEGATE.onStampedLockWriteLockTryLockTimeout(lock, timeout, unit);
+        return LOCK_DELEGATE.onStampedLockWriteLockTryLockTimeout(lock, timeout, unit);
     }
 
     public static void onStampedLockUnlockReadDone(StampedLock lock) {
-        DELEGATE.onStampedLockUnlockReadDone(lock);
+        LOCK_DELEGATE.onStampedLockUnlockReadDone(lock);
     }
 
     public static void onStampedLockUnlockWriteDone(StampedLock lock) {
-        DELEGATE.onStampedLockUnlockWriteDone(lock);
+        LOCK_DELEGATE.onStampedLockUnlockWriteDone(lock);
     }
 
     public static long onStampedLockTryConvertToReadLockDone(long newStamp, StampedLock lock, long stamp) {
-        return DELEGATE.onStampedLockTryConvertToReadLockDone(newStamp, lock, stamp);
+        return LOCK_DELEGATE.onStampedLockTryConvertToReadLockDone(newStamp, lock, stamp);
     }
 
     public static long onStampedLockTryConvertToWriteLockDone(long newStamp, StampedLock lock, long stamp) {
-        return DELEGATE.onStampedLockTryConvertToWriteLockDone(newStamp, lock, stamp);
+        return LOCK_DELEGATE.onStampedLockTryConvertToWriteLockDone(newStamp, lock, stamp);
     }
 
     public static long onStampedLockTryConvertToOptimisticReadLockDone(long newStamp, StampedLock lock, long stamp) {
-        return DELEGATE.onStampedLockTryConvertToOptimisticReadLockDone(newStamp, lock, stamp);
+        return LOCK_DELEGATE.onStampedLockTryConvertToOptimisticReadLockDone(newStamp, lock, stamp);
     }
 
     public static boolean onStampedLockTryUnlockWriteDone(boolean success, StampedLock lock) {
-        return DELEGATE.onStampedLockTryUnlockWriteDone(success, lock);
+        return LOCK_DELEGATE.onStampedLockTryUnlockWriteDone(success, lock);
     }
 
     public static boolean onStampedLockTryUnlockReadDone(boolean success, StampedLock lock) {
-        return DELEGATE.onStampedLockTryUnlockReadDone(success, lock);
+        return LOCK_DELEGATE.onStampedLockTryUnlockReadDone(success, lock);
     }
 
     public static void onStampedLockSkip() {
-        DELEGATE.onStampedLockSkip();
+        LOCK_DELEGATE.onStampedLockSkip();
     }
 
     public static void onRangerCondition(RangerCondition condition) {
-        DELEGATE.onRangerCondition(condition);
+        LOCK_DELEGATE.onRangerCondition(condition);
     }
 
 
     public static void onSelectorSelect(Selector selector) {
-        DELEGATE.onSelectorSelect(selector);
+        NETWORK_DELEGATE.onSelectorSelect(selector);
     }
 
     public static void onSelectorClose(Selector selector) {
-        DELEGATE.onSelectorClose(selector);
+        NETWORK_DELEGATE.onSelectorClose(selector);
     }
 
     public static void onSelectorCloseDone(Selector selector) {
-        DELEGATE.onSelectorCloseDone(selector);
+        NETWORK_DELEGATE.onSelectorCloseDone(selector);
     }
 
     public static void onServerSocketChannelBindDone(ServerSocketChannel channel) {
-        DELEGATE.onServerSocketChannelBindDone(channel);
+        NETWORK_DELEGATE.onServerSocketChannelBindDone(channel);
     }
 
     public static void onServerSocketChannelAccept(ServerSocketChannel channel) {
-        DELEGATE.onServerSocketChannelAccept(channel);
+        NETWORK_DELEGATE.onServerSocketChannelAccept(channel);
     }
 
     public static void onSocketChannelConnect(SocketChannel channel, SocketAddress remoteAddress) {
-        DELEGATE.onSocketChannelConnect(channel, remoteAddress);
+        NETWORK_DELEGATE.onSocketChannelConnect(channel, remoteAddress);
     }
 
     public static void onSelectorSetEventOpsDone(Selector selector, SelectionKey key) {
-        DELEGATE.onSelectorSetEventOpsDone(selector, key);
+        NETWORK_DELEGATE.onSelectorSetEventOpsDone(selector, key);
     }
 
     public static void onSelectorCancelKeyDone(Selector selector, SelectionKey key) {
-        DELEGATE.onSelectorCancelKeyDone(selector, key);
+        NETWORK_DELEGATE.onSelectorCancelKeyDone(selector, key);
     }
 
     public static void onSelectorSelectDone(Selector selector) {
-        DELEGATE.onSelectorSelectDone(selector);
+        NETWORK_DELEGATE.onSelectorSelectDone(selector);
     }
 
     public static void onServerSocketChannelAcceptDone(ServerSocketChannel channel, SocketChannel client) {
-        DELEGATE.onServerSocketChannelAcceptDone(channel, client);
+        NETWORK_DELEGATE.onServerSocketChannelAcceptDone(channel, client);
     }
 
     public static void onSocketChannelClose(AbstractInterruptibleChannel channel) {
-        DELEGATE.onSocketChannelClose(channel);
+        NETWORK_DELEGATE.onSocketChannelClose(channel);
     }
 
     public static void onSocketChannelCloseDone(AbstractInterruptibleChannel channel) {
-        DELEGATE.onSocketChannelCloseDone(channel);
+        NETWORK_DELEGATE.onSocketChannelCloseDone(channel);
     }
 
     public static void onSocketChannelConnectDone(SocketChannel channel, boolean success) {
-        DELEGATE.onSocketChannelConnectDone(channel, success);
+        NETWORK_DELEGATE.onSocketChannelConnectDone(channel, success);
     }
 
     public static void onSocketChannelFinishConnectDone(SocketChannel channel, boolean success) {
-        DELEGATE.onSocketChannelFinishConnectDone(channel, success);
+        NETWORK_DELEGATE.onSocketChannelFinishConnectDone(channel, success);
     }
 
     public static void onSocketChannelFinishConnect(SocketChannel channel) {
-        DELEGATE.onSocketChannelFinishConnect(channel);
+        NETWORK_DELEGATE.onSocketChannelFinishConnect(channel);
     }
 
 
     public static void onSocketChannelRead(SocketChannel channel) {
-        DELEGATE.onSocketChannelRead(channel);
+        NETWORK_DELEGATE.onSocketChannelRead(channel);
     }
 
     public static void onSocketChannelReadDoneInt(int bytesRead, SocketChannel channel) {
-        DELEGATE.onSocketChannelReadDone(channel, bytesRead);
+        NETWORK_DELEGATE.onSocketChannelReadDone(channel, bytesRead);
     }
 
     public static void onSocketChannelReadDone(long bytesRead, SocketChannel channel) {
-        DELEGATE.onSocketChannelReadDone(channel, bytesRead);
+        NETWORK_DELEGATE.onSocketChannelReadDone(channel, bytesRead);
     }
 
     public static void onSocketChannelWriteDoneInt(int bytesWritten, SocketChannel channel) {
-        DELEGATE.onSocketChannelWriteDone(channel, bytesWritten);
+        NETWORK_DELEGATE.onSocketChannelWriteDone(channel, bytesWritten);
     }
 
     public static void onSocketChannelWriteDone(long bytesWritten, SocketChannel channel) {
-        DELEGATE.onSocketChannelWriteDone(channel, bytesWritten);
+        NETWORK_DELEGATE.onSocketChannelWriteDone(channel, bytesWritten);
     }
 }

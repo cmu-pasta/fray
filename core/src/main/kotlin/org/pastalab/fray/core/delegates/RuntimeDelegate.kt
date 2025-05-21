@@ -1,14 +1,7 @@
-package org.pastalab.fray.core
+package org.pastalab.fray.core.delegates
 
-import java.net.SocketAddress
-import java.nio.channels.SelectionKey
-import java.nio.channels.Selector
-import java.nio.channels.ServerSocketChannel
-import java.nio.channels.SocketChannel
-import java.nio.channels.spi.AbstractInterruptibleChannel
 import java.time.Duration
-import java.time.Instant
-import java.util.*
+import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Semaphore
@@ -18,159 +11,136 @@ import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.StampedLock
-import org.pastalab.fray.core.utils.HelperThread
-import org.pastalab.fray.core.utils.Utils.verifyOrReport
+import org.pastalab.fray.core.RunContext
+import org.pastalab.fray.core.utils.Utils
+import org.pastalab.fray.runtime.Delegate
+import org.pastalab.fray.runtime.MemoryOpType
 import org.pastalab.fray.runtime.RangerCondition
 
-class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Delegate() {
-
-  var entered = ThreadLocal.withInitial { false }
-  var skipFunctionEntered = ThreadLocal.withInitial { 0 }
-  val stackTrace = ThreadLocal.withInitial { mutableListOf<String>() }
-
-  private fun checkEntered(): Boolean {
-
-    if (entered.get()) {
-      return true
-    }
-    entered.set(true)
-    if (skipFunctionEntered.get() > 0) {
-      entered.set(false)
-      return true
-    }
-    if (Thread.currentThread() is HelperThread) {
-      entered.set(false)
-      return true
-    }
-    // We do not process threads created outside of application.
-    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
-      entered.set(false)
-      return true
-    }
-    return false
-  }
+class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchronizer) :
+    Delegate() {
 
   override fun onMainExit() {
     context.mainCleanup()
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.mainExit()
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onThreadCreateDone(t: Thread) {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.threadCreateDone(t)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onThreadStart(t: Thread) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("thread.start")
       return
     }
     context.threadStart(t)
     onSkipMethod("thread.start")
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onThreadStartDone(t: Thread) {
     onSkipMethodDone("thread.start")
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.threadStartDone(t)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onThreadRun() {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.threadRun()
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onThreadEnd() {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.threadCompleted(Thread.currentThread())
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onThreadGetState(t: Thread, state: Thread.State): Thread.State {
-    if (checkEntered()) return state
+    if (synchronizer.checkEntered()) return state
     val result = context.threadGetState(t, state)
-    entered.set(false)
+    synchronizer.entered.set(false)
     return result
   }
 
   override fun onObjectWait(o: Any, timeout: Long) {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     try {
       context.objectWait(o, timeout != 0L)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onObjectWaitDone(o: Any) {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     try {
       context.objectWaitDone(o)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onObjectNotify(o: Any) {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.objectNotify(o)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onObjectNotifyAll(o: Any) {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.objectNotifyAll(o)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onLockLockInterruptibly(l: Lock) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Lock.lock")
       return
     }
     try {
       context.lockLock(l, true)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
       onSkipMethod("Lock.lock")
     }
   }
 
   override fun onLockHasQueuedThreads(l: Lock, result: Boolean): Boolean {
-    if (checkEntered()) {
-      entered.set(false)
+    if (synchronizer.checkEntered()) {
+      synchronizer.entered.set(false)
       return result
     }
     val result = context.lockHasQueuedThreads(l)
-    entered.set(false)
+    synchronizer.entered.set(false)
     return result
   }
 
   override fun onLockHasQueuedThread(l: Lock, t: Thread, result: Boolean): Boolean {
-    if (checkEntered()) {
-      entered.set(false)
+    if (synchronizer.checkEntered()) {
+      synchronizer.entered.set(false)
       return result
     }
     val result = context.lockHasQueuedThread(l, t)
-    entered.set(false)
+    synchronizer.entered.set(false)
     return result
   }
 
   override fun onLockTryLock(l: Lock) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Lock.tryLock")
       return
     }
     try {
       context.lockTryLock(l, false, false)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
       onSkipMethod("Lock.tryLock")
     }
   }
@@ -180,14 +150,14 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onLockTryLockInterruptibly(l: Lock, timeout: Long): Long {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Lock.tryLock")
       return timeout
     }
     try {
       context.lockTryLock(l, true, true)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
       onSkipMethod("Lock.tryLock")
     }
     return 0
@@ -198,7 +168,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onLockLock(l: Lock) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Lock.lock")
       return
     }
@@ -206,7 +176,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       context.lockLock(l, false)
     } finally {
       onSkipMethod("Lock.lock")
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
@@ -214,15 +184,15 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     onSkipMethodDone("Lock.lock")
   }
 
-  override fun onAtomicOperation(o: Any, type: org.pastalab.fray.runtime.MemoryOpType) {
-    if (checkEntered()) {
+  override fun onAtomicOperation(o: Any, type: MemoryOpType) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("AtomicOperation")
       return
     }
     try {
       context.atomicOperation(o, type)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
       onSkipMethod("AtomicOperation")
     }
   }
@@ -232,50 +202,50 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onLockUnlock(l: Lock) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Lock.unlock")
       return
     }
     try {
       context.lockUnlock(l)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
       onSkipMethod("Lock.unlock")
     }
   }
 
   override fun onLockUnlockDone(l: Lock) {
     onSkipMethodDone("Lock.unlock")
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.lockUnlockDone(l)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onMonitorEnter(o: Any) {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     try {
       context.monitorEnter(o, false)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onMonitorExit(o: Any) {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.monitorExit(o)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onMonitorExitDone(o: Any) {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.lockUnlockDone(o)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onLockNewCondition(c: Condition, l: Lock) {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.lockNewCondition(c, l)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onConditionAwait(o: Condition) {
@@ -283,14 +253,14 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   fun onConditionAwaitImpl(o: Condition, canInterrupt: Boolean, timed: Boolean): Boolean {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Condition.await")
       return true
     }
     try {
       context.conditionAwait(o, canInterrupt, timed)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
       onSkipMethod("Condition.await")
     }
     return false
@@ -300,11 +270,11 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     if (!onSkipMethodDone("Condition.await")) {
       return true
     }
-    if (checkEntered()) return true
+    if (synchronizer.checkEntered()) return true
     try {
       return context.conditionAwaitDone(o, canInterrupt)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
@@ -321,12 +291,12 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onConditionSignal(o: Condition) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Condition.signal")
       return
     }
     context.conditionSignal(o)
-    entered.set(false)
+    synchronizer.entered.set(false)
     onSkipMethod("Condition.signal")
   }
 
@@ -335,135 +305,107 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onConditionSignalAll(o: Condition) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Condition.signal")
       return
     }
     context.conditionSignalAll(o)
-    entered.set(false)
+    synchronizer.entered.set(false)
     onSkipMethod("Condition.signal")
   }
 
   override fun onUnsafeReadVolatile(o: Any?, offset: Long) {
     if (o == null) return
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     try {
-      context.unsafeOperation(o, offset, org.pastalab.fray.runtime.MemoryOpType.MEMORY_READ)
+      context.unsafeOperation(o, offset, MemoryOpType.MEMORY_READ)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onUnsafeWriteVolatile(o: Any?, offset: Long) {
     if (o == null) return
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     try {
-      context.unsafeOperation(o, offset, org.pastalab.fray.runtime.MemoryOpType.MEMORY_WRITE)
+      context.unsafeOperation(o, offset, MemoryOpType.MEMORY_WRITE)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onFieldRead(o: Any?, owner: String, name: String, descriptor: String) {
     if (o == null) return
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     try {
-      context.fieldOperation(o, owner, name, org.pastalab.fray.runtime.MemoryOpType.MEMORY_READ)
+      context.fieldOperation(o, owner, name, MemoryOpType.MEMORY_READ)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onFieldWrite(o: Any?, owner: String, name: String, descriptor: String) {
     if (o == null) return
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     try {
-      context.fieldOperation(o, owner, name, org.pastalab.fray.runtime.MemoryOpType.MEMORY_WRITE)
+      context.fieldOperation(o, owner, name, MemoryOpType.MEMORY_WRITE)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onStaticFieldRead(owner: String, name: String, descriptor: String) {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     try {
-      context.fieldOperation(null, owner, name, org.pastalab.fray.runtime.MemoryOpType.MEMORY_READ)
+      context.fieldOperation(null, owner, name, MemoryOpType.MEMORY_READ)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onStaticFieldWrite(owner: String, name: String, descriptor: String) {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     try {
-      context.fieldOperation(null, owner, name, org.pastalab.fray.runtime.MemoryOpType.MEMORY_WRITE)
+      context.fieldOperation(null, owner, name, MemoryOpType.MEMORY_WRITE)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onExit(status: Int) {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     if (status != 0) {
       context.reportError(RuntimeException("Exit with status $status"))
     }
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onYield() {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     try {
       context.yield()
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
-  val onSkipRecursion = ThreadLocal.withInitial { false }
-
   override fun onSkipMethod(signature: String) {
-    if (onSkipRecursion.get()) {
-      return
-    }
-    onSkipRecursion.set(true)
-    stackTrace.get().add(signature)
-    skipFunctionEntered.set(1 + skipFunctionEntered.get())
-
-    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
-      stackTrace.get().removeLast()
-      skipFunctionEntered.set(skipFunctionEntered.get() - 1)
-    }
-    onSkipRecursion.set(false)
+    synchronizer.onSkipMethod(signature)
   }
 
   override fun onSkipMethodDone(signature: String): Boolean {
-    if (onSkipRecursion.get()) {
-      return false
-    }
-    onSkipRecursion.set(true)
-    try {
-      if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
-        return false
-      }
-      verifyOrReport(!stackTrace.get().isEmpty())
-      val last = stackTrace.get().removeLast()
-      verifyOrReport(last == signature)
-      skipFunctionEntered.set(skipFunctionEntered.get() - 1)
-      return true
-    } finally {
-      onSkipRecursion.set(false)
-    }
+    return synchronizer.onSkipMethodDone(signature)
   }
 
   fun onThreadParkImpl(): Boolean {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Thread.park")
       return true
     }
     try {
       context.threadPark()
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
       onSkipMethod("Thread.park")
     }
     return false
@@ -485,11 +427,11 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
     if (!onSkipMethodDone("Thread.park")) {
       return
     }
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     try {
       context.threadParkDone(timed)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
@@ -499,22 +441,22 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
 
   override fun onThreadUnpark(t: Thread?) {
     if (t == null) return
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       return
     }
     context.threadUnpark(t)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onThreadUnparkDone(t: Thread?) {
     if (t == null) return
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.threadUnparkDone(t)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onThreadInterrupt(t: Thread) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Thread.interrupt")
       return
     }
@@ -522,21 +464,21 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       context.threadInterrupt(t)
     } finally {
       onSkipMethod("Thread.interrupt")
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onThreadInterruptDone(t: Thread) {
     onSkipMethodDone("Thread.interrupt")
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.threadInterruptDone(t)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onThreadClearInterrupt(origin: Boolean, t: Thread): Boolean {
-    if (checkEntered()) return origin
+    if (synchronizer.checkEntered()) return origin
     val o = context.threadClearInterrupt(t)
-    entered.set(false)
+    synchronizer.entered.set(false)
     return o
   }
 
@@ -545,13 +487,13 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onSemaphoreInit(sem: Semaphore) {
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.semaphoreInit(sem)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onSemaphoreTryAcquire(sem: Semaphore, permits: Int) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Semaphore.acquire")
       return
     }
@@ -559,7 +501,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       context.semaphoreAcquire(sem, permits, false, true, false)
     } finally {
       onSkipMethod("Semaphore.acquire")
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
@@ -569,7 +511,7 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       timeout: Long,
       unit: TimeUnit
   ): Long {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Semaphore.acquire")
       return timeout
     }
@@ -577,13 +519,13 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       context.semaphoreAcquire(sem, permits, true, true, true)
     } finally {
       onSkipMethod("Semaphore.acquire")
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
     return 0
   }
 
   override fun onSemaphoreAcquire(sem: Semaphore, permits: Int) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Semaphore.acquire")
       return
     }
@@ -591,19 +533,19 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       context.semaphoreAcquire(sem, permits, true, true, false)
     } finally {
       onSkipMethod("Semaphore.acquire")
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onSemaphoreAcquireUninterruptibly(sem: Semaphore, permits: Int) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Semaphore.acquire")
       return
     }
     try {
       context.semaphoreAcquire(sem, permits, true, false, false)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
       onSkipMethod("Semaphore.acquire")
     }
   }
@@ -613,12 +555,12 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onSemaphoreRelease(sem: Semaphore, permits: Int) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Semaphore.release")
       return
     }
     context.semaphoreRelease(sem, permits)
-    entered.set(false)
+    synchronizer.entered.set(false)
     onSkipMethod("Semaphore.release")
   }
 
@@ -627,12 +569,12 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onSemaphoreDrainPermits(sem: Semaphore) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Semaphore.drainPermits")
       return
     }
     context.semaphoreDrainPermits(sem)
-    entered.set(false)
+    synchronizer.entered.set(false)
     onSkipMethod("Semaphore.drainPermits")
   }
 
@@ -641,12 +583,12 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onSemaphoreReducePermits(sem: Semaphore, permits: Int) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Semaphore.reducePermits")
       return
     }
     context.semaphoreReducePermits(sem, permits)
-    entered.set(false)
+    synchronizer.entered.set(false)
     onSkipMethod("Semaphore.reducePermits")
   }
 
@@ -655,14 +597,14 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   fun onLatchAwaitImpl(latch: CountDownLatch, timed: Boolean): Boolean {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Latch.await")
       return true
     }
     try {
       context.latchAwait(latch, timed)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
       onSkipMethod("Latch.await")
     }
     return false
@@ -674,11 +616,11 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
 
   fun onLatchAwaitDoneImpl(latch: CountDownLatch): Boolean {
     onSkipMethodDone("Latch.await")
-    if (checkEntered()) return true
+    if (synchronizer.checkEntered()) return true
     try {
       return context.latchAwaitDone(latch)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
@@ -699,56 +641,56 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onLatchCountDown(latch: CountDownLatch) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("Latch.countDown")
       return
     }
     context.latchCountDown(latch)
-    entered.set(false)
+    synchronizer.entered.set(false)
     onSkipMethod("Latch.countDown")
   }
 
   override fun onLatchCountDownDone(latch: CountDownLatch) {
     onSkipMethodDone("Latch.countDown")
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     context.latchCountDownDone(latch)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onReportError(e: Throwable) {
-    val originEntered = entered.get()
-    entered.set(true)
+    val originEntered = synchronizer.entered.get()
+    synchronizer.entered.set(true)
     context.reportError(e)
-    entered.set(originEntered)
+    synchronizer.entered.set(originEntered)
   }
 
   override fun onArrayLoad(o: Any?, index: Int) {
     if (o == null) return
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     try {
-      context.arrayOperation(o, index, org.pastalab.fray.runtime.MemoryOpType.MEMORY_READ)
+      context.arrayOperation(o, index, MemoryOpType.MEMORY_READ)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onArrayStore(o: Any?, index: Int) {
     if (o == null) return
-    if (checkEntered()) return
+    if (synchronizer.checkEntered()) return
     try {
-      context.arrayOperation(o, index, org.pastalab.fray.runtime.MemoryOpType.MEMORY_WRITE)
+      context.arrayOperation(o, index, MemoryOpType.MEMORY_WRITE)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun start() {
     // For the first thread, it is not registered.
-    // Therefor we cannot call `checkEntered` here.
+    // Therefor we cannot call `synchronizer.checkEntered` here.
     try {
-      entered.set(true)
+      synchronizer.entered.set(true)
       context.start()
-      entered.set(false)
+      synchronizer.entered.set(false)
     } catch (e: Throwable) {
       e.printStackTrace()
     }
@@ -865,107 +807,86 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onThreadIsInterrupted(result: Boolean, t: Thread): Boolean {
-    if (checkEntered()) return result
+    if (synchronizer.checkEntered()) return result
     val isInterrupted = context.threadIsInterrupted(t, result)
-    entered.set(false)
+    synchronizer.entered.set(false)
     return isInterrupted
   }
 
-  override fun onNanoTime(): Long {
-    if (checkEntered()) return System.nanoTime()
-    val value = context.nanoTime()
-    entered.set(false)
-    return value
-  }
-
-  override fun onCurrentTimeMillis(): Long {
-    if (checkEntered()) return System.currentTimeMillis()
-    val value = context.currentTimeMillis()
-    entered.set(false)
-    return value
-  }
-
-  override fun onInstantNow(): Instant {
-    if (checkEntered()) return Instant.now()
-    val instant = context.instantNow()
-    entered.set(false)
-    return instant
-  }
-
   override fun onObjectHashCode(t: Any): Int {
-    if (checkEntered()) return t.hashCode()
+    if (synchronizer.checkEntered()) return t.hashCode()
     val hashCode = context.hashCode(t)
-    entered.set(false)
+    synchronizer.entered.set(false)
     return hashCode
   }
 
   override fun onForkJoinPoolCommonPool(pool: ForkJoinPool): ForkJoinPool {
-    if (checkEntered()) return pool
+    if (synchronizer.checkEntered()) return pool
     val pool = context.getForkJoinPoolCommon()
-    entered.set(false)
+    synchronizer.entered.set(false)
     return pool
   }
 
   override fun onThreadLocalRandomGetProbe(probe: Int): Int {
-    if (checkEntered()) return probe
+    if (synchronizer.checkEntered()) return probe
     val probe = context.getThreadLocalRandomProbe()
-    entered.set(false)
+    synchronizer.entered.set(false)
     return probe
   }
 
   override fun onThreadSleepDuration(duration: Duration) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       Thread.sleep(duration.toMillis())
       return
     }
     try {
       context.threadSleepOperation()
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onThreadSleepMillis(millis: Long) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       Thread.sleep(millis)
       return
     }
     try {
       context.threadSleepOperation()
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onThreadSleepMillisNanos(millis: Long, nanos: Int) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       Thread.sleep(millis, nanos)
       return
     }
     try {
       context.threadSleepOperation()
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
   }
 
   override fun onStampedLockReadLock(lock: StampedLock) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("StampedLock")
       return
     }
     context.stampedLockLock(lock, true, false, false, true)
-    entered.set(false)
+    synchronizer.entered.set(false)
     onSkipMethod("StampedLock")
   }
 
   override fun onStampedLockWriteLock(lock: StampedLock) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("StampedLock")
       return
     }
     context.stampedLockLock(lock, true, false, false, false)
-    entered.set(false)
+    synchronizer.entered.set(false)
     onSkipMethod("StampedLock")
   }
 
@@ -978,70 +899,70 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
   }
 
   override fun onStampedLockReadLockInterruptibly(lock: StampedLock) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("StampedLock")
       return
     }
     try {
       context.stampedLockLock(lock, true, true, false, true)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
       onSkipMethod("StampedLock")
     }
   }
 
   override fun onStampedLockWriteLockInterruptibly(lock: StampedLock) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("StampedLock")
       return
     }
     try {
       context.stampedLockLock(lock, true, true, false, false)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
       onSkipMethod("StampedLock")
     }
   }
 
   override fun onStampedLockUnlockReadDone(lock: StampedLock) {
     onSkipMethodDone("StampedLock")
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       return
     }
     context.stampedLockUnlock(lock, true)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onStampedLockUnlockWriteDone(lock: StampedLock) {
     onSkipMethodDone("StampedLock")
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       return
     }
     context.stampedLockUnlock(lock, false)
-    entered.set(false)
+    synchronizer.entered.set(false)
   }
 
   override fun onStampedLockTryUnlockWriteDone(success: Boolean, lock: StampedLock): Boolean {
     onSkipMethodDone("StampedLock")
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       return success
     }
     if (success) {
       context.stampedLockUnlock(lock, false)
     }
-    entered.set(false)
+    synchronizer.entered.set(false)
     return success
   }
 
   override fun onStampedLockTryUnlockReadDone(success: Boolean, lock: StampedLock): Boolean {
     onSkipMethodDone("StampedLock")
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       return success
     }
     if (success) {
       context.stampedLockUnlock(lock, true)
     }
-    entered.set(false)
+    synchronizer.entered.set(false)
     return success
   }
 
@@ -1051,11 +972,11 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       stamp: Long,
   ): Long {
     onSkipMethodDone("StampedLock")
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       return newStamp
     }
     context.stampedLockConvertToWriteLock(lock, stamp, newStamp)
-    entered.set(false)
+    synchronizer.entered.set(false)
     return newStamp
   }
 
@@ -1065,11 +986,11 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       stamp: Long,
   ): Long {
     onSkipMethodDone("StampedLock")
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       return newStamp
     }
     context.stampedLockConvertToReadLock(lock, stamp, newStamp)
-    entered.set(false)
+    synchronizer.entered.set(false)
     return newStamp
   }
 
@@ -1079,31 +1000,31 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       stamp: Long,
   ): Long {
     onSkipMethodDone("StampedLock")
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       return newStamp
     }
     context.stampedLockConvertToOptimisticReadLock(lock, stamp, newStamp)
-    entered.set(false)
+    synchronizer.entered.set(false)
     return newStamp
   }
 
   override fun onStampedLockReadLockTryLock(lock: StampedLock) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("StampedLock")
       return
     }
     context.stampedLockLock(lock, false, false, false, true)
-    entered.set(false)
+    synchronizer.entered.set(false)
     onSkipMethod("StampedLock")
   }
 
   override fun onStampedLockWriteLockTryLock(lock: StampedLock) {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("StampedLock")
       return
     }
     context.stampedLockLock(lock, false, false, false, false)
-    entered.set(false)
+    synchronizer.entered.set(false)
     onSkipMethod("StampedLock")
   }
 
@@ -1112,14 +1033,14 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       timeout: Long,
       unit: TimeUnit
   ): Long {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("StampedLock")
       return timeout
     }
     try {
       context.stampedLockLock(lock, true, true, true, true)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
       onSkipMethod("StampedLock")
     }
     return 0
@@ -1130,194 +1051,28 @@ class RuntimeDelegate(val context: RunContext) : org.pastalab.fray.runtime.Deleg
       timeout: Long,
       unit: TimeUnit
   ): Long {
-    if (checkEntered()) {
+    if (synchronizer.checkEntered()) {
       onSkipMethod("StampedLock")
       return timeout
     }
     try {
       context.stampedLockLock(lock, true, true, true, false)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
       onSkipMethod("StampedLock")
     }
     return 0
   }
 
   override fun onRangerCondition(condition: RangerCondition) {
-    if (checkEntered()) {
-      verifyOrReport(false, "This method should never be called recursively")
+    if (synchronizer.checkEntered()) {
+      Utils.verifyOrReport(false, "This method should never be called recursively")
       return
     }
     try {
       context.rangerCondition(condition)
     } finally {
-      entered.set(false)
+      synchronizer.entered.set(false)
     }
-  }
-
-  override fun onSelectorCancelKeyDone(selector: Selector, key: SelectionKey) {
-    if (checkEntered()) {
-      return
-    }
-    try {
-      context.selectorCancelKey(selector, key)
-    } finally {
-      entered.set(false)
-    }
-  }
-
-  override fun onSelectorSelect(selector: Selector) {
-    if (checkEntered()) {
-      onSkipMethod("Selector.select")
-      return
-    }
-    try {
-      context.selectorSelect(selector)
-    } finally {
-      entered.set(false)
-      onSkipMethod("Selector.select")
-    }
-  }
-
-  override fun onSelectorSelectDone(selector: Selector?) {
-    onSkipMethodDone("Selector.select")
-  }
-
-  override fun onSelectorClose(selector: Selector?) {
-    onSkipMethod("Selector.close")
-  }
-
-  override fun onSelectorCloseDone(selector: Selector) {
-    onSkipMethodDone("Selector.close")
-    if (checkEntered()) return
-    context.selectorClose(selector)
-    entered.set(false)
-  }
-
-  override fun onSelectorSetEventOpsDone(selector: Selector, key: SelectionKey) {
-    if (checkEntered()) {
-      return
-    }
-    try {
-      context.selectorSetEventOps(selector, key)
-    } finally {
-      entered.set(false)
-    }
-  }
-
-  override fun onServerSocketChannelAccept(channel: ServerSocketChannel) {
-    if (checkEntered()) {
-      onSkipMethod("ServerSocketChannel.accept")
-      return
-    }
-    try {
-      context.serverSocketChannelAccept(channel)
-    } finally {
-      entered.set(false)
-      onSkipMethod("ServerSocketChannel.accept")
-    }
-  }
-
-  override fun onServerSocketChannelAcceptDone(
-      channel: ServerSocketChannel,
-      client: SocketChannel?
-  ) {
-    onSkipMethodDone("ServerSocketChannel.accept")
-    if (checkEntered()) return
-    try {
-      context.serverSocketChannelAcceptDone(channel, client)
-    } finally {
-      entered.set(false)
-    }
-  }
-
-  override fun onSocketChannelRead(channel: SocketChannel) {
-    if (checkEntered()) {
-      onSkipMethod("SocketChannel.read")
-      return
-    }
-    try {
-      context.socketChannelRead(channel)
-    } finally {
-      entered.set(false)
-      onSkipMethod("SocketChannel.read")
-    }
-  }
-
-  override fun onSocketChannelReadDone(channel: SocketChannel, bytesRead: Long) {
-    onSkipMethodDone("SocketChannel.read")
-    if (checkEntered()) return
-    try {
-      context.socketChannelReadDone(channel, bytesRead)
-    } finally {
-      entered.set(false)
-    }
-  }
-
-  override fun onSocketChannelWriteDone(channel: SocketChannel, bytesWritten: Long) {
-    if (checkEntered()) return
-    try {
-      context.socketChannelWriteDone(channel, bytesWritten)
-    } finally {
-      entered.set(false)
-    }
-  }
-
-  override fun onSocketChannelClose(channel: AbstractInterruptibleChannel?) {
-    onSkipMethod("SocketChannel.close")
-  }
-
-  override fun onSocketChannelCloseDone(channel: AbstractInterruptibleChannel) {
-    onSkipMethodDone("SocketChannel.close")
-    if (checkEntered()) return
-    if (channel is ServerSocketChannel) {
-      context.serverSocketChannelClose(channel)
-    } else if (channel is SocketChannel) {
-      context.socketChannelClose(channel)
-    }
-    entered.set(false)
-  }
-
-  override fun onSocketChannelConnect(channel: SocketChannel, remoteAddress: SocketAddress) {
-    if (checkEntered()) {
-      onSkipMethod("SocketChannel.connect")
-      return
-    }
-    try {
-      context.socketChannelConnect(channel, remoteAddress)
-    } finally {
-      entered.set(false)
-      onSkipMethod("SocketChannel.connect")
-    }
-  }
-
-  override fun onSocketChannelFinishConnect(channel: SocketChannel?) {
-    onSkipMethod("SocketChannel.finishConnect")
-  }
-
-  override fun onSocketChannelFinishConnectDone(channel: SocketChannel, success: Boolean) {
-    onSkipMethodDone("SocketChannel.finishConnect")
-    if (checkEntered()) return
-    try {
-      context.socketChannelConnectDone(channel, success)
-    } finally {
-      entered.set(false)
-    }
-  }
-
-  override fun onSocketChannelConnectDone(channel: SocketChannel, success: Boolean) {
-    onSkipMethodDone("SocketChannel.connect")
-    if (checkEntered()) return
-    try {
-      context.socketChannelConnectDone(channel, success)
-    } finally {
-      entered.set(false)
-    }
-  }
-
-  override fun onServerSocketChannelBindDone(channel: ServerSocketChannel) {
-    if (checkEntered()) return
-    context.serverSocketChannelBindDone(channel)
-    entered.set(false)
   }
 }

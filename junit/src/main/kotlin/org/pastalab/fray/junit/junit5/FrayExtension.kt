@@ -5,9 +5,13 @@ import org.junit.jupiter.api.extension.*
 import org.junit.jupiter.api.extension.ConditionEvaluationResult.disabled
 import org.junit.jupiter.api.extension.ConditionEvaluationResult.enabled
 import org.pastalab.fray.core.RunContext
-import org.pastalab.fray.core.RuntimeDelegate
+import org.pastalab.fray.core.controllers.ProactiveNetworkController
+import org.pastalab.fray.core.controllers.TimeController
+import org.pastalab.fray.core.delegates.DelegateSynchronizer
+import org.pastalab.fray.core.delegates.ProactiveNetworkDelegate
+import org.pastalab.fray.core.delegates.RuntimeDelegate
+import org.pastalab.fray.core.delegates.TimeDelegate
 import org.pastalab.fray.core.randomness.ControlledRandom
-import org.pastalab.fray.runtime.Delegate
 import org.pastalab.fray.runtime.Runtime
 
 class FrayExtension(
@@ -35,7 +39,11 @@ class FrayExtension(
       frayContext.config.scheduler = frayContext.config.scheduler.nextIteration()
       frayContext.config.randomnessProvider = ControlledRandom()
     }
-    Runtime.DELEGATE = RuntimeDelegate(frayContext)
+    val synchronizer = DelegateSynchronizer(frayContext)
+    Runtime.NETWORK_DELEGATE =
+        ProactiveNetworkDelegate(ProactiveNetworkController(frayContext), synchronizer)
+    Runtime.TIME_DELEGATE = TimeDelegate(TimeController(frayContext), synchronizer)
+    Runtime.LOCK_DELEGATE = RuntimeDelegate(frayContext, synchronizer)
     Runtime.start()
     val result = invocation.proceed()
     Runtime.onSkipMethod("JUnit internal")
@@ -50,7 +58,7 @@ class FrayExtension(
     try {
       Runtime.onMainExit()
     } finally {
-      Runtime.DELEGATE = Delegate()
+      Runtime.resetAllDelegate()
     }
     if (frayContext.bugFound != null) {
       throw AssertionError(frayContext.bugFound!!)

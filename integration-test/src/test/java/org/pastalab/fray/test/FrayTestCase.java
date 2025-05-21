@@ -13,12 +13,14 @@ import org.pastalab.fray.core.command.MethodExecutor;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
+import org.pastalab.fray.test.fail.cdl.CountDownLatchDeadlockUnblockMultiThread;
 import org.pastalab.fray.test.fail.network.AsyncClientNoConnectWriteDeadlock;
 import org.pastalab.fray.test.fail.network.AsyncClientSelectAfterCloseDeadlock;
 import org.pastalab.fray.test.fail.network.AsyncClientSelectNoConnectDeadlock;
 import org.pastalab.fray.test.fail.network.SyncClientExceptionWithoutServer;
 import org.pastalab.fray.test.fail.network.SyncServerAcceptDeadlock;
 import org.pastalab.fray.test.fail.stampedlock.StampedLockConversionDeadlock;
+import org.pastalab.fray.test.fail.wait.RescheduleBeforeWaitReacquireMonitorLock;
 import org.pastalab.fray.test.success.network.*;
 
 import java.util.*;
@@ -72,7 +74,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                StampedLockConversionDeadlock.main(new String[]{});
+                                CountDownLatchDeadlockUnblockMultiThread.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
