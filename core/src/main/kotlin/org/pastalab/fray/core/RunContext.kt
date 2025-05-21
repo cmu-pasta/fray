@@ -3,13 +3,6 @@ package org.pastalab.fray.core
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.Thread.UncaughtExceptionHandler
-import java.net.InetSocketAddress
-import java.net.SocketAddress
-import java.nio.channels.SelectionKey
-import java.nio.channels.Selector
-import java.nio.channels.ServerSocketChannel
-import java.nio.channels.SocketChannel
-import java.time.Instant
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Semaphore
@@ -38,6 +31,7 @@ import org.pastalab.fray.core.concurrency.context.StampedLockContext
 import org.pastalab.fray.core.concurrency.context.WriteLockContext
 import org.pastalab.fray.core.concurrency.operations.*
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
+import org.pastalab.fray.core.controllers.RunFinishedHandler
 import org.pastalab.fray.core.ranger.RangerEvaluationContext
 import org.pastalab.fray.core.ranger.RangerEvaluationDelegate
 import org.pastalab.fray.core.scheduler.FrayIdeaPluginScheduler
@@ -49,7 +43,6 @@ import org.pastalab.fray.core.utils.toThreadInfos
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
 import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.runtime.DeadlockException
-import org.pastalab.fray.runtime.Delegate
 import org.pastalab.fray.runtime.LivenessException
 import org.pastalab.fray.runtime.RangerCondition
 import org.pastalab.fray.runtime.Runtime
@@ -61,7 +54,7 @@ class RunContext(val config: Configuration) {
   var currentThreadId: Long = -1
   var mainThreadId: Long = -1
   var bugFound: Throwable? = null
-  var nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
+  val runFinishedHandlers = mutableListOf<RunFinishedHandler>()
   val hashCodeMapper = ReferencedContextManager<Int>({ config.randomnessProvider.nextInt() })
   var forkJoinPool: ForkJoinPool? = null
   private val semaphoreManager = ReferencedContextManager {
@@ -180,7 +173,7 @@ class RunContext(val config: Configuration) {
         return
       }
       // We want to switch to the dummy so that the shutdown will not be blocked.
-      Runtime.DELEGATE = Delegate()
+      Runtime.resetAllDelegate()
       exitProcess(0)
     }
   }
@@ -219,7 +212,7 @@ class RunContext(val config: Configuration) {
       }
     }
     context.state = ThreadState.Completed
-    org.pastalab.fray.runtime.Runtime.DELEGATE = org.pastalab.fray.runtime.Delegate()
+    org.pastalab.fray.runtime.Runtime.resetAllDelegate()
     done()
   }
 
@@ -247,11 +240,11 @@ class RunContext(val config: Configuration) {
     registeredThreads.clear()
     config.testStatusObservers.forEach { it.onExecutionDone(bugFound) }
     hashCodeMapper.done(false)
-    nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
+    runFinishedHandlers.forEach { it.done() }
   }
 
   fun shutDown() {
-    org.pastalab.fray.runtime.Runtime.DELEGATE = org.pastalab.fray.runtime.Delegate()
+    org.pastalab.fray.runtime.Runtime.resetAllDelegate()
     executor.stopHelperThread()
   }
 
@@ -907,118 +900,6 @@ class RunContext(val config: Configuration) {
     syncManager.wait(latch)
   }
 
-  fun selectorSetEventOps(selector: Selector, key: SelectionKey) {
-    val selectorContext = nioContextManager.getSelectorContext(selector)
-    val channelContext = nioContextManager.getChannelContext(key.channel()) ?: return
-    selectorContext.setEventOp(channelContext, key.interestOps())
-  }
-
-  fun selectorCancelKey(selector: Selector, key: SelectionKey) {
-    val selectorContext = nioContextManager.getSelectorContext(selector)
-    val channelContext = nioContextManager.getChannelContext(key.channel()) ?: return
-    selectorContext.cancel(channelContext)
-  }
-
-  fun selectorSelect(selector: Selector) {
-    val threadContext = registeredThreads[Thread.currentThread().id]!!
-    val selectorContext = nioContextManager.getSelectorContext(selector)
-    threadContext.state = ThreadState.Runnable
-    threadContext.pendingOperation = SelectorSelectOperation(selectorContext)
-    scheduleNextOperation(true)
-    while (selectorContext.select(threadContext)) {
-      threadContext.state = ThreadState.Blocked
-      threadContext.pendingOperation = SelectorSelectBlocked(selectorContext)
-      scheduleNextOperation(true)
-    }
-  }
-
-  fun selectorClose(selector: Selector) {
-    nioContextManager.selectorClose(selector)
-  }
-
-  fun serverSocketChannelBindDone(serverSocketChannel: ServerSocketChannel) {
-    nioContextManager.serverSocketChannelBind(serverSocketChannel)
-  }
-
-  fun socketChannelClose(socketChannel: SocketChannel) {
-    nioContextManager.socketChannelClose(socketChannel)
-  }
-
-  fun serverSocketChannelClose(serverSocketChannel: ServerSocketChannel) {
-    nioContextManager.serverSocketChannelClose(serverSocketChannel)
-  }
-
-  fun socketChannelRead(socketChannel: SocketChannel) {
-    val socketChannelContext = nioContextManager.getSocketChannelContext(socketChannel)
-    val context = registeredThreads[Thread.currentThread().id]!!
-    context.state = ThreadState.Runnable
-    context.pendingOperation = SocketChannelReadOperation(socketChannelContext)
-    scheduleNextOperation(true)
-    while (socketChannelContext.read(context)) {
-      context.state = ThreadState.Blocked
-      context.pendingOperation = SocketChannelReadBlocked(socketChannelContext)
-      scheduleNextOperation(true)
-    }
-  }
-
-  fun socketChannelReadDone(socketChannel: SocketChannel, bytesRead: Long) {
-    val socketChannelContext = nioContextManager.getSocketChannelContext(socketChannel)
-    socketChannelContext.readDone(bytesRead)
-  }
-
-  fun serverSocketChannelAccept(serverSocketChannel: ServerSocketChannel) {
-    val serverSocketChannelContext =
-        nioContextManager.getServerSocketChannelContext(serverSocketChannel)
-    val context = registeredThreads[Thread.currentThread().id]!!
-    context.state = ThreadState.Runnable
-    context.pendingOperation = ServerSocketChannelAcceptOperation(serverSocketChannelContext)
-    scheduleNextOperation(true)
-    while (serverSocketChannelContext.accept(context)) {
-      context.state = ThreadState.Blocked
-      context.pendingOperation = ServerSocketChannelAcceptBlocked(serverSocketChannelContext)
-      scheduleNextOperation(true)
-    }
-    if (serverSocketChannelContext.pendingConnects > 0) {
-      serverSocketChannelContext.pendingConnects--
-    }
-  }
-
-  fun serverSocketChannelAcceptDone(
-      serverSocketChannel: ServerSocketChannel,
-      socketChannel: SocketChannel?
-  ) {
-    if (socketChannel != null) {
-      nioContextManager.socketChannelAccepted(serverSocketChannel, socketChannel)
-    }
-  }
-
-  fun socketChannelConnect(socketChannel: SocketChannel, address: SocketAddress) {
-    if (address !is InetSocketAddress) {
-      throw IllegalArgumentException("Only InetSocketAddress is supported for now.")
-    }
-    if (socketChannel.isConnected) {
-      return
-    }
-    val serverSocketChannelContext =
-        nioContextManager.getServerSocketChannelAtPort(address.port) ?: return
-    if (serverSocketChannelContext == null) {
-      return
-    }
-    serverSocketChannelContext.connectReceived()
-  }
-
-  fun socketChannelWriteDone(socketChannel: SocketChannel, bytesWritten: Long) {
-    val port = (socketChannel.remoteAddress as? InetSocketAddress)?.port ?: return
-    val localPort = (socketChannel.localAddress as? InetSocketAddress)?.port ?: return
-    nioContextManager.getSocketChannelAtPort(port, localPort)?.writeReceived(bytesWritten)
-  }
-
-  fun socketChannelConnectDone(socketChannel: SocketChannel, success: Boolean) {
-    if (success) {
-      nioContextManager.socketChannelConnected(socketChannel)
-    }
-  }
-
   fun threadSleepOperation() {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
@@ -1028,17 +909,17 @@ class RunContext(val config: Configuration) {
   }
 
   fun evaluateRangerCondition(condition: RangerCondition): Boolean {
-    val currentRuntimeDelegate = Runtime.DELEGATE
+    val currentRuntimeDelegate = Runtime.LOCK_DELEGATE
     val result =
         try {
           val rangerEvaluationContext = RangerEvaluationContext(this)
-          Runtime.DELEGATE =
+          Runtime.LOCK_DELEGATE =
               RangerEvaluationDelegate(rangerEvaluationContext, Thread.currentThread())
           condition.satisfied()
         } catch (e: Throwable) {
           false
         } finally {
-          Runtime.DELEGATE = currentRuntimeDelegate
+          Runtime.LOCK_DELEGATE = currentRuntimeDelegate
         }
     return result
   }
@@ -1219,19 +1100,6 @@ class RunContext(val config: Configuration) {
     } else {
       obj.hashCode()
     }
-  }
-
-  fun nanoTime(): Long {
-    nanoTime += TimeUnit.MILLISECONDS.toNanos(10000)
-    return nanoTime
-  }
-
-  fun currentTimeMillis(): Long {
-    return nanoTime() / 1000000
-  }
-
-  fun instantNow(): Instant {
-    return Instant.ofEpochMilli(currentTimeMillis())
   }
 
   fun getForkJoinPoolCommon(): ForkJoinPool {
