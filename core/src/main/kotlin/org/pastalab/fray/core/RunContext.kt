@@ -1018,7 +1018,7 @@ class RunContext(val config: Configuration) {
             .filter { it.state == ThreadState.Runnable }
             .sortedBy { it.thread.id }
 
-    // The first empty check will enable timed operations
+    // The second empty check will enable timed operations
     if (enabledOperations.isEmpty()) {
       unblockTimedOperations()
       enabledOperations =
@@ -1044,6 +1044,7 @@ class RunContext(val config: Configuration) {
               .filter { it.state == ThreadState.Runnable }
               .sortedBy { it.thread.id }
     }
+
     return enabledOperations
   }
 

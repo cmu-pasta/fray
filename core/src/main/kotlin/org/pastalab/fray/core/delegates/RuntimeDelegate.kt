@@ -21,10 +21,10 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     Delegate() {
 
   override fun onMainExit() {
-    context.mainCleanup()
     if (synchronizer.checkEntered()) return
     context.mainExit()
     synchronizer.entered.set(false)
+    context.mainCleanup()
   }
 
   override fun onThreadCreateDone(t: Thread) {
