@@ -11,14 +11,6 @@ import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.test.fail.cdl.CountDownLatchDeadlockUnblockMultiThread;
-import org.pastalab.fray.test.fail.network.AsyncClientNoConnectWriteDeadlock;
-import org.pastalab.fray.test.fail.network.AsyncClientSelectAfterCloseDeadlock;
-import org.pastalab.fray.test.fail.network.AsyncClientSelectNoConnectDeadlock;
-import org.pastalab.fray.test.fail.network.SyncClientExceptionWithoutServer;
-import org.pastalab.fray.test.fail.network.SyncServerAcceptDeadlock;
-import org.pastalab.fray.test.fail.stampedlock.StampedLockConversionDeadlock;
-import org.pastalab.fray.test.fail.wait.RescheduleBeforeWaitReacquireMonitorLock;
-import org.pastalab.fray.test.success.network.*;
 
 import java.util.*;
 
@@ -27,35 +19,9 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 public class FrayTestCase {
 
-    private DynamicTest populateTest(String className, boolean testShouldFail) {
+    private DynamicTest populateTest(String className, boolean testShouldFail, Configuration configuration) {
         return dynamicTest("Test: " + className, () -> {
-            Configuration config = new Configuration(
-                    new ExecutionInfo(
-                            new MethodExecutor(className,
-                                    "main",
-                                    new ArrayList<>(),
-                                    new ArrayList<>(),
-                                    new HashMap<>()
-                            ),
-                            false,
-                            false,
-                            -1
-                    ),
-                    "/tmp/report",
-                    1000,
-                    60,
-                    new PCTScheduler(),
-                    new ControlledRandom(),
-                    true,
-                    false,
-                    true,
-                    false,
-                    false,
-                    false,
-                    NetworkDelegateType.PROACTIVE,
-                    TimeDelegateType.MOCK
-            );
-            TestRunner runner = new TestRunner(config);
+            TestRunner runner = new TestRunner(configuration);
             Throwable result = runner.run();
             if (testShouldFail) {
                 assertFalse(result instanceof FrayInternalError);
@@ -104,7 +70,7 @@ public class FrayTestCase {
     @TestFactory
     public List<DynamicTest> testCases() {
         List<DynamicTest> tests = new ArrayList<>();
-        new ClassGraph().acceptPackages("org.pastalab.fray.test").scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
+        new ClassGraph().acceptPackages("org.pastalab.fray.test.default").scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
             String name = classInfo.getName();
             boolean shouldFail = true;
             if (name.contains("fail")) {
@@ -114,7 +80,77 @@ public class FrayTestCase {
             } else {
                 return;
             }
-            tests.add(populateTest(classInfo.getName(), shouldFail));
+            Configuration config = new Configuration(
+                    new ExecutionInfo(
+                            new MethodExecutor(classInfo.getName(),
+                                    "main",
+                                    new ArrayList<>(),
+                                    new ArrayList<>(),
+                                    new HashMap<>()
+                            ),
+                            false,
+                            false,
+                            -1
+                    ),
+                    "/tmp/report",
+                    1000,
+                    60,
+                    new PCTScheduler(),
+                    new ControlledRandom(),
+                    true,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    NetworkDelegateType.PROACTIVE,
+                    TimeDelegateType.MOCK
+            );
+            tests.add(populateTest(classInfo.getName(), shouldFail, config));
+        });
+        return tests;
+    }
+
+    @TestFactory
+    public List<DynamicTest> testReactiveNetworkController() {
+        List<DynamicTest> tests = new ArrayList<>();
+        new ClassGraph().acceptPackages("org.pastalab.fray.test.controllers.network.reactive").scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
+            String name = classInfo.getName();
+            boolean shouldFail = true;
+            if (name.contains("fail")) {
+                shouldFail = true;
+            } else if (name.contains("success")) {
+                shouldFail = false;
+            } else {
+                return;
+            }
+            Configuration config = new Configuration(
+                    new ExecutionInfo(
+                            new MethodExecutor(classInfo.getName(),
+                                    "main",
+                                    new ArrayList<>(),
+                                    new ArrayList<>(),
+                                    new HashMap<>()
+                            ),
+                            false,
+                            false,
+                            -1
+                    ),
+                    "/tmp/report",
+                    50,
+                    60,
+                    new PCTScheduler(),
+                    new ControlledRandom(),
+                    true,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    NetworkDelegateType.REACTIVE,
+                    TimeDelegateType.MOCK
+            );
+            tests.add(populateTest(classInfo.getName(), shouldFail, config));
         });
         return tests;
     }
