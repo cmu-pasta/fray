@@ -5,6 +5,7 @@ import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.groups.defaultByName
 import com.github.ajalt.clikt.parameters.groups.groupChoice
 import com.github.ajalt.clikt.parameters.options.*
+import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
 import java.io.File
@@ -48,7 +49,11 @@ data class ExecutionInfo(
 sealed class ExecutionConfig(name: String) : OptionGroup(name) {
   open fun getExecutionInfo(): ExecutionInfo {
     return ExecutionInfo(
-        MethodExecutor("", "", emptyList(), emptyList(), emptyMap()), false, false, 10000000)
+        MethodExecutor("", "", emptyList(), emptyList(), emptyMap()),
+        false,
+        false,
+        10000000,
+    )
   }
 }
 
@@ -74,7 +79,8 @@ class CliExecutionConfig : ExecutionConfig("cli") {
         MethodExecutor(clazz, method, targetArgs, classpaths, propertyMap),
         ignoreUnhandledExceptions,
         interleaveMemoryOps,
-        maxScheduledStep)
+        maxScheduledStep,
+    )
   }
 }
 
@@ -191,7 +197,8 @@ class MainCommand : CliktCommand() {
               "-f",
               "--full",
               help =
-                  "If the report should save full schedule. Otherwise, Fray only saves schedules points if there are more than one runnable threads.")
+                  "If the report should save full schedule. Otherwise, Fray only saves schedules points if there are more than one runnable threads.",
+          )
           .flag()
 
   val scheduler by
@@ -204,13 +211,15 @@ class MainCommand : CliktCommand() {
               "surw" to SURW(),
               "dynamic" to Dynamic(),
               "replay-from-recordings" to ReplayFromRecordings(),
-              "replay" to Replay())
+              "replay" to Replay(),
+          )
           .defaultByName("random")
   val noFray by option("--no-fray", help = "Runnning in no-Fray mode.").flag()
   val exploreMode by
       option(
               "--explore",
-              help = "Running in explore mode and Fray will continue if a failure is found.")
+              help = "Running in explore mode and Fray will continue if a failure is found.",
+          )
           .flag()
   val noExitWhenBugFound by
       option("--no-exit-on-bug", help = "Fray will not immediately exit when a failure is found.")
@@ -228,8 +237,31 @@ class MainCommand : CliktCommand() {
               help =
                   "Run the target application without dummy run. The dummy run (run target once " +
                       "before launching Fray) helps Fray to prune out non-determinism " +
-                      "introduced by the constructors and initializers.")
+                      "introduced by the constructors and initializers.",
+          )
           .flag()
+  val networkDelegateType by
+      option(
+              "--network-delegate-type",
+              help =
+                  "Network delegate type. Possible values: PROACTIVE, NONE. " +
+                      "Default is PROACTIVE.",
+          )
+          .choice(
+              "proactive" to NetworkDelegateType.PROACTIVE,
+              "none" to NetworkDelegateType.NONE,
+          )
+          .default(NetworkDelegateType.PROACTIVE)
+  val timeDelegateType by
+      option(
+              "--time-delegate-type",
+              help = "Time delegate type. Possible values: MOCK, NONE. " + "Default is MOCK.",
+          )
+          .choice(
+              "mock" to TimeDelegateType.MOCK,
+              "none" to TimeDelegateType.NONE,
+          )
+          .default(TimeDelegateType.MOCK)
 
   override fun run() {}
 
@@ -249,7 +281,9 @@ class MainCommand : CliktCommand() {
             noExitWhenBugFound,
             scheduler.isReplay,
             noFray,
-            dummyRun)
+            dummyRun,
+            networkDelegateType,
+            timeDelegateType)
     if (s.third != null) {
       configuration.scheduleObservers.add(s.third!!)
       configuration.testStatusObservers.add(s.third!!)
@@ -271,6 +305,8 @@ data class Configuration(
     val isReplay: Boolean,
     val noFray: Boolean,
     val dummyRun: Boolean,
+    val networkDelegateType: NetworkDelegateType,
+    val timeDelegateType: TimeDelegateType,
 ) {
   val scheduleObservers = mutableListOf<ScheduleObserver<ThreadInfo>>()
   val testStatusObservers = mutableListOf<TestStatusObserver>()
