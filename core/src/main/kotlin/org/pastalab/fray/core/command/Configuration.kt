@@ -14,7 +14,6 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.exists
 import kotlin.time.TimeSource
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -37,11 +36,6 @@ import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_REPLAY
 import org.pastalab.fray.rmi.ScheduleObserver
 import org.pastalab.fray.rmi.TestStatusObserver
 import org.pastalab.fray.rmi.ThreadInfo
-
-enum class InterceptedFeatures {
-  CORE,
-  NETWORK,
-}
 
 @Serializable
 data class ExecutionInfo(
@@ -87,7 +81,6 @@ class CliExecutionConfig : ExecutionConfig("cli") {
 class JsonExecutionConfig : ExecutionConfig("json") {
   val path by option("--config-path").file().required()
 
-  @OptIn(ExperimentalSerializationApi::class)
   override fun getExecutionInfo(): ExecutionInfo {
     val module = SerializersModule {
       polymorphic(Executor::class) {
@@ -237,26 +230,12 @@ class MainCommand : CliktCommand() {
                       "before launching Fray) helps Fray to prune out non-determinism " +
                       "introduced by the constructors and initializers.")
           .flag()
-  val disableFeature by
-      option(
-              "--disable-feature",
-              help = "Disable the interception features separated by comma (,).")
-          .default("")
 
   override fun run() {}
 
   fun toConfiguration(): Configuration {
     val executionInfo = runConfig.getExecutionInfo()
     val s = scheduler.getScheduler()
-    val enabledFeatures = InterceptedFeatures.entries.toMutableSet()
-    enabledFeatures -=
-        disableFeature.split(",").mapNotNull {
-          try {
-            InterceptedFeatures.valueOf(it.trim())
-          } catch (e: IllegalArgumentException) {
-            null
-          }
-        }
     val configuration =
         Configuration(
             executionInfo,
@@ -270,8 +249,7 @@ class MainCommand : CliktCommand() {
             noExitWhenBugFound,
             scheduler.isReplay,
             noFray,
-            dummyRun,
-            enabledFeatures)
+            dummyRun)
     if (s.third != null) {
       configuration.scheduleObservers.add(s.third!!)
       configuration.testStatusObservers.add(s.third!!)
@@ -293,7 +271,6 @@ data class Configuration(
     val isReplay: Boolean,
     val noFray: Boolean,
     val dummyRun: Boolean,
-    val enabledFeatures: Set<InterceptedFeatures>
 ) {
   val scheduleObservers = mutableListOf<ScheduleObserver<ThreadInfo>>()
   val testStatusObservers = mutableListOf<TestStatusObserver>()
