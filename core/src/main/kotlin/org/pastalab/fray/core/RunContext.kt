@@ -3,6 +3,7 @@ package org.pastalab.fray.core
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.Thread.UncaughtExceptionHandler
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Semaphore
@@ -57,6 +58,8 @@ class RunContext(val config: Configuration) {
   val runFinishedHandlers = mutableListOf<RunFinishedHandler>()
   val hashCodeMapper = ReferencedContextManager<Int>({ config.randomnessProvider.nextInt() })
   var forkJoinPool: ForkJoinPool? = null
+  val reactiveResumedThreadQueue = ConcurrentLinkedQueue<Long>()
+  val reactiveBlockedThreadQueue = ConcurrentLinkedQueue<Long>()
   private val semaphoreManager = ReferencedContextManager {
     verifyOrReport(it is Semaphore) { "SemaphoreManager can only manage Semaphore objects" }
     SemaphoreContext(0, it as Semaphore)
@@ -236,6 +239,7 @@ class RunContext(val config: Configuration) {
     semaphoreManager.done()
     latchManager.done()
     nioContextManager.done()
+    reactiveResumedThreadQueue.clear()
 
     registeredThreads.clear()
     config.testStatusObservers.forEach { it.onExecutionDone(bugFound) }
@@ -992,6 +996,57 @@ class RunContext(val config: Configuration) {
     }
   }
 
+  fun unblockThreadsInReactiveQueue() {
+    // Iterator provides weakly consistent view of the collection.
+    // It's safe here because the new items will be picked next time.
+    val iterator = reactiveResumedThreadQueue.iterator()
+    while (iterator.hasNext()) {
+      val thread = iterator.next()
+      val context = registeredThreads[thread]!!
+      verifyOrReport(context.state == ThreadState.Blocked)
+      context.pendingOperation = ThreadResumeOperation(true)
+      context.state = ThreadState.Runnable
+      reactiveBlockedThreadQueue.remove(thread)
+      iterator.remove()
+    }
+  }
+
+  fun getEnabledOperations(): List<ThreadContext> {
+    var enabledOperations =
+        registeredThreads.values
+            .toList()
+            .filter { it.state == ThreadState.Runnable }
+            .sortedBy { it.thread.id }
+
+    // The first empty check will enable timed operations
+    if (enabledOperations.isEmpty()) {
+      unblockTimedOperations()
+      enabledOperations =
+          registeredThreads.values
+              .toList()
+              .filter { it.state == ThreadState.Runnable }
+              .sortedBy { it.thread.id }
+    }
+
+    // The first empty check will try to wait for threads blocked reactively
+    // (e.g., by network operations).
+    if (enabledOperations.isEmpty()) {
+      if (reactiveBlockedThreadQueue.isEmpty()) return enabledOperations
+      synchronized(reactiveResumedThreadQueue) {
+        while (reactiveResumedThreadQueue.isEmpty()) {
+          (reactiveResumedThreadQueue as Object).wait()
+        }
+      }
+      unblockThreadsInReactiveQueue()
+      enabledOperations =
+          registeredThreads.values
+              .toList()
+              .filter { it.state == ThreadState.Runnable }
+              .sortedBy { it.thread.id }
+    }
+    return enabledOperations
+  }
+
   fun scheduleNextOperation(shouldBlockCurrentThread: Boolean) {
     // Our current design makes sure that reschedule is only called
     // by scheduled thread.
@@ -1013,23 +1068,10 @@ class RunContext(val config: Configuration) {
     }
 
     checkAndUnblockRangerOperations()
-    var enabledOperations =
-        registeredThreads.values
-            .toList()
-            .filter { it.state == ThreadState.Runnable }
-            .sortedBy { it.thread.id }
+    unblockThreadsInReactiveQueue()
 
-    // The first empty check will enable timed operations
-    if (enabledOperations.isEmpty()) {
-      unblockTimedOperations()
-      enabledOperations =
-          registeredThreads.values
-              .toList()
-              .filter { it.state == ThreadState.Runnable }
-              .sortedBy { it.thread.id }
-    }
+    val enabledOperations = getEnabledOperations()
 
-    // The second empty check throws deadlock exceptions.
     if (enabledOperations.isEmpty()) {
       // If no thread is blocked. We are done. Return to main thread and exit.
       if (registeredThreads.values.none { it.state == ThreadState.Blocked }) {

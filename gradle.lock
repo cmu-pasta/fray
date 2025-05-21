@@ -929,12 +929,6 @@
       "hash": "sha256-Qn/Lh5kr/JTPxkGNvWF2r35/IbyPx0msjDRXN988pCc="
     }
   },
-  "com.jetbrains.intellij.java:java-compiler-ant-tasks:243.24978-EAP-CANDIDATE-SNAPSHOT": {
-    "java-compiler-ant-tasks-243.24978-EAP-CANDIDATE-SNAPSHOT.pom": {
-      "url": "https://cache-redirector.jetbrains.com/www.jetbrains.com/intellij-repository/snapshots/com/jetbrains/intellij/java/java-compiler-ant-tasks/243.24978-EAP-CANDIDATE-SNAPSHOT/java-compiler-ant-tasks-243.24978-EAP-CANDIDATE-SNAPSHOT.pom",
-      "hash": "sha256-xSjXpEC4HT5VHERpGyvBTnIUUAPTjTAi/w3rizocea4="
-    }
-  },
   "com.jetbrains.intellij.java:java-compiler-instrumentation-util:243.24978.46": {
     "java-compiler-instrumentation-util-243.24978.46.jar": {
       "url": "https://cache-redirector.jetbrains.com/www.jetbrains.com/intellij-repository/releases/com/jetbrains/intellij/java/java-compiler-instrumentation-util/243.24978.46/java-compiler-instrumentation-util-243.24978.46.jar",
@@ -983,12 +977,6 @@
     "test-framework-243.24978.46.pom": {
       "url": "https://cache-redirector.jetbrains.com/www.jetbrains.com/intellij-repository/releases/com/jetbrains/intellij/platform/test-framework/243.24978.46/test-framework-243.24978.46.pom",
       "hash": "sha256-VcT+yGsvCA0vr2KDFY9YAqiNl/0dyHtJMi2LZELryLM="
-    }
-  },
-  "com.jetbrains.intellij.platform:test-framework:243.24978-EAP-CANDIDATE-SNAPSHOT": {
-    "test-framework-243.24978-EAP-CANDIDATE-SNAPSHOT.pom": {
-      "url": "https://cache-redirector.jetbrains.com/www.jetbrains.com/intellij-repository/snapshots/com/jetbrains/intellij/platform/test-framework/243.24978-EAP-CANDIDATE-SNAPSHOT/test-framework-243.24978-EAP-CANDIDATE-SNAPSHOT.pom",
-      "hash": "sha256-xGBcYn5jLb4JY8fJwYUXRpxkLWLUVPo6MqUDd+aCx6o="
     }
   },
   "com.jetbrains.intellij.platform:test-framework-common:243.24978.46": {

@@ -244,11 +244,12 @@ class MainCommand : CliktCommand() {
       option(
               "--network-delegate-type",
               help =
-                  "Network delegate type. Possible values: PROACTIVE, NONE. " +
+                  "Network delegate type. Possible values: PROACTIVE, REACTIVE, NONE. " +
                       "Default is PROACTIVE.",
           )
           .choice(
               "proactive" to NetworkDelegateType.PROACTIVE,
+              "reactive" to NetworkDelegateType.REACTIVE,
               "none" to NetworkDelegateType.NONE,
           )
           .default(NetworkDelegateType.PROACTIVE)
