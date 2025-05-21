@@ -11,6 +11,7 @@
 
 - Make Fray Debugger adaptive to the IDE settings.
 - Enable resizable separator to display complete thread names.
+- Divide RunContext into controllers.
 
 ### Deprecated
 
