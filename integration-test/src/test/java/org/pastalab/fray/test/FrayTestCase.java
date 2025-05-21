@@ -6,10 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 import org.pastalab.fray.core.FrayInternalError;
 import org.pastalab.fray.core.TestRunner;
-import org.pastalab.fray.core.command.Configuration;
-import org.pastalab.fray.core.command.ExecutionInfo;
-import org.pastalab.fray.core.command.LambdaExecutor;
-import org.pastalab.fray.core.command.MethodExecutor;
+import org.pastalab.fray.core.command.*;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
@@ -54,7 +51,9 @@ public class FrayTestCase {
                     true,
                     false,
                     false,
-                    false
+                    false,
+                    NetworkDelegateType.PROACTIVE,
+                    TimeDelegateType.MOCK
             );
             TestRunner runner = new TestRunner(config);
             Throwable result = runner.run();
@@ -94,7 +93,9 @@ public class FrayTestCase {
                 true,
                 false,
                 false,
-                false
+                false,
+                NetworkDelegateType.PROACTIVE,
+                TimeDelegateType.MOCK
         );
         TestRunner runner = new TestRunner(config);
         runner.run();
