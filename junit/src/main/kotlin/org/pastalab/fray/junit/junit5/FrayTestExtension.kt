@@ -13,7 +13,6 @@ import org.junit.platform.commons.util.Preconditions
 import org.pastalab.fray.core.RunContext
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.command.ExecutionInfo
-import org.pastalab.fray.core.command.InterceptedFeatures
 import org.pastalab.fray.core.command.LambdaExecutor
 import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.randomness.ControlledRandom
@@ -89,7 +88,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             concurrencyTest.replay.isNotEmpty(),
             false,
             true,
-            InterceptedFeatures.entries.toSet())
+        )
     val frayContext = RunContext(config)
     val frayJupiterContext = FrayJupiterContext()
     return Stream.iterate(1, { it + 1 })

@@ -6,7 +6,6 @@ import kotlin.test.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.command.ExecutionInfo
-import org.pastalab.fray.core.command.InterceptedFeatures
 import org.pastalab.fray.core.command.LambdaExecutor
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.RandomScheduler
@@ -32,8 +31,7 @@ class RunContextReentrantLockTest {
               true,
               false,
               false,
-              false,
-              InterceptedFeatures.entries.toSet()))
+              false))
 
   @BeforeEach
   fun setUp() {

@@ -6,7 +6,6 @@
 
 - Reenable nix flake build.
 - Better stdout and allow customized schedulers.
-- Enable feature selection through configuration.
 
 ### Changed
 
