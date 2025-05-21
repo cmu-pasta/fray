@@ -10,6 +10,7 @@ import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.command.ExecutionInfo
 import org.pastalab.fray.core.command.LambdaExecutor
 import org.pastalab.fray.core.command.NetworkDelegateType
+import org.pastalab.fray.core.command.TimeDelegateType
 import org.pastalab.fray.core.observers.ScheduleVerifier
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.POSScheduler
@@ -48,7 +49,7 @@ object FrayInTestLauncher {
             false,
             false,
             NetworkDelegateType.PROACTIVE,
-            NetworkDelegateType.MOCK,
+            TimeDelegateType.MOCK,
         )
     additionalConfigs(config)
     val runner = TestRunner(config)
