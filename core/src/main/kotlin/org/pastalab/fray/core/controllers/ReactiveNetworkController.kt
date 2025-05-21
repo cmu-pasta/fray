@@ -19,8 +19,8 @@ class ReactiveNetworkController(val runContext: RunContext) : RunFinishedHandler
 
   fun selectorSelectDone() {
     val threadContext = runContext.registeredThreads[Thread.currentThread().id]!!
-    runContext.reactiveResumedThreadQueue.add(Thread.currentThread().id)
     synchronized(runContext.reactiveResumedThreadQueue) {
+      runContext.reactiveResumedThreadQueue.add(Thread.currentThread().id)
       (runContext.reactiveResumedThreadQueue as Object).notify()
     }
     threadContext.block()
@@ -37,8 +37,8 @@ class ReactiveNetworkController(val runContext: RunContext) : RunFinishedHandler
 
   fun socketChannelBlockedDone() {
     val threadContext = runContext.registeredThreads[Thread.currentThread().id]!!
-    runContext.reactiveResumedThreadQueue.add(Thread.currentThread().id)
     synchronized(runContext.reactiveResumedThreadQueue) {
+      runContext.reactiveResumedThreadQueue.add(Thread.currentThread().id)
       (runContext.reactiveResumedThreadQueue as Object).notify()
     }
     threadContext.block()

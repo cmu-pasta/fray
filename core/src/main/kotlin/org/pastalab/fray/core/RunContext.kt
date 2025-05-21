@@ -1032,8 +1032,10 @@ class RunContext(val config: Configuration) {
     // (e.g., by network operations).
     if (enabledOperations.isEmpty()) {
       if (reactiveBlockedThreadQueue.isEmpty()) return enabledOperations
-      while (reactiveResumedThreadQueue.isEmpty()) {
-        synchronized(reactiveResumedThreadQueue) { (reactiveResumedThreadQueue as Object).wait() }
+      synchronized(reactiveResumedThreadQueue) {
+        while (reactiveResumedThreadQueue.isEmpty()) {
+          (reactiveResumedThreadQueue as Object).wait()
+        }
       }
       unblockThreadsInReactiveQueue()
       enabledOperations =
