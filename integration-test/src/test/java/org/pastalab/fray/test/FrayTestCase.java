@@ -11,7 +11,6 @@ import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.test.controllers.network.reactive.success.NetworkCallWithSocketNoDeadlock;
-import org.pastalab.fray.test.fail.cdl.CountDownLatchDeadlockUnblockMultiThread;
 
 import java.util.*;
 
@@ -71,7 +70,7 @@ public class FrayTestCase {
     @TestFactory
     public List<DynamicTest> testCases() {
         List<DynamicTest> tests = new ArrayList<>();
-        new ClassGraph().acceptPackages("org.pastalab.fray.test.default").scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
+        new ClassGraph().acceptPackages("org.pastalab.fray.test.core").scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
             String name = classInfo.getName();
             boolean shouldFail = true;
             if (name.contains("fail")) {

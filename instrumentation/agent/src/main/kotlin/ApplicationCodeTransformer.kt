@@ -75,7 +75,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = MonitorInstrumenter(cv)
 
       cv = ConditionInstrumenter(cv)
-      cv = ClassConstructorInstrumenter(cv)
+      cv = ClassConstructorInstrumenter(cv, false)
       cv = SleepInstrumenter(cv)
       cv = TimeInstrumenter(cv)
       cv = SkipMethodInstrumenter(cv)

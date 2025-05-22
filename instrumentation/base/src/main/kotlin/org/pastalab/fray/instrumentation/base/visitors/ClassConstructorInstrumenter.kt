@@ -4,7 +4,21 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes.ASM9
 
-class ClassConstructorInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
+class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : ClassVisitor(ASM9, cv) {
+  var className = ""
+
+  override fun visit(
+      version: Int,
+      access: Int,
+      name: String,
+      signature: String?,
+      superName: String?,
+      interfaces: Array<out String?>?
+  ) {
+    className = name
+    super.visit(version, access, name, signature, superName, interfaces)
+  }
+
   override fun visitMethod(
       access: Int,
       name: String,
@@ -14,6 +28,10 @@ class ClassConstructorInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   ): MethodVisitor {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
     if (name == "<clinit>") {
+      if (isJDK && !ALLOWED_JDK_CLASSES.contains(className)) {
+        return mv
+      }
+      print("Instrumenting class: $className")
       val methodSignature = "#$name$descriptor"
       val eMv =
           MethodEnterVisitor(
@@ -37,5 +55,9 @@ class ClassConstructorInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           { mv, isFinalBlock -> mv.push(methodSignature) })
     }
     return mv
+  }
+
+  companion object {
+    val ALLOWED_JDK_CLASSES = arrayOf("sun/security/ssl/SSLExtension\$ClientExtensions")
   }
 }
