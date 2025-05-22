@@ -18,6 +18,7 @@ being blocked at network operations.
 - Make Fray Debugger adaptive to the IDE settings.
 - Enable resizable separator to display complete thread names.
 - Divide RunContext into controllers.
+- Add ClassConstructorInstrumenter to the JDK instrumenter.
 
 ### Deprecated
 

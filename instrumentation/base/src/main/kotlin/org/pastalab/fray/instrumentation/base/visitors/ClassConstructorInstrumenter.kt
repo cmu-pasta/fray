@@ -31,7 +31,6 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
       if (isJDK && !ALLOWED_JDK_CLASSES.contains(className)) {
         return mv
       }
-      print("Instrumenting class: $className")
       val methodSignature = "#$name$descriptor"
       val eMv =
           MethodEnterVisitor(
