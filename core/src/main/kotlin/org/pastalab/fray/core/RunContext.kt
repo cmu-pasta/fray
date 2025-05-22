@@ -1011,40 +1011,41 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun getEnabledOperations(): List<ThreadContext> {
-    var enabledOperations =
-        registeredThreads.values
-            .toList()
-            .filter { it.state == ThreadState.Runnable }
-            .sortedBy { it.thread.id }
+  // We use enabledOperationBuffer because [getEnabledOperations] is on the hot
+  // path which is called by [scheduleNextOperation]. We want to avoid creating
+  // a temporary list every time.
+  val enabledOperationBuffer = mutableListOf<ThreadContext>()
 
-    // The first empty check will enable timed operations
-    if (enabledOperations.isEmpty()) {
-      unblockTimedOperations()
-      enabledOperations =
-          registeredThreads.values
-              .toList()
-              .filter { it.state == ThreadState.Runnable }
-              .sortedBy { it.thread.id }
-    }
+  fun getEnabledOperations(): List<ThreadContext> {
+    enabledOperationBuffer.clear()
+    registeredThreads.values
+        .filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
+        .sortBy { it.thread.id }
 
     // The first empty check will try to wait for threads blocked reactively
     // (e.g., by network operations).
-    if (enabledOperations.isEmpty()) {
-      if (reactiveBlockedThreadQueue.isEmpty()) return enabledOperations
-      synchronized(reactiveResumedThreadQueue) {
-        while (reactiveResumedThreadQueue.isEmpty()) {
-          (reactiveResumedThreadQueue as Object).wait()
+    if (enabledOperationBuffer.isEmpty()) {
+      if (!reactiveBlockedThreadQueue.isEmpty()) {
+        synchronized(reactiveResumedThreadQueue) {
+          while (reactiveResumedThreadQueue.isEmpty()) {
+            (reactiveResumedThreadQueue as Object).wait()
+          }
         }
+        unblockThreadsInReactiveQueue()
+        registeredThreads.values
+            .filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
+            .sortBy { it.thread.id }
       }
-      unblockThreadsInReactiveQueue()
-      enabledOperations =
-          registeredThreads.values
-              .toList()
-              .filter { it.state == ThreadState.Runnable }
-              .sortedBy { it.thread.id }
     }
-    return enabledOperations
+
+    // The second empty check will enable timed operations
+    if (enabledOperationBuffer.isEmpty()) {
+      unblockTimedOperations()
+      registeredThreads.values
+          .filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
+          .sortBy { it.thread.id }
+    }
+    return enabledOperationBuffer
   }
 
   fun scheduleNextOperation(shouldBlockCurrentThread: Boolean) {
@@ -1098,8 +1099,7 @@ class RunContext(val config: Configuration) {
 
     val nextThread =
         try {
-          config.scheduler.scheduleNextOperation(
-              enabledOperations, registeredThreads.values.toList())
+          config.scheduler.scheduleNextOperation(enabledOperations, registeredThreads.values)
         } catch (e: Throwable) {
           reportError(e)
           enabledOperations.first()
@@ -1107,7 +1107,6 @@ class RunContext(val config: Configuration) {
     config.scheduleObservers.forEach {
       it.onNewSchedule(registeredThreads.values.toList().toThreadInfos(), nextThread.toThreadInfo())
     }
-
     currentThreadId = nextThread.thread.id
     nextThread.state = ThreadState.Running
     runThread(currentThread, nextThread)

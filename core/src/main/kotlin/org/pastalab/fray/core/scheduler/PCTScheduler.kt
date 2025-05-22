@@ -22,7 +22,7 @@ class PCTScheduler(val rand: ControlledRandom, val numSwitchPoints: Int, var max
 
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,
-      allThreads: List<ThreadContext>
+      allThreads: Collection<ThreadContext>
   ): ThreadContext {
     if (threads.size == 1) {
       return threads[0]

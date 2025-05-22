@@ -9,7 +9,7 @@ class ReplayScheduler(val recording: List<ScheduleRecording>) : Scheduler {
 
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,
-      allThreads: List<ThreadContext>
+      allThreads: Collection<ThreadContext>
   ): ThreadContext {
     if (index >= recording.size) {
       return threads[0]
