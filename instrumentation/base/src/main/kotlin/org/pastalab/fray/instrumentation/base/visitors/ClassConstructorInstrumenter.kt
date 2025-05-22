@@ -57,6 +57,9 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
   }
 
   companion object {
-    val ALLOWED_JDK_CLASSES = arrayOf("sun/security/ssl/SSLExtension\$ClientExtensions")
+    val ALLOWED_JDK_CLASSES = arrayOf(
+        "sun/security/ssl/SSLExtension\$ClientExtensions",
+        "java/security/cert/X509CertSelector",
+    )
   }
 }
