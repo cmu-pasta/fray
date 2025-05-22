@@ -42,6 +42,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = ForkJoinPoolInstrumenter(cv)
     cv = UnsafeParkInstrumenter(cv)
     cv = NioSocketImplInstrumenter(cv)
+    cv = ClassConstructorInstrumenter(cv, true)
     //    cv = ObjectHashCodeInstrumenter(cv, true)
     cv = SelectorVisitor(cv)
     cv = SocketChannelInstrumenter(cv)
