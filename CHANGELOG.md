@@ -6,6 +6,12 @@
 
 - Reenable nix flake build.
 - Better stdout and allow customized schedulers.
+- Add reactive network controller. The reactive network controller blocks
+the thread every time a network operation is performed. Once the operation
+is completed, the thread notifies the scheduler to mark the thread as  
+runnable. This introduces non-determinism because the schedule depends on 
+when the network operation is completed. However this prevents Fray from 
+being blocked at network operations.
 
 ### Changed
 

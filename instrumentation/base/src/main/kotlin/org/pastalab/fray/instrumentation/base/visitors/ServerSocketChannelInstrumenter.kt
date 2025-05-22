@@ -5,7 +5,7 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes.ACONST_NULL
 import org.pastalab.fray.runtime.Runtime
 
-class ServerSocketChannelVisitor(cv: ClassVisitor) :
+class ServerSocketChannelInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(
         cv,
         "sun/nio/ch/ServerSocketChannelImpl",

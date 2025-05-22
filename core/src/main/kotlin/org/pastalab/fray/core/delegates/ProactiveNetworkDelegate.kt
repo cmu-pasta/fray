@@ -1,6 +1,7 @@
 package org.pastalab.fray.core.delegates
 
 import java.net.SocketAddress
+import java.net.SocketImpl
 import java.nio.channels.SelectionKey
 import java.nio.channels.Selector
 import java.nio.channels.ServerSocketChannel
@@ -177,5 +178,21 @@ class ProactiveNetworkDelegate(
     if (synchronizer.checkEntered()) return
     controller.serverSocketChannelBindDone(channel)
     synchronizer.entered.set(false)
+  }
+
+  override fun onNioSocketConnect(socket: SocketImpl) {
+    TODO()
+  }
+
+  override fun onNioSocketConnectDone(socket: SocketImpl) {
+    TODO()
+  }
+
+  override fun onNioSocketRead(socket: SocketImpl) {
+    TODO()
+  }
+
+  override fun onNioSocketReadDone(socket: SocketImpl, bytesRead: Int) {
+    TODO()
   }
 }
