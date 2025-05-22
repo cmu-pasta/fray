@@ -1,6 +1,7 @@
 package org.pastalab.fray.runtime;
 
 import java.net.SocketAddress;
+import java.net.SocketImpl;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -58,5 +59,17 @@ public class NetworkDelegate {
     }
 
     public void onSocketChannelWriteDone(SocketChannel channel, long bytesWritten) {
+    }
+
+    public void onNioSocketConnect(SocketImpl socket) {
+    }
+
+    public void onNioSocketConnectDone(SocketImpl socket) {
+    }
+
+    public void onNioSocketRead(SocketImpl socket) {
+    }
+
+    public void onNioSocketReadDone(SocketImpl socket, int bytesRead) {
     }
 }

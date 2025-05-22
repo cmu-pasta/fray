@@ -1,5 +1,6 @@
 package org.pastalab.fray.core.delegates
 
+import java.net.SocketImpl
 import java.nio.channels.Selector
 import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
@@ -11,72 +12,66 @@ class ReactiveNetworkDelegate(
     val synchronizer: DelegateSynchronizer
 ) : NetworkDelegate() {
 
-  override fun onSelectorSelect(selector: Selector) {
+  fun reactiveBlockingEnter() {
     if (synchronizer.checkEntered()) {
-      synchronizer.onSkipMethod("Selector.select")
+      synchronizer.onSkipMethod("ReactiveBlocking")
       return
     }
     try {
-      controller.selectorBlocked(selector)
+      controller.reactiveBlockingBlocked()
     } finally {
       synchronizer.entered.set(false)
-      synchronizer.onSkipMethod("Selector.select")
+      synchronizer.onSkipMethod("ReactiveBlocking")
     }
   }
 
-  override fun onSelectorSelectDone(selector: Selector) {
-    synchronizer.onSkipMethodDone("Selector.select")
+  fun reactiveBlockingEnterDone() {
+    synchronizer.onSkipMethodDone("ReactiveBlocking")
     if (synchronizer.checkEntered()) return
-    controller.selectorSelectDone()
+    controller.reactiveBlockingUnblocked()
     synchronizer.entered.set(false)
   }
 
+  override fun onSelectorSelect(selector: Selector) {
+    reactiveBlockingEnter()
+  }
+
+  override fun onSelectorSelectDone(selector: Selector) {
+    reactiveBlockingEnterDone()
+  }
+
   override fun onServerSocketChannelAccept(channel: ServerSocketChannel) {
-    if (synchronizer.checkEntered()) {
-      synchronizer.onSkipMethod("ServerSocketChannel.accept")
-      return
-    }
-    try {
-      controller.socketChannelBlocked(channel)
-    } finally {
-      synchronizer.entered.set(false)
-      synchronizer.onSkipMethod("ServerSocketChannel.accept")
-    }
+    reactiveBlockingEnter()
   }
 
   override fun onServerSocketChannelAcceptDone(
       channel: ServerSocketChannel,
       client: SocketChannel?
   ) {
-    synchronizer.onSkipMethodDone("ServerSocketChannel.accept")
-    if (synchronizer.checkEntered()) return
-    try {
-      controller.socketChannelBlockedDone()
-    } finally {
-      synchronizer.entered.set(false)
-    }
+    reactiveBlockingEnterDone()
   }
 
   override fun onSocketChannelRead(channel: SocketChannel) {
-    if (synchronizer.checkEntered()) {
-      synchronizer.onSkipMethod("SocketChannel.read")
-      return
-    }
-    try {
-      controller.socketChannelBlocked(channel)
-    } finally {
-      synchronizer.entered.set(false)
-      synchronizer.onSkipMethod("SocketChannel.read")
-    }
+    reactiveBlockingEnter()
   }
 
   override fun onSocketChannelReadDone(channel: SocketChannel, bytesRead: Long) {
-    synchronizer.onSkipMethodDone("SocketChannel.read")
-    if (synchronizer.checkEntered()) return
-    try {
-      controller.socketChannelBlockedDone()
-    } finally {
-      synchronizer.entered.set(false)
-    }
+    reactiveBlockingEnterDone()
+  }
+
+  override fun onNioSocketConnect(socket: SocketImpl) {
+    reactiveBlockingEnter()
+  }
+
+  override fun onNioSocketConnectDone(socket: SocketImpl) {
+    reactiveBlockingEnterDone()
+  }
+
+  override fun onNioSocketRead(socket: SocketImpl) {
+    reactiveBlockingEnter()
+  }
+
+  override fun onNioSocketReadDone(socket: SocketImpl, bytesRead: Int) {
+    reactiveBlockingEnterDone()
   }
 }
