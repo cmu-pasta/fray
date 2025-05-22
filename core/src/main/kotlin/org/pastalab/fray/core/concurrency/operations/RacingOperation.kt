@@ -6,7 +6,7 @@ abstract class RacingOperation(
 ) : Operation() {
   // Well this does not completely solve the performance issue.
   // https://www.baeldung.com/java-exceptions-performance
-//  private val dummyThrowable = RuntimeException()
+  //  private val dummyThrowable = RuntimeException()
 
   // TODO(aoli): we should find a more efficient solution.
   // We use the stack trace hash to distinguish between different operations statically.

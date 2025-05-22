@@ -2,9 +2,9 @@ package org.pastalab.fray.core.randomness
 
 import com.antithesis.sdk.Random
 import java.util.*
+import kotlin.math.absoluteValue
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import kotlin.math.absoluteValue
 
 @Serializable
 class ControlledRandom(
