@@ -1118,8 +1118,11 @@ class RunContext(val config: Configuration) {
     }
   }
 
+  var previousPendingOperation: Operation? = null
+
   fun runThread(currentThread: ThreadContext, nextThread: ThreadContext) {
     val pendingOperation = nextThread.pendingOperation
+    previousPendingOperation = pendingOperation
     when (pendingOperation) {
       is ConditionWakeBlocked -> {
         nextThread.pendingOperation = ThreadResumeOperation(pendingOperation.noTimeout)
