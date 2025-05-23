@@ -61,6 +61,7 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
         arrayOf(
             "sun/security/ssl/SSLExtension\$ClientExtensions",
             "sun/security/validator/CADistrustPolicy",
+            "sun/security/util/UntrustedCertificates",
             "java/net/IDN",
             "sun/security/ssl/ClientHandshakeContext",
             "java/security/cert/X509CertSelector",
