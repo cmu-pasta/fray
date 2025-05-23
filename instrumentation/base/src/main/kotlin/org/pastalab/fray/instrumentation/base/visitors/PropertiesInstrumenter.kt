@@ -2,7 +2,7 @@ package org.pastalab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.ClassVisitor
 
-class SystemInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, System::class.java.name) {
+class PropertiesInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, System::class.java.name) {
   override fun instrumentMethod(
       mv: org.objectweb.asm.MethodVisitor,
       access: Int,

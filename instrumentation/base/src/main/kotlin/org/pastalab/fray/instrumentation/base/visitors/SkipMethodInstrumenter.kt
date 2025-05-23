@@ -11,6 +11,7 @@ import java.util.ServiceLoader
 import java.util.logging.Logger
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
+import java.util.Properties
 
 class SkipMethodInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(
@@ -21,6 +22,7 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
         PrintStream::class.java.name,
         URLClassLoader::class.java.name,
         JarURLConnection::class.java.name,
+        Properties::class.java.name,
         "org.junit.platform.launcher.core.LauncherConfigurationParameters",
         //        "org.junit.platform.engine.support.store.NamespacedHierarchicalStore",
         "org.slf4j.LoggerFactory",
