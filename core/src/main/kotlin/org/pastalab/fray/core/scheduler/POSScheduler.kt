@@ -15,7 +15,7 @@ class POSScheduler(val rand: ControlledRandom) : Scheduler {
 
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,
-      allThread: List<ThreadContext>
+      allThread: Collection<ThreadContext>
   ): ThreadContext {
     if (threads.size == 1) {
       return threads[0]

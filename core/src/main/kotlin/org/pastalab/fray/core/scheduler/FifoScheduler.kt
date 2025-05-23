@@ -7,7 +7,7 @@ import org.pastalab.fray.core.ThreadContext
 class FifoScheduler : Scheduler {
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,
-      allThreads: List<ThreadContext>
+      allThreads: Collection<ThreadContext>
   ): ThreadContext {
     return threads.first()
   }

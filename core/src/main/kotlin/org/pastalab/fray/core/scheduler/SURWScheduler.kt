@@ -75,7 +75,7 @@ class SURWScheduler(
 
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,
-      allThreads: List<ThreadContext>
+      allThreads: Collection<ThreadContext>
   ): ThreadContext {
     // First we need to update weights if new threads are created.
     checkNewThreads(threads)

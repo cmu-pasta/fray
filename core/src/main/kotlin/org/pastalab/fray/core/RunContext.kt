@@ -51,7 +51,7 @@ import org.pastalab.fray.runtime.Runtime.onReportError
 
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 class RunContext(val config: Configuration) {
-  val registeredThreads = mutableMapOf<Long, ThreadContext>().toSortedMap()
+  val registeredThreads = mutableMapOf<Long, ThreadContext>()
   var currentThreadId: Long = -1
   var mainThreadId: Long = -1
   var bugFound: Throwable? = null
@@ -1019,13 +1019,13 @@ class RunContext(val config: Configuration) {
   fun getEnabledOperations(): List<ThreadContext> {
     enabledOperationBuffer.clear()
     registeredThreads.values.filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
+    enabledOperationBuffer.sortBy { it.thread.id }
 
     // The second empty check will enable timed operations
     if (enabledOperationBuffer.isEmpty()) {
       unblockTimedOperations()
-      registeredThreads.values.toList().filterTo(enabledOperationBuffer) {
-        it.state == ThreadState.Runnable
-      }
+      registeredThreads.values.filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
+      enabledOperationBuffer.sortBy { it.thread.id }
     }
 
     // The first empty check will try to wait for threads blocked reactively
@@ -1038,9 +1038,8 @@ class RunContext(val config: Configuration) {
         }
       }
       unblockThreadsInReactiveQueue()
-      registeredThreads.values.toList().filterTo(enabledOperationBuffer) {
-        it.state == ThreadState.Runnable
-      }
+      registeredThreads.values.filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
+      enabledOperationBuffer.sortBy { it.thread.id }
     }
     return enabledOperationBuffer
   }
@@ -1096,8 +1095,7 @@ class RunContext(val config: Configuration) {
 
     val nextThread =
         try {
-          config.scheduler.scheduleNextOperation(
-              enabledOperations, registeredThreads.values.toList())
+          config.scheduler.scheduleNextOperation(enabledOperations, registeredThreads.values)
         } catch (e: Throwable) {
           reportError(e)
           enabledOperations.first()

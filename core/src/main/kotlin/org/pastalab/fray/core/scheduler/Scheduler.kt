@@ -7,7 +7,7 @@ import org.pastalab.fray.core.ThreadContext
 sealed interface Scheduler {
   fun scheduleNextOperation(
       threads: List<ThreadContext>,
-      allThreads: List<ThreadContext>
+      allThreads: Collection<ThreadContext>
   ): ThreadContext
 
   fun nextIteration(): Scheduler
