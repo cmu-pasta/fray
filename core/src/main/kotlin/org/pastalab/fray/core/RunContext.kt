@@ -51,7 +51,7 @@ import org.pastalab.fray.runtime.Runtime.onReportError
 
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 class RunContext(val config: Configuration) {
-  val registeredThreads = mutableMapOf<Long, ThreadContext>()
+  val registeredThreads = mutableMapOf<Long, ThreadContext>().toSortedMap()
   var currentThreadId: Long = -1
   var mainThreadId: Long = -1
   var bugFound: Throwable? = null
@@ -1011,41 +1011,38 @@ class RunContext(val config: Configuration) {
     }
   }
 
+  // We use enabledOperationBuffer because [getEnabledOperations] is on the hot
+  // path which is called by [scheduleNextOperation]. We want to avoid creating
+  // a temporary list every time.
+  val enabledOperationBuffer = mutableListOf<ThreadContext>()
+
   fun getEnabledOperations(): List<ThreadContext> {
-    var enabledOperations =
-        registeredThreads.values
-            .toList()
-            .filter { it.state == ThreadState.Runnable }
-            .sortedBy { it.thread.id }
+    enabledOperationBuffer.clear()
+    registeredThreads.values.filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
 
     // The second empty check will enable timed operations
-    if (enabledOperations.isEmpty()) {
+    if (enabledOperationBuffer.isEmpty()) {
       unblockTimedOperations()
-      enabledOperations =
-          registeredThreads.values
-              .toList()
-              .filter { it.state == ThreadState.Runnable }
-              .sortedBy { it.thread.id }
+      registeredThreads.values.toList().filterTo(enabledOperationBuffer) {
+        it.state == ThreadState.Runnable
+      }
     }
 
     // The first empty check will try to wait for threads blocked reactively
     // (e.g., by network operations).
-    if (enabledOperations.isEmpty()) {
-      if (reactiveBlockedThreadQueue.isEmpty()) return enabledOperations
+    if (enabledOperationBuffer.isEmpty()) {
+      if (reactiveBlockedThreadQueue.isEmpty()) return enabledOperationBuffer
       synchronized(reactiveResumedThreadQueue) {
         while (reactiveResumedThreadQueue.isEmpty()) {
           (reactiveResumedThreadQueue as Object).wait()
         }
       }
       unblockThreadsInReactiveQueue()
-      enabledOperations =
-          registeredThreads.values
-              .toList()
-              .filter { it.state == ThreadState.Runnable }
-              .sortedBy { it.thread.id }
+      registeredThreads.values.toList().filterTo(enabledOperationBuffer) {
+        it.state == ThreadState.Runnable
+      }
     }
-
-    return enabledOperations
+    return enabledOperationBuffer
   }
 
   fun scheduleNextOperation(shouldBlockCurrentThread: Boolean) {

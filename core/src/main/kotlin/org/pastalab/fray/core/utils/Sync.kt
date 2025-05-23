@@ -4,7 +4,7 @@ package org.pastalab.fray.core.utils
 // for signals.
 class Sync(val goal: Int) : Any() {
   private var count = 0
-  private val signaler = mutableListOf<String>()
+  //  private val signaler = mutableListOf<String>()
   private var isBlocked = false
 
   @Synchronized fun isBlocked() = isBlocked
@@ -35,13 +35,13 @@ class Sync(val goal: Int) : Any() {
     isBlocked = false
     // At this point no concurrency.
     count = 0
-    signaler.clear()
+    //    signaler.clear()
   }
 
   @Synchronized
   fun unblock() {
     count += 1
-    signaler.add(Thread.currentThread().name)
+    //    signaler.add(Thread.currentThread().name)
     Utils.verifyOrReport(count <= goal)
     if (count == goal) {
       (this as Object).notify()
