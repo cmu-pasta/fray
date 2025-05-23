@@ -1024,15 +1024,18 @@ class RunContext(val config: Configuration) {
     // The first empty check will try to wait for threads blocked reactively
     // (e.g., by network operations).
     if (enabledOperationBuffer.isEmpty()) {
-      if (reactiveBlockedThreadQueue.isEmpty()) return enabledOperationBuffer
-      synchronized(reactiveResumedThreadQueue) {
-        while (reactiveResumedThreadQueue.isEmpty()) {
-          (reactiveResumedThreadQueue as Object).wait()
+      if (!reactiveBlockedThreadQueue.isEmpty()) {
+        synchronized(reactiveResumedThreadQueue) {
+          while (reactiveResumedThreadQueue.isEmpty()) {
+            (reactiveResumedThreadQueue as Object).wait()
+          }
         }
+        unblockThreadsInReactiveQueue()
+        registeredThreads.values.filterTo(enabledOperationBuffer) {
+          it.state == ThreadState.Runnable
+        }
+        enabledOperationBuffer.sortBy { it.thread.id }
       }
-      unblockThreadsInReactiveQueue()
-      registeredThreads.values.filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
-      enabledOperationBuffer.sortBy { it.thread.id }
     }
 
     // The second empty check will enable timed operations
@@ -1041,7 +1044,6 @@ class RunContext(val config: Configuration) {
       registeredThreads.values.filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
       enabledOperationBuffer.sortBy { it.thread.id }
     }
-
     return enabledOperationBuffer
   }
 

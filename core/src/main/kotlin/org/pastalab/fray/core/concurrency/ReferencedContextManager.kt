@@ -17,8 +17,7 @@ class ReferencedContextManager<T>(val contextProducer: (Any) -> T) {
   }
 
   fun addContext(obj: Any, context: T) {
-    val id = System.identityHashCode(obj)
-    objMap[id] = context
+    objMap[obj] = context
   }
 
   fun done(reset: Boolean = true) {
