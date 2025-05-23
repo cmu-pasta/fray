@@ -60,6 +60,7 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
     val ALLOWED_JDK_CLASSES =
         arrayOf(
             "sun/security/ssl/SSLExtension\$ClientExtensions",
+            "sun/security/validator/CADistrustPolicy",
             "java/net/IDN",
             "sun/security/ssl/ClientHandshakeContext",
             "java/security/cert/X509CertSelector",
