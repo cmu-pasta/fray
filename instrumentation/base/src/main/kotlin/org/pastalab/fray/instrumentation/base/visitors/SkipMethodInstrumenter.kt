@@ -22,6 +22,7 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
         URLClassLoader::class.java.name,
         JarURLConnection::class.java.name,
         Properties::class.java.name,
+        "sun.security.util.ObjectIdentifier",
         "org.junit.platform.launcher.core.LauncherConfigurationParameters",
         //        "org.junit.platform.engine.support.store.NamespacedHierarchicalStore",
         "org.slf4j.LoggerFactory",

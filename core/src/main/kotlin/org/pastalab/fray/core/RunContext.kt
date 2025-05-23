@@ -1044,6 +1044,8 @@ class RunContext(val config: Configuration) {
     return enabledOperationBuffer
   }
 
+  var previousThreadId: Long = 0
+
   fun scheduleNextOperation(shouldBlockCurrentThread: Boolean) {
     // Our current design makes sure that reschedule is only called
     // by scheduled thread.
@@ -1103,6 +1105,7 @@ class RunContext(val config: Configuration) {
     config.scheduleObservers.forEach {
       it.onNewSchedule(registeredThreads.values.toList().toThreadInfos(), nextThread.toThreadInfo())
     }
+    previousThreadId = currentThreadId
 
     currentThreadId = nextThread.thread.id
     nextThread.state = ThreadState.Running
