@@ -23,7 +23,8 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
       shouldInstrument =
           name.startsWith("java/util/Observable") ||
               name.startsWith("java/util/Vector") ||
-              name.startsWith("sun/nio/ch/")
+              name.startsWith("sun/nio/ch/") ||
+              name.startsWith("sun/security/")
     }
   }
 
