@@ -7,11 +7,10 @@ import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
 import java.net.JarURLConnection
 import java.net.URLClassLoader
+import java.util.Properties
 import java.util.ServiceLoader
-import java.util.logging.Logger
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
-import java.util.Properties
 
 class SkipMethodInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(
