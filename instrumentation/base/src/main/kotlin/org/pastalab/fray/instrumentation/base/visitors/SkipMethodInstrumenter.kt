@@ -11,6 +11,7 @@ import java.util.Properties
 import java.util.ServiceLoader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
+import java.util.ResourceBundle
 
 class SkipMethodInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(
@@ -22,6 +23,7 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
         URLClassLoader::class.java.name,
         JarURLConnection::class.java.name,
         Properties::class.java.name,
+        ResourceBundle::class.java.name,
         "sun.security.util.ObjectIdentifier",
         "org.junit.platform.launcher.core.LauncherConfigurationParameters",
         //        "org.junit.platform.engine.support.store.NamespacedHierarchicalStore",
