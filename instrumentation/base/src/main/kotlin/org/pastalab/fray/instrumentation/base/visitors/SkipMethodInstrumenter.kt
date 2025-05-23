@@ -16,7 +16,6 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(
         cv,
         ClassLoader::class.java.name,
-        Logger::class.java.name,
         MethodType::class.java.name,
         ServiceLoader::class.java.name,
         PrintStream::class.java.name,
