@@ -7,6 +7,7 @@ import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.ConditionAwaitBlocked
 import org.pastalab.fray.core.concurrency.operations.ConditionWakeBlocked
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
+import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.rmi.ThreadState
 
 class ConditionSignalContext(lockContext: LockContext, condition: Condition) :
@@ -14,6 +15,9 @@ class ConditionSignalContext(lockContext: LockContext, condition: Condition) :
   val conditionReference = WeakReference(condition)
 
   override fun sendSignalToObject() {
+    verifyOrReport(lockContext.lockReference.get() is Lock) {
+      "ConditionSignalContext should only be used with Lock objects"
+    }
     val lock = lockContext.lockReference.get() as Lock? ?: return
     lock.lock()
     try {

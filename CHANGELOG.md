@@ -19,6 +19,12 @@ being blocked at network operations.
 - Enable resizable separator to display complete thread names.
 - Divide RunContext into controllers.
 - Add ClassConstructorInstrumenter to the JDK instrumenter.
+- Use `WeakIdentityHashMap` in `ReferenceContextManager` for more robust
+reference management.
+- Use a `enabledOperationBuffer` in `RunContext` to avoid creating new 
+list for every scheduling point.
+- Update `SkipMethodInstrumenter` and `ClassConstructorInstrumenter` to 
+avoid Fray hanging.
 
 ### Deprecated
 

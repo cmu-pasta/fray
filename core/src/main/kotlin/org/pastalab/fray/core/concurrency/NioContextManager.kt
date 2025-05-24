@@ -172,12 +172,10 @@ class NioContextManager {
 
   fun done() {
     portToServerSocketChannelContext.values.forEach { it.channelReference.get()?.close() }
-    serverSocketChannelContextManager.objMap.values.forEach {
-      it.first.channelReference.get()?.close()
-    }
-    socketChannelContextManager.objMap.values.forEach { it.first.channelReference.get()?.close() }
+    serverSocketChannelContextManager.objMap.values.forEach { it.channelReference.get()?.close() }
+    socketChannelContextManager.objMap.values.forEach { it.channelReference.get()?.close() }
     portToServerSocketChannelContext.clear()
-    selectorContextManager.objMap.values.forEach { it.first.selectorReference.get()?.close() }
+    selectorContextManager.objMap.values.forEach { it.selectorReference.get()?.close() }
     portToConnectedSockets.values.forEach { it.channelReference.get()?.close() }
     portToConnectedSockets.clear()
   }

@@ -1,50 +1,28 @@
 package org.pastalab.fray.core.concurrency
 
-import java.lang.ref.PhantomReference
-import java.lang.ref.ReferenceQueue
-
-class IdentityPhantomReference<T>(referent: T, queue: ReferenceQueue<in T>) :
-    PhantomReference<T>(referent, queue) {
-  val id = System.identityHashCode(referent)
-}
+import org.pastalab.fray.core.map.WeakIdentityHashMap
 
 class ReferencedContextManager<T>(val contextProducer: (Any) -> T) {
-  val queue = ReferenceQueue<Any>()
-  val objMap = mutableMapOf<Int, Pair<T, IdentityPhantomReference<*>>>()
+  val objMap = WeakIdentityHashMap<Any, T>()
 
   fun getContext(obj: Any): T {
-    val id = System.identityHashCode(obj)
     if (!hasContext(obj)) {
-      objMap[id] = Pair(contextProducer(obj), IdentityPhantomReference(obj, queue))
-      gc()
+      objMap[obj] = contextProducer(obj)
     }
-    return objMap[id]!!.first
+    return objMap[obj]!!
   }
 
   fun hasContext(obj: Any): Boolean {
-    val id = System.identityHashCode(obj)
-    return objMap.containsKey(id)
+    return objMap.containsKey(obj)
   }
 
   fun addContext(obj: Any, context: T) {
-    val id = System.identityHashCode(obj)
-    objMap[id] = Pair(context, IdentityPhantomReference(obj, queue))
-    gc()
+    objMap[obj] = context
   }
 
   fun done(reset: Boolean = true) {
-    gc()
     if (reset) {
       objMap.clear()
-    }
-  }
-
-  fun gc() {
-    var ref = queue.poll()
-    while (ref != null) {
-      val id = (ref as IdentityPhantomReference<*>).id
-      objMap.remove(id)
-      ref = queue.poll()
     }
   }
 }

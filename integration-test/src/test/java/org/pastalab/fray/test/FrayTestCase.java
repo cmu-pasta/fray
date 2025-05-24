@@ -11,7 +11,10 @@ import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.test.controllers.network.reactive.success.NetworkCallWithSocketNoDeadlock;
+import org.pastalab.fray.test.core.fail.rwlock.ReentrantReadWriteLockDeadlock;
 import org.pastalab.fray.test.core.success.classconstructor.X509CertSelectorConstructorNoDeadlock;
+import org.pastalab.fray.test.core.success.lock.ReentrantLockTryLockNoDeadlock;
+import org.pastalab.fray.test.core.success.rwlock.ReentrantReadWriteLockNoDeadlock;
 
 import java.util.*;
 
@@ -40,7 +43,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                X509CertSelectorConstructorNoDeadlock.main(new String[]{});
+                                ReentrantLockTryLockNoDeadlock.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
