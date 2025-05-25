@@ -12,7 +12,6 @@ import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.StampedLock
 import org.pastalab.fray.core.RunContext
-import org.pastalab.fray.core.utils.Utils
 import org.pastalab.fray.runtime.Delegate
 import org.pastalab.fray.runtime.MemoryOpType
 import org.pastalab.fray.runtime.RangerCondition
@@ -27,350 +26,162 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     synchronizer.entered.set(false)
   }
 
-  override fun onThreadCreateDone(t: Thread) {
-    if (synchronizer.checkEntered()) return
-    context.threadCreateDone(t)
-    synchronizer.entered.set(false)
-  }
+  override fun onThreadCreateDone(t: Thread) =
+      synchronizer.runInFrayDoneNoSkip { context.threadCreateDone(t) }
 
-  override fun onThreadStart(t: Thread) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("thread.start")
-      return
-    }
-    context.threadStart(t)
-    onSkipMethod("thread.start")
-    synchronizer.entered.set(false)
-  }
+  override fun onThreadStart(t: Thread) =
+      synchronizer.runInFrayStart("thread.start") { context.threadStart(t) }
 
-  override fun onThreadStartDone(t: Thread) {
-    onSkipMethodDone("thread.start")
-    if (synchronizer.checkEntered()) return
-    context.threadStartDone(t)
-    synchronizer.entered.set(false)
-  }
+  override fun onThreadStartDone(t: Thread) =
+      synchronizer.runInFrayDone("thread.start") { context.threadStartDone(t) }
 
-  override fun onThreadRun() {
-    if (synchronizer.checkEntered()) return
-    context.threadRun()
-    synchronizer.entered.set(false)
-  }
+  override fun onThreadRun() = synchronizer.runInFrayDoneNoSkip { context.threadRun() }
 
-  override fun onThreadEnd() {
-    if (synchronizer.checkEntered()) return
-    context.threadCompleted(Thread.currentThread())
-    synchronizer.entered.set(false)
-  }
+  override fun onThreadEnd() = synchronizer.runInFrayDoneNoSkip { context.threadCompleted() }
 
-  override fun onThreadGetState(t: Thread, state: Thread.State): Thread.State {
-    if (synchronizer.checkEntered()) return state
-    val result = context.threadGetState(t, state)
-    synchronizer.entered.set(false)
-    return result
-  }
+  override fun onThreadGetState(t: Thread, state: Thread.State): Thread.State =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { context.threadGetState(t, state) },
+          { state },
+      )
 
-  override fun onObjectWait(o: Any, timeout: Long) {
-    if (synchronizer.checkEntered()) return
-    try {
-      context.objectWait(o, timeout != 0L)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onObjectWait(o: Any, timeout: Long) =
+      synchronizer.runInFrayStartNoSkip { context.objectWait(o, timeout != 0L) }
 
-  override fun onObjectWaitDone(o: Any) {
-    if (synchronizer.checkEntered()) return
-    try {
-      context.objectWaitDone(o)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onObjectWaitDone(o: Any) =
+      synchronizer.runInFrayDoneNoSkip { context.objectWaitDone(o).map {} }
 
-  override fun onObjectNotify(o: Any) {
-    if (synchronizer.checkEntered()) return
-    context.objectNotify(o)
-    synchronizer.entered.set(false)
-  }
+  override fun onObjectNotify(o: Any) = synchronizer.runInFrayDoneNoSkip { context.objectNotify(o) }
 
-  override fun onObjectNotifyAll(o: Any) {
-    if (synchronizer.checkEntered()) return
-    context.objectNotifyAll(o)
-    synchronizer.entered.set(false)
-  }
+  override fun onObjectNotifyAll(o: Any) =
+      synchronizer.runInFrayDoneNoSkip { context.objectNotifyAll(o) }
 
-  override fun onLockLockInterruptibly(l: Lock) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Lock.lock")
-      return
-    }
-    try {
-      context.lockLock(l, true)
-    } finally {
-      synchronizer.entered.set(false)
-      onSkipMethod("Lock.lock")
-    }
-  }
+  override fun onLockLockInterruptibly(l: Lock) =
+      synchronizer.runInFrayStart("Lock.lock") { context.lockLock(l, true) }
 
-  override fun onLockHasQueuedThreads(l: Lock, result: Boolean): Boolean {
-    if (synchronizer.checkEntered()) {
-      synchronizer.entered.set(false)
-      return result
-    }
-    val result = context.lockHasQueuedThreads(l)
-    synchronizer.entered.set(false)
-    return result
-  }
+  override fun onLockHasQueuedThreads(l: Lock, result: Boolean): Boolean =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { context.lockHasQueuedThreads(l) },
+          { result },
+      )
 
-  override fun onLockHasQueuedThread(l: Lock, t: Thread, result: Boolean): Boolean {
-    if (synchronizer.checkEntered()) {
-      synchronizer.entered.set(false)
-      return result
-    }
-    val result = context.lockHasQueuedThread(l, t)
-    synchronizer.entered.set(false)
-    return result
-  }
+  override fun onLockHasQueuedThread(l: Lock, t: Thread, result: Boolean): Boolean =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { context.lockHasQueuedThread(l, t) },
+          { result },
+      )
 
-  override fun onLockTryLock(l: Lock) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Lock.tryLock")
-      return
-    }
-    try {
-      context.lockTryLock(l, false, false)
-    } finally {
-      synchronizer.entered.set(false)
-      onSkipMethod("Lock.tryLock")
-    }
-  }
+  override fun onLockTryLock(l: Lock) =
+      synchronizer.runInFrayStart("Lock.tryLock") {
+        context.lockTryLock(l, canInterrupt = false, timed = false)
+      }
 
-  override fun onLockTryLockDone(l: Lock) {
-    onSkipMethodDone("Lock.tryLock")
-  }
+  override fun onLockTryLockDone(l: Lock) =
+      synchronizer.runInFrayDone("Lock.tryLock") { Result.success(Unit) }
 
-  override fun onLockTryLockInterruptibly(l: Lock, timeout: Long): Long {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Lock.tryLock")
-      return timeout
-    }
-    try {
-      context.lockTryLock(l, true, true)
-    } finally {
-      synchronizer.entered.set(false)
-      onSkipMethod("Lock.tryLock")
-    }
-    return 0
-  }
+  override fun onLockTryLockInterruptibly(l: Lock, timeout: Long): Long =
+      synchronizer.runInFrayStartWithOriginBlock(
+          "Lock.tryLock",
+          { context.lockTryLock(l, canInterrupt = true, timed = true).map { 0 } },
+          { timeout },
+      )
 
-  override fun onLockTryLockInterruptiblyDone(l: Lock) {
-    onSkipMethodDone("Lock.tryLock")
-  }
+  override fun onLockTryLockInterruptiblyDone(l: Lock) =
+      synchronizer.runInFrayDone("Lock.tryLock") { Result.success(Unit) }
 
-  override fun onLockLock(l: Lock) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Lock.lock")
-      return
-    }
-    try {
-      context.lockLock(l, false)
-    } finally {
-      onSkipMethod("Lock.lock")
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onLockLock(l: Lock) =
+      synchronizer.runInFrayStart("Lock.lock") { context.lockLock(l, false) }
 
-  override fun onLockLockDone() {
-    onSkipMethodDone("Lock.lock")
-  }
+  override fun onLockLockDone() = synchronizer.runInFrayDone("Lock.lock") { Result.success(Unit) }
 
-  override fun onAtomicOperation(o: Any, type: MemoryOpType) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("AtomicOperation")
-      return
-    }
-    try {
-      context.atomicOperation(o, type)
-    } finally {
-      synchronizer.entered.set(false)
-      onSkipMethod("AtomicOperation")
-    }
-  }
+  override fun onAtomicOperation(o: Any, type: MemoryOpType) =
+      synchronizer.runInFrayStart("AtomicOperation") { context.atomicOperation(o, type) }
 
-  override fun onAtomicOperationDone() {
-    onSkipMethodDone("AtomicOperation")
-  }
+  override fun onAtomicOperationDone() =
+      synchronizer.runInFrayDone("AtomicOperation") { Result.success(Unit) }
 
-  override fun onLockUnlock(l: Lock) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Lock.unlock")
-      return
-    }
-    try {
-      context.lockUnlock(l)
-    } finally {
-      synchronizer.entered.set(false)
-      onSkipMethod("Lock.unlock")
-    }
-  }
+  override fun onLockUnlock(l: Lock) =
+      synchronizer.runInFrayStart("Lock.unlock") { context.lockUnlock(l) }
 
-  override fun onLockUnlockDone(l: Lock) {
-    onSkipMethodDone("Lock.unlock")
-    if (synchronizer.checkEntered()) return
-    context.lockUnlockDone(l)
-    synchronizer.entered.set(false)
-  }
+  override fun onLockUnlockDone(l: Lock) =
+      synchronizer.runInFrayDone("Lock.unlock") { context.lockUnlockDone(l) }
 
-  override fun onMonitorEnter(o: Any) {
-    if (synchronizer.checkEntered()) return
-    try {
-      context.monitorEnter(o, false)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onMonitorEnter(o: Any) =
+      synchronizer.runInFrayStartNoSkip { context.monitorEnter(o, false) }
 
-  override fun onMonitorExit(o: Any) {
-    if (synchronizer.checkEntered()) return
-    context.monitorExit(o)
-    synchronizer.entered.set(false)
-  }
+  override fun onMonitorExit(o: Any) = synchronizer.runInFrayStartNoSkip { context.monitorExit(o) }
 
-  override fun onMonitorExitDone(o: Any) {
-    if (synchronizer.checkEntered()) return
-    context.lockUnlockDone(o)
-    synchronizer.entered.set(false)
-  }
+  override fun onMonitorExitDone(o: Any) =
+      synchronizer.runInFrayDoneNoSkip { context.lockUnlockDone(o) }
 
   override fun onLockNewCondition(c: Condition, l: Lock) {
-    if (synchronizer.checkEntered()) return
+    if (synchronizer.entered.get()) return
     context.lockNewCondition(c, l)
     synchronizer.entered.set(false)
   }
 
-  override fun onConditionAwait(o: Condition) {
-    onConditionAwaitImpl(o, true, false)
-  }
+  override fun onConditionAwait(o: Condition) =
+      synchronizer.runInFrayStart("Condition.await") {
+        context.conditionAwait(o, canInterrupt = true, timed = false)
+      }
 
-  fun onConditionAwaitImpl(o: Condition, canInterrupt: Boolean, timed: Boolean): Boolean {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Condition.await")
-      return true
-    }
-    try {
-      context.conditionAwait(o, canInterrupt, timed)
-    } finally {
-      synchronizer.entered.set(false)
-      onSkipMethod("Condition.await")
-    }
-    return false
-  }
+  override fun onConditionAwaitUninterruptibly(o: Condition) =
+      synchronizer.runInFrayStart("Condition.await") {
+        context.conditionAwait(o, canInterrupt = false, timed = false)
+      }
 
-  fun onConditionAwaitDoneImpl(o: Condition, canInterrupt: Boolean): Boolean {
-    if (!onSkipMethodDone("Condition.await")) {
-      return true
-    }
-    if (synchronizer.checkEntered()) return true
-    try {
-      return context.conditionAwaitDone(o, canInterrupt)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onConditionAwaitDone(o: Condition) =
+      synchronizer.runInFrayDone("Condition.await") { context.conditionAwaitDone(o, true).map {} }
 
-  override fun onConditionAwaitUninterruptibly(o: Condition) {
-    onConditionAwaitImpl(o, false, false)
-  }
+  override fun onConditionAwaitUninterruptiblyDone(o: Condition) =
+      synchronizer.runInFrayDone("Condition.await") { context.conditionAwaitDone(o, false).map {} }
 
-  override fun onConditionAwaitDone(o: Condition) {
-    onConditionAwaitDoneImpl(o, true)
-  }
+  override fun onConditionSignal(o: Condition) =
+      synchronizer.runInFrayStart("Condition.signal") { context.conditionSignal(o) }
 
-  override fun onConditionAwaitUninterruptiblyDone(o: Condition) {
-    onConditionAwaitDoneImpl(o, false)
-  }
+  override fun onConditionSignalDone(l: Condition) =
+      synchronizer.runInFrayDone("Condition.signal") { Result.success(Unit) }
 
-  override fun onConditionSignal(o: Condition) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Condition.signal")
-      return
-    }
-    context.conditionSignal(o)
-    synchronizer.entered.set(false)
-    onSkipMethod("Condition.signal")
-  }
-
-  override fun onConditionSignalDone(l: Condition) {
-    onSkipMethodDone("Condition.signal")
-  }
-
-  override fun onConditionSignalAll(o: Condition) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Condition.signal")
-      return
-    }
-    context.conditionSignalAll(o)
-    synchronizer.entered.set(false)
-    onSkipMethod("Condition.signal")
-  }
+  override fun onConditionSignalAll(o: Condition) =
+      synchronizer.runInFrayStart("Condition.signal") { context.conditionSignalAll(o) }
 
   override fun onUnsafeReadVolatile(o: Any?, offset: Long) {
     if (o == null) return
-    if (synchronizer.checkEntered()) return
-    try {
+    synchronizer.runInFrayStartNoSkip {
       context.unsafeOperation(o, offset, MemoryOpType.MEMORY_READ)
-    } finally {
-      synchronizer.entered.set(false)
     }
   }
 
   override fun onUnsafeWriteVolatile(o: Any?, offset: Long) {
     if (o == null) return
-    if (synchronizer.checkEntered()) return
-    try {
+    synchronizer.runInFrayStartNoSkip {
       context.unsafeOperation(o, offset, MemoryOpType.MEMORY_WRITE)
-    } finally {
-      synchronizer.entered.set(false)
     }
   }
 
   override fun onFieldRead(o: Any?, owner: String, name: String, descriptor: String) {
     if (o == null) return
-    if (synchronizer.checkEntered()) return
-    try {
+    synchronizer.runInFrayStartNoSkip {
       context.fieldOperation(o, owner, name, MemoryOpType.MEMORY_READ)
-    } finally {
-      synchronizer.entered.set(false)
     }
   }
 
   override fun onFieldWrite(o: Any?, owner: String, name: String, descriptor: String) {
     if (o == null) return
-    if (synchronizer.checkEntered()) return
-    try {
+    synchronizer.runInFrayStartNoSkip {
       context.fieldOperation(o, owner, name, MemoryOpType.MEMORY_WRITE)
-    } finally {
-      synchronizer.entered.set(false)
     }
   }
 
-  override fun onStaticFieldRead(owner: String, name: String, descriptor: String) {
-    if (synchronizer.checkEntered()) return
-    try {
-      context.fieldOperation(null, owner, name, MemoryOpType.MEMORY_READ)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onStaticFieldRead(owner: String, name: String, descriptor: String) =
+      synchronizer.runInFrayStartNoSkip {
+        context.fieldOperation(null, owner, name, MemoryOpType.MEMORY_READ)
+      }
 
-  override fun onStaticFieldWrite(owner: String, name: String, descriptor: String) {
-    if (synchronizer.checkEntered()) return
-    try {
-      context.fieldOperation(null, owner, name, MemoryOpType.MEMORY_WRITE)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onStaticFieldWrite(owner: String, name: String, descriptor: String) =
+      synchronizer.runInFrayStartNoSkip {
+        context.fieldOperation(null, owner, name, MemoryOpType.MEMORY_WRITE)
+      }
 
   override fun onExit(status: Int) {
     if (synchronizer.checkEntered()) return
@@ -380,14 +191,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     synchronizer.entered.set(false)
   }
 
-  override fun onYield() {
-    if (synchronizer.checkEntered()) return
-    try {
-      context.yield()
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onYield() = synchronizer.runInFrayStartNoSkip { context.yield() }
 
   override fun onSkipMethod(signature: String) {
     synchronizer.onSkipMethod(signature)
@@ -397,23 +201,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     return synchronizer.onSkipMethodDone(signature)
   }
 
-  fun onThreadParkImpl(): Boolean {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Thread.park")
-      return true
-    }
-    try {
-      context.threadPark()
-    } finally {
-      synchronizer.entered.set(false)
-      onSkipMethod("Thread.park")
-    }
-    return false
-  }
-
-  override fun onThreadPark() {
-    onThreadParkImpl()
-  }
+  override fun onThreadPark() = synchronizer.runInFrayStart("Thread.park") { context.threadPark() }
 
   override fun onUnsafeThreadParkTimed(isAbsolute: Boolean, time: Long) {
     if (isAbsolute) {
@@ -423,239 +211,124 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     }
   }
 
-  fun onThreadParkDoneImpl(timed: Boolean) {
-    if (!onSkipMethodDone("Thread.park")) {
-      return
-    }
-    if (synchronizer.checkEntered()) return
-    try {
-      context.threadParkDone(timed)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
-
-  override fun onThreadParkDone() {
-    onThreadParkDoneImpl(false)
-  }
+  override fun onThreadParkDone() =
+      synchronizer.runInFrayDone("Thread.park") { context.threadParkDone(false) }
 
   override fun onThreadUnpark(t: Thread?) {
     if (t == null) return
-    if (synchronizer.checkEntered()) {
-      return
-    }
-    context.threadUnpark(t)
-    synchronizer.entered.set(false)
+    synchronizer.runInFrayStart("Thread.unpark") { context.threadUnpark(t) }
   }
 
   override fun onThreadUnparkDone(t: Thread?) {
     if (t == null) return
-    if (synchronizer.checkEntered()) return
-    context.threadUnparkDone(t)
-    synchronizer.entered.set(false)
+    synchronizer.runInFrayDone("Thread.unpark") { context.threadUnparkDone(t) }
   }
 
-  override fun onThreadInterrupt(t: Thread) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Thread.interrupt")
-      return
-    }
-    try {
-      context.threadInterrupt(t)
-    } finally {
-      onSkipMethod("Thread.interrupt")
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onThreadInterrupt(t: Thread) =
+      synchronizer.runInFrayStart("Thread.interrupt") { context.threadInterrupt(t) }
 
-  override fun onThreadInterruptDone(t: Thread) {
-    onSkipMethodDone("Thread.interrupt")
-    if (synchronizer.checkEntered()) return
-    context.threadInterruptDone(t)
-    synchronizer.entered.set(false)
-  }
+  override fun onThreadInterruptDone(t: Thread) =
+      synchronizer.runInFrayDone("Thread.interrupt") { context.threadInterruptDone(t) }
 
-  override fun onThreadClearInterrupt(origin: Boolean, t: Thread): Boolean {
-    if (synchronizer.checkEntered()) return origin
-    val o = context.threadClearInterrupt(t)
-    synchronizer.entered.set(false)
-    return o
-  }
+  override fun onThreadClearInterrupt(origin: Boolean, t: Thread): Boolean =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { context.threadClearInterrupt(t) },
+          { origin },
+      )
 
   override fun onReentrantReadWriteLockInit(lock: ReentrantReadWriteLock) {
     context.reentrantReadWriteLockInit(lock)
   }
 
-  override fun onSemaphoreInit(sem: Semaphore) {
-    if (synchronizer.checkEntered()) return
-    context.semaphoreInit(sem)
-    synchronizer.entered.set(false)
-  }
+  override fun onSemaphoreInit(sem: Semaphore) =
+      synchronizer.runInFrayStartNoSkip { context.semaphoreInit(sem) }
 
-  override fun onSemaphoreTryAcquire(sem: Semaphore, permits: Int) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Semaphore.acquire")
-      return
-    }
-    try {
-      context.semaphoreAcquire(sem, permits, false, true, false)
-    } finally {
-      onSkipMethod("Semaphore.acquire")
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onSemaphoreTryAcquire(sem: Semaphore, permits: Int) =
+      synchronizer.runInFrayStart("Semaphore.acquire") {
+        context.semaphoreAcquire(
+            sem, permits, shouldBlock = false, canInterrupt = true, timed = false)
+      }
 
   override fun onSemaphoreTryAcquirePermitsTimeout(
       sem: Semaphore,
       permits: Int,
       timeout: Long,
       unit: TimeUnit
-  ): Long {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Semaphore.acquire")
-      return timeout
-    }
-    try {
-      context.semaphoreAcquire(sem, permits, true, true, true)
-    } finally {
-      onSkipMethod("Semaphore.acquire")
-      synchronizer.entered.set(false)
-    }
-    return 0
-  }
+  ): Long =
+      synchronizer.runInFrayStartWithOriginBlock(
+          "Semaphore.acquire",
+          {
+            context
+                .semaphoreAcquire(
+                    sem, permits, shouldBlock = true, canInterrupt = true, timed = true)
+                .map { 0L }
+          },
+          {
+            return@runInFrayStartWithOriginBlock timeout
+          },
+      )
 
-  override fun onSemaphoreAcquire(sem: Semaphore, permits: Int) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Semaphore.acquire")
-      return
-    }
-    try {
-      context.semaphoreAcquire(sem, permits, true, true, false)
-    } finally {
-      onSkipMethod("Semaphore.acquire")
-      synchronizer.entered.set(false)
-    }
-  }
-
-  override fun onSemaphoreAcquireUninterruptibly(sem: Semaphore, permits: Int) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Semaphore.acquire")
-      return
-    }
-    try {
-      context.semaphoreAcquire(sem, permits, true, false, false)
-    } finally {
-      synchronizer.entered.set(false)
-      onSkipMethod("Semaphore.acquire")
-    }
-  }
-
-  override fun onSemaphoreAcquireDone() {
-    onSkipMethodDone("Semaphore.acquire")
-  }
-
-  override fun onSemaphoreRelease(sem: Semaphore, permits: Int) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Semaphore.release")
-      return
-    }
-    context.semaphoreRelease(sem, permits)
-    synchronizer.entered.set(false)
-    onSkipMethod("Semaphore.release")
-  }
-
-  override fun onSemaphoreReleaseDone() {
-    onSkipMethodDone("Semaphore.release")
-  }
-
-  override fun onSemaphoreDrainPermits(sem: Semaphore) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Semaphore.drainPermits")
-      return
-    }
-    context.semaphoreDrainPermits(sem)
-    synchronizer.entered.set(false)
-    onSkipMethod("Semaphore.drainPermits")
-  }
-
-  override fun onSemaphoreDrainPermitsDone() {
-    onSkipMethodDone("Semaphore.drainPermits")
-  }
-
-  override fun onSemaphoreReducePermits(sem: Semaphore, permits: Int) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Semaphore.reducePermits")
-      return
-    }
-    context.semaphoreReducePermits(sem, permits)
-    synchronizer.entered.set(false)
-    onSkipMethod("Semaphore.reducePermits")
-  }
-
-  override fun onSemaphoreReducePermitsDone() {
-    onSkipMethodDone("Semaphore.reducePermits")
-  }
-
-  fun onLatchAwaitImpl(latch: CountDownLatch, timed: Boolean): Boolean {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Latch.await")
-      return true
-    }
-    try {
-      context.latchAwait(latch, timed)
-    } finally {
-      synchronizer.entered.set(false)
-      onSkipMethod("Latch.await")
-    }
-    return false
-  }
-
-  override fun onLatchAwait(latch: CountDownLatch) {
-    onLatchAwaitImpl(latch, false)
-  }
-
-  fun onLatchAwaitDoneImpl(latch: CountDownLatch): Boolean {
-    onSkipMethodDone("Latch.await")
-    if (synchronizer.checkEntered()) return true
-    try {
-      return context.latchAwaitDone(latch)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
-
-  override fun onLatchAwaitTimeout(latch: CountDownLatch, timeout: Long, unit: TimeUnit): Boolean {
-    try {
-      if (onLatchAwaitImpl(latch, true)) {
-        onSkipMethodDone("Latch.await")
-        return latch.await(timeout, unit)
+  override fun onSemaphoreAcquire(sem: Semaphore, permits: Int) =
+      synchronizer.runInFrayStart("Semaphore.acquire") {
+        context.semaphoreAcquire(
+            sem, permits, shouldBlock = true, canInterrupt = true, timed = false)
       }
-    } catch (e: InterruptedException) {
-      // Do nothing
-    }
-    return onLatchAwaitDoneImpl(latch)
+
+  override fun onSemaphoreAcquireUninterruptibly(sem: Semaphore, permits: Int) =
+      synchronizer.runInFrayStart("Semaphore.acquire") {
+        context.semaphoreAcquire(
+            sem, permits, shouldBlock = true, canInterrupt = false, timed = false)
+      }
+
+  override fun onSemaphoreAcquireDone() =
+      synchronizer.runInFrayDone("Semaphore.acquire") { Result.success(Unit) }
+
+  override fun onSemaphoreRelease(sem: Semaphore, permits: Int) =
+      synchronizer.runInFrayStart("Semaphore.release") { context.semaphoreRelease(sem, permits) }
+
+  override fun onSemaphoreReleaseDone() =
+      synchronizer.runInFrayDone("Semaphore.release") { Result.success(Unit) }
+
+  override fun onSemaphoreDrainPermits(sem: Semaphore) =
+      synchronizer.runInFrayStart("Semaphore.drainPermits") {
+        context.semaphoreDrainPermits(sem).map {}
+      }
+
+  override fun onSemaphoreDrainPermitsDone() =
+      synchronizer.runInFrayDone("Semaphore.drainPermits") { Result.success(Unit) }
+
+  override fun onSemaphoreReducePermits(sem: Semaphore, permits: Int) =
+      synchronizer.runInFrayStart("Semaphore.reducePermits") {
+        context.semaphoreReducePermits(sem, permits)
+      }
+
+  override fun onSemaphoreReducePermitsDone() =
+      synchronizer.runInFrayDone("Semaphore.reducePermits") { Result.success(Unit) }
+
+  override fun onLatchAwait(latch: CountDownLatch) =
+      synchronizer.runInFrayStart("Latch.await") { context.latchAwait(latch, false) }
+
+  // Unlike `onLatchAwait`, which is only instrumented at the start and end of the method,
+  // `onLatchAwaitTimeout` replaces the original `CountDownLatch.await` method completely because
+  // The underlying method call is not deterministic due to the timeout. Therefore, we need to
+  // implement a deterministic version of the method.
+  override fun onLatchAwaitTimeout(latch: CountDownLatch, timeout: Long, unit: TimeUnit): Boolean {
+    runCatching { synchronizer.runInFrayStart("Latch.await") { context.latchAwait(latch, true) } }
+    return synchronizer.runInFrayDoneWithOriginBlock(
+        "Latch.await",
+        { context.latchAwaitDone(latch) },
+        { latch.await(timeout, unit) },
+    )
   }
 
-  override fun onLatchAwaitDone(latch: CountDownLatch) {
-    onLatchAwaitDoneImpl(latch)
-  }
+  override fun onLatchAwaitDone(latch: CountDownLatch) =
+      synchronizer.runInFrayDone("Latch.await") { context.latchAwaitDone(latch).map {} }
 
-  override fun onLatchCountDown(latch: CountDownLatch) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("Latch.countDown")
-      return
-    }
-    context.latchCountDown(latch)
-    synchronizer.entered.set(false)
-    onSkipMethod("Latch.countDown")
-  }
+  override fun onLatchCountDown(latch: CountDownLatch) =
+      synchronizer.runInFrayStart("Latch.countDown") { context.latchCountDown(latch) }
 
-  override fun onLatchCountDownDone(latch: CountDownLatch) {
-    onSkipMethodDone("Latch.countDown")
-    if (synchronizer.checkEntered()) return
-    context.latchCountDownDone(latch)
-    synchronizer.entered.set(false)
-  }
+  override fun onLatchCountDownDone(latch: CountDownLatch) =
+      synchronizer.runInFrayDone("Latch.countDown") { context.latchCountDownDone(latch) }
 
   override fun onReportError(e: Throwable) {
     val originEntered = synchronizer.entered.get()
@@ -666,413 +339,312 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   override fun onArrayLoad(o: Any?, index: Int) {
     if (o == null) return
-    if (synchronizer.checkEntered()) return
-    try {
-      context.arrayOperation(o, index, MemoryOpType.MEMORY_READ)
-    } finally {
-      synchronizer.entered.set(false)
-    }
+    synchronizer.runInFrayStartNoSkip { context.arrayOperation(o, index, MemoryOpType.MEMORY_READ) }
   }
 
   override fun onArrayStore(o: Any?, index: Int) {
     if (o == null) return
-    if (synchronizer.checkEntered()) return
-    try {
+    synchronizer.runInFrayStartNoSkip {
       context.arrayOperation(o, index, MemoryOpType.MEMORY_WRITE)
-    } finally {
-      synchronizer.entered.set(false)
     }
   }
 
   override fun start() {
-    // For the first thread, it is not registered.
+    // The first thread is not registered.
     // Therefor we cannot call `synchronizer.checkEntered` here.
-    try {
-      synchronizer.entered.set(true)
-      context.start()
-      synchronizer.entered.set(false)
-    } catch (e: Throwable) {
-      e.printStackTrace()
-    }
+    synchronizer.entered.set(true)
+    context.start()
+    synchronizer.entered.set(false)
   }
 
   override fun onThreadParkNanos(nanos: Long) {
-    if (onThreadParkImpl()) {
-      onSkipMethodDone("Thread.park")
-      LockSupport.parkNanos(nanos)
-      return
-    }
-    try {
-      LockSupport.park()
-    } finally {
-      onThreadParkDoneImpl(true)
-    }
+    synchronizer.runInFrayStart("Thread.park") { context.threadPark() }
+    synchronizer.runInFrayDoneWithOriginBlock(
+        "Thread.park",
+        {
+          runCatching { LockSupport.park() }
+          context.threadParkDone(true)
+        },
+        { LockSupport.parkNanos(nanos) },
+    )
   }
 
   override fun onThreadParkUntil(deadline: Long) {
-    if (onThreadParkImpl()) {
-      onSkipMethodDone("Thread.park")
-      LockSupport.parkUntil(deadline)
-      return
-    }
-    try {
-      LockSupport.park()
-    } finally {
-      onThreadParkDoneImpl(true)
-    }
+    synchronizer.runInFrayStart("Thread.park") { context.threadPark() }
+    synchronizer.runInFrayDoneWithOriginBlock(
+        "Thread.park",
+        {
+          runCatching { LockSupport.park() }
+          context.threadParkDone(true)
+        },
+        { LockSupport.parkNanos(deadline) },
+    )
   }
 
   override fun onThreadParkNanosWithBlocker(blocker: Any?, nanos: Long) {
-    if (onThreadParkImpl()) {
-      onSkipMethodDone("Thread.park")
-      LockSupport.parkNanos(blocker, nanos)
-      return
-    }
-    try {
-      LockSupport.park()
-    } finally {
-      onThreadParkDoneImpl(true)
-    }
+    synchronizer.runInFrayStart("Thread.park") { context.threadPark() }
+    synchronizer.runInFrayDoneWithOriginBlock(
+        "Thread.park",
+        {
+          runCatching { LockSupport.park() }
+          context.threadParkDone(true)
+        },
+        { LockSupport.parkNanos(blocker, nanos) },
+    )
   }
 
   override fun onThreadParkUntilWithBlocker(blocker: Any?, deadline: Long) {
-    if (onThreadParkImpl()) {
-      try {
-        LockSupport.parkUntil(blocker, deadline)
-      } finally {
-        onSkipMethodDone("Thread.park")
-      }
-      return
-    }
-    try {
-      LockSupport.park()
-    } finally {
-      onThreadParkDoneImpl(true)
-    }
+    synchronizer.runInFrayStart("Thread.park") { context.threadPark() }
+    synchronizer.runInFrayDoneWithOriginBlock(
+        "Thread.park",
+        {
+          runCatching { LockSupport.park() }
+          context.threadParkDone(true)
+        },
+        { LockSupport.parkUntil(blocker, deadline) },
+    )
   }
 
   override fun onConditionAwaitTime(o: Condition, time: Long, unit: TimeUnit): Boolean {
-    try {
-      if (onConditionAwaitImpl(o, true, true)) {
-        try {
-          return o.await(time, unit)
-        } finally {
-          onSkipMethodDone("Condition.await")
-        }
+
+    runCatching {
+      synchronizer.runInFrayStart("Condition.await") {
+        context.conditionAwait(o, canInterrupt = true, timed = true)
       }
-      o.await()
-    } catch (e: Throwable) {
-      onConditionAwaitDoneImpl(o, true)
-      throw e
     }
-    return onConditionAwaitDoneImpl(o, true)
+    return synchronizer.runInFrayDoneWithOriginBlock(
+        "Condition.await",
+        {
+          runCatching { o.await() }
+          context.conditionAwaitDone(o, true)
+        },
+        { o.await(time, unit) },
+    )
   }
 
   override fun onConditionAwaitNanos(o: Condition, nanos: Long): Long {
-    try {
-      if (onConditionAwaitImpl(o, true, true)) {
-        try {
-          return o.awaitNanos(nanos)
-        } finally {
-          onSkipMethodDone("Condition.await")
-        }
+    runCatching {
+      synchronizer.runInFrayStart("Condition.await") {
+        context.conditionAwait(o, canInterrupt = true, timed = true)
       }
-      o.await()
-    } catch (e: Throwable) {
-      onConditionAwaitDoneImpl(o, true)
-      throw e
     }
-    return if (onConditionAwaitDoneImpl(o, true)) {
-      (nanos - 10000000).coerceAtLeast(0)
-    } else {
-      0
-    }
+    return synchronizer.runInFrayDoneWithOriginBlock(
+        "Condition.await",
+        {
+          runCatching { o.await() }
+          context.conditionAwaitDone(o, true).map {
+            if (it) {
+              (nanos - 10000000).coerceAtLeast(0)
+            } else {
+              0
+            }
+          }
+        },
+        { o.awaitNanos(nanos) },
+    )
   }
 
   override fun onConditionAwaitUntil(o: Condition, deadline: Date): Boolean {
-    try {
-      if (onConditionAwaitImpl(o, true, true)) {
-        try {
-          return o.awaitUntil(deadline)
-        } finally {
-          onSkipMethodDone("Condition.await")
-        }
+    runCatching {
+      synchronizer.runInFrayStart("Condition.await") {
+        context.conditionAwait(o, canInterrupt = true, timed = true)
       }
-      o.await()
-    } catch (e: Throwable) {
-      onConditionAwaitDoneImpl(o, true)
-      throw e
     }
-    return onConditionAwaitDoneImpl(o, true)
+    return synchronizer.runInFrayDoneWithOriginBlock(
+        "Condition.await",
+        {
+          runCatching { o.await() }
+          context.conditionAwaitDone(o, true)
+        },
+        { o.awaitUntil(deadline) },
+    )
   }
 
-  override fun onThreadIsInterrupted(result: Boolean, t: Thread): Boolean {
-    if (synchronizer.checkEntered()) return result
-    val isInterrupted = context.threadIsInterrupted(t, result)
-    synchronizer.entered.set(false)
-    return isInterrupted
-  }
+  override fun onThreadIsInterrupted(result: Boolean, t: Thread): Boolean =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { context.threadIsInterrupted(t, result) },
+          { result },
+      )
 
-  override fun onObjectHashCode(t: Any): Int {
-    if (synchronizer.checkEntered()) return t.hashCode()
-    val hashCode = context.hashCode(t)
-    synchronizer.entered.set(false)
-    return hashCode
-  }
+  override fun onObjectHashCode(t: Any): Int =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { context.hashCode(t) },
+          { t.hashCode() },
+      )
 
-  override fun onForkJoinPoolCommonPool(pool: ForkJoinPool): ForkJoinPool {
-    if (synchronizer.checkEntered()) return pool
-    val pool = context.getForkJoinPoolCommon()
-    synchronizer.entered.set(false)
-    return pool
-  }
+  override fun onForkJoinPoolCommonPool(pool: ForkJoinPool): ForkJoinPool =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { context.getForkJoinPoolCommon() },
+          { pool },
+      )
 
-  override fun onThreadLocalRandomGetProbe(probe: Int): Int {
-    if (synchronizer.checkEntered()) return probe
-    val probe = context.getThreadLocalRandomProbe()
-    synchronizer.entered.set(false)
-    return probe
-  }
+  override fun onThreadLocalRandomGetProbe(probe: Int): Int =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { context.getThreadLocalRandomProbe() },
+          { probe },
+      )
 
-  override fun onThreadSleepDuration(duration: Duration) {
-    if (synchronizer.checkEntered()) {
-      Thread.sleep(duration.toMillis())
-      return
-    }
-    try {
-      context.threadSleepOperation()
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onThreadSleepDuration(duration: Duration) =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { context.threadSleepOperation() },
+          { Thread.sleep(duration.toMillis()) },
+      )
 
-  override fun onThreadSleepMillis(millis: Long) {
-    if (synchronizer.checkEntered()) {
-      Thread.sleep(millis)
-      return
-    }
-    try {
-      context.threadSleepOperation()
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onThreadSleepMillis(millis: Long) =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { context.threadSleepOperation() },
+          { Thread.sleep(millis) },
+      )
 
-  override fun onThreadSleepMillisNanos(millis: Long, nanos: Int) {
-    if (synchronizer.checkEntered()) {
-      Thread.sleep(millis, nanos)
-      return
-    }
-    try {
-      context.threadSleepOperation()
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onThreadSleepMillisNanos(millis: Long, nanos: Int) =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { context.threadSleepOperation() },
+          { Thread.sleep(millis, nanos) },
+      )
 
-  override fun onStampedLockReadLock(lock: StampedLock) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("StampedLock")
-      return
-    }
-    context.stampedLockLock(lock, true, false, false, true)
-    synchronizer.entered.set(false)
-    onSkipMethod("StampedLock")
-  }
+  override fun onStampedLockReadLock(lock: StampedLock) =
+      synchronizer.runInFrayStart("StampedLock") {
+        context.stampedLockLock(
+            lock, shouldBlock = true, canInterrupt = false, timed = false, isReadLock = true)
+      }
 
-  override fun onStampedLockWriteLock(lock: StampedLock) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("StampedLock")
-      return
-    }
-    context.stampedLockLock(lock, true, false, false, false)
-    synchronizer.entered.set(false)
-    onSkipMethod("StampedLock")
-  }
+  override fun onStampedLockWriteLock(lock: StampedLock) =
+      synchronizer.runInFrayStart("StampedLock") {
+        context.stampedLockLock(
+            lock, shouldBlock = true, canInterrupt = false, timed = false, isReadLock = false)
+      }
 
-  override fun onStampedLockSkipDone() {
-    onSkipMethodDone("StampedLock")
-  }
+  override fun onStampedLockSkipDone() =
+      synchronizer.runInFrayDone("StampedLock") { Result.success(Unit) }
 
-  override fun onStampedLockSkip() {
-    onSkipMethod("StampedLock")
-  }
+  override fun onStampedLockSkip() =
+      synchronizer.runInFrayStart("StampedLock") { Result.success(Unit) }
 
-  override fun onStampedLockReadLockInterruptibly(lock: StampedLock) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("StampedLock")
-      return
-    }
-    try {
-      context.stampedLockLock(lock, true, true, false, true)
-    } finally {
-      synchronizer.entered.set(false)
-      onSkipMethod("StampedLock")
-    }
-  }
+  override fun onStampedLockReadLockInterruptibly(lock: StampedLock) =
+      synchronizer.runInFrayStart("StampedLock") {
+        context.stampedLockLock(
+            lock, shouldBlock = true, canInterrupt = true, timed = false, isReadLock = true)
+      }
 
-  override fun onStampedLockWriteLockInterruptibly(lock: StampedLock) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("StampedLock")
-      return
-    }
-    try {
-      context.stampedLockLock(lock, true, true, false, false)
-    } finally {
-      synchronizer.entered.set(false)
-      onSkipMethod("StampedLock")
-    }
-  }
+  override fun onStampedLockWriteLockInterruptibly(lock: StampedLock) =
+      synchronizer.runInFrayStart("StampedLock") {
+        context.stampedLockLock(
+            lock, shouldBlock = true, canInterrupt = true, timed = false, isReadLock = false)
+      }
 
-  override fun onStampedLockUnlockReadDone(lock: StampedLock) {
-    onSkipMethodDone("StampedLock")
-    if (synchronizer.checkEntered()) {
-      return
-    }
-    context.stampedLockUnlock(lock, true)
-    synchronizer.entered.set(false)
-  }
+  override fun onStampedLockUnlockReadDone(lock: StampedLock) =
+      synchronizer.runInFrayDone("StampedLock") { context.stampedLockUnlock(lock, true) }
 
-  override fun onStampedLockUnlockWriteDone(lock: StampedLock) {
-    onSkipMethodDone("StampedLock")
-    if (synchronizer.checkEntered()) {
-      return
-    }
-    context.stampedLockUnlock(lock, false)
-    synchronizer.entered.set(false)
-  }
+  override fun onStampedLockUnlockWriteDone(lock: StampedLock) =
+      synchronizer.runInFrayDone("StampedLock") { context.stampedLockUnlock(lock, false) }
 
-  override fun onStampedLockTryUnlockWriteDone(success: Boolean, lock: StampedLock): Boolean {
-    onSkipMethodDone("StampedLock")
-    if (synchronizer.checkEntered()) {
-      return success
-    }
-    if (success) {
-      context.stampedLockUnlock(lock, false)
-    }
-    synchronizer.entered.set(false)
-    return success
-  }
+  override fun onStampedLockTryUnlockWriteDone(success: Boolean, lock: StampedLock): Boolean =
+      synchronizer.runInFrayDoneWithOriginBlock(
+          "StampedLock",
+          {
+            if (success) {
+              context.stampedLockUnlock(lock, false)
+            }
+            Result.success(success)
+          },
+          { success },
+      )
 
-  override fun onStampedLockTryUnlockReadDone(success: Boolean, lock: StampedLock): Boolean {
-    onSkipMethodDone("StampedLock")
-    if (synchronizer.checkEntered()) {
-      return success
-    }
-    if (success) {
-      context.stampedLockUnlock(lock, true)
-    }
-    synchronizer.entered.set(false)
-    return success
-  }
+  override fun onStampedLockTryUnlockReadDone(success: Boolean, lock: StampedLock): Boolean =
+      synchronizer.runInFrayDoneWithOriginBlock(
+          "StampedLock",
+          {
+            if (success) {
+              context.stampedLockUnlock(lock, true)
+            }
+            Result.success(success)
+          },
+          { success },
+      )
 
   override fun onStampedLockTryConvertToWriteLockDone(
       newStamp: Long,
       lock: StampedLock,
       stamp: Long,
-  ): Long {
-    onSkipMethodDone("StampedLock")
-    if (synchronizer.checkEntered()) {
-      return newStamp
-    }
-    context.stampedLockConvertToWriteLock(lock, stamp, newStamp)
-    synchronizer.entered.set(false)
-    return newStamp
-  }
+  ): Long =
+      synchronizer.runInFrayDoneWithOriginBlock(
+          "StampedLock",
+          { context.stampedLockConvertToWriteLock(lock, stamp, newStamp).map { newStamp } },
+          { newStamp },
+      )
 
   override fun onStampedLockTryConvertToReadLockDone(
       newStamp: Long,
       lock: StampedLock,
       stamp: Long,
-  ): Long {
-    onSkipMethodDone("StampedLock")
-    if (synchronizer.checkEntered()) {
-      return newStamp
-    }
-    context.stampedLockConvertToReadLock(lock, stamp, newStamp)
-    synchronizer.entered.set(false)
-    return newStamp
-  }
+  ): Long =
+      synchronizer.runInFrayDoneWithOriginBlock(
+          "StampedLock",
+          { context.stampedLockConvertToReadLock(lock, stamp, newStamp).map { newStamp } },
+          { newStamp },
+      )
 
   override fun onStampedLockTryConvertToOptimisticReadLockDone(
       newStamp: Long,
       lock: StampedLock,
       stamp: Long,
-  ): Long {
-    onSkipMethodDone("StampedLock")
-    if (synchronizer.checkEntered()) {
-      return newStamp
-    }
-    context.stampedLockConvertToOptimisticReadLock(lock, stamp, newStamp)
-    synchronizer.entered.set(false)
-    return newStamp
-  }
+  ): Long =
+      synchronizer.runInFrayDoneWithOriginBlock(
+          "StampedLock",
+          {
+            context.stampedLockConvertToOptimisticReadLock(lock, stamp, newStamp).map { newStamp }
+          },
+          { newStamp },
+      )
 
-  override fun onStampedLockReadLockTryLock(lock: StampedLock) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("StampedLock")
-      return
-    }
-    context.stampedLockLock(lock, false, false, false, true)
-    synchronizer.entered.set(false)
-    onSkipMethod("StampedLock")
-  }
+  override fun onStampedLockReadLockTryLock(lock: StampedLock) =
+      synchronizer.runInFrayStart("StampedLock") {
+        context.stampedLockLock(
+            lock, shouldBlock = false, canInterrupt = false, timed = false, isReadLock = true)
+      }
 
-  override fun onStampedLockWriteLockTryLock(lock: StampedLock) {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("StampedLock")
-      return
-    }
-    context.stampedLockLock(lock, false, false, false, false)
-    synchronizer.entered.set(false)
-    onSkipMethod("StampedLock")
-  }
+  override fun onStampedLockWriteLockTryLock(lock: StampedLock) =
+      synchronizer.runInFrayStart("StampedLock") {
+        context.stampedLockLock(
+            lock, shouldBlock = false, canInterrupt = false, timed = false, isReadLock = false)
+      }
 
   override fun onStampedLockReadLockTryLockTimeout(
       lock: StampedLock,
       timeout: Long,
       unit: TimeUnit
-  ): Long {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("StampedLock")
-      return timeout
-    }
-    try {
-      context.stampedLockLock(lock, true, true, true, true)
-    } finally {
-      synchronizer.entered.set(false)
-      onSkipMethod("StampedLock")
-    }
-    return 0
-  }
+  ): Long =
+      synchronizer.runInFrayStartWithOriginBlock(
+          "StampedLock",
+          {
+            context
+                .stampedLockLock(
+                    lock, shouldBlock = true, canInterrupt = true, timed = true, isReadLock = true)
+                .map { 0L }
+          },
+          {
+            return@runInFrayStartWithOriginBlock timeout
+          },
+      )
 
   override fun onStampedLockWriteLockTryLockTimeout(
       lock: StampedLock,
       timeout: Long,
       unit: TimeUnit
-  ): Long {
-    if (synchronizer.checkEntered()) {
-      onSkipMethod("StampedLock")
-      return timeout
-    }
-    try {
-      context.stampedLockLock(lock, true, true, true, false)
-    } finally {
-      synchronizer.entered.set(false)
-      onSkipMethod("StampedLock")
-    }
-    return 0
-  }
+  ): Long =
+      synchronizer.runInFrayStartWithOriginBlock(
+          "StampedLock",
+          {
+            context
+                .stampedLockLock(
+                    lock, shouldBlock = true, canInterrupt = true, timed = true, isReadLock = false)
+                .map { 0L }
+          },
+          {
+            return@runInFrayStartWithOriginBlock timeout
+          },
+      )
 
-  override fun onRangerCondition(condition: RangerCondition) {
-    if (synchronizer.checkEntered()) {
-      Utils.verifyOrReport(false, "This method should never be called recursively")
-      return
-    }
-    try {
-      context.rangerCondition(condition)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onRangerCondition(condition: RangerCondition) =
+      synchronizer.runInFrayStartNoSkip { context.rangerCondition(condition) }
 }
