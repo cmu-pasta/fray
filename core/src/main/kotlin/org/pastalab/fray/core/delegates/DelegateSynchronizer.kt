@@ -1,10 +1,9 @@
 package org.pastalab.fray.core.delegates
 
-import kotlin.text.get
-import kotlin.text.set
 import org.pastalab.fray.core.RunContext
 import org.pastalab.fray.core.utils.HelperThread
 import org.pastalab.fray.core.utils.Utils
+import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
 class DelegateSynchronizer(val context: RunContext) {
   var entered = ThreadLocal.withInitial { false }
@@ -13,7 +12,6 @@ class DelegateSynchronizer(val context: RunContext) {
   val onSkipRecursion = ThreadLocal.withInitial { false }
 
   fun checkEntered(): Boolean {
-
     if (entered.get()) {
       return true
     }
@@ -32,6 +30,92 @@ class DelegateSynchronizer(val context: RunContext) {
       return true
     }
     return false
+  }
+
+  inline fun runInFrayDoneNoSkip(frayBlock: () -> Result<Unit>) {
+    return runInFrayDone(frayBlock, false, "", {})
+  }
+
+  inline fun <T> runInFrayDoneWithOriginBlockAndNoSkip(
+      frayBlock: () -> Result<T>,
+      originBlock: () -> T
+  ): T {
+    return runInFrayDone(frayBlock, false, "", originBlock)
+  }
+
+  inline fun runInFrayDone(skipSignature: String, frayBlock: () -> Result<Unit>) {
+    return runInFrayDone(frayBlock, true, skipSignature, {})
+  }
+
+  inline fun <T> runInFrayDoneWithOriginBlock(
+      skipSignature: String,
+      frayBlock: () -> Result<T>,
+      originBlock: (() -> T)
+  ): T {
+    return runInFrayDone(frayBlock, true, skipSignature, originBlock)
+  }
+
+  inline fun <T> runInFrayDone(
+      frayBlock: () -> Result<T>,
+      skipDone: Boolean,
+      skipSignature: String,
+      originBlock: (() -> T)
+  ): T {
+    if (skipDone) {
+      onSkipMethodDone(skipSignature)
+    }
+    if (checkEntered()) {
+      return originBlock()
+    }
+    val result = frayBlock()
+    entered.set(false)
+    result.fold(
+        onFailure = { throw it },
+        onSuccess = {
+          return it
+        },
+    )
+  }
+
+  inline fun runInFrayStartNoSkip(frayBlock: () -> Result<Unit>) {
+    runInFrayStart(frayBlock, false, "", {})
+  }
+
+  inline fun runInFrayStart(skipSignature: String, frayBlock: () -> Result<Unit>) {
+    runInFrayStart(frayBlock, true, skipSignature, {})
+  }
+
+  inline fun <T> runInFrayStartWithOriginBlock(
+      skipSignature: String,
+      frayBlock: () -> Result<T>,
+      originBlock: () -> T
+  ): T {
+    return runInFrayStart(frayBlock, true, skipSignature, originBlock)
+  }
+
+  inline fun <T> runInFrayStart(
+      frayBlock: () -> Result<T>,
+      skipStart: Boolean,
+      skipSignature: String,
+      originBlock: () -> T
+  ): T {
+    if (checkEntered()) {
+      if (skipStart) {
+        onSkipMethod(skipSignature)
+      }
+      return originBlock()
+    }
+    val result = frayBlock()
+    if (skipStart) {
+      onSkipMethod(skipSignature)
+    }
+    entered.set(false)
+    result.fold(
+        onFailure = { throw it },
+        onSuccess = {
+          return it
+        },
+    )
   }
 
   fun onSkipMethod(signature: String) {

@@ -13,6 +13,7 @@ import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.test.controllers.network.reactive.success.NetworkCallWithSocketNoDeadlock;
 import org.pastalab.fray.test.core.fail.rwlock.ReentrantReadWriteLockDeadlock;
 import org.pastalab.fray.test.core.success.classconstructor.X509CertSelectorConstructorNoDeadlock;
+import org.pastalab.fray.test.core.success.condition.ConditionAwaitTimeoutInterrupt;
 import org.pastalab.fray.test.core.success.lock.ReentrantLockTryLockNoDeadlock;
 import org.pastalab.fray.test.core.success.rwlock.ReentrantReadWriteLockNoDeadlock;
 
@@ -43,7 +44,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                ReentrantLockTryLockNoDeadlock.main(new String[]{});
+                                ConditionAwaitTimeoutInterrupt.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }

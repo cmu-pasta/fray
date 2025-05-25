@@ -39,6 +39,8 @@ import org.pastalab.fray.core.scheduler.FrayIdeaPluginScheduler
 import org.pastalab.fray.core.utils.HelperThread
 import org.pastalab.fray.core.utils.ReentrantReadWriteLockCache
 import org.pastalab.fray.core.utils.SynchronizationManager
+import org.pastalab.fray.core.utils.Utils.mustBeCaught
+import org.pastalab.fray.core.utils.Utils.verifyNoThrow
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.core.utils.toThreadInfos
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
@@ -154,8 +156,11 @@ class RunContext(val config: Configuration) {
       }
 
       if (e is FrayInternalError) {
-        config.frayLogger.error(sw.toString())
-        return
+        config.frayLogger.error(sw.toString(), true)
+        val path = config.saveToReportFolder(config.nextSavedIndex++)
+        config.frayLogger.info("The recording is saved to $path", true)
+        Runtime.resetAllDelegate()
+        exitProcess(0)
       }
 
       if (config.exploreMode && config.nextSavedIndex > 0) {
@@ -165,7 +170,8 @@ class RunContext(val config: Configuration) {
       config.frayLogger.info(
           "Error found at iter: ${config.currentIteration}, step: $step, " +
               "Elapsed time: ${config.elapsedTime()}ms",
-          true)
+          true,
+      )
       config.frayLogger.info(sw.toString())
       val recordingIndex = config.nextSavedIndex++
       if (!config.isReplay) {
@@ -189,7 +195,7 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun mainExit() {
+  fun mainExit() = verifyNoThrow {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
     while (registeredThreads.any {
@@ -219,7 +225,7 @@ class RunContext(val config: Configuration) {
     done()
   }
 
-  fun start() {
+  fun start() = verifyNoThrow {
     val t = Thread.currentThread()
     step = 0
     bugFound = null
@@ -248,31 +254,29 @@ class RunContext(val config: Configuration) {
   }
 
   fun shutDown() {
-    org.pastalab.fray.runtime.Runtime.resetAllDelegate()
+    Runtime.resetAllDelegate()
     executor.stopHelperThread()
   }
 
-  fun threadCreateDone(t: Thread) {
-    val originalHanlder = t.uncaughtExceptionHandler
+  fun threadCreateDone(t: Thread) = verifyNoThrow {
+    val originalHandler = t.uncaughtExceptionHandler
     val handler = UncaughtExceptionHandler { t, e ->
       onReportError(e)
-      originalHanlder?.uncaughtException(t, e)
+      originalHandler?.uncaughtException(t, e)
     }
     t.setUncaughtExceptionHandler(handler)
     val parentContext = registeredThreads[Thread.currentThread().id]!!
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this, parentContext.index)
   }
 
-  fun threadStart(t: Thread) {
-    syncManager.createWait(t, 1)
-  }
+  fun threadStart(t: Thread) = verifyNoThrow { syncManager.createWait(t, 1) }
 
-  fun threadStartDone(t: Thread) {
+  fun threadStartDone(t: Thread) = verifyNoThrow {
     // Wait for the new thread runs.
     syncManager.wait(t)
   }
 
-  fun threadPark() {
+  fun threadPark() = verifyNoThrow {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
 
@@ -285,7 +289,7 @@ class RunContext(val config: Configuration) {
     LockSupport.unpark(t)
   }
 
-  fun threadParkDone(timed: Boolean) {
+  fun threadParkDone(timed: Boolean) = mustBeCaught {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
 
@@ -305,7 +309,7 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun threadUnpark(t: Thread) {
+  fun threadUnpark(t: Thread) = verifyNoThrow {
     val context = registeredThreads[t.id]
     if (context?.state == ThreadState.Blocked && context?.pendingOperation is ParkBlocked) {
       context.state = ThreadState.Runnable
@@ -315,32 +319,34 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun threadUnparkDone(t: Thread) {}
+  fun threadUnparkDone(t: Thread) = verifyNoThrow {}
 
-  fun threadRun() {
-    var t = Thread.currentThread()
-    registeredThreads[t.id]?.state = ThreadState.Runnable
+  fun threadRun() = verifyNoThrow {
+    val t = Thread.currentThread()
+    val context = registeredThreads[t.id]!!
+    context.state = ThreadState.Runnable
     syncManager.signal(t)
-    registeredThreads[t.id]?.block()
+    context.block()
   }
 
-  fun threadIsInterrupted(t: Thread, result: Boolean): Boolean {
-    return result || registeredThreads[t.id]!!.interruptSignaled
+  fun threadIsInterrupted(t: Thread, result: Boolean) = verifyNoThrow {
+    result || registeredThreads[t.id]!!.interruptSignaled
   }
 
-  fun threadGetState(t: Thread, state: Thread.State): Thread.State {
+  fun threadGetState(t: Thread, state: Thread.State) = verifyNoThrow {
     if (state == Thread.State.WAITING ||
         state == Thread.State.TIMED_WAITING ||
         state == Thread.State.BLOCKED) {
       val context = registeredThreads[t.id]
       if (context?.state == ThreadState.Running || context?.state == ThreadState.Runnable) {
-        return Thread.State.RUNNABLE
+        return@verifyNoThrow Thread.State.RUNNABLE
       }
     }
-    return state
+    return@verifyNoThrow state
   }
 
-  fun threadCompleted(t: Thread) {
+  fun threadCompleted() = verifyNoThrow {
+    val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
     context.isExiting = true
     monitorEnter(t, true)
@@ -431,11 +437,9 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun objectWait(o: Any, timed: Boolean) {
-    objectWaitImpl(o, true, timed)
-  }
+  fun objectWait(o: Any, timed: Boolean) = mustBeCaught { objectWaitImpl(o, true, timed) }
 
-  fun conditionAwait(o: Condition, canInterrupt: Boolean, timed: Boolean) {
+  fun conditionAwait(o: Condition, canInterrupt: Boolean, timed: Boolean) = mustBeCaught {
     objectWaitImpl(o, canInterrupt, timed)
   }
 
@@ -475,13 +479,13 @@ class RunContext(val config: Configuration) {
     return (pendingOperation as ThreadResumeOperation).noTimeout
   }
 
-  fun threadInterrupt(t: Thread) {
+  fun threadInterrupt(t: Thread) = mustBeCaught {
     val context = registeredThreads[t.id]!!
     context.interruptSignaled = true
     val pendingOperation = context.pendingOperation
 
     if (context.state == ThreadState.Running) {
-      return
+      return@mustBeCaught
     }
 
     if (pendingOperation is BlockedOperation) {
@@ -494,7 +498,7 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun threadInterruptDone(t: Thread) {
+  fun threadInterruptDone(t: Thread) = verifyNoThrow {
     val context = registeredThreads[Thread.currentThread().id]!!
     val pendingOperation = context.pendingOperation
     if (pendingOperation is InterruptPendingOperation) {
@@ -503,19 +507,17 @@ class RunContext(val config: Configuration) {
     context.pendingOperation = ThreadResumeOperation(true)
   }
 
-  fun threadClearInterrupt(t: Thread): Boolean {
+  fun threadClearInterrupt(t: Thread) = verifyNoThrow {
     val context = registeredThreads[t.id]!!
     val origin = context.interruptSignaled
     context.interruptSignaled = false
-    return origin
+    origin
   }
 
-  fun objectWaitDone(o: Any) {
-    objectWaitDoneImpl(o, true)
-  }
+  fun objectWaitDone(o: Any) = mustBeCaught { objectWaitDoneImpl(o, true) }
 
-  fun conditionAwaitDone(o: Condition, canInterrupt: Boolean): Boolean {
-    return objectWaitDoneImpl(o, canInterrupt)
+  fun conditionAwaitDone(o: Condition, canInterrupt: Boolean) = mustBeCaught {
+    objectWaitDoneImpl(o, canInterrupt)
   }
 
   fun objectNotifyImpl(waitingObject: Any) {
@@ -523,28 +525,20 @@ class RunContext(val config: Configuration) {
     waitingContext.signal(config.randomnessProvider, false)
   }
 
-  fun objectNotify(o: Any) {
-    objectNotifyImpl(o)
-  }
+  fun objectNotify(o: Any) = verifyNoThrow { objectNotifyImpl(o) }
 
-  fun conditionSignal(o: Condition) {
-    objectNotifyImpl(o)
-  }
+  fun conditionSignal(o: Condition) = verifyNoThrow { objectNotifyImpl(o) }
 
   fun objectNotifyAllImpl(waitingObject: Any) {
     val waitingContext = signalManager.getContext(waitingObject)
     waitingContext.signal(config.randomnessProvider, true)
   }
 
-  fun objectNotifyAll(o: Any) {
-    objectNotifyAllImpl(o)
-  }
+  fun objectNotifyAll(o: Any) = verifyNoThrow { objectNotifyAllImpl(o) }
 
-  fun conditionSignalAll(o: Condition) {
-    objectNotifyAllImpl(o)
-  }
+  fun conditionSignalAll(o: Condition) = verifyNoThrow { objectNotifyAllImpl(o) }
 
-  fun lockTryLock(lock: Any, canInterrupt: Boolean, timed: Boolean) {
+  fun lockTryLock(lock: Any, canInterrupt: Boolean, timed: Boolean) = mustBeCaught {
     lockImpl(lock, false, false, canInterrupt, timed, false)
   }
 
@@ -610,11 +604,11 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun monitorEnter(lock: Any, shouldRetry: Boolean) {
+  fun monitorEnter(lock: Any, shouldRetry: Boolean) = mustBeCaught {
     lockImpl(lock, true, true, false, false, shouldRetry)
   }
 
-  fun lockLock(lock: Any, canInterrupt: Boolean) {
+  fun lockLock(lock: Any, canInterrupt: Boolean) = mustBeCaught {
     lockImpl(lock, false, true, canInterrupt, false, false)
   }
 
@@ -665,17 +659,15 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun lockUnlock(lock: Any) {
+  fun lockUnlock(lock: Any) = mustBeCaught {
     unlockImpl(lockManager.getContext(lock), Thread.currentThread().id, true, false, false)
   }
 
-  fun monitorExit(lock: Any) {
+  fun monitorExit(lock: Any) = verifyNoThrow {
     unlockImpl(lockManager.getContext(lock), Thread.currentThread().id, true, false, true)
   }
 
-  fun lockUnlockDone(lock: Any) {
-    syncManager.wait(lockManager.getContext(lock))
-  }
+  fun lockUnlockDone(lock: Any) = verifyNoThrow { syncManager.wait(lockManager.getContext(lock)) }
 
   fun lockNewCondition(condition: Condition, lock: Lock) {
     val lockContext = lockManager.getContext(lock)
@@ -690,7 +682,7 @@ class RunContext(val config: Configuration) {
       canInterrupt: Boolean,
       timed: Boolean,
       isReadLock: Boolean
-  ) {
+  ) = mustBeCaught {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
     context.pendingOperation = LockLockOperation(lock)
@@ -715,7 +707,7 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun stampedLockUnlock(lock: StampedLock, isReadLock: Boolean) {
+  fun stampedLockUnlock(lock: StampedLock, isReadLock: Boolean) = verifyNoThrow {
     val stampedLockContext = stampedLockManager.getContext(lock)
     val threadContext = registeredThreads[Thread.currentThread().id]!!
     if (isReadLock) {
@@ -725,28 +717,30 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun stampedLockConvertToReadLock(lock: StampedLock, stamp: Long, newStamp: Long) {
+  fun stampedLockConvertToReadLock(lock: StampedLock, stamp: Long, newStamp: Long) = verifyNoThrow {
     if (newStamp == 0L) {
-      return
+      return@verifyNoThrow
     }
     val stampedLockContext = stampedLockManager.getContext(lock)
     stampedLockContext.convertToReadLock(stamp)
   }
 
-  fun stampedLockConvertToWriteLock(lock: StampedLock, stamp: Long, newStamp: Long) {
-    if (newStamp == 0L) {
-      return
-    }
-    val stampedLockContext = stampedLockManager.getContext(lock)
-    stampedLockContext.convertToWriteLock(stamp)
-  }
+  fun stampedLockConvertToWriteLock(lock: StampedLock, stamp: Long, newStamp: Long) =
+      verifyNoThrow {
+        if (newStamp == 0L) {
+          return@verifyNoThrow
+        }
+        val stampedLockContext = stampedLockManager.getContext(lock)
+        stampedLockContext.convertToWriteLock(stamp)
+      }
 
-  fun stampedLockConvertToOptimisticReadLock(lock: StampedLock, stamp: Long, newStamp: Long) {
-    val stampedLockContext = stampedLockManager.getContext(lock)
-    stampedLockContext.convertToOptimisticReadLock(stamp)
-  }
+  fun stampedLockConvertToOptimisticReadLock(lock: StampedLock, stamp: Long, newStamp: Long) =
+      verifyNoThrow {
+        val stampedLockContext = stampedLockManager.getContext(lock)
+        stampedLockContext.convertToOptimisticReadLock(stamp)
+      }
 
-  fun semaphoreInit(sem: Semaphore) {
+  fun semaphoreInit(sem: Semaphore) = verifyNoThrow {
     val context = SemaphoreContext(sem.availablePermits(), sem)
     semaphoreManager.addContext(sem, context)
   }
@@ -757,7 +751,7 @@ class RunContext(val config: Configuration) {
       shouldBlock: Boolean,
       canInterrupt: Boolean,
       timed: Boolean
-  ) {
+  ) = mustBeCaught {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
     context.pendingOperation = LockLockOperation(sem)
@@ -780,16 +774,16 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun semaphoreRelease(sem: Semaphore, permits: Int) {
+  fun semaphoreRelease(sem: Semaphore, permits: Int) = verifyNoThrow {
     val threadContext = registeredThreads[Thread.currentThread().id]!!
     semaphoreManager.getContext(sem).release(permits, threadContext)
   }
 
-  fun semaphoreDrainPermits(sem: Semaphore): Int {
-    return semaphoreManager.getContext(sem).drainPermits()
+  fun semaphoreDrainPermits(sem: Semaphore) = verifyNoThrow {
+    semaphoreManager.getContext(sem).drainPermits()
   }
 
-  fun semaphoreReducePermits(sem: Semaphore, permits: Int) {
+  fun semaphoreReducePermits(sem: Semaphore, permits: Int) = verifyNoThrow {
     semaphoreManager.getContext(sem).reducePermits(permits)
   }
 
@@ -798,9 +792,9 @@ class RunContext(val config: Configuration) {
       owner: String,
       name: String,
       type: org.pastalab.fray.runtime.MemoryOpType
-  ) {
+  ) = mustBeCaught {
     if (!config.executionInfo.interleaveMemoryOps && !volatileManager.isVolatile(owner, name))
-        return
+        return@mustBeCaught
     val objIds = mutableListOf<Int>()
     if (obj != null) {
       objIds.add(System.identityHashCode(obj))
@@ -811,21 +805,23 @@ class RunContext(val config: Configuration) {
     memoryOperation(objIds.toIntArray().contentHashCode(), type)
   }
 
-  fun atomicOperation(obj: Any, type: org.pastalab.fray.runtime.MemoryOpType) {
+  fun atomicOperation(obj: Any, type: org.pastalab.fray.runtime.MemoryOpType) = mustBeCaught {
     val objId = System.identityHashCode(obj)
     memoryOperation(objId, type)
   }
 
-  fun arrayOperation(obj: Any, index: Int, type: org.pastalab.fray.runtime.MemoryOpType) {
-    if (!config.executionInfo.interleaveMemoryOps) return
-    val objId = System.identityHashCode(obj)
-    memoryOperation((31 * objId) + index, type)
-  }
+  fun arrayOperation(obj: Any, index: Int, type: org.pastalab.fray.runtime.MemoryOpType) =
+      mustBeCaught {
+        if (!config.executionInfo.interleaveMemoryOps) return@mustBeCaught
+        val objId = System.identityHashCode(obj)
+        memoryOperation((31 * objId) + index, type)
+      }
 
-  fun unsafeOperation(obj: Any, offset: Long, type: org.pastalab.fray.runtime.MemoryOpType) {
-    val objId = System.identityHashCode(obj)
-    memoryOperation((31 * objId) + offset.toInt(), type)
-  }
+  fun unsafeOperation(obj: Any, offset: Long, type: org.pastalab.fray.runtime.MemoryOpType) =
+      mustBeCaught {
+        val objId = System.identityHashCode(obj)
+        memoryOperation((31 * objId) + offset.toInt(), type)
+      }
 
   fun memoryOperation(obj: Int, type: org.pastalab.fray.runtime.MemoryOpType) {
     val t = Thread.currentThread().id
@@ -834,7 +830,7 @@ class RunContext(val config: Configuration) {
     scheduleNextOperation(true)
   }
 
-  fun latchAwait(latch: CountDownLatch, timed: Boolean) {
+  fun latchAwait(latch: CountDownLatch, timed: Boolean) = mustBeCaught {
     val t = Thread.currentThread().id
     val objId = System.identityHashCode(latch)
     val context = registeredThreads[t]!!
@@ -873,15 +869,15 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun lockHasQueuedThreads(lock: Lock): Boolean {
-    return lockManager.getContext(lock).hasQueuedThreads()
+  fun lockHasQueuedThreads(lock: Lock) = verifyNoThrow {
+    lockManager.getContext(lock).hasQueuedThreads()
   }
 
-  fun lockHasQueuedThread(lock: Lock, thread: Thread): Boolean {
-    return lockManager.getContext(lock).hasQueuedThread(thread.id)
+  fun lockHasQueuedThread(lock: Lock, thread: Thread) = verifyNoThrow {
+    lockManager.getContext(lock).hasQueuedThread(thread.id)
   }
 
-  fun latchAwaitDone(latch: CountDownLatch): Boolean {
+  fun latchAwaitDone(latch: CountDownLatch) = mustBeCaught {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
     if (context.state != ThreadState.Running) {
@@ -890,21 +886,19 @@ class RunContext(val config: Configuration) {
     }
     val pendingOperation = context.pendingOperation
     verifyOrReport(pendingOperation is ThreadResumeOperation)
-    return (pendingOperation as ThreadResumeOperation).noTimeout
+    return@mustBeCaught pendingOperation.noTimeout
   }
 
-  fun latchCountDown(latch: CountDownLatch) {
+  fun latchCountDown(latch: CountDownLatch) = verifyNoThrow {
     val unblockedThreads = latchManager.getContext(latch).countDown()
     if (unblockedThreads > 0) {
       syncManager.createWait(latch, unblockedThreads)
     }
   }
 
-  fun latchCountDownDone(latch: CountDownLatch) {
-    syncManager.wait(latch)
-  }
+  fun latchCountDownDone(latch: CountDownLatch) = verifyNoThrow { syncManager.wait(latch) }
 
-  fun threadSleepOperation() {
+  fun threadSleepOperation() = verifyNoThrow {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
     context.pendingOperation = ThreadResumeOperation(true)
@@ -928,7 +922,7 @@ class RunContext(val config: Configuration) {
     return result
   }
 
-  fun rangerCondition(condition: RangerCondition) {
+  fun rangerCondition(condition: RangerCondition) = mustBeCaught {
     val context = registeredThreads[Thread.currentThread().id]!!
     while (!evaluateRangerCondition(condition)) {
       context.pendingOperation = RangerWaitOperation(condition, context)
@@ -982,7 +976,7 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun yield() {
+  fun yield() = mustBeCaught {
     registeredThreads[Thread.currentThread().id]!!.state = ThreadState.Runnable
     scheduleNextOperation(true)
   }
@@ -1056,7 +1050,8 @@ class RunContext(val config: Configuration) {
         Thread.currentThread() is HelperThread ||
             currentThreadId == Thread.currentThread().id ||
             currentThread.state == ThreadState.Runnable ||
-            currentThread.state == ThreadState.Completed)
+            currentThread.state == ThreadState.Completed,
+    )
     verifyOrReport(registeredThreads.none { it.value.state == ThreadState.Running })
 
     if (bugFound != null &&
@@ -1134,23 +1129,23 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun hashCode(obj: Any): Int {
+  fun hashCode(obj: Any) = verifyNoThrow {
     val hashCodeMethod = obj.javaClass.getMethod("hashCode")
-    return if (hashCodeMethod.declaringClass == Object::class.java) {
+    if (hashCodeMethod.declaringClass == Object::class.java) {
       hashCodeMapper.getContext(obj)
     } else {
       obj.hashCode()
     }
   }
 
-  fun getForkJoinPoolCommon(): ForkJoinPool {
+  fun getForkJoinPoolCommon() = verifyNoThrow {
     if (forkJoinPool == null) {
       forkJoinPool = ForkJoinPool()
     }
-    return forkJoinPool!!
+    forkJoinPool!!
   }
 
-  fun getThreadLocalRandomProbe(): Int {
-    return registeredThreads[Thread.currentThread().id]!!.localRandomProbe
+  fun getThreadLocalRandomProbe() = verifyNoThrow {
+    registeredThreads[Thread.currentThread().id]!!.localRandomProbe
   }
 }

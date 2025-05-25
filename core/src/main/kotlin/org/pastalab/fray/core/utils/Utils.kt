@@ -23,16 +23,29 @@ object Utils {
   @OptIn(ExperimentalContracts::class)
   fun verifyOrReport(condition: Boolean, message: String) {
     contract { returns() implies condition }
-    if (!condition) {
-      val e = FrayInternalError(message)
-      Runtime.onReportError(e)
-    }
+    verifyOrReport(condition) { message }
   }
 
   @OptIn(ExperimentalContracts::class)
   fun verifyOrReport(condition: Boolean, message: () -> String) {
     contract { returns() implies condition }
-    verifyOrReport(condition, message())
+    if (!condition) {
+      val e = FrayInternalError(message())
+      Runtime.onReportError(e)
+    }
+  }
+
+  internal fun <T> verifyNoThrow(block: () -> T): Result<T> {
+    val result = mustBeCaught { block() }
+    verifyOrReport(result.isSuccess) {
+      val exception = result.exceptionOrNull()!!
+      "Expected no exception, but got: $exception, stack trace: ${exception.stackTrace.joinToString("\n")}"
+    }
+    return result
+  }
+
+  internal inline fun <T> mustBeCaught(block: () -> T): Result<T> {
+    return runCatching { block() }
   }
 }
 

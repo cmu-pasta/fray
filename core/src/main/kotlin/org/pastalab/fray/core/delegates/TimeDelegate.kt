@@ -6,24 +6,21 @@ import org.pastalab.fray.runtime.TimeDelegate
 
 class TimeDelegate(val controller: TimeController, val synchronizer: DelegateSynchronizer) :
     TimeDelegate() {
-  override fun onNanoTime(): Long {
-    if (synchronizer.checkEntered()) return System.nanoTime()
-    val value = controller.nanoTime()
-    synchronizer.entered.set(false)
-    return value
-  }
+  override fun onNanoTime(): Long =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { controller.nanoTime() },
+          { System.nanoTime() },
+      )
 
-  override fun onCurrentTimeMillis(): Long {
-    if (synchronizer.checkEntered()) return System.currentTimeMillis()
-    val value = controller.currentTimeMillis()
-    synchronizer.entered.set(false)
-    return value
-  }
+  override fun onCurrentTimeMillis(): Long =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { controller.currentTimeMillis() },
+          { System.currentTimeMillis() },
+      )
 
-  override fun onInstantNow(): Instant {
-    if (synchronizer.checkEntered()) return Instant.now()
-    val instant = controller.instantNow()
-    synchronizer.entered.set(false)
-    return instant
-  }
+  override fun onInstantNow(): Instant =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { controller.instantNow() },
+          { Instant.now() },
+      )
 }

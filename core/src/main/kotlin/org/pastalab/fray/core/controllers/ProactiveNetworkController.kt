@@ -14,24 +14,26 @@ import org.pastalab.fray.core.concurrency.operations.ServerSocketChannelAcceptBl
 import org.pastalab.fray.core.concurrency.operations.ServerSocketChannelAcceptOperation
 import org.pastalab.fray.core.concurrency.operations.SocketChannelReadBlocked
 import org.pastalab.fray.core.concurrency.operations.SocketChannelReadOperation
+import org.pastalab.fray.core.utils.Utils.mustBeCaught
+import org.pastalab.fray.core.utils.Utils.verifyNoThrow
 import org.pastalab.fray.rmi.ThreadState
 
 class ProactiveNetworkController(val runContext: RunContext) : RunFinishedHandler(runContext) {
   val nioContextManager = NioContextManager()
 
-  fun selectorSetEventOps(selector: Selector, key: SelectionKey) {
+  fun selectorSetEventOps(selector: Selector, key: SelectionKey) = verifyNoThrow {
     val selectorContext = nioContextManager.getSelectorContext(selector)
-    val channelContext = nioContextManager.getChannelContext(key.channel()) ?: return
+    val channelContext = nioContextManager.getChannelContext(key.channel()) ?: return@verifyNoThrow
     selectorContext.setEventOp(channelContext, key.interestOps())
   }
 
-  fun selectorCancelKey(selector: Selector, key: SelectionKey) {
+  fun selectorCancelKey(selector: Selector, key: SelectionKey) = verifyNoThrow {
     val selectorContext = nioContextManager.getSelectorContext(selector)
-    val channelContext = nioContextManager.getChannelContext(key.channel()) ?: return
+    val channelContext = nioContextManager.getChannelContext(key.channel()) ?: return@verifyNoThrow
     selectorContext.cancel(channelContext)
   }
 
-  fun selectorSelect(selector: Selector) {
+  fun selectorSelect(selector: Selector) = mustBeCaught {
     val threadContext = runContext.registeredThreads[Thread.currentThread().id]!!
     val selectorContext = nioContextManager.getSelectorContext(selector)
     threadContext.state = ThreadState.Runnable
@@ -44,23 +46,23 @@ class ProactiveNetworkController(val runContext: RunContext) : RunFinishedHandle
     }
   }
 
-  fun selectorClose(selector: Selector) {
+  fun selectorClose(selector: Selector) = verifyNoThrow {
     nioContextManager.selectorClose(selector)
   }
 
-  fun serverSocketChannelBindDone(serverSocketChannel: ServerSocketChannel) {
+  fun serverSocketChannelBindDone(serverSocketChannel: ServerSocketChannel) = verifyNoThrow {
     nioContextManager.serverSocketChannelBind(serverSocketChannel)
   }
 
-  fun socketChannelClose(socketChannel: SocketChannel) {
+  fun socketChannelClose(socketChannel: SocketChannel) = verifyNoThrow {
     nioContextManager.socketChannelClose(socketChannel)
   }
 
-  fun serverSocketChannelClose(serverSocketChannel: ServerSocketChannel) {
+  fun serverSocketChannelClose(serverSocketChannel: ServerSocketChannel) = verifyNoThrow {
     nioContextManager.serverSocketChannelClose(serverSocketChannel)
   }
 
-  fun socketChannelRead(socketChannel: SocketChannel) {
+  fun socketChannelRead(socketChannel: SocketChannel) = verifyNoThrow {
     val socketChannelContext = nioContextManager.getSocketChannelContext(socketChannel)
     val context = runContext.registeredThreads[Thread.currentThread().id]!!
     context.state = ThreadState.Runnable
@@ -73,12 +75,12 @@ class ProactiveNetworkController(val runContext: RunContext) : RunFinishedHandle
     }
   }
 
-  fun socketChannelReadDone(socketChannel: SocketChannel, bytesRead: Long) {
+  fun socketChannelReadDone(socketChannel: SocketChannel, bytesRead: Long) = verifyNoThrow {
     val socketChannelContext = nioContextManager.getSocketChannelContext(socketChannel)
     socketChannelContext.readDone(bytesRead)
   }
 
-  fun serverSocketChannelAccept(serverSocketChannel: ServerSocketChannel) {
+  fun serverSocketChannelAccept(serverSocketChannel: ServerSocketChannel) = verifyNoThrow {
     val serverSocketChannelContext =
         nioContextManager.getServerSocketChannelContext(serverSocketChannel)
     val context = runContext.registeredThreads[Thread.currentThread().id]!!
@@ -98,31 +100,31 @@ class ProactiveNetworkController(val runContext: RunContext) : RunFinishedHandle
   fun serverSocketChannelAcceptDone(
       serverSocketChannel: ServerSocketChannel,
       socketChannel: SocketChannel?
-  ) {
+  ) = verifyNoThrow {
     if (socketChannel != null) {
       nioContextManager.socketChannelAccepted(serverSocketChannel, socketChannel)
     }
   }
 
-  fun socketChannelConnect(socketChannel: SocketChannel, address: SocketAddress) {
+  fun socketChannelConnect(socketChannel: SocketChannel, address: SocketAddress) = verifyNoThrow {
     if (address !is InetSocketAddress) {
       throw IllegalArgumentException("Only InetSocketAddress is supported for now.")
     }
     if (socketChannel.isConnected) {
-      return
+      return@verifyNoThrow
     }
     val serverSocketChannelContext =
-        nioContextManager.getServerSocketChannelAtPort(address.port) ?: return
+        nioContextManager.getServerSocketChannelAtPort(address.port) ?: return@verifyNoThrow
     serverSocketChannelContext.connectReceived()
   }
 
-  fun socketChannelWriteDone(socketChannel: SocketChannel, bytesWritten: Long) {
-    val port = (socketChannel.remoteAddress as? InetSocketAddress)?.port ?: return
-    val localPort = (socketChannel.localAddress as? InetSocketAddress)?.port ?: return
+  fun socketChannelWriteDone(socketChannel: SocketChannel, bytesWritten: Long) = verifyNoThrow {
+    val port = (socketChannel.remoteAddress as? InetSocketAddress)?.port ?: return@verifyNoThrow
+    val localPort = (socketChannel.localAddress as? InetSocketAddress)?.port ?: return@verifyNoThrow
     nioContextManager.getSocketChannelAtPort(port, localPort)?.writeReceived(bytesWritten)
   }
 
-  fun socketChannelConnectDone(socketChannel: SocketChannel, success: Boolean) {
+  fun socketChannelConnectDone(socketChannel: SocketChannel, success: Boolean) = verifyNoThrow {
     if (success) {
       nioContextManager.socketChannelConnected(socketChannel)
     }

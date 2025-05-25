@@ -8,177 +8,92 @@ import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
 import java.nio.channels.spi.AbstractInterruptibleChannel
 import org.pastalab.fray.core.controllers.ProactiveNetworkController
+import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.runtime.NetworkDelegate
 
 class ProactiveNetworkDelegate(
     val controller: ProactiveNetworkController,
     val synchronizer: DelegateSynchronizer
 ) : NetworkDelegate() {
-  override fun onSelectorCancelKeyDone(selector: Selector, key: SelectionKey) {
-    if (synchronizer.checkEntered()) {
-      return
-    }
-    try {
-      controller.selectorCancelKey(selector, key)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onSelectorCancelKeyDone(selector: Selector, key: SelectionKey) =
+      synchronizer.runInFrayDoneNoSkip { controller.selectorCancelKey(selector, key) }
 
-  override fun onSelectorSelect(selector: Selector) {
-    if (synchronizer.checkEntered()) {
-      synchronizer.onSkipMethod("Selector.select")
-      return
-    }
-    try {
-      controller.selectorSelect(selector)
-    } finally {
-      synchronizer.entered.set(false)
-      synchronizer.onSkipMethod("Selector.select")
-    }
-  }
+  override fun onSelectorSelect(selector: Selector) =
+      synchronizer.runInFrayStart("Selector.select") { controller.selectorSelect(selector) }
 
-  override fun onSelectorSelectDone(selector: Selector?) {
-    synchronizer.onSkipMethodDone("Selector.select")
-  }
+  override fun onSelectorSelectDone(selector: Selector) =
+      synchronizer.runInFrayDone("Selector.select") { Result.success(Unit) }
 
-  override fun onSelectorClose(selector: Selector?) {
-    synchronizer.onSkipMethod("Selector.close")
-  }
+  override fun onSelectorClose(selector: Selector) =
+      synchronizer.runInFrayStart("Selector.close") { Result.success(Unit) }
 
-  override fun onSelectorCloseDone(selector: Selector) {
-    synchronizer.onSkipMethodDone("Selector.close")
-    if (synchronizer.checkEntered()) return
-    controller.selectorClose(selector)
-    synchronizer.entered.set(false)
-  }
+  override fun onSelectorCloseDone(selector: Selector) =
+      synchronizer.runInFrayDone("Selector.close") { controller.selectorClose(selector) }
 
-  override fun onSelectorSetEventOpsDone(selector: Selector, key: SelectionKey) {
-    if (synchronizer.checkEntered()) {
-      return
-    }
-    try {
-      controller.selectorSetEventOps(selector, key)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onSelectorSetEventOpsDone(selector: Selector, key: SelectionKey) =
+      synchronizer.runInFrayDoneNoSkip { controller.selectorSetEventOps(selector, key) }
 
-  override fun onServerSocketChannelAccept(channel: ServerSocketChannel) {
-    if (synchronizer.checkEntered()) {
-      synchronizer.onSkipMethod("ServerSocketChannel.accept")
-      return
-    }
-    try {
-      controller.serverSocketChannelAccept(channel)
-    } finally {
-      synchronizer.entered.set(false)
-      synchronizer.onSkipMethod("ServerSocketChannel.accept")
-    }
-  }
+  override fun onServerSocketChannelAccept(channel: ServerSocketChannel) =
+      synchronizer.runInFrayStart("ServerSocketChannelAccept") {
+        controller.serverSocketChannelAccept(channel)
+      }
 
   override fun onServerSocketChannelAcceptDone(
       channel: ServerSocketChannel,
       client: SocketChannel?
-  ) {
-    synchronizer.onSkipMethodDone("ServerSocketChannel.accept")
-    if (synchronizer.checkEntered()) return
-    try {
-      controller.serverSocketChannelAcceptDone(channel, client)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  ) =
+      synchronizer.runInFrayDone("ServerSocketChannel.accept") {
+        controller.serverSocketChannelAcceptDone(channel, client)
+      }
 
-  override fun onSocketChannelRead(channel: SocketChannel) {
-    if (synchronizer.checkEntered()) {
-      synchronizer.onSkipMethod("SocketChannel.read")
-      return
-    }
-    try {
-      controller.socketChannelRead(channel)
-    } finally {
-      synchronizer.entered.set(false)
-      synchronizer.onSkipMethod("SocketChannel.read")
-    }
-  }
+  override fun onSocketChannelRead(channel: SocketChannel) =
+      synchronizer.runInFrayDone("SocketChannelRead") { controller.socketChannelRead(channel) }
 
-  override fun onSocketChannelReadDone(channel: SocketChannel, bytesRead: Long) {
-    synchronizer.onSkipMethodDone("SocketChannel.read")
-    if (synchronizer.checkEntered()) return
-    try {
-      controller.socketChannelReadDone(channel, bytesRead)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onSocketChannelReadDone(channel: SocketChannel, bytesRead: Long) =
+      synchronizer.runInFrayDone("SocketChannelRead") {
+        controller.socketChannelReadDone(channel, bytesRead)
+      }
 
-  override fun onSocketChannelWriteDone(channel: SocketChannel, bytesWritten: Long) {
-    if (synchronizer.checkEntered()) return
-    try {
-      controller.socketChannelWriteDone(channel, bytesWritten)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onSocketChannelWriteDone(channel: SocketChannel, bytesWritten: Long) =
+      synchronizer.runInFrayDoneNoSkip { controller.socketChannelWriteDone(channel, bytesWritten) }
 
-  override fun onSocketChannelClose(channel: AbstractInterruptibleChannel?) {
-    synchronizer.onSkipMethod("SocketChannel.close")
-  }
+  override fun onSocketChannelClose(channel: AbstractInterruptibleChannel?) =
+      synchronizer.runInFrayStart("SocketChannel.close") { Result.success(Unit) }
 
-  override fun onSocketChannelCloseDone(channel: AbstractInterruptibleChannel) {
-    synchronizer.onSkipMethodDone("SocketChannel.close")
-    if (synchronizer.checkEntered()) return
-    if (channel is ServerSocketChannel) {
-      controller.serverSocketChannelClose(channel)
-    } else if (channel is SocketChannel) {
-      controller.socketChannelClose(channel)
-    }
-    synchronizer.entered.set(false)
-  }
+  override fun onSocketChannelCloseDone(channel: AbstractInterruptibleChannel) =
+      synchronizer.runInFrayDone("SocketChannel.close") {
+        if (channel is ServerSocketChannel) {
+          controller.serverSocketChannelClose(channel)
+        } else if (channel is SocketChannel) {
+          controller.socketChannelClose(channel)
+        } else {
+          verifyOrReport(false) {
+            "Unknown channel type: ${channel::class.java.name}. Expected ServerSocketChannel or SocketChannel."
+          }
+          Result.success(Unit)
+        }
+      }
 
-  override fun onSocketChannelConnect(channel: SocketChannel, remoteAddress: SocketAddress) {
-    if (synchronizer.checkEntered()) {
-      synchronizer.onSkipMethod("SocketChannel.connect")
-      return
-    }
-    try {
-      controller.socketChannelConnect(channel, remoteAddress)
-    } finally {
-      synchronizer.entered.set(false)
-      synchronizer.onSkipMethod("SocketChannel.connect")
-    }
-  }
+  override fun onSocketChannelConnect(channel: SocketChannel, remoteAddress: SocketAddress) =
+      synchronizer.runInFrayStart("SocketChannel.connect") {
+        controller.socketChannelConnect(channel, remoteAddress)
+      }
 
-  override fun onSocketChannelFinishConnect(channel: SocketChannel?) {
-    synchronizer.onSkipMethod("SocketChannel.finishConnect")
-  }
+  override fun onSocketChannelFinishConnect(channel: SocketChannel?) =
+      synchronizer.runInFrayStart("SocketChannel.finishConnect") { Result.success(Unit) }
 
-  override fun onSocketChannelFinishConnectDone(channel: SocketChannel, success: Boolean) {
-    synchronizer.onSkipMethodDone("SocketChannel.finishConnect")
-    if (synchronizer.checkEntered()) return
-    try {
-      controller.socketChannelConnectDone(channel, success)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onSocketChannelFinishConnectDone(channel: SocketChannel, success: Boolean) =
+      synchronizer.runInFrayDone("SocketChannel.finishConnect") {
+        controller.socketChannelConnectDone(channel, success)
+      }
 
-  override fun onSocketChannelConnectDone(channel: SocketChannel, success: Boolean) {
-    synchronizer.onSkipMethodDone("SocketChannel.connect")
-    if (synchronizer.checkEntered()) return
-    try {
-      controller.socketChannelConnectDone(channel, success)
-    } finally {
-      synchronizer.entered.set(false)
-    }
-  }
+  override fun onSocketChannelConnectDone(channel: SocketChannel, success: Boolean) =
+      synchronizer.runInFrayDone("SocketChannel.connect") {
+        controller.socketChannelConnectDone(channel, success)
+      }
 
-  override fun onServerSocketChannelBindDone(channel: ServerSocketChannel) {
-    if (synchronizer.checkEntered()) return
-    controller.serverSocketChannelBindDone(channel)
-    synchronizer.entered.set(false)
-  }
+  override fun onServerSocketChannelBindDone(channel: ServerSocketChannel) =
+      synchronizer.runInFrayDoneNoSkip { controller.serverSocketChannelBindDone(channel) }
 
   override fun onNioSocketConnect(socket: SocketImpl) {
     TODO()
