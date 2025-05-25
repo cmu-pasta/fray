@@ -12,25 +12,11 @@ class ReactiveNetworkDelegate(
     val synchronizer: DelegateSynchronizer
 ) : NetworkDelegate() {
 
-  fun reactiveBlockingEnter() {
-    if (synchronizer.checkEntered()) {
-      synchronizer.onSkipMethod("ReactiveBlocking")
-      return
-    }
-    try {
-      controller.reactiveBlockingBlocked()
-    } finally {
-      synchronizer.entered.set(false)
-      synchronizer.onSkipMethod("ReactiveBlocking")
-    }
-  }
+  fun reactiveBlockingEnter() =
+      synchronizer.runInFrayStart("ReactiveBlocking") { controller.reactiveBlockingBlocked() }
 
-  fun reactiveBlockingEnterDone() {
-    synchronizer.onSkipMethodDone("ReactiveBlocking")
-    if (synchronizer.checkEntered()) return
-    controller.reactiveBlockingUnblocked()
-    synchronizer.entered.set(false)
-  }
+  fun reactiveBlockingEnterDone() =
+      synchronizer.runInFrayDone("ReactiveBlocking") { controller.reactiveBlockingUnblocked() }
 
   override fun onSelectorSelect(selector: Selector) {
     reactiveBlockingEnter()

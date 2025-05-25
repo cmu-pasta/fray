@@ -3,22 +3,22 @@ package org.pastalab.fray.core.controllers
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 import org.pastalab.fray.core.RunContext
+import org.pastalab.fray.core.utils.Utils.verifyNoThrow
 
 class TimeController(val context: RunContext) : RunFinishedHandler(context) {
   var nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
 
-  fun nanoTime(): Long {
+  private fun getAndIncrementNanoTime(): Long {
+    val currentNanoTime = nanoTime
     nanoTime += TimeUnit.MILLISECONDS.toNanos(10000)
-    return nanoTime
+    return currentNanoTime
   }
 
-  fun currentTimeMillis(): Long {
-    return nanoTime() / 1000000
-  }
+  fun nanoTime() = verifyNoThrow { getAndIncrementNanoTime() }
 
-  fun instantNow(): Instant {
-    return Instant.ofEpochMilli(currentTimeMillis())
-  }
+  fun currentTimeMillis() = verifyNoThrow { getAndIncrementNanoTime() / 1000000 }
+
+  fun instantNow() = verifyNoThrow { Instant.ofEpochMilli(getAndIncrementNanoTime() / 1000000) }
 
   override fun done() {
     nanoTime = TimeUnit.SECONDS.toNanos(1577768400)

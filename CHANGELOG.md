@@ -12,6 +12,10 @@ is completed, the thread notifies the scheduler to mark the thread as
 runnable. This introduces non-determinism because the schedule depends on 
 when the network operation is completed. However this prevents Fray from 
 being blocked at network operations.
+- Add `verifyNoThrow` and `mustBeCaught` methods to verify that no exceptions 
+are thrown from Fray.
+- Add `runInFray` and `runInFrayDone` methods to run code in Fray and 
+avoid recursive calls.
 
 ### Changed
 
