@@ -3,6 +3,7 @@ package org.pastalab.fray.instrumentation.base.visitors
 import java.util.concurrent.locks.AbstractQueuedSynchronizer.ConditionObject
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
+import org.pastalab.fray.runtime.Runtime
 
 class ConditionInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(cv, ConditionObject::class.java.name) {

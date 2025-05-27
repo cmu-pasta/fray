@@ -122,15 +122,20 @@ class DelegateSynchronizer(val context: RunContext) {
     if (onSkipRecursion.get()) {
       return
     }
-    onSkipRecursion.set(true)
-    stackTrace.get().add(signature)
-    skipFunctionEntered.set(1 + skipFunctionEntered.get())
+    try {
+      onSkipRecursion.set(true)
+      stackTrace.get().add(signature)
+      skipFunctionEntered.set(1 + skipFunctionEntered.get())
 
-    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
-      stackTrace.get().removeLast()
-      skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+      if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
+        stackTrace.get().removeLast()
+        skipFunctionEntered.set(skipFunctionEntered.get() - 1)
+      }
+    } catch (e: Throwable) {
+      verifyOrReport(false) { "Error in onSkipMethod: $e" }
+    } finally {
+      onSkipRecursion.set(false)
     }
-    onSkipRecursion.set(false)
   }
 
   fun onSkipMethodDone(signature: String): Boolean {
@@ -147,6 +152,9 @@ class DelegateSynchronizer(val context: RunContext) {
       Utils.verifyOrReport(last == signature)
       skipFunctionEntered.set(skipFunctionEntered.get() - 1)
       return true
+    } catch (e: Throwable) {
+      verifyOrReport(false) { "Error in onSkipMethodDone: $e" }
+      return false
     } finally {
       onSkipRecursion.set(false)
     }

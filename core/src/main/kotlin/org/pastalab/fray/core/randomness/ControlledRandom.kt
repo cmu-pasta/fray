@@ -1,6 +1,7 @@
 package org.pastalab.fray.core.randomness
 
 import java.util.*
+import kotlin.math.absoluteValue
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 

@@ -1,6 +1,8 @@
 package org.pastalab.fray.test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.classgraph.ClassGraph;
+import kotlinx.serialization.json.Json;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
@@ -10,13 +12,15 @@ import org.pastalab.fray.core.command.*;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
-import org.pastalab.fray.test.controllers.network.reactive.success.NetworkCallWithSocketNoDeadlock;
-import org.pastalab.fray.test.core.fail.rwlock.ReentrantReadWriteLockDeadlock;
-import org.pastalab.fray.test.core.success.classconstructor.X509CertSelectorConstructorNoDeadlock;
-import org.pastalab.fray.test.core.success.condition.ConditionAwaitTimeoutInterrupt;
-import org.pastalab.fray.test.core.success.lock.ReentrantLockTryLockNoDeadlock;
-import org.pastalab.fray.test.core.success.rwlock.ReentrantReadWriteLockNoDeadlock;
+import org.pastalab.fray.core.scheduler.RandomScheduler;
+import org.pastalab.fray.core.scheduler.Scheduler;
+import org.pastalab.fray.core.utils.Utils;
+import org.pastalab.fray.core.utils.UtilsKt;
+import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
+import org.pastalab.fray.test.core.success.threadpool.ThreadPoolExecutorShutdown;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,13 +42,50 @@ public class FrayTestCase {
     }
 
     @Test
+    public void replay() throws IOException {
+        String basePath = "/tmp/report-ba/recording/";
+        Scheduler scheduler = org.pastalab.fray.core.utils.UtilsKt.schedulerFromRecording(basePath);
+        ControlledRandom randomnessProvider = UtilsKt.randomFromRecording(basePath);
+        Configuration config = new Configuration(
+                new ExecutionInfo(
+                        new LambdaExecutor(() -> {
+                            try {
+                                ScheduledThreadPoolWorkSteal.main(new String[]{});
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                            return null;
+                        }),
+                        false,
+                        false,
+                        -1
+                ),
+                "/tmp/report2",
+                1,
+                60,
+                scheduler,
+                randomnessProvider,
+                true,
+                false,
+                true,
+                true,
+                false,
+                false,
+                NetworkDelegateType.REACTIVE,
+                TimeDelegateType.MOCK
+        );
+        TestRunner runner = new TestRunner(config);
+        runner.run();
+    }
+
+    @Test
     public void testOne() throws Throwable {
         System.setProperty("fray.recordSchedule", "true");
         Configuration config = new Configuration(
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                ConditionAwaitTimeoutInterrupt.main(new String[]{});
+                                ThreadPoolExecutorShutdown.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -57,7 +98,7 @@ public class FrayTestCase {
                 "/tmp/report2",
                 1000,
                 60,
-                new POSScheduler(),
+                new POSScheduler(new ControlledRandom()),
                 new ControlledRandom(),
                 true,
                 false,
@@ -66,7 +107,7 @@ public class FrayTestCase {
                 false,
                 false,
                 NetworkDelegateType.REACTIVE,
-                TimeDelegateType.MOCK
+                TimeDelegateType.NONE
         );
         TestRunner runner = new TestRunner(config);
         runner.run();

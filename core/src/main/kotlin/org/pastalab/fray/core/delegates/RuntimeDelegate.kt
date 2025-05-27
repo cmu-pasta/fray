@@ -35,9 +35,9 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
   override fun onThreadStartDone(t: Thread) =
       synchronizer.runInFrayDone("thread.start") { context.threadStartDone(t) }
 
-  override fun onThreadRun() = synchronizer.runInFrayDoneNoSkip { context.threadRun() }
+  override fun onThreadRun() = synchronizer.runInFrayStartNoSkip { context.threadRun() }
 
-  override fun onThreadEnd() = synchronizer.runInFrayDoneNoSkip { context.threadCompleted() }
+  override fun onThreadEnd() = synchronizer.runInFrayStartNoSkip { context.threadCompleted() }
 
   override fun onThreadGetState(t: Thread, state: Thread.State): Thread.State =
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
@@ -115,9 +115,16 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       synchronizer.runInFrayDoneNoSkip { context.lockUnlockDone(o) }
 
   override fun onLockNewCondition(c: Condition, l: Lock) {
-    if (synchronizer.entered.get()) return
-    context.lockNewCondition(c, l)
-    synchronizer.entered.set(false)
+    if (synchronizer.entered.get()) {
+      return
+    }
+    // Here we want to track condition creation even if in skipped sections.
+    synchronizer.entered.set(true)
+    try {
+      context.lockNewCondition(c, l)
+    } finally {
+      synchronizer.entered.set(false)
+    }
   }
 
   override fun onConditionAwait(o: Condition) =
@@ -373,8 +380,11 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     // The first thread is not registered.
     // Therefor we cannot call `synchronizer.checkEntered` here.
     synchronizer.entered.set(true)
-    context.start()
-    synchronizer.entered.set(false)
+    try {
+      context.start()
+    } finally {
+      synchronizer.entered.set(false)
+    }
   }
 
   private fun onThreadParkTimed(originBlock: () -> Unit) {
