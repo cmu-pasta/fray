@@ -16,6 +16,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 import java.util.concurrent.locks.StampedLock
+import kotlin.system.exitProcess
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.concurrency.NioContextManager
 import org.pastalab.fray.core.concurrency.ReferencedContextManager
@@ -50,7 +51,6 @@ import org.pastalab.fray.runtime.RangerCondition
 import org.pastalab.fray.runtime.Runtime
 import org.pastalab.fray.runtime.Runtime.onReportError
 import org.pastalab.fray.runtime.TargetTerminateException
-import kotlin.system.exitProcess
 
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 class RunContext(val config: Configuration) {
