@@ -50,6 +50,7 @@ import org.pastalab.fray.runtime.RangerCondition
 import org.pastalab.fray.runtime.Runtime
 import org.pastalab.fray.runtime.Runtime.onReportError
 import org.pastalab.fray.runtime.TargetTerminateException
+import kotlin.system.exitProcess
 
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 class RunContext(val config: Configuration) {
@@ -161,8 +162,7 @@ class RunContext(val config: Configuration) {
         val path = config.saveToReportFolder(config.nextSavedIndex++)
         config.frayLogger.info("The recording is saved to $path", true)
         Runtime.resetAllDelegate()
-        syncManager.createWait(this, 1)
-        syncManager.wait(this)
+        exitProcess(1)
       }
 
       if (config.exploreMode && config.nextSavedIndex > 0) {
@@ -185,8 +185,7 @@ class RunContext(val config: Configuration) {
       }
       // We want to switch to the dummy so that the shutdown will not be blocked.
       Runtime.resetAllDelegate()
-      syncManager.createWait(this, 1)
-      syncManager.wait(this)
+      exitProcess(1)
     }
   }
 
