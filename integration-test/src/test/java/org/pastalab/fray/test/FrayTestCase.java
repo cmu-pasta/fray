@@ -1,8 +1,6 @@
 package org.pastalab.fray.test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.classgraph.ClassGraph;
-import kotlinx.serialization.json.Json;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
@@ -12,9 +10,7 @@ import org.pastalab.fray.core.command.*;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
-import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
-import org.pastalab.fray.core.utils.Utils;
 import org.pastalab.fray.core.utils.UtilsKt;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
 import org.pastalab.fray.test.core.success.threadpool.ThreadPoolExecutorShutdown;
