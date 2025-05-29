@@ -37,7 +37,6 @@ public class FrayTestCase {
         });
     }
 
-    @Test
     public void replay() throws IOException {
         String basePath = "/tmp/report-ba/recording/";
         Scheduler scheduler = org.pastalab.fray.core.utils.UtilsKt.schedulerFromRecording(basePath);
