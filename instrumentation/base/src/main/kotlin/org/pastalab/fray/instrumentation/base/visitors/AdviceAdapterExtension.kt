@@ -2,9 +2,9 @@ package org.pastalab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
-import org.objectweb.asm.commons.AdviceAdapter
+import org.objectweb.asm.commons.GeneratorAdapter
 
-fun AdviceAdapter.getLocals(): Array<Any> {
+fun GeneratorAdapter.getLocals(): Array<Any> {
   val argTypes = argumentTypes.map { typeToLocal(it) }.toMutableList()
   if (access and Opcodes.ACC_STATIC == 0) {
     argTypes.add(0, "java/lang/Object")

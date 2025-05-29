@@ -34,7 +34,7 @@ class ProactiveNetworkDelegate(
       synchronizer.runInFrayDoneNoSkip { controller.selectorSetEventOps(selector, key) }
 
   override fun onServerSocketChannelAccept(channel: ServerSocketChannel) =
-      synchronizer.runInFrayStart("ServerSocketChannelAccept") {
+      synchronizer.runInFrayStart("ServerSocketChannel.accept") {
         controller.serverSocketChannelAccept(channel)
       }
 
@@ -47,7 +47,7 @@ class ProactiveNetworkDelegate(
       }
 
   override fun onSocketChannelRead(channel: SocketChannel) =
-      synchronizer.runInFrayDone("SocketChannelRead") { controller.socketChannelRead(channel) }
+      synchronizer.runInFrayStart("SocketChannelRead") { controller.socketChannelRead(channel) }
 
   override fun onSocketChannelReadDone(channel: SocketChannel, bytesRead: Long) =
       synchronizer.runInFrayDone("SocketChannelRead") {

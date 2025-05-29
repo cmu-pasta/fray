@@ -11,7 +11,7 @@ class ConditionWakeBlocked(val conditionContext: ConditionSignalContext, val noT
             System.identityHashCode(conditionContext.conditionReference.get()),
             ResourceType.CONDITION)) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
-    if (type == InterruptionType.INTERRUPT) {
+    if (conditionContext.lockContext.canLock(tid)) {
       return conditionContext.getSyncObject()
     }
     return null

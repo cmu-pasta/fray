@@ -50,6 +50,7 @@ import org.pastalab.fray.runtime.LivenessException
 import org.pastalab.fray.runtime.RangerCondition
 import org.pastalab.fray.runtime.Runtime
 import org.pastalab.fray.runtime.Runtime.onReportError
+import org.pastalab.fray.runtime.TargetTerminateException
 
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 class RunContext(val config: Configuration) {
@@ -112,6 +113,7 @@ class RunContext(val config: Configuration) {
   private val signalManager =
       ReferencedContextManager<SignalContext> {
         val lockContext = lockManager.getContext(it)
+        verifyOrReport(it !is Condition)
         val obj = ObjectNotifyContext(lockContext, it)
         lockContext.signalContexts.add(obj)
         obj
@@ -160,7 +162,7 @@ class RunContext(val config: Configuration) {
         val path = config.saveToReportFolder(config.nextSavedIndex++)
         config.frayLogger.info("The recording is saved to $path", true)
         Runtime.resetAllDelegate()
-        exitProcess(0)
+        exitProcess(1)
       }
 
       if (config.exploreMode && config.nextSavedIndex > 0) {
@@ -183,7 +185,7 @@ class RunContext(val config: Configuration) {
       }
       // We want to switch to the dummy so that the shutdown will not be blocked.
       Runtime.resetAllDelegate()
-      exitProcess(0)
+      exitProcess(1)
     }
   }
 
@@ -479,13 +481,13 @@ class RunContext(val config: Configuration) {
     return (pendingOperation as ThreadResumeOperation).noTimeout
   }
 
-  fun threadInterrupt(t: Thread) = mustBeCaught {
+  fun threadInterrupt(t: Thread) = verifyNoThrow {
     val context = registeredThreads[t.id]!!
     context.interruptSignaled = true
     val pendingOperation = context.pendingOperation
 
     if (context.state == ThreadState.Running) {
-      return@mustBeCaught
+      return@verifyNoThrow
     }
 
     if (pendingOperation is BlockedOperation) {
@@ -669,7 +671,7 @@ class RunContext(val config: Configuration) {
 
   fun lockUnlockDone(lock: Any) = verifyNoThrow { syncManager.wait(lockManager.getContext(lock)) }
 
-  fun lockNewCondition(condition: Condition, lock: Lock) {
+  fun lockNewCondition(condition: Condition, lock: Lock) = verifyNoThrow {
     val lockContext = lockManager.getContext(lock)
     val conditionContext = ConditionSignalContext(lockContext, condition)
     lockContext.signalContexts.add(conditionContext)
@@ -961,9 +963,9 @@ class RunContext(val config: Configuration) {
 
   fun checkDeadlock(cleanUp: () -> Unit) {
     val deadLock =
-        if (registeredThreads.values.toList().none { it.schedulable() }) {
+        if (registeredThreads.values.none { it.schedulable() }) {
           unblockTimedOperations()
-          registeredThreads.values.toList().none { it.schedulable() }
+          registeredThreads.values.none { it.schedulable() }
         } else {
           false
         }
@@ -1060,7 +1062,7 @@ class RunContext(val config: Configuration) {
         Thread.currentThread() !is HelperThread) {
       currentThread.state = ThreadState.Running
       // Let's try to break all running threads if a bug is found.
-      throw RuntimeException()
+      throw TargetTerminateException()
     }
 
     checkAndUnblockRangerOperations()

@@ -12,6 +12,7 @@ class POSScheduler(val rand: ControlledRandom) : Scheduler {
   constructor() : this(ControlledRandom()) {}
 
   @Transient val threadPriority = mutableMapOf<ThreadContext, Double>()
+  @Transient val nonRacingOperationBuffer = mutableListOf<ThreadContext>()
 
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,
@@ -20,19 +21,19 @@ class POSScheduler(val rand: ControlledRandom) : Scheduler {
     if (threads.size == 1) {
       return threads[0]
     }
-    val nonRacingOps = mutableListOf<ThreadContext>()
+    nonRacingOperationBuffer.clear()
     for (thread in threads) {
       if (thread !in threadPriority) {
         val priority = rand.nextDouble(0.0, 1.0)
         threadPriority[thread] = priority
       }
       if (thread.pendingOperation is NonRacingOperation) {
-        nonRacingOps.add(thread)
+        nonRacingOperationBuffer.add(thread)
       }
     }
     // Schedule all non-racing OPs first.
-    if (nonRacingOps.isNotEmpty()) {
-      return nonRacingOps.minBy { threadPriority[it]!! }
+    if (nonRacingOperationBuffer.isNotEmpty()) {
+      return nonRacingOperationBuffer.minBy { threadPriority[it]!! }
     }
     val next = threads.minBy { threadPriority[it]!! }
     threadPriority.keys.removeIf {

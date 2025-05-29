@@ -11,7 +11,7 @@ class ObjectWakeBlocked(val objectContext: ObjectNotifyContext, val noTimeout: B
             System.identityHashCode(objectContext.lockContext.lockReference.get()),
             ResourceType.CONDITION)) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
-    if (type == InterruptionType.INTERRUPT) {
+    if (objectContext.lockContext.canLock(tid)) {
       return objectContext.getSyncObject()
     }
     return null

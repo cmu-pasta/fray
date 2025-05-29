@@ -1,5 +1,7 @@
 package org.pastalab.fray.core.utils
 
+import org.pastalab.fray.core.utils.Utils.verifyOrReport
+
 class SynchronizationManager {
   val synchronizationPoints = mutableMapOf<Int, Sync>()
 
