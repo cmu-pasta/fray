@@ -165,9 +165,11 @@ class Rand : ScheduleAlgorithm("random", false) {
 
 class PCT : ScheduleAlgorithm("pct", false) {
   val numSwitchPoints by option().int().default(3)
+  val maxStep by option().int().default(0)
 
   override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
-    return Triple(PCTScheduler(ControlledRandom(), numSwitchPoints, 0), ControlledRandom(), null)
+    return Triple(
+        PCTScheduler(ControlledRandom(), numSwitchPoints, maxStep), ControlledRandom(), null)
   }
 }
 
