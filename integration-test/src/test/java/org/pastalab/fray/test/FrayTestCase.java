@@ -12,6 +12,7 @@ import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 import org.pastalab.fray.core.utils.UtilsKt;
+import org.pastalab.fray.test.core.fail.network.SimpleHttpClient;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
 import org.pastalab.fray.test.core.success.threadpool.ThreadPoolExecutorShutdown;
 
@@ -80,7 +81,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                ThreadPoolExecutorShutdown.main(new String[]{});
+                                SimpleHttpClient.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
