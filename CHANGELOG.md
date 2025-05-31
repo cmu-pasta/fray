@@ -18,6 +18,7 @@ are thrown from Fray.
 avoid recursive calls.
 - Fix Fray hang if a thread is interrupted in ConditionWakeBlocked state.
 - Track new condition creation even if in the skip method state.
+- Add `-verify` while running integration tests.
 
 ### Changed
 
@@ -33,6 +34,7 @@ list for every scheduling point.
 avoid Fray hanging.
 - Update `MethodExitInstrumenter` to provide better exception handling.
 - Update `MonitorInstrumenter` to support `HttpClient`.
+- Fix `VerifyError` caused by instrumenters.
 
 ### Deprecated
 

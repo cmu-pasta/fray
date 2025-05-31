@@ -43,7 +43,7 @@ class UnsafeParkInstrumenter(cv: ClassVisitor) :
             invokeStatic(
                 Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
                 Utils.kFunctionToASMMethod(Runtime::onThreadUnpark))
-            dup()
+            dupX1()
             super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
             invokeStatic(
                 Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
