@@ -4,6 +4,12 @@ plugins {
 
 group = "org.pastalab.fray.test"
 
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(23))
+  }
+}
+
 dependencies {
   testImplementation(platform("org.junit:junit-bom:5.10.0"))
   testImplementation("org.junit.jupiter:junit-jupiter")

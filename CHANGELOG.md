@@ -16,6 +16,8 @@ being blocked at network operations.
 are thrown from Fray.
 - Add `runInFray` and `runInFrayDone` methods to run code in Fray and 
 avoid recursive calls.
+- Fix Fray hang if a thread is interrupted in ConditionWakeBlocked state.
+- Track new condition creation even if in the skip method state.
 
 ### Changed
 
@@ -29,6 +31,8 @@ reference management.
 list for every scheduling point.
 - Update `SkipMethodInstrumenter` and `ClassConstructorInstrumenter` to 
 avoid Fray hanging.
+- Update `MethodExitInstrumenter` to provide better exception handling.
+- Update `MonitorInstrumenter` to support `HttpClient`.
 
 ### Deprecated
 
