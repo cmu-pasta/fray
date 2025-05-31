@@ -73,6 +73,7 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
         false,
         false,
         true,
-        { mv, isFinalBlock -> push(methodSignature) })
+        className,
+        customizer = { mv, isFinalBlock -> push(methodSignature) })
   }
 }

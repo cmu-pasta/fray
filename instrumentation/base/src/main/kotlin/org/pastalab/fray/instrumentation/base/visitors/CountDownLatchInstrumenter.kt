@@ -32,7 +32,8 @@ class CountDownLatchInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          true)
+          true,
+          className)
     }
     if (name == "countDown") {
       val eMv =
@@ -52,7 +53,8 @@ class CountDownLatchInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          true)
+          true,
+          className)
     }
     return super.instrumentMethod(mv, access, name, descriptor, signature, exceptions)
   }

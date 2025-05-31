@@ -25,7 +25,7 @@ class ThreadLocalRandomInstrumenter(cv: ClassVisitor) :
           false,
           false,
           false,
-      )
+          className)
     }
     return mv
   }

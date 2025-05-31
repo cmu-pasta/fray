@@ -20,7 +20,15 @@ class AbstractInterruptibleChannelVisitor(cv: ClassVisitor) :
           MethodEnterVisitor(
               mv, Runtime::onSocketChannelClose, access, name, descriptor, true, false)
       return MethodExitVisitor(
-          eMv, Runtime::onSocketChannelCloseDone, access, name, descriptor, true, false, false)
+          eMv,
+          Runtime::onSocketChannelCloseDone,
+          access,
+          name,
+          descriptor,
+          true,
+          false,
+          false,
+          className)
     }
     return mv
   }

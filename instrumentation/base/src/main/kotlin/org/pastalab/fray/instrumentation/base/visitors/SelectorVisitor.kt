@@ -25,21 +25,45 @@ class SelectorVisitor(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(mv, Runtime::onSelectorSelect, access, name, descriptor, true, false)
       return MethodExitVisitor(
-          eMv, Runtime::onSelectorSelectDone, access, name, descriptor, true, false, true)
+          eMv,
+          Runtime::onSelectorSelectDone,
+          access,
+          name,
+          descriptor,
+          true,
+          false,
+          true,
+          className)
     }
     if (name == "close" && access and Opcodes.ACC_ABSTRACT == 0) {
       val eMv =
           MethodEnterVisitor(mv, Runtime::onSelectorClose, access, name, descriptor, true, false)
       return MethodExitVisitor(
-          eMv, Runtime::onSelectorCloseDone, access, name, descriptor, true, false, true)
+          eMv, Runtime::onSelectorCloseDone, access, name, descriptor, true, false, true, className)
     }
     if (name == "setEventOps" && access and Opcodes.ACC_ABSTRACT == 0) {
       return MethodExitVisitor(
-          mv, Runtime::onSelectorSetEventOpsDone, access, name, descriptor, true, true, false)
+          mv,
+          Runtime::onSelectorSetEventOpsDone,
+          access,
+          name,
+          descriptor,
+          true,
+          true,
+          false,
+          className)
     }
     if (name == "cancel" && access and Opcodes.ACC_ABSTRACT == 0) {
       return MethodExitVisitor(
-          mv, Runtime::onSelectorCancelKeyDone, access, name, descriptor, true, true, false)
+          mv,
+          Runtime::onSelectorCancelKeyDone,
+          access,
+          name,
+          descriptor,
+          true,
+          true,
+          false,
+          className)
     }
     return mv
   }

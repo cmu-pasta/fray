@@ -35,7 +35,8 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           false,
           false,
-          true)
+          true,
+          className)
     }
     if (name == "readLock") {
       val eMv =
@@ -55,7 +56,8 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           false,
           false,
-          true)
+          true,
+          className)
     }
     if (name == "tryReadLock") {
       val method =
@@ -79,7 +81,15 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
             }
           }
       return MethodExitVisitor(
-          eMv, Runtime::onStampedLockSkipDone, access, name, descriptor, false, false, true)
+          eMv,
+          Runtime::onStampedLockSkipDone,
+          access,
+          name,
+          descriptor,
+          false,
+          false,
+          true,
+          className)
     }
     if (name == "tryWriteLock") {
       val method =
@@ -95,7 +105,15 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
             }
           }
       return MethodExitVisitor(
-          eMv, Runtime::onStampedLockSkipDone, access, name, descriptor, false, false, false)
+          eMv,
+          Runtime::onStampedLockSkipDone,
+          access,
+          name,
+          descriptor,
+          false,
+          false,
+          false,
+          className)
     }
     if (name == "readLockInterruptibly") {
       val eMv =
@@ -108,7 +126,15 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
               true,
               false)
       return MethodExitVisitor(
-          eMv, Runtime::onStampedLockSkipDone, access, name, descriptor, false, false, true)
+          eMv,
+          Runtime::onStampedLockSkipDone,
+          access,
+          name,
+          descriptor,
+          false,
+          false,
+          true,
+          className)
     }
     if (name == "writeLockInterruptibly") {
       val eMv =
@@ -121,7 +147,15 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
               true,
               false)
       return MethodExitVisitor(
-          eMv, Runtime::onStampedLockSkipDone, access, name, descriptor, false, false, true)
+          eMv,
+          Runtime::onStampedLockSkipDone,
+          access,
+          name,
+          descriptor,
+          false,
+          false,
+          true,
+          className)
     }
     if (name == "unlockWrite") {
       return MethodExitVisitor(
@@ -132,7 +166,8 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          false)
+          false,
+          className)
     }
     if (name == "unlockRead") {
       return MethodExitVisitor(
@@ -143,7 +178,8 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          false)
+          false,
+          className)
     }
     if (name == "tryConvertToWriteLock") {
       return MethodExitVisitor(
@@ -154,7 +190,8 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           true,
-          false)
+          false,
+          className)
     }
     if (name == "tryConvertToReadLock") {
       return MethodExitVisitor(
@@ -165,7 +202,8 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           true,
-          false)
+          false,
+          className)
     }
     if (name == "tryConvertToOptimisticRead") {
       return MethodExitVisitor(
@@ -176,7 +214,8 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           true,
-          false)
+          false,
+          className)
     }
     if (name == "tryUnlockRead") {
       return MethodExitVisitor(
@@ -187,7 +226,8 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          false)
+          false,
+          className)
     }
     if (name == "tryUnlockWrite") {
       return MethodExitVisitor(
@@ -198,7 +238,8 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          false)
+          false,
+          className)
     }
     return super.instrumentMethod(mv, access, name, descriptor, signature, exceptions)
   }

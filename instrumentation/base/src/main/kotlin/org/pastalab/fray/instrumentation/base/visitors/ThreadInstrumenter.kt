@@ -27,7 +27,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           descriptor,
           true,
           false,
-          false)
+          false,
+          className)
     }
     if (name == "start") {
       val eMv =
@@ -39,7 +40,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
               descriptor,
               true,
               false,
-              true)
+              true,
+              className)
       return MethodEnterVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onThreadStart,
@@ -62,7 +64,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           descriptor,
           true,
           false,
-          false)
+          false,
+          className)
     }
     if (name == "isInterrupted") {
       return MethodExitVisitor(
@@ -73,7 +76,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           descriptor,
           true,
           false,
-          false)
+          false,
+          className)
     }
     if (name == "clearInterrupt") {
       return MethodExitVisitor(
@@ -84,7 +88,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           descriptor,
           true,
           false,
-          false)
+          false,
+          className)
     }
     if (name == "setInterrupt") {
       val eMv =
@@ -104,7 +109,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           descriptor,
           true,
           false,
-          true)
+          true,
+          className)
     }
     if (name == "getState") {
       return MethodExitVisitor(
@@ -115,7 +121,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           descriptor,
           true,
           false,
-          false)
+          false,
+          className)
     }
 
     if (name == "interrupt") {

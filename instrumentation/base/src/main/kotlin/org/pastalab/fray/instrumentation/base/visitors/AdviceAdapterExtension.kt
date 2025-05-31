@@ -4,10 +4,10 @@ import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import org.objectweb.asm.commons.GeneratorAdapter
 
-fun GeneratorAdapter.getLocals(): Array<Any> {
+fun GeneratorAdapter.getLocals(thisType: String): Array<Any> {
   val argTypes = argumentTypes.map { typeToLocal(it) }.toMutableList()
   if (access and Opcodes.ACC_STATIC == 0) {
-    argTypes.add(0, "java/lang/Object")
+    argTypes.add(0, thisType)
   }
   return argTypes.toTypedArray()
 }

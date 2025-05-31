@@ -32,7 +32,8 @@ class LockSupportInstrumenter(cv: ClassVisitor) :
           descriptor,
           false,
           false,
-          true)
+          true,
+          className)
     }
     if (name.startsWith("unpark")) {
       val eMv =
@@ -52,7 +53,8 @@ class LockSupportInstrumenter(cv: ClassVisitor) :
           descriptor,
           false,
           true,
-          true)
+          true,
+          className)
     }
     return mv
   }

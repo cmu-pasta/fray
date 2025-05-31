@@ -9,6 +9,20 @@ import org.objectweb.asm.Opcodes.ASM9
 // in the debugger view. So we need to disable reschedule inside
 // toString method.
 class ToStringInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
+  var className = ""
+
+  override fun visit(
+      version: Int,
+      access: Int,
+      name: String,
+      signature: String?,
+      superName: String?,
+      interfaces: Array<out String?>?
+  ) {
+    className = name
+    super.visit(version, access, name, signature, superName, interfaces)
+  }
+
   override fun visitMethod(
       access: Int,
       name: String,
@@ -37,6 +51,7 @@ class ToStringInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           false,
           false,
           true,
+          className,
           customizer = { mv, isFinalBlock -> push("toString") })
     } else {
       mv

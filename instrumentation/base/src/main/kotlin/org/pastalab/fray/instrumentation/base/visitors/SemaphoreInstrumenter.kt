@@ -22,7 +22,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           descriptor,
           true,
           false,
-          false)
+          false,
+          className)
     }
     if ((name == "acquire" || name == "acquireUninterruptibly" || name == "tryAcquire")) {
       val method =
@@ -68,7 +69,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           descriptor,
           false,
           false,
-          true)
+          true,
+          className)
     }
     if (name == "release" && descriptor == "()V") {
       val eMv =
@@ -88,7 +90,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           descriptor,
           false,
           false,
-          true)
+          true,
+          className)
     }
     if (name == "release" && descriptor == "(I)V") {
       val eMv =
@@ -108,7 +111,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           descriptor,
           false,
           false,
-          true)
+          true,
+          className)
     }
     if (name == "drainPermits") {
       val eMv =
@@ -128,7 +132,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           descriptor,
           false,
           false,
-          true)
+          true,
+          className)
     }
     if (name == "reducePermits") {
       val eMv =
@@ -148,7 +153,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           descriptor,
           false,
           false,
-          true)
+          true,
+          className)
     }
     return mv
   }

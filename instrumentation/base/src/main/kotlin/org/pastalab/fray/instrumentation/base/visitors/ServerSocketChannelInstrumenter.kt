@@ -20,7 +20,15 @@ class ServerSocketChannelInstrumenter(cv: ClassVisitor) :
   ): MethodVisitor {
     if (name == "bind" && descriptor.startsWith("(Ljava/net/SocketAddress;I)")) {
       return MethodExitVisitor(
-          mv, Runtime::onServerSocketChannelBindDone, access, name, descriptor, true, false, false)
+          mv,
+          Runtime::onServerSocketChannelBindDone,
+          access,
+          name,
+          descriptor,
+          true,
+          false,
+          false,
+          className)
     }
     if (name == "accept") {
       val eMv =
@@ -34,7 +42,8 @@ class ServerSocketChannelInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          true) { mv, isFinalBlock ->
+          true,
+          className) { mv, isFinalBlock ->
             if (isFinalBlock) {
               visitInsn(ACONST_NULL)
             } else {

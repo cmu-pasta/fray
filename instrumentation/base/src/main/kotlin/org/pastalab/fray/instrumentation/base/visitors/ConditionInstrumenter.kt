@@ -1,12 +1,12 @@
 package org.pastalab.fray.instrumentation.base.visitors
 
-import java.util.concurrent.locks.AbstractQueuedSynchronizer.ConditionObject
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
-import org.pastalab.fray.runtime.Runtime
 
 class ConditionInstrumenter(cv: ClassVisitor) :
-    ClassVisitorBase(cv, ConditionObject::class.java.name) {
+    ClassVisitorBase(
+        cv,
+        java.util.concurrent.locks.AbstractQueuedSynchronizer.ConditionObject::class.java.name) {
 
   override fun instrumentMethod(
       mv: MethodVisitor,
@@ -28,7 +28,8 @@ class ConditionInstrumenter(cv: ClassVisitor) :
                 org.pastalab.fray.runtime.Runtime::onConditionAwaitUninterruptiblyDone)
           }
       val eMv = MethodEnterVisitor(mv, method.first, access, name, descriptor, true, false)
-      return MethodExitVisitor(eMv, method.second, access, name, descriptor, true, false, true)
+      return MethodExitVisitor(
+          eMv, method.second, access, name, descriptor, true, false, true, className)
     }
     if (name == "signal") {
       val eMv =
@@ -48,7 +49,8 @@ class ConditionInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          true)
+          true,
+          className)
     }
     if (name == "signalAll") {
       val eMv =
@@ -68,7 +70,8 @@ class ConditionInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          true)
+          true,
+          className)
     }
     return mv
   }

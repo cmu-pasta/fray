@@ -25,7 +25,7 @@ class ObjectInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Object::class.
               true,
           )
       return MethodExitVisitor(
-          eMv, Runtime::onObjectWaitDone, access, name, descriptor, true, false, true)
+          eMv, Runtime::onObjectWaitDone, access, name, descriptor, true, false, true, className)
     }
     return mv
   }
