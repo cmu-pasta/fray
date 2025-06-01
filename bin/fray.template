@@ -49,7 +49,7 @@ CLASS_PATH=""
 SYSTEM_PROPS=""
 REPLAY=""
 CLASS=""
-ITER="1"
+ITER="10000"
 ARGS=()
 
 while [[ $# -gt 0 ]]; do
@@ -117,7 +117,7 @@ COMMAND+=("--method" "main")
 
 # Add replay if specified
 if [[ -n "$REPLAY" ]]; then
-  COMMAND+=("--scheduler" "replay-from-recordings" "--path-to-recordings" "$REPLAY")
+  COMMAND+=("--scheduler" "replay" "--path-to-scheduler" "$REPLAY")
 fi
 
 # Add args if any

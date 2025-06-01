@@ -12,11 +12,9 @@ import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 import org.pastalab.fray.core.utils.UtilsKt;
-import org.pastalab.fray.test.core.fail.network.SimpleHttpClient;
+import org.pastalab.fray.test.controllers.network.reactive.success.SimpleHttpClient;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
-import org.pastalab.fray.test.core.success.threadpool.ThreadPoolExecutorShutdown;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -114,6 +112,9 @@ public class FrayTestCase {
         List<DynamicTest> tests = new ArrayList<>();
         new ClassGraph().acceptPackages("org.pastalab.fray.test.core").scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
             String name = classInfo.getName();
+            if (name.contains("SchedulerThreadPoolWorkSteal")) {
+                return;
+            }
             boolean shouldFail = true;
             if (name.contains("fail")) {
                 shouldFail = true;

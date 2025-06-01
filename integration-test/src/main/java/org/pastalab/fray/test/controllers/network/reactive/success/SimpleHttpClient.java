@@ -1,4 +1,4 @@
-package org.pastalab.fray.test.core.fail.network;
+package org.pastalab.fray.test.controllers.network.reactive.success;
 
 import java.io.IOException;
 import java.net.URI;
