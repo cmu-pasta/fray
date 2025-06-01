@@ -12,11 +12,9 @@ import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 import org.pastalab.fray.core.utils.UtilsKt;
-import org.pastalab.fray.test.core.fail.network.SimpleHttpClient;
+import org.pastalab.fray.test.controllers.network.reactive.success.SimpleHttpClient;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
-import org.pastalab.fray.test.core.success.threadpool.ThreadPoolExecutorShutdown;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
