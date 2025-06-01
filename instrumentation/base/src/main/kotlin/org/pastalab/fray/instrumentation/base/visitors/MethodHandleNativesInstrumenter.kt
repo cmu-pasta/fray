@@ -33,7 +33,9 @@ class MethodHandleNativesInstrumenter(cv: ClassVisitor) :
           descriptor,
           false,
           false,
-          true) { mv, isFinalBlock ->
+          true,
+          className // pass thisType
+          ) { mv, isFinalBlock ->
             mv.push(methodSignature)
           }
     }

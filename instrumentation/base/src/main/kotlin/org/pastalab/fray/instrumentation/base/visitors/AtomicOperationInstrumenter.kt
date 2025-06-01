@@ -77,7 +77,7 @@ class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           false,
           false,
           true,
-      )
+          className)
     }
     return mv
   }

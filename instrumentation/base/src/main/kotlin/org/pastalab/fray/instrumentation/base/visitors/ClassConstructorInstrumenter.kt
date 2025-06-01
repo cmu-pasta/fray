@@ -51,7 +51,8 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
           false,
           false,
           true,
-          { mv, isFinalBlock -> mv.push(methodSignature) })
+          className,
+          customizer = { mv, isFinalBlock -> mv.push(methodSignature) })
     }
     return mv
   }

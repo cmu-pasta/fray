@@ -23,7 +23,8 @@ class ReentrantReadWriteLockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          false)
+          false,
+          className)
     }
     return mv
   }

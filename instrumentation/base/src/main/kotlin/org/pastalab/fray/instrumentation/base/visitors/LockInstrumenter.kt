@@ -39,7 +39,8 @@ class LockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          true)
+          true,
+          className)
     }
     if (name == "tryLock" && descriptor == "(JLjava/util/concurrent/TimeUnit;)Z") {
       val eMv =
@@ -60,7 +61,8 @@ class LockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          true)
+          true,
+          className)
     }
     if (name == "hasQueuedThreads") {
       return MethodExitVisitor(
@@ -71,7 +73,8 @@ class LockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          false)
+          false,
+          className)
     }
     if (name == "hasQueuedThread") {
       return MethodExitVisitor(
@@ -82,7 +85,8 @@ class LockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           true,
-          false)
+          false,
+          className)
     }
     if (name == "lock" || name == "lockInterruptibly") {
       val eMv =
@@ -113,7 +117,8 @@ class LockInstrumenter(cv: ClassVisitor) :
           descriptor,
           false,
           false,
-          true)
+          true,
+          className)
     }
     if (name == "unlock") {
       val eMv =
@@ -133,7 +138,8 @@ class LockInstrumenter(cv: ClassVisitor) :
           descriptor,
           true,
           false,
-          true)
+          true,
+          className)
     }
     if (name == "newCondition") {
       return NewConditionVisitor(

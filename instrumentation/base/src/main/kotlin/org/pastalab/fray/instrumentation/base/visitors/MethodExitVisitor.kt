@@ -25,6 +25,7 @@ class MethodExitVisitor(
     val loadThis: Boolean,
     val loadArgs: Boolean,
     val addFinalBlock: Boolean,
+    val thisType: String,
     val customizer: MethodExitVisitor.(v: MethodExitVisitor, isFinalBlock: Boolean) -> Unit =
         { v, isFinalBlock ->
         }
@@ -116,8 +117,8 @@ class MethodExitVisitor(
           methodExitLabel,
           Type.getObjectType("java/lang/Throwable"),
       )
-      val locals = getLocals()
-      visitFrame(Opcodes.F_NEW, locals.size, getLocals(), 1, arrayOf("java/lang/Throwable"))
+      val locals = getLocals(thisType)
+      visitFrame(Opcodes.F_NEW, locals.size, locals, 1, arrayOf("java/lang/Throwable"))
       if (loadThis) {
         loadThis()
       }
@@ -127,7 +128,7 @@ class MethodExitVisitor(
       customizer(this, true)
       invokeStatic(
           Type.getObjectType(
-              org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+              Runtime::class.java.name.replace(".", "/"),
           ),
           Utils.kFunctionToASMMethod(method),
       )

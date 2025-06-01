@@ -99,8 +99,9 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
       override fun visitMaxs(maxStack: Int, maxLocals: Int) {
         val label = mark()
         catchException(enterLabel, label, Type.getObjectType("java/lang/Throwable"))
-        val locals = getLocals()
-        visitFrame(Opcodes.F_NEW, locals.size, getLocals(), 1, arrayOf("java/lang/Throwable"))
+        val locals = getLocals(className)
+        visitFrame(
+            Opcodes.F_NEW, locals.size, getLocals(className), 1, arrayOf("java/lang/Throwable"))
         insertMonitorExit()
         visitInsn(ATHROW)
         super.visitMaxs(maxStack, maxLocals)

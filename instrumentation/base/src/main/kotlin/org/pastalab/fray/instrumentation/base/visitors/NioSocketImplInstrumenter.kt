@@ -18,14 +18,28 @@ class NioSocketImplInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(mv, Runtime::onNioSocketConnect, access, name, descriptor, true, false)
       return MethodExitVisitor(
-          eMv, Runtime::onNioSocketConnectDone, access, name, descriptor, true, false, true)
+          eMv,
+          Runtime::onNioSocketConnectDone,
+          access,
+          name,
+          descriptor,
+          true,
+          false,
+          true,
+          className)
     } else if (name == "read") {
       val eMv =
           MethodEnterVisitor(mv, Runtime::onNioSocketRead, access, name, descriptor, true, false)
       return MethodExitVisitor(
-          eMv, Runtime::onNioSocketReadDone, access, name, descriptor, true, false, true) {
-              mv,
-              isFinalBlock ->
+          eMv,
+          Runtime::onNioSocketReadDone,
+          access,
+          name,
+          descriptor,
+          true,
+          false,
+          true,
+          className) { mv, isFinalBlock ->
             if (isFinalBlock) {
               push(0)
             } else {
