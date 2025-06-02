@@ -6,7 +6,7 @@
 
 ### Changed
 
-- Better skip logic in JUnit tests.
+- Better skip logic in JUnit tests and Intellij debugger.
 
 ### Deprecated
 

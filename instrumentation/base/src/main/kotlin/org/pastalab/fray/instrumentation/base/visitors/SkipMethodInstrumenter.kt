@@ -41,6 +41,19 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
         MethodHandles::class.java.name,
         CallSite::class.java.name,
     ) {
+  override fun visit(
+    version: Int,
+    access: Int,
+    name: String,
+    signature: String?,
+    superName: String?,
+    interfaces: Array<out String>?
+  ) {
+    super.visit(version, access, name, signature, superName, interfaces)
+    if (name.startsWith("com/intellij/rt/debugger/")) {
+      shouldInstrument = true
+    }
+  }
 
   override fun instrumentMethod(
       mv: MethodVisitor,
