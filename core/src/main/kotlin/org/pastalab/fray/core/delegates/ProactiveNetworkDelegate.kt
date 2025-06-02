@@ -95,19 +95,11 @@ class ProactiveNetworkDelegate(
   override fun onServerSocketChannelBindDone(channel: ServerSocketChannel) =
       synchronizer.runInFrayDoneNoSkip { controller.serverSocketChannelBindDone(channel) }
 
-  override fun onNioSocketConnect(socket: SocketImpl) {
-    TODO()
-  }
+  override fun onNioSocketConnect(socket: SocketImpl) {}
 
-  override fun onNioSocketConnectDone(socket: SocketImpl) {
-    TODO()
-  }
+  override fun onNioSocketConnectDone(socket: SocketImpl) {}
 
-  override fun onNioSocketRead(socket: SocketImpl) {
-    TODO()
-  }
+  override fun onNioSocketRead(socket: SocketImpl) {}
 
-  override fun onNioSocketReadDone(socket: SocketImpl, bytesRead: Int) {
-    TODO()
-  }
+  override fun onNioSocketReadDone(socket: SocketImpl, bytesRead: Int) {}
 }

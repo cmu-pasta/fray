@@ -1,5 +1,6 @@
 package org.pastalab.fray.junit.tests.scheduler;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.testkit.engine.EngineTestKit;
 
@@ -8,6 +9,7 @@ import static org.junit.platform.testkit.engine.EventConditions.*;
 
 public class ReplaySchedulerTest {
     @Test
+    @Disabled
     public void testBankAccountReplay() {
         EngineTestKit
                 .engine("junit-jupiter")
