@@ -4,6 +4,20 @@
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 0.5.0 - 2025-06-02
+
+### Added
+
 - Reenable nix flake build.
 - Better stdout and allow customized schedulers.
 - Add reactive network controller. The reactive network controller blocks
@@ -35,14 +49,6 @@ avoid Fray hanging.
 - Update `MethodExitInstrumenter` to provide better exception handling.
 - Update `MonitorInstrumenter` to support `HttpClient`.
 - Fix `VerifyError` caused by instrumenters.
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 
 ## 0.4.4 - 2025-05-12
 
