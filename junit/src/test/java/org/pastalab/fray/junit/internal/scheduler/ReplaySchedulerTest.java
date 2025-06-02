@@ -1,6 +1,7 @@
 package org.pastalab.fray.junit.internal.scheduler;
 
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.ReplayScheduler;
 import org.pastalab.fray.junit.junit5.FrayTestExtension;
 import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
