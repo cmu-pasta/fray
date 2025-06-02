@@ -36,7 +36,7 @@
           project =
             (gradle2nix.builders.${pkgs.system}.buildGradlePackage {
               pname = "fray";
-              version = "0.5.1-SNAPSHOT";
+              version = "0.5.2-SNAPSHOT";
 
               src = ./.;
               lockFile = ./gradle.lock;

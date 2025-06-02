@@ -6,17 +6,23 @@
 
 ### Changed
 
-- Better skip logic in JUnit tests and Intellij debugger.
-
 ### Deprecated
 
 ### Removed
 
 ### Fixed
 
-- Fix Fray crash due to unimplemented methods in `ProactiveNetworkController`.
-
 ### Security
+
+## 0.5.1 - 2025-06-02
+
+### Changed
+
+- Better skip logic in JUnit tests and Intellij debugger.
+
+### Fixed
+
+- Fix Fray crash due to unimplemented methods in `ProactiveNetworkController`.
 
 ## 0.5.0 - 2025-06-02
 
