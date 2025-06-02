@@ -1,6 +1,7 @@
 package org.pastalab.fray.junit.junit5
 
 import java.lang.reflect.Constructor
+import java.lang.reflect.Method
 import org.junit.jupiter.api.extension.*
 import org.junit.jupiter.api.extension.ConditionEvaluationResult.disabled
 import org.junit.jupiter.api.extension.ConditionEvaluationResult.enabled
@@ -18,13 +19,7 @@ class FrayExtension(
     val index: Int,
     val frayContext: RunContext,
     val frayJupiterContext: FrayJupiterContext
-) :
-    BeforeEachCallback,
-    AfterEachCallback,
-    TestWatcher,
-    ExecutionCondition,
-    InvocationInterceptor,
-    AfterAllCallback {
+) : AfterEachCallback, TestWatcher, ExecutionCondition, InvocationInterceptor, AfterAllCallback {
 
   override fun <T : Any?> interceptTestClassConstructor(
       invocation: InvocationInterceptor.Invocation<T>,
@@ -50,8 +45,13 @@ class FrayExtension(
     return result
   }
 
-  override fun beforeEach(context: ExtensionContext?) {
+  override fun interceptTestTemplateMethod(
+      invocation: InvocationInterceptor.Invocation<Void?>?,
+      invocationContext: ReflectiveInvocationContext<Method?>?,
+      extensionContext: ExtensionContext?
+  ) {
     Runtime.onSkipMethodDone("JUnit internal")
+    invocation?.proceed()
   }
 
   override fun afterEach(context: ExtensionContext) {
