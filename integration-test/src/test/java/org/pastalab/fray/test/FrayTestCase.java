@@ -112,7 +112,7 @@ public class FrayTestCase {
         List<DynamicTest> tests = new ArrayList<>();
         new ClassGraph().acceptPackages("org.pastalab.fray.test.core").scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
             String name = classInfo.getName();
-            if (name.contains("SchedulerThreadPoolWorkSteal")) {
+            if (name.contains("ScheduledThreadPoolWorkSteal")) {
                 return;
             }
             boolean shouldFail = true;
