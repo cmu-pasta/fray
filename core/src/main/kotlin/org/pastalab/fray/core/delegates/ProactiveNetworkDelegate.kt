@@ -96,18 +96,14 @@ class ProactiveNetworkDelegate(
       synchronizer.runInFrayDoneNoSkip { controller.serverSocketChannelBindDone(channel) }
 
   override fun onNioSocketConnect(socket: SocketImpl) {
-    TODO()
   }
 
   override fun onNioSocketConnectDone(socket: SocketImpl) {
-    TODO()
   }
 
   override fun onNioSocketRead(socket: SocketImpl) {
-    TODO()
   }
 
   override fun onNioSocketReadDone(socket: SocketImpl, bytesRead: Int) {
-    TODO()
   }
 }

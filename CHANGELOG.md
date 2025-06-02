@@ -6,11 +6,15 @@
 
 ### Changed
 
+- Better skip logic in JUnit tests.
+
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+
+- Fix Fray crash due to unimplemented methods in `ProactiveNetworkController`.
 
 ### Security
 
