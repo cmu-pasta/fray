@@ -291,7 +291,7 @@ class RunContext(val config: Configuration) {
     LockSupport.unpark(t)
   }
 
-  fun threadParkDone(timed: Boolean) = mustBeCaught {
+  fun threadParkDone(blockedUntil: Long) = mustBeCaught {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
 
@@ -302,7 +302,7 @@ class RunContext(val config: Configuration) {
         context.pendingOperation = ThreadResumeOperation(true)
         context.state = ThreadState.Runnable
       } else {
-        context.pendingOperation = ParkBlocked(timed, context)
+        context.pendingOperation = ParkBlocked(blockedUntil, context)
         context.state = ThreadState.Blocked
         scheduleNextOperation(true)
       }
@@ -378,7 +378,7 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  private fun objectWaitImpl(waitingObject: Any, canInterrupt: Boolean, timed: Boolean) {
+  private fun objectWaitImpl(waitingObject: Any, canInterrupt: Boolean, blockedUntil: Long) {
     val t = Thread.currentThread().id
     val objId = System.identityHashCode(waitingObject)
     val signalContext = signalManager.getContext(waitingObject)
@@ -401,7 +401,7 @@ class RunContext(val config: Configuration) {
       return
     }
 
-    signalContext.addWaitingThread(context, timed, canInterrupt)
+    signalContext.addWaitingThread(context, blockedUntil, canInterrupt)
 
     unlockImpl(lockContext, t, true, true, signalContext is ObjectNotifyContext)
 
@@ -439,10 +439,12 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun objectWait(o: Any, timed: Boolean) = mustBeCaught { objectWaitImpl(o, true, timed) }
+  fun objectWait(o: Any, blockedUntil: Long) = mustBeCaught {
+    objectWaitImpl(o, true, blockedUntil)
+  }
 
-  fun conditionAwait(o: Condition, canInterrupt: Boolean, timed: Boolean) = mustBeCaught {
-    objectWaitImpl(o, canInterrupt, timed)
+  fun conditionAwait(o: Condition, canInterrupt: Boolean, blockedUntil: Long) = mustBeCaught {
+    objectWaitImpl(o, canInterrupt, blockedUntil)
   }
 
   fun objectWaitDoneImpl(waitingObject: Any, canInterrupt: Boolean): Boolean {
@@ -540,8 +542,8 @@ class RunContext(val config: Configuration) {
 
   fun conditionSignalAll(o: Condition) = verifyNoThrow { objectNotifyAllImpl(o) }
 
-  fun lockTryLock(lock: Any, canInterrupt: Boolean, timed: Boolean) = mustBeCaught {
-    lockImpl(lock, false, false, canInterrupt, timed, false)
+  fun lockTryLock(lock: Any, canInterrupt: Boolean, blockedUntil: Long) = mustBeCaught {
+    lockImpl(lock, false, false, canInterrupt, blockedUntil, false)
   }
 
   fun lockImpl(
@@ -549,7 +551,7 @@ class RunContext(val config: Configuration) {
       isMonitorLock: Boolean,
       shouldBlock: Boolean,
       canInterrupt: Boolean,
-      timed: Boolean,
+      blockedUntil: Long,
       shouldRetry: Boolean,
   ) {
     val t = Thread.currentThread().id
@@ -564,7 +566,7 @@ class RunContext(val config: Configuration) {
       context.checkInterrupt()
     }
 
-    val blockingWait = shouldBlock || timed
+    val blockingWait = shouldBlock || (blockedUntil != BLOCKED_OPERATION_NOT_TIMED)
 
     /**
      * We need a while loop here because even a thread unlock this thread and makes this thread
@@ -585,7 +587,7 @@ class RunContext(val config: Configuration) {
     // }
     while (!lockContext.lock(context, blockingWait, false, canInterrupt) && blockingWait) {
       context.state = ThreadState.Blocked
-      context.pendingOperation = LockBlocked(timed, lockContext)
+      context.pendingOperation = LockBlocked(blockedUntil, lockContext)
       // We want to block current thread because we do
       // not want to rely on ReentrantLock. This allows
       // us to pick which Thread to run next if multiple
@@ -600,18 +602,19 @@ class RunContext(val config: Configuration) {
       }
       val pendingOperation = context.pendingOperation
       verifyOrReport(pendingOperation is ThreadResumeOperation)
-      if (!(pendingOperation as ThreadResumeOperation).noTimeout && timed) {
+      if (!(pendingOperation as ThreadResumeOperation).noTimeout &&
+          blockedUntil != BLOCKED_OPERATION_NOT_TIMED) {
         break
       }
     }
   }
 
   fun monitorEnter(lock: Any, shouldRetry: Boolean) = mustBeCaught {
-    lockImpl(lock, true, true, false, false, shouldRetry)
+    lockImpl(lock, true, true, false, BLOCKED_OPERATION_NOT_TIMED, shouldRetry)
   }
 
   fun lockLock(lock: Any, canInterrupt: Boolean) = mustBeCaught {
-    lockImpl(lock, false, true, canInterrupt, false, false)
+    lockImpl(lock, false, true, canInterrupt, BLOCKED_OPERATION_NOT_TIMED, false)
   }
 
   fun reentrantReadWriteLockInit(
@@ -682,7 +685,7 @@ class RunContext(val config: Configuration) {
       lock: StampedLock,
       shouldBlock: Boolean,
       canInterrupt: Boolean,
-      timed: Boolean,
+      blockedUntil: Long,
       isReadLock: Boolean
   ) = mustBeCaught {
     val t = Thread.currentThread().id
@@ -696,14 +699,15 @@ class RunContext(val config: Configuration) {
 
     while (!lockFun(context, shouldBlock, canInterrupt) && shouldBlock) {
       context.state = ThreadState.Blocked
-      context.pendingOperation = LockBlocked(timed, stampedLockContext)
+      context.pendingOperation = LockBlocked(blockedUntil, stampedLockContext)
 
       scheduleNextOperation(true)
       if (canInterrupt) {
         context.checkInterrupt()
       }
       val pendingOperation = context.pendingOperation
-      if (!(pendingOperation as ThreadResumeOperation).noTimeout && timed) {
+      if (!(pendingOperation as ThreadResumeOperation).noTimeout &&
+          blockedUntil != BLOCKED_OPERATION_NOT_TIMED) {
         break
       }
     }
@@ -752,7 +756,7 @@ class RunContext(val config: Configuration) {
       permits: Int,
       shouldBlock: Boolean,
       canInterrupt: Boolean,
-      timed: Boolean
+      blockedUntil: Long
   ) = mustBeCaught {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
@@ -762,7 +766,7 @@ class RunContext(val config: Configuration) {
 
     while (!semaphoreManager.getContext(sem).acquire(permits, shouldBlock, canInterrupt, context) &&
         shouldBlock) {
-      context.pendingOperation = LockBlocked(timed, semaphoreManager.getContext(sem))
+      context.pendingOperation = LockBlocked(blockedUntil, semaphoreManager.getContext(sem))
       context.state = ThreadState.Blocked
 
       scheduleNextOperation(true)
@@ -770,7 +774,8 @@ class RunContext(val config: Configuration) {
         context.checkInterrupt()
       }
       val pendingOperation = context.pendingOperation
-      if (!(pendingOperation as ThreadResumeOperation).noTimeout && timed) {
+      if (!(pendingOperation as ThreadResumeOperation).noTimeout &&
+          blockedUntil != BLOCKED_OPERATION_NOT_TIMED) {
         break
       }
     }
@@ -832,7 +837,7 @@ class RunContext(val config: Configuration) {
     scheduleNextOperation(true)
   }
 
-  fun latchAwait(latch: CountDownLatch, timed: Boolean) = mustBeCaught {
+  fun latchAwait(latch: CountDownLatch, blockedUntil: Long) = mustBeCaught {
     val t = Thread.currentThread().id
     val objId = System.identityHashCode(latch)
     val context = registeredThreads[t]!!
@@ -843,7 +848,7 @@ class RunContext(val config: Configuration) {
     scheduleNextOperation(true)
 
     if (latchContext.await(true, context)) {
-      context.pendingOperation = CountDownLatchAwaitBlocking(timed, latchContext)
+      context.pendingOperation = CountDownLatchAwaitBlocking(blockedUntil, latchContext)
       context.state = ThreadState.Blocked
       checkDeadlock {
         // We should not use [InterruptionType.FORCE] here because
@@ -852,7 +857,7 @@ class RunContext(val config: Configuration) {
         context.state = ThreadState.Running
       }
       executor.submit {
-        if (timed) {
+        if (blockedUntil != BLOCKED_OPERATION_NOT_TIMED) {
           // this thread is blocked by Sync
           while (!context.sync.isBlocked()) {
             Thread.yield()
@@ -900,11 +905,11 @@ class RunContext(val config: Configuration) {
 
   fun latchCountDownDone(latch: CountDownLatch) = verifyNoThrow { syncManager.wait(latch) }
 
-  fun threadSleepOperation() = verifyNoThrow {
+  fun threadSleepOperation(blockedUntil: Long) = verifyNoThrow {
     val t = Thread.currentThread().id
     val context = registeredThreads[t]!!
-    context.pendingOperation = ThreadResumeOperation(true)
-    context.state = ThreadState.Runnable
+    context.pendingOperation = SleepBlockedOperation(context, blockedUntil)
+    context.state = ThreadState.Blocked
     scheduleNextOperation(true)
   }
 
@@ -964,7 +969,7 @@ class RunContext(val config: Configuration) {
   fun checkDeadlock(cleanUp: () -> Unit) {
     val deadLock =
         if (registeredThreads.values.none { it.schedulable() }) {
-          unblockTimedOperations()
+          getEnabledOperations()
           registeredThreads.values.none { it.schedulable() }
         } else {
           false
@@ -983,15 +988,6 @@ class RunContext(val config: Configuration) {
     scheduleNextOperation(true)
   }
 
-  fun unblockTimedOperations() {
-    registeredThreads.values.forEach {
-      val op = it.pendingOperation
-      if (op is BlockedOperation && op.timed) {
-        op.unblockThread(it.thread.id, InterruptionType.TIMEOUT)
-      }
-    }
-  }
-
   fun unblockThreadsInReactiveQueue() {
     // Iterator provides weakly consistent view of the collection.
     // It's safe here because the new items will be picked next time.
@@ -1007,6 +1003,36 @@ class RunContext(val config: Configuration) {
     }
   }
 
+  fun unblockTimedBlocking(): Long {
+    var blockingTime = 0L
+    val currentTime = System.currentTimeMillis()
+    if (config.ignoreTimedBlock &&
+        registeredThreads.any { it.value.state == ThreadState.Runnable }) {
+      return 0
+    }
+    registeredThreads.values.forEach {
+      val op = it.pendingOperation
+      if (op is BlockedOperation && op.blockedUntil != BLOCKED_OPERATION_NOT_TIMED) {
+        if (config.ignoreTimedBlock || op.blockedUntil <= currentTime) {
+          // If the thread is blocked by sleep operation, unblock it.
+          op.unblockThread(it.thread.id, InterruptionType.TIMEOUT)
+        } else {
+          // If the thread is blocked by sleep operation, we need to wait for it.
+          if (blockingTime == 0L) {
+            blockingTime = (op.blockedUntil - currentTime)
+          } else {
+            blockingTime = blockingTime.coerceAtMost(op.blockedUntil - currentTime)
+          }
+        }
+      }
+    }
+    return if (config.ignoreTimedBlock) {
+      0
+    } else {
+      blockingTime
+    }
+  }
+
   // We use enabledOperationBuffer because [getEnabledOperations] is on the hot
   // path which is called by [scheduleNextOperation]. We want to avoid creating
   // a temporary list every time.
@@ -1014,33 +1040,25 @@ class RunContext(val config: Configuration) {
 
   fun getEnabledOperations(): List<ThreadContext> {
     enabledOperationBuffer.clear()
+    val blockingTime = unblockTimedBlocking()
+    unblockThreadsInReactiveQueue()
     registeredThreads.values
         .filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
         .sortBy { it.thread.id }
-
-    // The first empty check will try to wait for threads blocked reactively
-    // (e.g., by network operations).
     if (enabledOperationBuffer.isEmpty()) {
       if (!reactiveBlockedThreadQueue.isEmpty()) {
         synchronized(reactiveResumedThreadQueue) {
-          while (reactiveResumedThreadQueue.isEmpty()) {
-            (reactiveResumedThreadQueue as Object).wait()
+          if (reactiveResumedThreadQueue.isEmpty()) {
+            (reactiveResumedThreadQueue as Object).wait(blockingTime)
           }
         }
-        unblockThreadsInReactiveQueue()
-        registeredThreads.values
-            .filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
-            .sortBy { it.thread.id }
       }
     }
-
-    // The second empty check will enable timed operations
-    if (enabledOperationBuffer.isEmpty()) {
-      unblockTimedOperations()
-      registeredThreads.values
-          .filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
-          .sortBy { it.thread.id }
-    }
+    unblockTimedBlocking()
+    unblockThreadsInReactiveQueue()
+    registeredThreads.values
+        .filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
+        .sortBy { it.thread.id }
     return enabledOperationBuffer
   }
 
@@ -1066,8 +1084,6 @@ class RunContext(val config: Configuration) {
     }
 
     checkAndUnblockRangerOperations()
-    unblockThreadsInReactiveQueue()
-
     val enabledOperations = getEnabledOperations()
 
     if (enabledOperations.isEmpty()) {

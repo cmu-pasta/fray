@@ -6,10 +6,10 @@ import org.pastalab.fray.rmi.ResourceType
 
 class ConditionWakeBlocked(val conditionContext: ConditionSignalContext, val noTimeout: Boolean) :
     BlockedOperation(
-        false,
         ResourceInfo(
             System.identityHashCode(conditionContext.conditionReference.get()),
-            ResourceType.CONDITION)) {
+            ResourceType.CONDITION),
+        BLOCKED_OPERATION_NOT_TIMED) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
     if (conditionContext.lockContext.canLock(tid)) {
       return conditionContext.getSyncObject()

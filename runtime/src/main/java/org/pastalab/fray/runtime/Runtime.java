@@ -57,7 +57,7 @@ public class Runtime {
     }
 
     public static long onLockTryLockInterruptibly(Lock l, long timeout, TimeUnit unit) {
-        return LOCK_DELEGATE.onLockTryLockInterruptibly(l, timeout);
+        return LOCK_DELEGATE.onLockTryLockInterruptibly(l, timeout, unit);
     }
 
     public static void onLockTryLockInterruptiblyDone(Lock l) {

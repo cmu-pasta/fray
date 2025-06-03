@@ -20,14 +20,14 @@ abstract class SignalContext(val lockContext: LockContext) : InterruptibleContex
 
   abstract fun updateThreadContextDueToBlock(
       threadContext: ThreadContext,
-      timed: Boolean,
+      blockedUntil: Long,
       canInterrupt: Boolean
   )
 
-  fun addWaitingThread(threadContext: ThreadContext, timed: Boolean, canInterrupt: Boolean) {
+  fun addWaitingThread(threadContext: ThreadContext, blockedUntil: Long, canInterrupt: Boolean) {
     verifyOrReport(threadContext !in waitingThreads)
     waitingThreads.add(threadContext)
-    updateThreadContextDueToBlock(threadContext, timed, canInterrupt)
+    updateThreadContextDueToBlock(threadContext, blockedUntil, canInterrupt)
   }
 
   override fun unblockThread(tid: Long, type: InterruptionType): Boolean {

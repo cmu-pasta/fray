@@ -36,10 +36,10 @@ class ConditionSignalContext(lockContext: LockContext, condition: Condition) :
 
   override fun updateThreadContextDueToBlock(
       threadContext: ThreadContext,
-      timed: Boolean,
+      blockedUntil: Long,
       canInterrupt: Boolean
   ) {
-    threadContext.pendingOperation = ConditionAwaitBlocked(this, canInterrupt, timed)
+    threadContext.pendingOperation = ConditionAwaitBlocked(this, canInterrupt, blockedUntil)
     threadContext.state = ThreadState.Blocked
   }
 

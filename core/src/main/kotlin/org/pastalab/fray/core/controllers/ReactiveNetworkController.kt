@@ -1,7 +1,8 @@
 package org.pastalab.fray.core.controllers
 
 import org.pastalab.fray.core.RunContext
-import org.pastalab.fray.core.concurrency.context.ReactiveBlockingBlocked
+import org.pastalab.fray.core.concurrency.operations.ReactiveBlockingBlocked
+import org.pastalab.fray.core.concurrency.operations.ReactiveBlockingOperation
 import org.pastalab.fray.core.utils.Utils.verifyNoThrow
 import org.pastalab.fray.rmi.ThreadState
 
@@ -18,6 +19,12 @@ class ReactiveNetworkController(val runContext: RunContext) : RunFinishedHandler
   fun reactiveBlockingBlocked() = verifyNoThrow {
     val tid = Thread.currentThread().id
     val threadContext = runContext.registeredThreads[tid]!!
+
+    // Reschedule before making network call
+    threadContext.pendingOperation = ReactiveBlockingOperation()
+    threadContext.state = ThreadState.Runnable
+    runContext.scheduleNextOperation(true)
+
     threadContext.state = ThreadState.Blocked
     threadContext.pendingOperation = ReactiveBlockingBlocked(threadContext)
     runContext.reactiveBlockedThreadQueue.add(tid)

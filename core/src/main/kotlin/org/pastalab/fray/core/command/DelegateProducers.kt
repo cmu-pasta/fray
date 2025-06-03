@@ -33,7 +33,7 @@ enum class NetworkDelegateType {
   ): NetworkDelegate
 }
 
-enum class TimeDelegateType {
+enum class SystemTimeDelegateType {
   MOCK {
     override fun produce(context: RunContext, synchronizer: DelegateSynchronizer): TimeDelegate {
       return org.pastalab.fray.core.delegates.TimeDelegate(TimeController(context), synchronizer)

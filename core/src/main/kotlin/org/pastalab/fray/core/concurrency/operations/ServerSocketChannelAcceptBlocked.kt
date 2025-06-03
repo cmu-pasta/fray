@@ -5,7 +5,9 @@ import org.pastalab.fray.rmi.ResourceInfo
 import org.pastalab.fray.rmi.ResourceType
 
 class ServerSocketChannelAcceptBlocked(val serverSocketChannelContext: ServerSocketChannelContext) :
-    BlockedOperation(false, ResourceInfo(serverSocketChannelContext.port, ResourceType.NETWORK)) {
+    BlockedOperation(
+        ResourceInfo(serverSocketChannelContext.port, ResourceType.NETWORK),
+        BLOCKED_OPERATION_NOT_TIMED) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
     return null
   }

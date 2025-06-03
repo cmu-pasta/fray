@@ -15,6 +15,7 @@ import org.pastalab.fray.runtime.Runtime
 import org.pastalab.fray.runtime.TargetTerminateException
 
 object Utils {
+
   fun sampleGeometric(p: Double, rand: Double): Int {
     return ceil(ln(1 - rand) / ln(1 - p)).toInt()
   }

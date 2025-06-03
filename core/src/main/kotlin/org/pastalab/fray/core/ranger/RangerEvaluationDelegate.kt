@@ -53,7 +53,7 @@ class RangerEvaluationDelegate(
     throw AbortEvaluationException("Abort ranger condition evaluation because of deadlock.")
   }
 
-  override fun onConditionAwaitUntil(condition: Condition, deadline: Date?): Boolean {
+  override fun onConditionAwaitUntil(condition: Condition, deadline: Date): Boolean {
     if (checkEntered()) return condition.awaitUntil(deadline)
     entered.set(false)
     throw AbortEvaluationException("Abort ranger condition evaluation because of deadlock.")
@@ -100,10 +100,10 @@ class RangerEvaluationDelegate(
     onSkipMethodDone("Lock.lock")
   }
 
-  override fun onLockTryLockInterruptibly(l: Lock, timeout: Long): Long {
+  override fun onLockTryLockInterruptibly(l: Lock, timeout: Long, unit: TimeUnit): Long {
     if (checkEntered()) {
       onSkipMethod("Lock.tryLock")
-      return timeout
+      return unit.toMillis(timeout)
     }
     try {
       rangerRunContext.lockImpl(l)

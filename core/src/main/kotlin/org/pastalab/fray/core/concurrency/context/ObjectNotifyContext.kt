@@ -22,10 +22,10 @@ class ObjectNotifyContext(lockContext: LockContext, obj: Any) : SignalContext(lo
 
   override fun updateThreadContextDueToBlock(
       threadContext: ThreadContext,
-      timedOperation: Boolean,
+      blockedUntil: Long,
       canInterrupt: Boolean
   ) {
-    threadContext.pendingOperation = ObjectWaitBlocked(this, timedOperation)
+    threadContext.pendingOperation = ObjectWaitBlocked(this, blockedUntil)
     threadContext.state = ThreadState.Blocked
   }
 

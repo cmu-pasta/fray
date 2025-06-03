@@ -12,6 +12,7 @@ import java.util.concurrent.locks.LockSupport
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.StampedLock
 import org.pastalab.fray.core.RunContext
+import org.pastalab.fray.core.concurrency.operations.BLOCKED_OPERATION_NOT_TIMED
 import org.pastalab.fray.runtime.Delegate
 import org.pastalab.fray.runtime.MemoryOpType
 import org.pastalab.fray.runtime.RangerCondition
@@ -46,7 +47,11 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       )
 
   override fun onObjectWait(o: Any, timeout: Long) =
-      synchronizer.runInFrayStartNoSkip { context.objectWait(o, timeout != 0L) }
+      synchronizer.runInFrayStartNoSkip {
+        val timeout =
+            if (timeout == 0L) BLOCKED_OPERATION_NOT_TIMED else timeout + System.currentTimeMillis()
+        context.objectWait(o, timeout)
+      }
 
   override fun onObjectWaitDone(o: Any) =
       synchronizer.runInFrayDoneNoSkip { context.objectWaitDone(o).map {} }
@@ -73,16 +78,24 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   override fun onLockTryLock(l: Lock) =
       synchronizer.runInFrayStart("Lock.tryLock") {
-        context.lockTryLock(l, canInterrupt = false, timed = false)
+        context.lockTryLock(l, canInterrupt = false, blockedUntil = BLOCKED_OPERATION_NOT_TIMED)
       }
 
   override fun onLockTryLockDone(l: Lock) =
       synchronizer.runInFrayDone("Lock.tryLock") { Result.success(Unit) }
 
-  override fun onLockTryLockInterruptibly(l: Lock, timeout: Long): Long =
+  override fun onLockTryLockInterruptibly(l: Lock, timeout: Long, unit: TimeUnit): Long =
       synchronizer.runInFrayStartWithOriginBlock(
           "Lock.tryLock",
-          { context.lockTryLock(l, canInterrupt = true, timed = true).map { 0 } },
+          {
+            context
+                .lockTryLock(
+                    l,
+                    canInterrupt = true,
+                    System.currentTimeMillis() + unit.toMillis(timeout),
+                )
+                .map { 0 }
+          },
           { timeout },
       )
 
@@ -129,12 +142,12 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   override fun onConditionAwait(o: Condition) =
       synchronizer.runInFrayStart("Condition.await") {
-        context.conditionAwait(o, canInterrupt = true, timed = false)
+        context.conditionAwait(o, canInterrupt = true, BLOCKED_OPERATION_NOT_TIMED)
       }
 
   override fun onConditionAwaitUninterruptibly(o: Condition) =
       synchronizer.runInFrayStart("Condition.await") {
-        context.conditionAwait(o, canInterrupt = false, timed = false)
+        context.conditionAwait(o, canInterrupt = false, BLOCKED_OPERATION_NOT_TIMED)
       }
 
   override fun onConditionAwaitDone(o: Condition) =
@@ -219,7 +232,9 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
   }
 
   override fun onThreadParkDone() =
-      synchronizer.runInFrayDone("Thread.park") { context.threadParkDone(false) }
+      synchronizer.runInFrayDone("Thread.park") {
+        context.threadParkDone(BLOCKED_OPERATION_NOT_TIMED)
+      }
 
   override fun onThreadUnpark(t: Thread?) {
     if (t == null) return
@@ -257,7 +272,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
             permits,
             shouldBlock = false,
             canInterrupt = true,
-            timed = false,
+            blockedUntil = BLOCKED_OPERATION_NOT_TIMED,
         )
       }
 
@@ -276,7 +291,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
                     permits,
                     shouldBlock = true,
                     canInterrupt = true,
-                    timed = true,
+                    blockedUntil = unit.toMillis(timeout) + System.currentTimeMillis(),
                 )
                 .map { 0L }
           },
@@ -292,7 +307,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
             permits,
             shouldBlock = true,
             canInterrupt = true,
-            timed = false,
+            BLOCKED_OPERATION_NOT_TIMED,
         )
       }
 
@@ -303,7 +318,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
             permits,
             shouldBlock = true,
             canInterrupt = false,
-            timed = false,
+            BLOCKED_OPERATION_NOT_TIMED,
         )
       }
 
@@ -333,14 +348,26 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       synchronizer.runInFrayDone("Semaphore.reducePermits") { Result.success(Unit) }
 
   override fun onLatchAwait(latch: CountDownLatch) =
-      synchronizer.runInFrayStart("Latch.await") { context.latchAwait(latch, false) }
+      synchronizer.runInFrayStart("Latch.await") {
+        context.latchAwait(
+            latch,
+            BLOCKED_OPERATION_NOT_TIMED,
+        )
+      }
 
   // Unlike `onLatchAwait`, which is only instrumented at the start and end of the method,
   // `onLatchAwaitTimeout` replaces the original `CountDownLatch.await` method completely because
   // The underlying method call is not deterministic due to the timeout. Therefore, we need to
   // implement a deterministic version of the method.
   override fun onLatchAwaitTimeout(latch: CountDownLatch, timeout: Long, unit: TimeUnit): Boolean {
-    runCatching { synchronizer.runInFrayStart("Latch.await") { context.latchAwait(latch, true) } }
+    runCatching {
+      synchronizer.runInFrayStart("Latch.await") {
+        context.latchAwait(
+            latch,
+            System.currentTimeMillis() + unit.toMillis(timeout),
+        )
+      }
+    }
     return synchronizer.runInFrayDoneWithOriginBlock(
         "Latch.await",
         { context.latchAwaitDone(latch) },
@@ -387,40 +414,47 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     }
   }
 
-  private fun onThreadParkTimed(originBlock: () -> Unit) {
+  private fun onThreadParkTimed(blockedUntil: Long, originBlock: () -> Unit) {
     synchronizer.runInFrayStart("Thread.park") { context.threadPark() }
     synchronizer.runInFrayDoneWithOriginBlock(
         "Thread.park",
         {
           runCatching { LockSupport.park() }
-          context.threadParkDone(true)
+          context.threadParkDone(blockedUntil)
         },
         originBlock,
     )
   }
 
-  override fun onThreadParkNanos(nanos: Long) = onThreadParkTimed { LockSupport.parkNanos(nanos) }
+  override fun onThreadParkNanos(nanos: Long) =
+      onThreadParkTimed(System.currentTimeMillis() + nanos / 1_000_000) {
+        LockSupport.parkNanos(nanos)
+      }
 
-  override fun onThreadParkUntil(deadline: Long) = onThreadParkTimed {
-    LockSupport.parkUntil(deadline)
-  }
+  override fun onThreadParkUntil(deadline: Long) =
+      onThreadParkTimed(deadline) { LockSupport.parkUntil(deadline) }
 
-  override fun onThreadParkNanosWithBlocker(blocker: Any?, nanos: Long) = onThreadParkTimed {
-    LockSupport.parkNanos(blocker, nanos)
-  }
+  override fun onThreadParkNanosWithBlocker(blocker: Any?, nanos: Long) =
+      onThreadParkTimed(System.currentTimeMillis() + nanos / 1_000_000) {
+        LockSupport.parkNanos(blocker, nanos)
+      }
 
-  override fun onThreadParkUntilWithBlocker(blocker: Any?, deadline: Long) = onThreadParkTimed {
-    LockSupport.parkUntil(blocker, deadline)
-  }
+  override fun onThreadParkUntilWithBlocker(blocker: Any?, deadline: Long) =
+      onThreadParkTimed(deadline) { LockSupport.parkUntil(blocker, deadline) }
 
   inline fun <T> onConditionAwaitTimed(
+      blockedUntil: Long,
       o: Condition,
       originBlock: () -> T,
-      resultMapping: (Boolean) -> T
+      resultMapping: (Boolean) -> T,
   ): T {
     val result = runCatching {
       synchronizer.runInFrayStart("Condition.await") {
-        context.conditionAwait(o, canInterrupt = true, timed = true)
+        context.conditionAwait(
+            o,
+            canInterrupt = true,
+            blockedUntil,
+        )
       }
     }
     return synchronizer.runInFrayDoneWithOriginBlock(
@@ -440,10 +474,20 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
   }
 
   override fun onConditionAwaitTime(o: Condition, time: Long, unit: TimeUnit): Boolean =
-      onConditionAwaitTimed(o, { o.await(time, unit) }) { it }
+      onConditionAwaitTimed(
+          unit.toMillis(time) + System.currentTimeMillis(),
+          o,
+          { o.await(time, unit) },
+      ) {
+        it
+      }
 
   override fun onConditionAwaitNanos(o: Condition, nanos: Long): Long =
-      onConditionAwaitTimed(o, { o.awaitNanos(nanos) }) {
+      onConditionAwaitTimed(
+          nanos / 1_000_000L + System.currentTimeMillis(),
+          o,
+          { o.awaitNanos(nanos) },
+      ) {
         if (it) {
           (nanos - 10000000).coerceAtLeast(0)
         } else {
@@ -452,7 +496,13 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       }
 
   override fun onConditionAwaitUntil(o: Condition, deadline: Date): Boolean =
-      onConditionAwaitTimed(o, { o.awaitUntil(deadline) }) { it }
+      onConditionAwaitTimed(
+          deadline.time,
+          o,
+          { o.awaitUntil(deadline) },
+      ) {
+        it
+      }
 
   override fun onThreadIsInterrupted(result: Boolean, t: Thread): Boolean =
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
@@ -480,19 +530,19 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   override fun onThreadSleepDuration(duration: Duration) =
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
-          { context.threadSleepOperation() },
+          { context.threadSleepOperation(duration.toMillis() + System.currentTimeMillis()) },
           { Thread.sleep(duration.toMillis()) },
       )
 
   override fun onThreadSleepMillis(millis: Long) =
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
-          { context.threadSleepOperation() },
+          { context.threadSleepOperation(millis + System.currentTimeMillis()) },
           { Thread.sleep(millis) },
       )
 
   override fun onThreadSleepMillisNanos(millis: Long, nanos: Int) =
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
-          { context.threadSleepOperation() },
+          { context.threadSleepOperation(millis + System.currentTimeMillis()) },
           { Thread.sleep(millis, nanos) },
       )
 
@@ -502,7 +552,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
             lock,
             shouldBlock = true,
             canInterrupt = false,
-            timed = false,
+            BLOCKED_OPERATION_NOT_TIMED,
             isReadLock = true,
         )
       }
@@ -513,7 +563,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
             lock,
             shouldBlock = true,
             canInterrupt = false,
-            timed = false,
+            BLOCKED_OPERATION_NOT_TIMED,
             isReadLock = false,
         )
       }
@@ -530,7 +580,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
             lock,
             shouldBlock = true,
             canInterrupt = true,
-            timed = false,
+            BLOCKED_OPERATION_NOT_TIMED,
             isReadLock = true,
         )
       }
@@ -541,7 +591,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
             lock,
             shouldBlock = true,
             canInterrupt = true,
-            timed = false,
+            BLOCKED_OPERATION_NOT_TIMED,
             isReadLock = false,
         )
       }
@@ -617,7 +667,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
             lock,
             shouldBlock = false,
             canInterrupt = false,
-            timed = false,
+            BLOCKED_OPERATION_NOT_TIMED,
             isReadLock = true,
         )
       }
@@ -628,7 +678,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
             lock,
             shouldBlock = false,
             canInterrupt = false,
-            timed = false,
+            BLOCKED_OPERATION_NOT_TIMED,
             isReadLock = false,
         )
       }
@@ -646,7 +696,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
                     lock,
                     shouldBlock = true,
                     canInterrupt = true,
-                    timed = true,
+                    blockedUntil = System.currentTimeMillis() + unit.toMillis(timeout),
                     isReadLock = true,
                 )
                 .map { 0L }
@@ -669,7 +719,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
                     lock,
                     shouldBlock = true,
                     canInterrupt = true,
-                    timed = true,
+                    blockedUntil = System.currentTimeMillis() + unit.toMillis(timeout),
                     isReadLock = false,
                 )
                 .map { 0L }
