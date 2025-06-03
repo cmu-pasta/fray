@@ -58,12 +58,15 @@ Select `frayTest` from the Gradle tool window to run all Fray tests in the proje
 > Fray debugger plugin only works with tests annotated with `@ConcurrencyTest` right now.
 
 
-### Disable `toString` evaluation in debug mode
+### Disable evaluations in debug mode
 
-By default Intellij calls `toString` to display the value of 
-local variables. This may trigger unnecssary schedules in Fray (e.g., if the `toString` method contains concurrency 
-primitives). This makes Fray replay nondeterministic.
+If you use IntelliJ debugger, you may notice that the replay sometimes failed. This is because the Intellij debugger
+tries to evaluate the value of local variables when the program is paused. Evaluating these variables may trigger 
+additional synchronization points leading to nondeterministic behavior in Fray. Thus, it is recommended to disable
+these features. 
 
-To disable Intellij `toString` evaluation, 
-go to `File -> Settings -> Build, Execution, Deployment -> Debugger -> Data Views -> Java` uncheck `Enable toString 
-object view`.
+To disable Intellij evaluation, 
+go to `File -> Settings -> Build, Execution, Deployment -> Debugger -> Data Views -> Java` and uncheck options that may 
+lead to dynamic evaluation.
+
+![img.png](debugger_config.png)
