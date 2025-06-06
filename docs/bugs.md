@@ -4,6 +4,10 @@
 
 # Bugs found by Fray
 
+## JDK
+
+- [# 8358601 Race condition causes FutureTask returned by ScheduledThreadPoolExecutor hangs](https://bugs.openjdk.org/browse/JDK-8358601)
+
 ## Lucene
 
 - [#13547 Flaky Test in TestMergeSchedulerExternal#testSubclassConcurrentMergeScheduler](https://github.com/apache/lucene/issues/13547)
