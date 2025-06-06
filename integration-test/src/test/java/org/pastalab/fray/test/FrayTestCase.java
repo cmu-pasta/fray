@@ -202,4 +202,49 @@ public class FrayTestCase {
         });
         return tests;
     }
+
+    @TestFactory
+    public List<DynamicTest> testTimedOperations() {
+        List<DynamicTest> tests = new ArrayList<>();
+        new ClassGraph().acceptPackages("org.pastalab.fray.test.time").scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
+            String name = classInfo.getName();
+            boolean shouldFail = true;
+            if (name.contains("fail")) {
+                shouldFail = true;
+            } else if (name.contains("success")) {
+                shouldFail = false;
+            } else {
+                return;
+            }
+            Configuration config = new Configuration(
+                    new ExecutionInfo(
+                            new MethodExecutor(classInfo.getName(),
+                                    "main",
+                                    new ArrayList<>(),
+                                    new ArrayList<>(),
+                                    new HashMap<>()
+                            ),
+                            false,
+                            false,
+                            -1
+                    ),
+                    "/tmp/report",
+                    10,
+                    60,
+                    new PCTScheduler(),
+                    new ControlledRandom(),
+                    true,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    NetworkDelegateType.REACTIVE,
+                    SystemTimeDelegateType.MOCK,
+                    false
+            );
+            tests.add(populateTest(classInfo.getName(), shouldFail, config));
+        });
+        return tests;
+    }
 }

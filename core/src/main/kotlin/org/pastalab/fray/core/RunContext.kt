@@ -1052,6 +1052,8 @@ class RunContext(val config: Configuration) {
             (reactiveResumedThreadQueue as Object).wait(blockingTime)
           }
         }
+      } else if (blockingTime > 0) {
+        Thread.sleep(blockingTime)
       }
     }
     unblockTimedBlocking()
