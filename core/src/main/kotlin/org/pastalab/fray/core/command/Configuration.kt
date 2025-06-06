@@ -169,7 +169,10 @@ class PCT : ScheduleAlgorithm("pct", false) {
 
   override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
     return Triple(
-        PCTScheduler(ControlledRandom(), numSwitchPoints, maxStep), ControlledRandom(), null)
+        PCTScheduler(ControlledRandom(), numSwitchPoints, maxStep),
+        ControlledRandom(),
+        null,
+    )
   }
 }
 
@@ -255,16 +258,24 @@ class MainCommand : CliktCommand() {
               "none" to NetworkDelegateType.NONE,
           )
           .default(NetworkDelegateType.PROACTIVE)
-  val timeDelegateType by
+  val systemTimeDelegateType by
       option(
-              "--time-delegate-type",
+              "--system-time-delegate-type",
               help = "Time delegate type. Possible values: MOCK, NONE. " + "Default is MOCK.",
           )
           .choice(
-              "mock" to TimeDelegateType.MOCK,
-              "none" to TimeDelegateType.NONE,
+              "mock" to SystemTimeDelegateType.MOCK,
+              "none" to SystemTimeDelegateType.NONE,
           )
-          .default(TimeDelegateType.MOCK)
+          .default(SystemTimeDelegateType.MOCK)
+  val ignoreTimedBlock by
+      option(
+              "--ignore-timed-block",
+              help =
+                  "Ignore timed block in the target application (e.g., Thread.sleep) will be " +
+                      "unblocked immediately.",
+          )
+          .flag(default = true)
 
   override fun run() {}
 
@@ -286,7 +297,8 @@ class MainCommand : CliktCommand() {
             noFray,
             dummyRun,
             networkDelegateType,
-            timeDelegateType)
+            systemTimeDelegateType,
+            ignoreTimedBlock)
     if (s.third != null) {
       configuration.scheduleObservers.add(s.third!!)
       configuration.testStatusObservers.add(s.third!!)
@@ -309,7 +321,8 @@ data class Configuration(
     val noFray: Boolean,
     val dummyRun: Boolean,
     val networkDelegateType: NetworkDelegateType,
-    val timeDelegateType: TimeDelegateType,
+    val systemTimeDelegateType: SystemTimeDelegateType,
+    val ignoreTimedBlock: Boolean
 ) {
   val scheduleObservers = mutableListOf<ScheduleObserver<ThreadInfo>>()
   val testStatusObservers = mutableListOf<TestStatusObserver>()

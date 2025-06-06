@@ -6,7 +6,8 @@ import org.pastalab.fray.rmi.ResourceType
 
 class SelectorSelectBlocked(val selectorContext: SelectorContext) :
     BlockedOperation(
-        false, ResourceInfo(System.identityHashCode(selectorContext), ResourceType.NETWORK)) {
+        ResourceInfo(System.identityHashCode(selectorContext), ResourceType.NETWORK),
+        BLOCKED_OPERATION_NOT_TIMED) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
     TODO("Not yet implemented")
   }

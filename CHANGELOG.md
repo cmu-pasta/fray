@@ -4,6 +4,8 @@
 
 ### Added
 
+- Allow Fray to use real-world time to decide if an operation should be unblocked.
+
 ### Changed
 
 ### Deprecated

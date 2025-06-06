@@ -41,8 +41,8 @@ public class Delegate {
     public void onLockTryLock(Lock l) {
     }
 
-    public long onLockTryLockInterruptibly(Lock l, long timeout) {
-        return timeout;
+    public long onLockTryLockInterruptibly(Lock l, long timeout, TimeUnit unit) {
+        return unit.toMillis(timeout);
     }
 
     public void onLockTryLockInterruptiblyDone(Lock l) {

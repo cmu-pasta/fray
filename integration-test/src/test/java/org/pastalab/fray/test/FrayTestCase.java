@@ -13,6 +13,7 @@ import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 import org.pastalab.fray.core.utils.UtilsKt;
 import org.pastalab.fray.test.controllers.network.reactive.success.SimpleHttpClient;
+import org.pastalab.fray.test.core.success.lock.ReentrantLockTryLock;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
 
 import java.io.IOException;
@@ -66,7 +67,8 @@ public class FrayTestCase {
                 false,
                 false,
                 NetworkDelegateType.REACTIVE,
-                TimeDelegateType.MOCK
+                SystemTimeDelegateType.MOCK,
+                true
         );
         TestRunner runner = new TestRunner(config);
         runner.run();
@@ -79,7 +81,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                SimpleHttpClient.main(new String[]{});
+                                ReentrantLockTryLock.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -90,7 +92,7 @@ public class FrayTestCase {
                         -1
                 ),
                 "/tmp/report2",
-                1000,
+                10,
                 60,
                 new POSScheduler(new ControlledRandom()),
                 new ControlledRandom(),
@@ -101,7 +103,8 @@ public class FrayTestCase {
                 false,
                 false,
                 NetworkDelegateType.REACTIVE,
-                TimeDelegateType.NONE
+                SystemTimeDelegateType.NONE,
+                true
         );
         TestRunner runner = new TestRunner(config);
         runner.run();
@@ -147,7 +150,8 @@ public class FrayTestCase {
                     false,
                     false,
                     NetworkDelegateType.PROACTIVE,
-                    TimeDelegateType.MOCK
+                    SystemTimeDelegateType.MOCK,
+                    true
             );
             tests.add(populateTest(classInfo.getName(), shouldFail, config));
         });
@@ -191,7 +195,8 @@ public class FrayTestCase {
                     false,
                     false,
                     NetworkDelegateType.REACTIVE,
-                    TimeDelegateType.MOCK
+                    SystemTimeDelegateType.MOCK,
+                    true
             );
             tests.add(populateTest(classInfo.getName(), shouldFail, config));
         });

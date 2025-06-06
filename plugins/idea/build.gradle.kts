@@ -3,7 +3,7 @@ import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
   kotlin("jvm")
-  id("org.jetbrains.intellij.platform") version "2.2.1"
+  id("org.jetbrains.intellij.platform") version "2.6.0"
 }
 
 group = project.property("pluginGroup")!!

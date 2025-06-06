@@ -7,13 +7,13 @@ import org.pastalab.fray.rmi.ResourceType
 class ConditionAwaitBlocked(
     val conditionContext: ConditionSignalContext,
     val canInterrupt: Boolean,
-    timed: Boolean
+    blockedUntil: Long
 ) :
     BlockedOperation(
-        timed,
         ResourceInfo(
             System.identityHashCode(conditionContext.conditionReference.get()),
-            ResourceType.CONDITION)) {
+            ResourceType.CONDITION),
+        blockedUntil) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
     if (conditionContext.unblockThread(tid, type)) {
       return conditionContext.getSyncObject()

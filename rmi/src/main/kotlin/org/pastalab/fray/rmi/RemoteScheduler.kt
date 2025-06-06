@@ -22,6 +22,7 @@ enum class ResourceType {
   CDL,
   PARK,
   RANGER_CONDITION,
+  SLEEP,
 }
 
 data class ResourceInfo(val resourceId: Int, val resourceType: ResourceType) : Serializable {

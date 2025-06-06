@@ -8,7 +8,7 @@ import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.command.ExecutionInfo
 import org.pastalab.fray.core.command.LambdaExecutor
 import org.pastalab.fray.core.command.NetworkDelegateType
-import org.pastalab.fray.core.command.TimeDelegateType
+import org.pastalab.fray.core.command.SystemTimeDelegateType
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.RandomScheduler
 import org.pastalab.fray.rmi.ResourceType
@@ -35,7 +35,8 @@ class RunContextReentrantLockTest {
               false,
               false,
               NetworkDelegateType.PROACTIVE,
-              TimeDelegateType.MOCK))
+              SystemTimeDelegateType.MOCK,
+              true))
 
   @BeforeEach
   fun setUp() {
