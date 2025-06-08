@@ -21,10 +21,10 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     Delegate() {
 
   override fun onMainExit() {
-    context.mainCleanup()
     if (synchronizer.checkEntered()) return
     context.mainExit()
     synchronizer.entered.set(false)
+    context.mainCleanup()
   }
 
   fun isSystemThread(thread: Thread): Boolean {
@@ -485,10 +485,16 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
   ): T {
     val result = runCatching {
       synchronizer.runInFrayStart("Condition.await") {
+        val until =
+            if (context.config.awaitTimedBlockTimeInf) {
+              Long.MAX_VALUE
+            } else {
+              blockedUntil
+            }
         context.conditionAwait(
             o,
             canInterrupt = true,
-            blockedUntil,
+            until,
         )
       }
     }

@@ -289,6 +289,14 @@ class MainCommand : CliktCommand() {
                       "unblocked immediately.",
           )
           .flag("--no-ignore-timed-block", default = true)
+  val awaitTimedBlockTimeInf by
+      option(
+              "--await-timed-block-time-inf",
+              help =
+                  "If set, Fray will wait for the timed block to finish. " +
+                      "Otherwise, it will be unblocked immediately.",
+          )
+          .flag("--no-await-timed-block-time-inf", default = false)
 
   override fun run() {}
 
@@ -311,7 +319,8 @@ class MainCommand : CliktCommand() {
             dummyRun,
             networkDelegateType,
             systemTimeDelegateType,
-            ignoreTimedBlock)
+            ignoreTimedBlock,
+            awaitTimedBlockTimeInf)
     if (s.third != null) {
       configuration.scheduleObservers.add(s.third!!)
       configuration.testStatusObservers.add(s.third!!)
@@ -335,7 +344,8 @@ data class Configuration(
     val dummyRun: Boolean,
     val networkDelegateType: NetworkDelegateType,
     val systemTimeDelegateType: SystemTimeDelegateType,
-    val ignoreTimedBlock: Boolean
+    val ignoreTimedBlock: Boolean,
+    val awaitTimedBlockTimeInf: Boolean = false,
 ) {
   val scheduleObservers = mutableListOf<ScheduleObserver<ThreadContext>>()
   val testStatusObservers = mutableListOf<TestStatusObserver>()
