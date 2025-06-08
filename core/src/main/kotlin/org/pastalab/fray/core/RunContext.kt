@@ -1,5 +1,6 @@
 package org.pastalab.fray.core
 
+import com.antithesis.sdk.Assert.unreachable
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.Thread.UncaughtExceptionHandler
@@ -16,6 +17,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock
 import java.util.concurrent.locks.StampedLock
+import kotlin.math.exp
 import kotlin.system.exitProcess
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.concurrency.NioContextManager
@@ -137,6 +139,7 @@ class RunContext(val config: Configuration) {
       // Let's do not report liveness exceptions.
       return
     }
+    unreachable("An error is found ${e.message}, stack trace: ${e.stackTraceToString()}", null)
     if (bugFound == null && !config.executionInfo.ignoreUnhandledExceptions) {
       bugFound = e
       val sw = StringWriter()
@@ -1066,6 +1069,54 @@ class RunContext(val config: Configuration) {
         .filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
         .sortBy { it.thread.id }
     return enabledOperationBuffer
+  }
+
+  fun sampleKnuth(): Long {
+    val lambda = 1.0
+    val l = exp(-lambda)
+    var k = 0L
+    var p = 1.0
+
+    do {
+      k++
+      p *= config.randomnessProvider.nextDouble()
+    } while (p > l && k < 20)
+
+    return k - 1
+  }
+
+  fun randomizedDelay() {
+    if (config.randomnessProvider.nextDouble() < 0.001) {
+      Thread.sleep(sampleKnuth())
+    }
+  }
+
+  fun logContextSwitchInfo(
+      currentThreadContext: ThreadContext,
+      nextThreadContext: ThreadContext,
+      enabledThreads: List<ThreadContext>
+  ) {
+    val currentThreadStackTrace = currentThreadContext.thread.stackTrace
+
+    if (currentThreadStackTrace.none {
+      it.className.contains("AsyncTimelockServiceImpl") &&
+          it.methodName.contains("acquireTimestampLease")
+    }) {
+      return
+    }
+
+    val log =
+        "Thread ${currentThreadContext.thread.id} " +
+            "switches to thread ${nextThreadContext.thread.id} at step $step.\n " +
+            "All enabled threads: " +
+            enabledThreads.joinToString("\n") {
+              "==== Thread ${it.thread.id} (${it.thread.name}) -\n" +
+                  "Stack trace:\n" +
+                  it.thread.stackTrace.joinToString("\n")
+            } +
+            "\n"
+
+    config.frayLogger.info(log, true)
   }
 
   fun scheduleNextOperation(shouldBlockCurrentThread: Boolean) {

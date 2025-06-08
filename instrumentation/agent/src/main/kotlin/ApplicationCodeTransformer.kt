@@ -79,7 +79,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = SleepInstrumenter(cv, false)
       cv = TimeInstrumenter(cv)
       cv = SkipMethodInstrumenter(cv)
-      cv = ObjectHashCodeInstrumenter(cv, false)
+      //      cv = ObjectHashCodeInstrumenter(cv, false)
       //      cv = AtomicGetInstrumenter(cv)
       //      cv = ToStringInstrumenter(cv)
       val classVersionInstrumenter = ClassVersionInstrumenter(cv)

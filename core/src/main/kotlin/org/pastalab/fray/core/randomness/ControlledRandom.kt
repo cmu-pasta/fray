@@ -1,6 +1,8 @@
 package org.pastalab.fray.core.randomness
 
+import com.antithesis.sdk.Random
 import java.util.*
+import kotlin.math.absoluteValue
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
@@ -16,33 +18,21 @@ class ControlledRandom(
   @Transient private var doubleIndex = 0
 
   fun nextInt(): Int {
-    if (integerIndex >= integers.size) {
-      val value = random.nextInt(Int.MAX_VALUE)
-      integers.add(value)
-      integerIndex += 1
-      return value
-    }
-    return integers[integerIndex++]
+    val value = (Random.getRandom().absoluteValue % Int.MAX_VALUE).toInt()
+    return value
   }
 
   fun nextDouble(): Double {
-    if (doubleIndex >= doubles.size) {
-      val value = random.nextDouble()
-      doubles.add(value)
-      doubleIndex += 1
-      return value
-    }
-    return doubles[doubleIndex++]
+    val positiveLong = (Random.getRandom() and 0x1FFFFFFFFFFFFFL).toDouble()
+    val value = positiveLong / (1L shl 53).toDouble()
+    return value
   }
 
   fun nextDouble(origin: Double, bound: Double): Double {
-    if (doubleIndex >= doubles.size) {
-      val value = origin + random.nextDouble() * (bound - origin)
-      doubles.add(value)
-      doubleIndex += 1
-      return value
-    }
-    return doubles[doubleIndex++]
+    val positiveLong = (Random.getRandom() and 0x1FFFFFFFFFFFFFL).toDouble()
+    var value = positiveLong / (1L shl 53).toDouble()
+    value = origin + value * (bound - origin)
+    return value
   }
 
   fun done() {
