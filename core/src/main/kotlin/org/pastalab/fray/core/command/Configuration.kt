@@ -293,6 +293,14 @@ class MainCommand : CliktCommand() {
   val sleepAsYield by
       option("--sleep-as-yield", help = "Treat Thread.sleep as Thread.yield.")
           .flag("--no-sleep-as-yield", default = false)
+  val awaitTimedBlockTimeInf by
+      option(
+              "--await-timed-block-time-inf",
+              help =
+                  "If set, Fray will wait for the timed block to finish. " +
+                      "Otherwise, it will be unblocked immediately.",
+          )
+          .flag("--no-await-timed-block-time-inf", default = false)
 
   override fun run() {}
 
@@ -316,6 +324,7 @@ class MainCommand : CliktCommand() {
             networkDelegateType,
             systemTimeDelegateType,
             ignoreTimedBlock,
+            awaitTimedBlockTimeInf,
             sleepAsYield)
     if (s.third != null) {
       configuration.scheduleObservers.add(s.third!!)
@@ -341,7 +350,8 @@ data class Configuration(
     val networkDelegateType: NetworkDelegateType,
     val systemTimeDelegateType: SystemTimeDelegateType,
     val ignoreTimedBlock: Boolean,
-    val sleepAsYield: Boolean,
+    val awaitTimedBlockTimeInf: Boolean = false,
+    val sleepAsYield: Boolean = false,
 ) {
   val scheduleObservers = mutableListOf<ScheduleObserver<ThreadContext>>()
   val testStatusObservers = mutableListOf<TestStatusObserver>()
