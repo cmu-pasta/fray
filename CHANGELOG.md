@@ -5,6 +5,8 @@
 ### Added
 
 - Allow Fray to use real-world time to decide if an operation should be unblocked.
+- Skip class constructors in `sun/security/ssl/SSLContextImpl`
+- Add instrumentation points at `NioSocket::accept`
 
 ### Changed
 

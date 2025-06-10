@@ -72,4 +72,10 @@ public class NetworkDelegate {
 
     public void onNioSocketReadDone(SocketImpl socket, int bytesRead) {
     }
+
+    public void onNioSocketAccept(SocketImpl socket) {
+    }
+
+    public void onNioSocketAcceptDone(SocketImpl socket) {
+    }
 }

@@ -275,7 +275,7 @@ class MainCommand : CliktCommand() {
                   "Ignore timed block in the target application (e.g., Thread.sleep) will be " +
                       "unblocked immediately.",
           )
-          .flag(default = true)
+          .flag("--no-ignore-timed-block", default = true)
 
   override fun run() {}
 

@@ -60,4 +60,12 @@ class ReactiveNetworkDelegate(
   override fun onNioSocketReadDone(socket: SocketImpl, bytesRead: Int) {
     reactiveBlockingEnterDone()
   }
+
+  override fun onNioSocketAccept(socket: SocketImpl?) {
+    reactiveBlockingEnter()
+  }
+
+  override fun onNioSocketAcceptDone(socket: SocketImpl?) {
+    reactiveBlockingEnterDone()
+  }
 }

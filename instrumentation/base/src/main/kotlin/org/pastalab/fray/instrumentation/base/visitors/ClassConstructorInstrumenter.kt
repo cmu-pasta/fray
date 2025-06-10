@@ -28,7 +28,7 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
   ): MethodVisitor {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
     if (name == "<clinit>") {
-      if (isJDK && !ALLOWED_JDK_CLASSES.contains(className)) {
+      if (isJDK && ALLOWED_JDK_CLASSES.none { className.contains(it) }) {
         return mv
       }
       val methodSignature = "#$name$descriptor"
@@ -61,6 +61,7 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
     val ALLOWED_JDK_CLASSES =
         arrayOf(
             "sun/security/ssl/SSLExtension\$ClientExtensions",
+            "sun/security/ssl/SSLContextImpl",
             "sun/security/validator/CADistrustPolicy",
             "sun/security/util/UntrustedCertificates",
             "sun/nio/cs/ThreadLocalCoders",
