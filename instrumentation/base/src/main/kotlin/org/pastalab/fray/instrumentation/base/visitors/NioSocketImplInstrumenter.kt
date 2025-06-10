@@ -47,6 +47,19 @@ class NioSocketImplInstrumenter(cv: ClassVisitor) :
               pop()
             }
           }
+    } else if (name == "accept") {
+      val eMv =
+          MethodEnterVisitor(mv, Runtime::onNioSocketAccept, access, name, descriptor, true, false)
+      return MethodExitVisitor(
+          eMv,
+          Runtime::onNioSocketAcceptDone,
+          access,
+          name,
+          descriptor,
+          true,
+          false,
+          true,
+          className)
     }
     return mv
   }

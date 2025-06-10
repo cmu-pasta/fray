@@ -593,4 +593,12 @@ public class Runtime {
     public static void onNioSocketReadDone(SocketImpl socket, int bytesRead) {
         NETWORK_DELEGATE.onNioSocketReadDone(socket, bytesRead);
     }
+
+    public static void onNioSocketAccept(SocketImpl socket) {
+        NETWORK_DELEGATE.onNioSocketAccept(socket);
+    }
+
+    public static void onNioSocketAcceptDone(SocketImpl socket) {
+        NETWORK_DELEGATE.onNioSocketAcceptDone(socket);
+    }
 }

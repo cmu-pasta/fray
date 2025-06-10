@@ -80,7 +80,7 @@ class RunContext(val config: Configuration) {
           is ReadLock -> {
             val result =
                 ReentrantReadWriteLockCache.getLock(it)?.let { lock ->
-                  reentrantReadWriteLockInit(lock).first
+                  reentrantReadWriteLockInitImpl(lock).first
                 }
             if (result != null) {
               result
@@ -94,7 +94,7 @@ class RunContext(val config: Configuration) {
           is WriteLock -> {
             val result =
                 ReentrantReadWriteLockCache.getLock(it)?.let { lock ->
-                  reentrantReadWriteLockInit(lock).second
+                  reentrantReadWriteLockInitImpl(lock).second
                 }
             if (result != null) {
               result
@@ -617,7 +617,12 @@ class RunContext(val config: Configuration) {
     lockImpl(lock, false, true, canInterrupt, BLOCKED_OPERATION_NOT_TIMED, false)
   }
 
-  fun reentrantReadWriteLockInit(
+  fun reentrantReadWriteLockInit(lock: ReentrantReadWriteLock) = verifyNoThrow {
+    reentrantReadWriteLockInitImpl(lock)
+    return@verifyNoThrow
+  }
+
+  fun reentrantReadWriteLockInitImpl(
       lock: ReentrantReadWriteLock
   ): Pair<ReadLockContext, WriteLockContext> {
     val readLock = lock.readLock()
