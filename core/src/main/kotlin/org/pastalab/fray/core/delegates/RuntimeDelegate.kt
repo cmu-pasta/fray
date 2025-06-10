@@ -259,9 +259,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       )
 
   override fun onReentrantReadWriteLockInit(lock: ReentrantReadWriteLock) =
-      synchronizer.runInFrayStartNoSkip {
-        context.reentrantReadWriteLockInit(lock)
-      }
+      synchronizer.runInFrayStartNoSkip { context.reentrantReadWriteLockInit(lock) }
 
   override fun onSemaphoreInit(sem: Semaphore) =
       synchronizer.runInFrayStartNoSkip { context.semaphoreInit(sem) }
