@@ -20,10 +20,12 @@ dependencies {
 
 tasks.test {
   useJUnitPlatform()
+  maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
   val jvmti = project(":jvmti")
   val jdk = project(":instrumentation:jdk")
   val agent = project(":instrumentation:agent")
   executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
+  jvmArgs("-ea")
   jvmArgs("-verify")
   jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
   jvmArgs("-javaagent:${agent.layout.buildDirectory.get().asFile}/libs/" +
