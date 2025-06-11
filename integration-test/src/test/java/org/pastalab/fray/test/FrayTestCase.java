@@ -16,7 +16,6 @@ import org.pastalab.fray.core.utils.UtilsKt;
 import org.pastalab.fray.test.core.success.lock.ReentrantLockTryLock;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
