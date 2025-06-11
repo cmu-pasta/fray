@@ -5,7 +5,9 @@ import java.rmi.RemoteException
 
 interface ScheduleObserver<T> : Remote {
 
-  @Throws(RemoteException::class) fun onNewSchedule(allThreads: List<T>, scheduled: T)
+  @Throws(RemoteException::class) fun onNewSchedule(allThreads: Collection<T>, scheduled: T)
+
+  @Throws(RemoteException::class) fun onContextSwitch(current: T, next: T)
 
   companion object {
     const val NAME = "ScheduleObserver"

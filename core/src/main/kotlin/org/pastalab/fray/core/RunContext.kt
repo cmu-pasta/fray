@@ -42,7 +42,6 @@ import org.pastalab.fray.core.utils.SynchronizationManager
 import org.pastalab.fray.core.utils.Utils.mustBeCaught
 import org.pastalab.fray.core.utils.Utils.verifyNoThrow
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
-import org.pastalab.fray.core.utils.toThreadInfos
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
 import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.runtime.DeadlockException
@@ -1124,11 +1123,12 @@ class RunContext(val config: Configuration) {
           reportError(e)
           enabledOperations.first()
         }
-    config.scheduleObservers.forEach {
-      it.onNewSchedule(registeredThreads.values.toList().toThreadInfos(), nextThread.toThreadInfo())
-    }
+    config.scheduleObservers.forEach { it.onNewSchedule(registeredThreads.values, nextThread) }
     currentThreadId = nextThread.thread.id
     nextThread.state = ThreadState.Running
+    if (currentThread != nextThread) {
+      config.scheduleObservers.forEach { it.onContextSwitch(currentThread, nextThread) }
+    }
     runThread(currentThread, nextThread)
     if (currentThread != nextThread && shouldBlockCurrentThread) {
       currentThread.block()

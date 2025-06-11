@@ -23,11 +23,13 @@ import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
+import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.debugger.DebuggerRegistry
 import org.pastalab.fray.core.logger.FrayLogger
 import org.pastalab.fray.core.observers.ScheduleRecorder
 import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.observers.ScheduleVerifier
+import org.pastalab.fray.core.observers.ThreadPausingTimeLogger
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.scheduler.*
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_DEBUG
@@ -36,7 +38,6 @@ import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_PROPERTY_KEY
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_REPLAY
 import org.pastalab.fray.rmi.ScheduleObserver
 import org.pastalab.fray.rmi.TestStatusObserver
-import org.pastalab.fray.rmi.ThreadInfo
 
 @Serializable
 data class ExecutionInfo(
@@ -324,7 +325,7 @@ data class Configuration(
     val systemTimeDelegateType: SystemTimeDelegateType,
     val ignoreTimedBlock: Boolean
 ) {
-  val scheduleObservers = mutableListOf<ScheduleObserver<ThreadInfo>>()
+  val scheduleObservers = mutableListOf<ScheduleObserver<ThreadContext>>()
   val testStatusObservers = mutableListOf<TestStatusObserver>()
   var nextSavedIndex = 0
   var currentIteration = 0
@@ -354,6 +355,9 @@ data class Configuration(
       val scheduleRecorder = ScheduleRecorder()
       testStatusObservers.add(scheduleRecorder)
       scheduleObservers.add(scheduleRecorder)
+    }
+    if (System.getProperty("fray.logPausingTime", "false").toBoolean()) {
+      scheduleObservers.add(ThreadPausingTimeLogger(frayLogger))
     }
 
     val debuggerProperty = System.getProperty(FRAY_DEBUGGER_PROPERTY_KEY, FRAY_DEBUGGER_DISABLED)

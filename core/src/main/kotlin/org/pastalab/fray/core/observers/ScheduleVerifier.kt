@@ -2,12 +2,12 @@ package org.pastalab.fray.core.observers
 
 import java.io.File
 import kotlinx.serialization.json.Json
+import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.rmi.ScheduleObserver
 import org.pastalab.fray.rmi.TestStatusObserver
-import org.pastalab.fray.rmi.ThreadInfo
 
 class ScheduleVerifier(val schedules: List<ScheduleRecording>) :
-    ScheduleObserver<ThreadInfo>, TestStatusObserver {
+    ScheduleObserver<ThreadContext>, TestStatusObserver {
   constructor(
       path: String
   ) : this(Json.decodeFromString<List<ScheduleRecording>>(File(path).readText()))
@@ -18,23 +18,14 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) :
     index = 0
   }
 
-  override fun onNewSchedule(allThreads: List<ThreadInfo>, scheduled: ThreadInfo) {
+  override fun onNewSchedule(allThreads: Collection<ThreadContext>, scheduled: ThreadContext) {
     if (index >= schedules.size) {
       return
     }
     val recording = schedules[index]
-    val scheduledIndex = scheduled.threadIndex
-    val enabled = allThreads.map { it.threadIndex }.toList()
-    var operation = ""
-    var count = 0
-    for (st in scheduled.stackTraces) {
-      if (st.className.startsWith("org.pastalab.fray")) {
-        continue
-      }
-      operation += "@${st.className}.${st.methodName},"
-      count += 1
-      if (count == 3) break
-    }
+    val scheduledIndex = scheduled.index
+    val enabled = allThreads.map { it.index }.toList()
+    val operation = scheduled.pendingOperation.javaClass.name
     if (recording.scheduled != scheduledIndex) {
       throw IllegalStateException(
           "Scheduled index mismatch: expected ${recording.scheduled}, got $scheduledIndex")
@@ -49,6 +40,8 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) :
     }
     index++
   }
+
+  override fun onContextSwitch(current: ThreadContext, next: ThreadContext) {}
 
   override fun onExecutionDone(bugFound: Throwable?) {}
 
