@@ -1,7 +1,6 @@
 package org.pastalab.fray.test;
 
 import io.github.classgraph.ClassGraph;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
