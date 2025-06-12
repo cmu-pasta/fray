@@ -58,6 +58,17 @@ sealed class ExecutionConfig(name: String) : OptionGroup(name) {
   }
 }
 
+class EmptyExecutionConfig : ExecutionConfig("empty") {
+  override fun getExecutionInfo(): ExecutionInfo {
+    return ExecutionInfo(
+        LambdaExecutor {},
+        false,
+        false,
+        -1,
+    )
+  }
+}
+
 class CliExecutionConfig : ExecutionConfig("cli") {
   val clazz by option().required()
   val method by option().required()
@@ -235,6 +246,7 @@ class MainCommand : CliktCommand() {
           .groupChoice(
               "cli" to CliExecutionConfig(),
               "json" to JsonExecutionConfig(),
+              "empty" to EmptyExecutionConfig(),
           )
           .defaultByName("cli")
   val dummyRun by
