@@ -4,6 +4,7 @@ import io.github.classgraph.ClassGraph;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.api.io.TempDir;
 import org.pastalab.fray.core.FrayInternalError;
 import org.pastalab.fray.core.TestRunner;
 import org.pastalab.fray.core.command.*;
@@ -12,17 +13,20 @@ import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 import org.pastalab.fray.core.utils.UtilsKt;
-import org.pastalab.fray.test.controllers.network.reactive.success.SimpleHttpClient;
 import org.pastalab.fray.test.core.success.lock.ReentrantLockTryLock;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 public class FrayTestCase {
+
+    @TempDir
+    Path tempDir;
 
     private DynamicTest populateTest(String className, boolean testShouldFail, Configuration configuration) {
         return dynamicTest("Test: " + className, () -> {
@@ -110,10 +114,10 @@ public class FrayTestCase {
         runner.run();
     }
 
-    @TestFactory
-    public List<DynamicTest> testCases() {
+    private List<DynamicTest> populateTests(String dirName, int iteration, NetworkDelegateType networkDelegateType,
+                                            SystemTimeDelegateType systemTimeDelegateType, boolean ignoredTimedBlock) {
         List<DynamicTest> tests = new ArrayList<>();
-        new ClassGraph().acceptPackages("org.pastalab.fray.test.core").scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
+        new ClassGraph().acceptPackages(dirName).scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
             String name = classInfo.getName();
             if (name.contains("ScheduledThreadPoolWorkSteal")) {
                 return;
@@ -138,9 +142,9 @@ public class FrayTestCase {
                             false,
                             -1
                     ),
-                    "/tmp/report",
-                    1000,
-                    60,
+                    tempDir.toString(),
+                    iteration,
+                    60 * 10,
                     new PCTScheduler(),
                     new ControlledRandom(),
                     true,
@@ -149,102 +153,30 @@ public class FrayTestCase {
                     false,
                     false,
                     false,
-                    NetworkDelegateType.PROACTIVE,
-                    SystemTimeDelegateType.MOCK,
-                    true
+                    networkDelegateType,
+                    systemTimeDelegateType,
+                    ignoredTimedBlock
             );
             tests.add(populateTest(classInfo.getName(), shouldFail, config));
         });
         return tests;
+    }
+
+    @TestFactory
+    public List<DynamicTest> testCases() {
+        return populateTests("org.pastalab.fray.test.core", 5000, NetworkDelegateType.PROACTIVE,
+                SystemTimeDelegateType.MOCK, true);
     }
 
     @TestFactory
     public List<DynamicTest> testReactiveNetworkController() {
-        List<DynamicTest> tests = new ArrayList<>();
-        new ClassGraph().acceptPackages("org.pastalab.fray.test.controllers.network.reactive").scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
-            String name = classInfo.getName();
-            boolean shouldFail = true;
-            if (name.contains("fail")) {
-                shouldFail = true;
-            } else if (name.contains("success")) {
-                shouldFail = false;
-            } else {
-                return;
-            }
-            Configuration config = new Configuration(
-                    new ExecutionInfo(
-                            new MethodExecutor(classInfo.getName(),
-                                    "main",
-                                    new ArrayList<>(),
-                                    new ArrayList<>(),
-                                    new HashMap<>()
-                            ),
-                            false,
-                            false,
-                            -1
-                    ),
-                    "/tmp/report",
-                    50,
-                    60,
-                    new PCTScheduler(),
-                    new ControlledRandom(),
-                    true,
-                    false,
-                    true,
-                    false,
-                    false,
-                    false,
-                    NetworkDelegateType.REACTIVE,
-                    SystemTimeDelegateType.MOCK,
-                    true
-            );
-            tests.add(populateTest(classInfo.getName(), shouldFail, config));
-        });
-        return tests;
+        return populateTests("org.pastalab.fray.test.controllers.network.reactive", 100, NetworkDelegateType.REACTIVE,
+                SystemTimeDelegateType.MOCK, true);
     }
 
     @TestFactory
     public List<DynamicTest> testTimedOperations() {
-        List<DynamicTest> tests = new ArrayList<>();
-        new ClassGraph().acceptPackages("org.pastalab.fray.test.time").scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
-            String name = classInfo.getName();
-            boolean shouldFail = true;
-            if (name.contains("fail")) {
-                shouldFail = true;
-            } else if (name.contains("success")) {
-                shouldFail = false;
-            } else {
-                return;
-            }
-            Configuration config = new Configuration(
-                    new ExecutionInfo(
-                            new MethodExecutor(classInfo.getName(),
-                                    "main",
-                                    new ArrayList<>(),
-                                    new ArrayList<>(),
-                                    new HashMap<>()
-                            ),
-                            false,
-                            false,
-                            -1
-                    ),
-                    "/tmp/report",
-                    10,
-                    60,
-                    new PCTScheduler(),
-                    new ControlledRandom(),
-                    true,
-                    false,
-                    true,
-                    false,
-                    false,
-                    false,
-                    NetworkDelegateType.REACTIVE,
-                    SystemTimeDelegateType.MOCK,
-                    false
-            );
-            tests.add(populateTest(classInfo.getName(), shouldFail, config));
-        });
-        return tests;
+        return populateTests("org.pastalab.fray.test.time", 10, NetworkDelegateType.REACTIVE,
+                SystemTimeDelegateType.MOCK, false);
     }
 }
