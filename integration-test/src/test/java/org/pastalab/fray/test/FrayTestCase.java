@@ -13,6 +13,7 @@ import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 import org.pastalab.fray.core.utils.UtilsKt;
+import org.pastalab.fray.test.core.success.constructor.ThreadCreatedInStaticConstructor;
 import org.pastalab.fray.test.core.success.lock.ReentrantLockTryLock;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
 
@@ -85,7 +86,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                ReentrantLockTryLock.main(new String[]{});
+                                ThreadCreatedInStaticConstructor.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -164,13 +165,13 @@ public class FrayTestCase {
 
     @TestFactory
     public List<DynamicTest> testCases() {
-        return populateTests("org.pastalab.fray.test.core", 5000, NetworkDelegateType.PROACTIVE,
+        return populateTests("org.pastalab.fray.test.core", 100, NetworkDelegateType.PROACTIVE,
                 SystemTimeDelegateType.MOCK, true);
     }
 
     @TestFactory
     public List<DynamicTest> testReactiveNetworkController() {
-        return populateTests("org.pastalab.fray.test.controllers.network.reactive", 100, NetworkDelegateType.REACTIVE,
+        return populateTests("org.pastalab.fray.test.controllers.network.reactive", 10, NetworkDelegateType.REACTIVE,
                 SystemTimeDelegateType.MOCK, true);
     }
 

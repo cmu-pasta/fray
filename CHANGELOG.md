@@ -8,6 +8,7 @@
 - Skip class constructors in `sun/security/ssl/SSLContextImpl`
 - Add instrumentation points at `NioSocket::accept`
 - Add thread pausing time logger.
+- Add java agent launcher to use fray through java agent (can only run 1 iteratoin). 
 
 ### Changed
 
@@ -18,6 +19,9 @@
 ### Removed
 
 ### Fixed
+
+- Fix incorrect blocking time for `Unsafe.park(false, 0)`.
+- Fix thread created in the `onSkipMethod` state is not tracked.
 
 ### Security
 
