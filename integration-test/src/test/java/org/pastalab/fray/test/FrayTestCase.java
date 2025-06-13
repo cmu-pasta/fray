@@ -17,6 +17,7 @@ import org.pastalab.fray.test.controllers.network.reactive.success.SimpleHttpCli
 import org.pastalab.fray.test.core.fail.network.AsyncClientSelectAfterCloseDeadlock;
 import org.pastalab.fray.test.core.success.constructor.ThreadCreatedInStaticConstructor;
 import org.pastalab.fray.test.core.success.lock.ReentrantLockTryLock;
+import org.pastalab.fray.test.core.success.rwlock.ReentrantReadWriteLockMultipleThreadUnlock;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
 
 import java.io.IOException;
@@ -88,7 +89,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                AsyncClientSelectAfterCloseDeadlock.main(new String[]{});
+                                ReentrantReadWriteLockMultipleThreadUnlock.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }

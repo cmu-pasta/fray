@@ -72,8 +72,8 @@ class ReadLockContext(lock: Lock) : LockContext(lock) {
   }
 
   fun unlockWaiters() {
-    for (readLockWaiter in lockWaiters.values) {
-      unblockThread(readLockWaiter.thread.thread.id, InterruptionType.RESOURCE_AVAILABLE)
+    for (readLockWaiter in lockWaiters.values.map { it.thread.thread.id }.toList()) {
+      unblockThread(readLockWaiter, InterruptionType.RESOURCE_AVAILABLE)
     }
   }
 
