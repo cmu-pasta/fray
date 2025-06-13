@@ -7,7 +7,24 @@ import org.objectweb.asm.Type
 import org.objectweb.asm.commons.GeneratorAdapter
 import org.pastalab.fray.runtime.Runtime
 
-class SleepInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
+class SleepInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : ClassVisitor(ASM9, cv) {
+
+  var shouldInstrument = !isJDK
+
+  override fun visit(
+      version: Int,
+      access: Int,
+      name: String,
+      signature: String?,
+      superName: String?,
+      interfaces: Array<out String?>?
+  ) {
+    super.visit(version, access, name, signature, superName, interfaces)
+    if (isJDK && name.contains("java/util/concurrent")) {
+      shouldInstrument = true
+    }
+  }
+
   override fun visitMethod(
       access: Int,
       name: String,
@@ -15,13 +32,11 @@ class SleepInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
-    return object :
-        GeneratorAdapter(
-            ASM9,
-            super.visitMethod(access, name, descriptor, signature, exceptions),
-            access,
-            name,
-            descriptor) {
+    val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
+    if (!shouldInstrument) {
+      return mv
+    }
+    return object : GeneratorAdapter(ASM9, mv, access, name, descriptor) {
       override fun visitMethodInsn(
           opcode: Int,
           owner: String,

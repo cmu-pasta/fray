@@ -28,6 +28,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     val cn = ClassNode()
     var cv: ClassVisitor = ThreadInstrumenter(cn)
     cv = VolatileFieldsInstrumenter(cv, true)
+    cv = SleepInstrumenter(cv, true)
     cv = FieldInstanceReadWriteInstrumenter(cv)
     cv = ReentrantReadWriteLockInstrumenter(cv)
     cv = LockSupportInstrumenter(cv)
