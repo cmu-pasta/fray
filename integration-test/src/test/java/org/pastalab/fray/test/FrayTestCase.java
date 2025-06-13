@@ -14,6 +14,7 @@ import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 import org.pastalab.fray.core.utils.UtilsKt;
 import org.pastalab.fray.test.controllers.network.reactive.success.SimpleHttpClient;
+import org.pastalab.fray.test.core.fail.network.AsyncClientSelectAfterCloseDeadlock;
 import org.pastalab.fray.test.core.success.constructor.ThreadCreatedInStaticConstructor;
 import org.pastalab.fray.test.core.success.lock.ReentrantLockTryLock;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
@@ -87,7 +88,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                SimpleHttpClient.main(new String[]{});
+                                AsyncClientSelectAfterCloseDeadlock.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -98,7 +99,7 @@ public class FrayTestCase {
                         -1
                 ),
                 "/tmp/report2",
-                10,
+                50,
                 60,
                 new POSScheduler(new ControlledRandom()),
                 new ControlledRandom(),
@@ -108,7 +109,7 @@ public class FrayTestCase {
                 false,
                 false,
                 false,
-                NetworkDelegateType.REACTIVE,
+                NetworkDelegateType.PROACTIVE,
                 SystemTimeDelegateType.NONE,
                 true
         );

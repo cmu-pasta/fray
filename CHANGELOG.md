@@ -13,6 +13,7 @@
 ### Changed
 
 - Implement more efficient schedule recorder/verifier.
+- Instrument sleep statements in java.util.concurrent
 
 ### Deprecated
 
