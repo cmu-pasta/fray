@@ -36,6 +36,7 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
         "java.util.ServiceLoader\$LazyClassPathLookupIterator",
         "sun.reflect.annotation.AnnotationParser",
         "java.lang.ProcessImpl",
+        "java.security.Signature",
         "jdk.internal.misc.TerminatingThreadLocal",
         MethodHandle::class.java.name,
         MethodHandles::class.java.name,

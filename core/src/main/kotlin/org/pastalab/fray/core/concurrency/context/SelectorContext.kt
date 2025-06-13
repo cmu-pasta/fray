@@ -59,6 +59,7 @@ class SelectorContext(selector: Selector) : InterruptibleContext {
   }
 
   override fun unblockThread(tid: Long, type: InterruptionType): Boolean {
-    TODO("Not yet implemented")
+    unblockWaitingThreads()
+    return false
   }
 }
