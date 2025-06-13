@@ -1,7 +1,7 @@
 package org.pastalab.fray.core.delegates
 
 import java.time.Duration
-import java.util.Date
+import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Semaphore
@@ -27,14 +27,35 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     synchronizer.entered.set(false)
   }
 
-  override fun onThreadCreateDone(t: Thread) =
-      synchronizer.runInFrayDoneNoSkip { context.threadCreateDone(t) }
+  fun isSystemThread(thread: Thread): Boolean {
+    val systemGroup = thread.threadGroup
+    return "InnocuousThreadGroup" == systemGroup?.name
+  }
 
-  override fun onThreadStart(t: Thread) =
-      synchronizer.runInFrayStart("thread.start") { context.threadStart(t) }
+  private fun onThreadSkip(t: Thread, runnable: () -> Unit) {
+    if (synchronizer.entered.get()) {
+      return
+    }
+    if (!context.registeredThreads.contains(Thread.currentThread().id)) {
+      return
+    }
+    if (isSystemThread(t)) {
+      return
+    }
 
-  override fun onThreadStartDone(t: Thread) =
-      synchronizer.runInFrayDone("thread.start") { context.threadStartDone(t) }
+    try {
+      synchronizer.entered.set(true)
+      runnable()
+    } finally {
+      synchronizer.entered.set(false)
+    }
+  }
+
+  override fun onThreadCreateDone(t: Thread) = onThreadSkip(t) { context.threadCreateDone(t) }
+
+  override fun onThreadStart(t: Thread) = onThreadSkip(t) { context.threadStart(t) }
+
+  override fun onThreadStartDone(t: Thread) = onThreadSkip(t) { context.threadStartDone(t) }
 
   override fun onThreadRun() = synchronizer.runInFrayStartNoSkip { context.threadRun() }
 
@@ -227,7 +248,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     if (isAbsolute) {
       onThreadParkUntil(time)
     } else {
-      onThreadParkNanos(time)
+      onThreadParkNanosInternal(time != 0L, time)
     }
   }
 
@@ -425,10 +446,17 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     )
   }
 
-  override fun onThreadParkNanos(nanos: Long) =
-      onThreadParkTimed(System.currentTimeMillis() + nanos / 1_000_000) {
-        LockSupport.parkNanos(nanos)
-      }
+  override fun onThreadParkNanos(nanos: Long) = onThreadParkNanosInternal(true, nanos)
+
+  private fun onThreadParkNanosInternal(timed: Boolean, nanos: Long) {
+    val blockedUntil =
+        if (timed) {
+          System.currentTimeMillis() + nanos / 1_000_000
+        } else {
+          BLOCKED_OPERATION_NOT_TIMED
+        }
+    onThreadParkTimed(blockedUntil) { LockSupport.parkNanos(nanos) }
+  }
 
   override fun onThreadParkUntil(deadline: Long) =
       onThreadParkTimed(deadline) { LockSupport.parkUntil(deadline) }

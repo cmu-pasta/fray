@@ -142,7 +142,11 @@ public class Delegate {
         if (isAbsolute) {
             LockSupport.parkUntil(time);
         } else {
-            LockSupport.parkNanos(time);
+            if (time == 0) {
+                LockSupport.park();
+            } else {
+                LockSupport.parkNanos(time);
+            }
         }
     }
 

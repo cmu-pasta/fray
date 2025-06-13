@@ -8,7 +8,7 @@ plugins {
 dependencies {
   compileOnly(project(":runtime"))
   api(project(":rmi"))
-  compileOnly(project(":instrumentation:base"))
+  implementation(project(":instrumentation:agent", configuration = "shadow"))
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
   api("com.github.ajalt.clikt:clikt:4.2.2")
   testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -66,6 +66,10 @@ tasks.jar {
 tasks.named<ShadowJar>("shadowJar") {
   archiveClassifier.set("")
   relocate("org.objectweb.asm", "org.pastalab.fray.instrumentation.agent.asm")
+  manifest {
+    attributes(mapOf("Main-Class" to "org.pastalab.fray.core.MainKt"))
+    attributes(mapOf("Premain-Class" to "org.pastalab.fray.core.PreMainKt"))
+  }
 }
 
 tasks.register<Jar>("sourceJar") {
