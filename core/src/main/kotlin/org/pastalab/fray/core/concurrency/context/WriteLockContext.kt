@@ -123,8 +123,8 @@ class WriteLockContext(lock: Lock) : LockContext(lock) {
   }
 
   fun unlockWaiters() {
-    for (writeLockWaiter in lockWaiters.values) {
-      unblockThread(writeLockWaiter.thread.thread.id, InterruptionType.RESOURCE_AVAILABLE)
+    for (threadId in lockWaiters.values.map { it.thread.thread.id }.toList()) {
+      unblockThread(threadId, InterruptionType.RESOURCE_AVAILABLE)
     }
     // Waking threads are write waiters as well.
     for (thread in wakingThreads.values) {

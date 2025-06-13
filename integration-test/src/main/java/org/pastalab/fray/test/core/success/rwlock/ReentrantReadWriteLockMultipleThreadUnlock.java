@@ -34,6 +34,5 @@ public class ReentrantReadWriteLockMultipleThreadUnlock {
         rwLock.writeLock().lock();
         atomicInteger.incrementAndGet();
         rwLock.writeLock().unlock();
-        rwLock.writeLock().lock();
     }
 }

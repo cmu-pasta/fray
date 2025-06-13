@@ -23,6 +23,7 @@
 
 - Fix incorrect blocking time for `Unsafe.park(false, 0)`.
 - Fix thread created in the `onSkipMethod` state is not tracked.
+- Fix concurrent modification exception in read write lock.
 
 ### Security
 
