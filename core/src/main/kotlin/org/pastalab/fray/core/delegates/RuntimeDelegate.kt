@@ -1,7 +1,7 @@
 package org.pastalab.fray.core.delegates
 
 import java.time.Duration
-import java.util.Date
+import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Semaphore
@@ -27,6 +27,11 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     synchronizer.entered.set(false)
   }
 
+  fun isSystemThread(thread: Thread): Boolean {
+    val systemGroup = thread.threadGroup
+    return "InnocuousThreadGroup" == systemGroup?.name
+  }
+
   private fun onThreadSkip(t: Thread, runnable: () -> Unit) {
     if (synchronizer.entered.get()) {
       return
@@ -34,9 +39,10 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     if (!context.registeredThreads.contains(Thread.currentThread().id)) {
       return
     }
-    if (t.javaClass.name.startsWith("jdk.internal")) {
+    if (isSystemThread(t)) {
       return
     }
+
     try {
       synchronizer.entered.set(true)
       runnable()

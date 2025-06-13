@@ -9,6 +9,6 @@ class SelectorSelectBlocked(val selectorContext: SelectorContext) :
         ResourceInfo(System.identityHashCode(selectorContext), ResourceType.NETWORK),
         BLOCKED_OPERATION_NOT_TIMED) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
-    TODO("Not yet implemented")
+    return null
   }
 }
