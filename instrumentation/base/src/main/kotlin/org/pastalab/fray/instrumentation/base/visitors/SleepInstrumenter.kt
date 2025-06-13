@@ -20,7 +20,7 @@ class SleepInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : ClassVisitor(ASM
       interfaces: Array<out String?>?
   ) {
     super.visit(version, access, name, signature, superName, interfaces)
-    if (isJDK && name.contains("java/util/concurrent")) {
+    if (isJDK && name.startsWith("java/util/concurrent/")) {
       shouldInstrument = true
     }
   }
