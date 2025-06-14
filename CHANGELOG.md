@@ -14,6 +14,8 @@
 
 - Implement more efficient schedule recorder/verifier.
 - Instrument sleep statements in java.util.concurrent
+- Introduce `onSkipPrimitive` and `onSkipScheduling` to better support
+internal primitives and class constructors.
 
 ### Deprecated
 

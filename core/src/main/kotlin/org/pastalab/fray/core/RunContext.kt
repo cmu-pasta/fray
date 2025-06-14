@@ -62,6 +62,7 @@ class RunContext(val config: Configuration) {
   var forkJoinPool: ForkJoinPool? = null
   val reactiveResumedThreadQueue = ConcurrentLinkedQueue<Long>()
   val reactiveBlockedThreadQueue = ConcurrentLinkedQueue<Long>()
+  val prioritizedThreads = mutableSetOf<ThreadContext>()
   private val semaphoreManager = ReferencedContextManager {
     verifyOrReport(it is Semaphore) { "SemaphoreManager can only manage Semaphore objects" }
     SemaphoreContext(0, it as Semaphore)
@@ -1044,6 +1045,14 @@ class RunContext(val config: Configuration) {
 
   fun getEnabledOperations(): List<ThreadContext> {
     enabledOperationBuffer.clear()
+
+    if (prioritizedThreads.any { it.schedulable() }) {
+      prioritizedThreads
+          .filterTo(enabledOperationBuffer) { it.schedulable() }
+          .sortBy { it.thread.id }
+      return enabledOperationBuffer
+    }
+
     val blockingTime = unblockTimedBlocking()
     unblockThreadsInReactiveQueue()
     registeredThreads.values

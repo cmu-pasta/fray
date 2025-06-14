@@ -85,42 +85,42 @@ class RangerEvaluationDelegate(
 
   override fun onLockLock(l: Lock) {
     if (checkEntered()) {
-      onSkipMethod("Lock.lock")
+      onSkipPrimitive("Lock.lock")
       return
     }
     try {
       rangerRunContext.lockImpl(l)
     } finally {
       entered.set(false)
-      onSkipMethod("Lock.lock")
+      onSkipPrimitive("Lock.lock")
     }
   }
 
   override fun onLockLockDone() {
-    onSkipMethodDone("Lock.lock")
+    onSkipPrimitiveDone("Lock.lock")
   }
 
   override fun onLockTryLockInterruptibly(l: Lock, timeout: Long, unit: TimeUnit): Long {
     if (checkEntered()) {
-      onSkipMethod("Lock.tryLock")
+      onSkipPrimitive("Lock.tryLock")
       return unit.toMillis(timeout)
     }
     try {
       rangerRunContext.lockImpl(l)
     } finally {
       entered.set(false)
-      onSkipMethod("Lock.tryLock")
+      onSkipPrimitive("Lock.tryLock")
     }
     return 0
   }
 
   override fun onLockTryLockInterruptiblyDone(l: Lock) {
-    onSkipMethodDone("Lock.tryLock")
+    onSkipPrimitiveDone("Lock.tryLock")
   }
 
   val onSkipRecursion = ThreadLocal.withInitial { false }
 
-  override fun onSkipMethod(signature: String) {
+  override fun onSkipPrimitive(signature: String) {
     if (onSkipRecursion.get()) {
       return
     }
@@ -130,21 +130,21 @@ class RangerEvaluationDelegate(
     onSkipRecursion.set(false)
   }
 
-  override fun onSkipMethodDone(signature: String): Boolean {
+  override fun onSkipPrimitiveDone(signature: String) {
     if (onSkipRecursion.get()) {
-      return false
+      return
     }
     onSkipRecursion.set(true)
     try {
       if (stackTrace.get().isEmpty()) {
-        return false
+        return
       }
       val last = stackTrace.get().removeLast()
       if (last != signature) {
-        return false
+        return
       }
       skipFunctionEntered.set(skipFunctionEntered.get() - 1)
-      return true
+      return
     } finally {
       onSkipRecursion.set(false)
     }

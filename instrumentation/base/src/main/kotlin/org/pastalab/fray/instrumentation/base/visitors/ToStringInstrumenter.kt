@@ -35,7 +35,7 @@ class ToStringInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onSkipMethod,
+              org.pastalab.fray.runtime.Runtime::onSkipPrimitive,
               access,
               name,
               descriptor,
@@ -44,7 +44,7 @@ class ToStringInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
               preCustomizer = { it.push("toString") })
       MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onSkipMethodDone,
+          org.pastalab.fray.runtime.Runtime::onSkipPrimitiveDone,
           access,
           name,
           descriptor,

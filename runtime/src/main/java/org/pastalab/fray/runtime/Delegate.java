@@ -1,7 +1,6 @@
 package org.pastalab.fray.runtime;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
@@ -125,11 +124,16 @@ public class Delegate {
     public void onYield() {
     }
 
-    public void onSkipMethod(String signature) {
+    public void onSkipPrimitive(String signature) {
     }
 
-    public boolean onSkipMethodDone(String signature) {
-        return false;
+    public void onSkipPrimitiveDone(String signature) {
+    }
+
+    public void onSkipScheduling(String signature) {
+    }
+
+    public void onSkipSchedulingDone(String signature) {
     }
 
     public void start() {

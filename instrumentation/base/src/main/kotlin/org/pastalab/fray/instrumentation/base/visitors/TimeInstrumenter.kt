@@ -4,7 +4,7 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.Type
-import org.objectweb.asm.commons.AdviceAdapter
+import org.objectweb.asm.commons.GeneratorAdapter
 import org.pastalab.fray.runtime.Runtime
 
 class TimeInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
@@ -17,7 +17,7 @@ class TimeInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
   ): MethodVisitor {
 
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
-    return object : AdviceAdapter(ASM9, mv, access, name, descriptor) {
+    return object : GeneratorAdapter(ASM9, mv, access, name, descriptor) {
       override fun visitMethodInsn(
           opcode: Int,
           owner: String?,

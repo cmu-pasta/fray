@@ -176,12 +176,20 @@ public class Runtime {
         LOCK_DELEGATE.onYield();
     }
 
-    public static void onSkipMethod(String signature) {
-        LOCK_DELEGATE.onSkipMethod(signature);
+    public static void onSkipScheduling(String signature) {
+        LOCK_DELEGATE.onSkipScheduling(signature);
     }
 
-    public static void onSkipMethodDone(String signature) {
-        LOCK_DELEGATE.onSkipMethodDone(signature);
+    public static void onSkipPrimitive(String signature) {
+        LOCK_DELEGATE.onSkipPrimitive(signature);
+    }
+
+    public static void onSkipPrimitiveDone(String signature) {
+        LOCK_DELEGATE.onSkipPrimitiveDone(signature);
+    }
+
+    public static void onSkipSchedulingDone(String signature) {
+        LOCK_DELEGATE.onSkipSchedulingDone(signature);
     }
 
     public static void start() {

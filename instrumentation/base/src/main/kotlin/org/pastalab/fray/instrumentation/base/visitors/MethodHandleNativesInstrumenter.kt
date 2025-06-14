@@ -18,7 +18,7 @@ class MethodHandleNativesInstrumenter(cv: ClassVisitor) :
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onSkipMethod,
+              org.pastalab.fray.runtime.Runtime::onSkipPrimitive,
               access,
               name,
               descriptor,
@@ -27,7 +27,7 @@ class MethodHandleNativesInstrumenter(cv: ClassVisitor) :
               preCustomizer = { it.push(methodSignature) })
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onSkipMethodDone,
+          org.pastalab.fray.runtime.Runtime::onSkipPrimitiveDone,
           access,
           name,
           descriptor,
