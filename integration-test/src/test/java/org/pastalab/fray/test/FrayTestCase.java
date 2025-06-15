@@ -11,10 +11,13 @@ import org.pastalab.fray.core.command.*;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.POSScheduler;
+import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 import org.pastalab.fray.core.utils.UtilsKt;
 import org.pastalab.fray.test.controllers.network.reactive.success.SimpleHttpClient;
+import org.pastalab.fray.test.core.fail.monitor.SynchronizedMethodDeadlock;
 import org.pastalab.fray.test.core.fail.network.AsyncClientSelectAfterCloseDeadlock;
+import org.pastalab.fray.test.core.success.classconstructor.ClassConstructorNoDeadlock;
 import org.pastalab.fray.test.core.success.constructor.ThreadCreatedInStaticConstructor;
 import org.pastalab.fray.test.core.success.lock.ReentrantLockTryLock;
 import org.pastalab.fray.test.core.success.rwlock.ReentrantReadWriteLockMultipleThreadUnlock;
@@ -89,7 +92,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                ReentrantReadWriteLockMultipleThreadUnlock.main(new String[]{});
+                                ClassConstructorNoDeadlock.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -102,7 +105,7 @@ public class FrayTestCase {
                 "/tmp/report2",
                 50,
                 60,
-                new POSScheduler(new ControlledRandom()),
+                new RandomScheduler(new ControlledRandom()),
                 new ControlledRandom(),
                 true,
                 false,
@@ -124,6 +127,10 @@ public class FrayTestCase {
         new ClassGraph().acceptPackages(dirName).scan().getSubclasses(Object.class.getName()).forEach((classInfo) -> {
             String name = classInfo.getName();
             if (name.contains("ScheduledThreadPoolWorkSteal")) {
+                return;
+            }
+            // Do not run subclasses
+            if (name.contains("$")) {
                 return;
             }
             boolean shouldFail = true;

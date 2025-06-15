@@ -1,47 +1,15 @@
 package org.pastalab.fray.instrumentation.base.visitors
 
-import java.io.PrintStream
-import java.lang.invoke.CallSite
-import java.lang.invoke.MethodHandle
-import java.lang.invoke.MethodHandles
-import java.lang.invoke.MethodType
-import java.net.JarURLConnection
-import java.net.URLClassLoader
-import java.nio.charset.Charset
-import java.security.Provider
-import java.util.Properties
-import java.util.ResourceBundle
-import java.util.ServiceLoader
+import kotlin.reflect.KFunction
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 
-class SkipMethodInstrumenter(cv: ClassVisitor) :
-    ClassVisitorBase(
-        cv,
-        ClassLoader::class.java.name,
-        MethodType::class.java.name,
-        ServiceLoader::class.java.name,
-        PrintStream::class.java.name,
-        URLClassLoader::class.java.name,
-        JarURLConnection::class.java.name,
-        Properties::class.java.name,
-        ResourceBundle::class.java.name,
-        Charset::class.java.name,
-        Provider::class.java.name,
-        "sun.security.util.ObjectIdentifier",
-        "org.junit.platform.launcher.core.LauncherConfigurationParameters",
-        //        "org.junit.platform.engine.support.store.NamespacedHierarchicalStore",
-        "org.slf4j.LoggerFactory",
-        "com.intellij.rt.debugger.agent",
-        "java.util.ServiceLoader\$LazyClassPathLookupIterator",
-        "sun.reflect.annotation.AnnotationParser",
-        "java.lang.ProcessImpl",
-        "java.security.Signature",
-        "jdk.internal.misc.TerminatingThreadLocal",
-        MethodHandle::class.java.name,
-        MethodHandles::class.java.name,
-        CallSite::class.java.name,
-    ) {
+open class SkipMethodInstrumenter(
+    cv: ClassVisitor,
+    val skipMethod: KFunction<*>,
+    val skipDoneMethod: KFunction<*>,
+    vararg classNames: String
+) : ClassVisitorBase(cv, *classNames) {
   override fun visit(
       version: Int,
       access: Int,
@@ -51,9 +19,7 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
       interfaces: Array<out String>?
   ) {
     super.visit(version, access, name, signature, superName, interfaces)
-    if (name.startsWith("com/intellij/rt/debugger/")) {
-      shouldInstrument = true
-    }
+    shouldInstrument = shouldInstrument or classNames.any { name.startsWith(it) }
   }
 
   override fun instrumentMethod(
@@ -71,7 +37,7 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
     val eMv =
         MethodEnterVisitor(
             mv,
-            org.pastalab.fray.runtime.Runtime::onSkipMethod,
+            skipMethod,
             access,
             name,
             descriptor,
@@ -80,7 +46,7 @@ class SkipMethodInstrumenter(cv: ClassVisitor) :
             preCustomizer = { push(methodSignature) })
     return MethodExitVisitor(
         eMv,
-        org.pastalab.fray.runtime.Runtime::onSkipMethodDone,
+        skipDoneMethod,
         access,
         name,
         descriptor,

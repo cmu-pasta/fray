@@ -234,12 +234,20 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   override fun onYield() = synchronizer.runInFrayStartNoSkip { context.yield() }
 
-  override fun onSkipMethod(signature: String) {
-    synchronizer.onSkipMethod(signature)
+  override fun onSkipScheduling(signature: String) {
+    synchronizer.onSkipScheduling(signature)
   }
 
-  override fun onSkipMethodDone(signature: String): Boolean {
-    return synchronizer.onSkipMethodDone(signature)
+  override fun onSkipSchedulingDone(signature: String) {
+    synchronizer.onSkipSchedulingDone(signature)
+  }
+
+  override fun onSkipPrimitive(signature: String) {
+    synchronizer.onSkipPrimitive(signature)
+  }
+
+  override fun onSkipPrimitiveDone(signature: String) {
+    synchronizer.onSkipPrimitiveDone(signature)
   }
 
   override fun onThreadPark() = synchronizer.runInFrayStart("Thread.park") { context.threadPark() }

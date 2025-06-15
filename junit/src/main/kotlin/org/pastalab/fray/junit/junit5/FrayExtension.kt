@@ -41,7 +41,7 @@ class FrayExtension(
     Runtime.LOCK_DELEGATE = RuntimeDelegate(frayContext, synchronizer)
     Runtime.start()
     val result = invocation.proceed()
-    Runtime.onSkipMethod("JUnit internal")
+    Runtime.onSkipPrimitive("JUnit internal")
     return result
   }
 
@@ -50,7 +50,7 @@ class FrayExtension(
       invocationContext: ReflectiveInvocationContext<Method?>?,
       extensionContext: ExtensionContext?
   ) {
-    Runtime.onSkipMethodDone("JUnit internal")
+    Runtime.onSkipPrimitiveDone("JUnit internal")
     invocation?.proceed()
   }
 

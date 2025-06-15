@@ -35,7 +35,7 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onSkipMethod,
+              org.pastalab.fray.runtime.Runtime::onSkipScheduling,
               access,
               name,
               descriptor,
@@ -44,7 +44,7 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
               preCustomizer = { it.push(methodSignature) })
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onSkipMethodDone,
+          org.pastalab.fray.runtime.Runtime::onSkipSchedulingDone,
           access,
           name,
           descriptor,

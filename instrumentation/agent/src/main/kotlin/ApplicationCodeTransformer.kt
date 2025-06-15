@@ -39,7 +39,6 @@ class ApplicationCodeTransformer : ClassFileTransformer {
             !(dotClassName.contains("ConsoleLauncher") ||
                 //                dotClassName.contains("NamespacedHierarchicalStore") ||
                 dotClassName.contains("LauncherConfigurationParameters"))) ||
-        dotClassName.startsWith("org.gradle.") ||
         dotClassName.startsWith("org.jetbrains.") ||
         dotClassName.startsWith("worker.org.gradle.") ||
         dotClassName.startsWith(
@@ -60,7 +59,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       writeClassFile(className, classfileBuffer, false)
     }
     try {
-      Runtime.onSkipMethod("instrumentation")
+      Runtime.onSkipPrimitive("instrumentation")
       val classReader = ClassReader(classfileBuffer)
       val cn = ClassNode()
       var cv: ClassVisitor = ObjectNotifyInstrumenter(cn)
@@ -78,8 +77,9 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = ClassConstructorInstrumenter(cv, false)
       cv = SleepInstrumenter(cv, false)
       cv = TimeInstrumenter(cv)
-      cv = SkipMethodInstrumenter(cv)
-      cv = ObjectHashCodeInstrumenter(cv, false)
+      cv = SkipPrimitiveInstrumenter(cv)
+      cv = SkipScheduleInstrumenter(cv)
+      //      cv = ObjectHashCodeInstrumenter(cv, false)
       //      cv = AtomicGetInstrumenter(cv)
       //      cv = ToStringInstrumenter(cv)
       val classVersionInstrumenter = ClassVersionInstrumenter(cv)
@@ -101,7 +101,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       println("Failed to instrument: $className")
       e.printStackTrace()
     } finally {
-      Runtime.onSkipMethodDone("instrumentation")
+      Runtime.onSkipPrimitiveDone("instrumentation")
     }
     return classfileBuffer
   }
