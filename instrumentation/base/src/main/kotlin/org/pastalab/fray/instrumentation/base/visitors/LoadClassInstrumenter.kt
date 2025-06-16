@@ -35,7 +35,7 @@ class LoadClassInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       val eMv =
           MethodEnterVisitor(
               mv,
-              Runtime::onSkipPrimitive,
+              Runtime::onSkipScheduling,
               access,
               name,
               descriptor,
@@ -44,7 +44,7 @@ class LoadClassInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
               preCustomizer = { push(methodSignature) })
       return MethodExitVisitor(
           eMv,
-          Runtime::onSkipPrimitiveDone,
+          Runtime::onSkipSchedulingDone,
           access,
           name,
           descriptor,

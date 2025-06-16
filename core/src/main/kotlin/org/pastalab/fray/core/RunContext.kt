@@ -525,8 +525,10 @@ class RunContext(val config: Configuration) {
   }
 
   fun objectNotifyImpl(waitingObject: Any) {
-    val waitingContext = signalManager.getContext(waitingObject)
-    waitingContext.signal(config.randomnessProvider, false)
+    if (signalManager.hasContext(waitingObject)) {
+      val waitingContext = signalManager.getContext(waitingObject)
+      waitingContext.signal(config.randomnessProvider, false)
+    }
   }
 
   fun objectNotify(o: Any) = verifyNoThrow { objectNotifyImpl(o) }

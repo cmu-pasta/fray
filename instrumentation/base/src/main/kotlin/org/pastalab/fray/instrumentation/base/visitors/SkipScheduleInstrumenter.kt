@@ -30,6 +30,7 @@ class SkipScheduleInstrumenter(cv: ClassVisitor) :
         Charset::class.java.name,
         Provider::class.java.name,
         "sun.security.util.ObjectIdentifier",
+        "sun.instrument.InstrumentationImpl",
         "org.junit.platform.launcher.core.LauncherConfigurationParameters",
         //        "org.junit.platform.engine.support.store.NamespacedHierarchicalStore",
         "org.slf4j.LoggerFactory",
