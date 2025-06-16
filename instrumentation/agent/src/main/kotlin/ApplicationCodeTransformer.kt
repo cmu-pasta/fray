@@ -79,6 +79,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       cv = TimeInstrumenter(cv)
       cv = SkipPrimitiveInstrumenter(cv)
       cv = SkipScheduleInstrumenter(cv)
+      cv = LoadClassInstrumenter(cv)
       //      cv = ObjectHashCodeInstrumenter(cv, false)
       //      cv = AtomicGetInstrumenter(cv)
       //      cv = ToStringInstrumenter(cv)
