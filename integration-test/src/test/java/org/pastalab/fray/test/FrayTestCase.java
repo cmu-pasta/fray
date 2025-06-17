@@ -17,6 +17,7 @@ import org.pastalab.fray.core.utils.UtilsKt;
 import org.pastalab.fray.test.controllers.network.reactive.success.SimpleHttpClient;
 import org.pastalab.fray.test.core.fail.monitor.SynchronizedMethodDeadlock;
 import org.pastalab.fray.test.core.fail.network.AsyncClientSelectAfterCloseDeadlock;
+import org.pastalab.fray.test.core.success.abq.ArrayBlockingQueueNormalOffer;
 import org.pastalab.fray.test.core.success.classconstructor.ClassConstructorNoDeadlock;
 import org.pastalab.fray.test.core.success.constructor.ThreadCreatedInStaticConstructor;
 import org.pastalab.fray.test.core.success.lock.ReentrantLockTryLock;
@@ -26,7 +27,6 @@ import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSte
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
@@ -92,7 +92,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                ClassConstructorNoDeadlock.main(new String[]{});
+                                ArrayBlockingQueueNormalOffer.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
