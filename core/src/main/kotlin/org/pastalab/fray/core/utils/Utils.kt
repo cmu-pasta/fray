@@ -54,7 +54,9 @@ object Utils {
     val result = runCatching { block() }
     if (result.isFailure) {
       val exception = result.exceptionOrNull()
-      verifyOrReport(exception is InterruptedException || exception is TargetTerminateException)
+      verifyOrReport(exception is InterruptedException || exception is TargetTerminateException) {
+        "Expected InterruptedException or TargetTerminateException, but got: $exception, stack trace: ${exception?.stackTraceToString()}"
+      }
     }
     return result
   }
