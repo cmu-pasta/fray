@@ -27,8 +27,6 @@ import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSte
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
