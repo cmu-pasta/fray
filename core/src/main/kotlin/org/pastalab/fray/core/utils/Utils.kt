@@ -55,7 +55,7 @@ object Utils {
     if (result.isFailure) {
       val exception = result.exceptionOrNull()
       verifyOrReport(exception is InterruptedException || exception is TargetTerminateException) {
-        "Expected InterruptedException or TargetTerminateException, but got: $exception, stack trace: ${exception?.stackTrace?.joinToString("\n")}"
+        "Expected InterruptedException or TargetTerminateException, but got: $exception, stack trace: ${exception?.stackTraceToString()}"
       }
     }
     return result
