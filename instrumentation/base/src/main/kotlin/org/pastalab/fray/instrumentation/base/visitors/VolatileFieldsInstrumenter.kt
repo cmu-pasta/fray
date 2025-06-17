@@ -55,7 +55,7 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor, private val instrumentingJdk:
     return object : AdviceAdapter(ASM9, mv, access, name, descriptor) {
       override fun visitFieldInsn(opcode: Int, owner: String, name: String, descriptor: String) {
         if ((recursiveVisitClass(owner) || volatileManager.isVolatile(owner, name)) &&
-            !name.startsWith("org.pastalab/fray/runtime/")) {
+            !owner.startsWith("org/pastalab/fray/runtime/")) {
 
           if (opcode == Opcodes.GETFIELD) {
             dup()
