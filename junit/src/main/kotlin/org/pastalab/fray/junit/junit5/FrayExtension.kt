@@ -35,9 +35,8 @@ class FrayExtension(
       frayContext.config.randomnessProvider = ControlledRandom()
     }
     val synchronizer = DelegateSynchronizer(frayContext)
-    Runtime.NETWORK_DELEGATE =
-        ProactiveNetworkDelegate(ProactiveNetworkController(frayContext), synchronizer)
-    Runtime.TIME_DELEGATE = TimeDelegate(TimeController(frayContext), synchronizer)
+    Runtime.NETWORK_DELEGATE = frayContext.config.networkDelegateType.produce(frayContext, synchronizer)
+    Runtime.TIME_DELEGATE = frayContext.config.systemTimeDelegateType.produce(frayContext, synchronizer)
     Runtime.LOCK_DELEGATE = RuntimeDelegate(frayContext, synchronizer)
     Runtime.start()
     val result = invocation.proceed()

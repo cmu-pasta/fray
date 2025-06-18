@@ -91,7 +91,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             false,
             true,
             NetworkDelegateType.PROACTIVE,
-            SystemTimeDelegateType.MOCK,
+            SystemTimeDelegateType.NONE,
             true)
     val frayContext = RunContext(config)
     val frayJupiterContext = FrayJupiterContext()
