@@ -24,4 +24,16 @@ public class DummyTest {
     public void concurrencyTestFinishedWithFailure() {
         assert(false);
     }
+
+    @ConcurrencyTest(
+            iterations = 100
+    )
+    public void concurrencyTestFinishedAllThreadsTerminates() {
+        new Thread(() -> {
+            while (true) {
+                Thread.yield();
+            }
+        }).start();
+        assert (false);
+    }
 }

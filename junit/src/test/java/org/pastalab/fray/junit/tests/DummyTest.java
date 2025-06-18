@@ -23,6 +23,9 @@ public class DummyTest {
                 )
                 .haveExactly(1,
                         event(test("concurrencyTestFinishedWithFailure"), finishedWithFailure())
+                )
+                .haveExactly(1,
+                        event(test("concurrencyTestFinishedAllThreadsTerminates"), finishedWithFailure())
                 );
     }
 }
