@@ -55,6 +55,13 @@ class FrayExtension(
   }
 
   override fun afterEach(context: ExtensionContext) {
+    if (context.executionException.isPresent && !frayJupiterContext.bugFound) {
+      frayJupiterContext.bugFound = true
+      frayContext.reportError(context.executionException.get())
+      println(
+          "Bug found in iteration test ${context.displayName}, you may find detailed report and replay files " +
+              "in ${frayContext.config.report}")
+    }
     try {
       Runtime.onMainExit()
     } finally {
@@ -66,11 +73,13 @@ class FrayExtension(
   }
 
   override fun testFailed(context: ExtensionContext, cause: Throwable) {
-    frayJupiterContext.bugFound = true
-    frayContext.reportError(cause)
-    println(
-        "Bug found in iteration test ${context.displayName}, you may find detailed report and replay files " +
-            "in ${frayContext.config.report}")
+    if (!frayJupiterContext.bugFound) {
+      frayJupiterContext.bugFound = true
+      frayContext.reportError(cause)
+      println(
+          "Bug found in iteration test ${context.displayName}, you may find detailed report and replay files " +
+              "in ${frayContext.config.report}")
+    }
   }
 
   override fun evaluateExecutionCondition(context: ExtensionContext?): ConditionEvaluationResult {
