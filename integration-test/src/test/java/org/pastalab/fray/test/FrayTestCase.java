@@ -15,6 +15,7 @@ import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 import org.pastalab.fray.core.utils.UtilsKt;
 import org.pastalab.fray.test.controllers.network.reactive.success.SimpleHttpClient;
+import org.pastalab.fray.test.controllers.network.reactive.success.SimpleHttpServerHttpClient;
 import org.pastalab.fray.test.core.fail.monitor.SynchronizedMethodDeadlock;
 import org.pastalab.fray.test.core.fail.network.AsyncClientSelectAfterCloseDeadlock;
 import org.pastalab.fray.test.core.success.abq.ArrayBlockingQueueNormalOffer;
@@ -92,7 +93,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                ArrayBlockingQueueNormalOffer.main(new String[]{});
+                                SimpleHttpServerHttpClient.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -113,7 +114,7 @@ public class FrayTestCase {
                 false,
                 false,
                 false,
-                NetworkDelegateType.PROACTIVE,
+                NetworkDelegateType.REACTIVE,
                 SystemTimeDelegateType.NONE,
                 true
         );
