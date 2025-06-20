@@ -58,7 +58,8 @@ public class FrayTestCase {
                         }),
                         false,
                         false,
-                        -1
+                        -1,
+                        false
                 ),
                 "/tmp/report2",
                 1,
@@ -95,7 +96,8 @@ public class FrayTestCase {
                         }),
                         false,
                         false,
-                        -1
+                        -1,
+                        false
                 ),
                 "/tmp/report2",
                 50,
@@ -147,7 +149,8 @@ public class FrayTestCase {
                             ),
                             false,
                             false,
-                            -1
+                            -1,
+                            false
                     ),
                     tempDir.toString(),
                     iteration,

@@ -440,7 +440,13 @@ class RunContext(val config: Configuration) {
   }
 
   fun objectWait(o: Any, blockedUntil: Long) = mustBeCaught {
-    objectWaitImpl(o, true, blockedUntil)
+    val time =
+        if (config.executionInfo.timedWaitWaitInf) {
+          BLOCKED_OPERATION_NOT_TIMED
+        } else {
+          blockedUntil
+        }
+    objectWaitImpl(o, true, time)
   }
 
   fun conditionAwait(o: Condition, canInterrupt: Boolean, blockedUntil: Long) = mustBeCaught {
