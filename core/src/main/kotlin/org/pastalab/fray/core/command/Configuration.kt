@@ -45,6 +45,7 @@ data class ExecutionInfo(
     val ignoreUnhandledExceptions: Boolean,
     val interleaveMemoryOps: Boolean,
     val maxScheduledStep: Int,
+    val timedWaitWaitInf: Boolean = false,
 )
 
 sealed class ExecutionConfig(name: String) : OptionGroup(name) {
@@ -54,6 +55,7 @@ sealed class ExecutionConfig(name: String) : OptionGroup(name) {
         false,
         false,
         10000000,
+        false,
     )
   }
 }
@@ -65,6 +67,7 @@ class EmptyExecutionConfig : ExecutionConfig("empty") {
         false,
         false,
         -1,
+        false,
     )
   }
 }
@@ -92,6 +95,7 @@ class CliExecutionConfig : ExecutionConfig("cli") {
         ignoreUnhandledExceptions,
         interleaveMemoryOps,
         maxScheduledStep,
+        false,
     )
   }
 }
