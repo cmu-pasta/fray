@@ -270,7 +270,7 @@ class MainCommand : CliktCommand() {
               "reactive" to NetworkDelegateType.REACTIVE,
               "none" to NetworkDelegateType.NONE,
           )
-          .default(NetworkDelegateType.PROACTIVE)
+          .default(NetworkDelegateType.REACTIVE)
   val systemTimeDelegateType by
       option(
               "--system-time-delegate-type",
@@ -280,7 +280,7 @@ class MainCommand : CliktCommand() {
               "mock" to SystemTimeDelegateType.MOCK,
               "none" to SystemTimeDelegateType.NONE,
           )
-          .default(SystemTimeDelegateType.MOCK)
+          .default(SystemTimeDelegateType.NONE)
   val ignoreTimedBlock by
       option(
               "--ignore-timed-block",
@@ -289,6 +289,9 @@ class MainCommand : CliktCommand() {
                       "unblocked immediately.",
           )
           .flag("--no-ignore-timed-block", default = true)
+  val sleepAsYield by
+      option("--sleep-as-yield", help = "Treat Thread.sleep as Thread.yield.")
+          .flag("--no-sleep-as-yield", default = false)
 
   override fun run() {}
 
@@ -311,7 +314,8 @@ class MainCommand : CliktCommand() {
             dummyRun,
             networkDelegateType,
             systemTimeDelegateType,
-            ignoreTimedBlock)
+            ignoreTimedBlock,
+            sleepAsYield)
     if (s.third != null) {
       configuration.scheduleObservers.add(s.third!!)
       configuration.testStatusObservers.add(s.third!!)
@@ -335,7 +339,8 @@ data class Configuration(
     val dummyRun: Boolean,
     val networkDelegateType: NetworkDelegateType,
     val systemTimeDelegateType: SystemTimeDelegateType,
-    val ignoreTimedBlock: Boolean
+    val ignoreTimedBlock: Boolean,
+    val sleepAsYield: Boolean,
 ) {
   val scheduleObservers = mutableListOf<ScheduleObserver<ThreadContext>>()
   val testStatusObservers = mutableListOf<TestStatusObserver>()
