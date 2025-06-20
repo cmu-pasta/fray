@@ -92,6 +92,7 @@
               cmake
               gradle
               jdk23
+              jdk21
               jdk11
             ]
             ++ lib.optionals (pkgs.stdenv.isLinux) [
@@ -101,6 +102,7 @@
             export CC="${pkgs.gcc}/bin/gcc"
             export CXX="${pkgs.gcc}/bin/g++"
             export JDK11="${pkgs.jdk11.home}"
+            export JDK21="${pkgs.jdk21.home}"
             export JRE="${pkgs.jdk23.home}"
             export JAVA_HOME="${pkgs.jdk23.home}"
             ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
