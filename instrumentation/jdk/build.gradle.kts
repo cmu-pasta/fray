@@ -28,30 +28,46 @@ tasks.jar {
     dependsOn("copyDependencies")
 }
 
+fun buildJdk(basePath: String, frayJarPath: String, outputPath: String) {
+  providers.exec {
+    if (File(outputPath).exists()) {
+      delete(file(outputPath))
+    }
+    val runtimeJar = "$frayJarPath/../libs/${base.archivesName.get()}-$version.jar"
+    val jarDir = file(frayJarPath)
+
+    val jars = jarDir.listFiles { file -> file.extension == "jar" }
+        ?.joinToString(separator = ":") { it.absolutePath }
+      ?: "No JAR files found."
+    val command = listOf("$basePath/bin/jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars:$runtimeJar",
+        "-J--add-modules=org.pastalab.fray.instrumentation.jdk",
+        "-J-Dfray.debug=true",
+        "-J--class-path=$jars:$runtimeJar",
+        "--output=$outputPath", "--add-modules=ALL-MODULE-PATH",  "--fray-instrumentation")
+    println(command.joinToString(" "))
+    commandLine(command)
+  }.result.get()
+}
+
 tasks.build {
   dependsOn("jar")
-  val path = "${layout.buildDirectory.get().asFile}/dependency"
+  val frayJarPath = "${layout.buildDirectory.get().asFile}/dependency"
   val jdkPath = "${layout.buildDirectory.get().asFile}/java-inst"
   outputs.dirs(jdkPath)
   doLast {
     if (!state.upToDate) {
-      exec {
-        if (File(jdkPath).exists()) {
-          delete(file(jdkPath))
-        }
-        var runtimeJar = "$path/../libs/${base.archivesName.get()}-$version.jar"
-        val jarDir = file(path)
-
-        val jars = jarDir.listFiles { file -> file.extension == "jar" }
-            ?.joinToString(separator = ":") { it.absolutePath }
-          ?: "No JAR files found."
-        val command = listOf("jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars:$runtimeJar",
-            "-J--add-modules=org.pastalab.fray.instrumentation.jdk",
-            "-J-Dfray.debug=true",
-            "-J--class-path=$jars:$runtimeJar",
-            "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH",  "--fray-instrumentation")
-        println(command.joinToString(" "))
-        commandLine(command)
+      buildJdk(
+          basePath = System.getenv("JAVA_HOME"),
+          frayJarPath = frayJarPath,
+          outputPath = jdkPath
+      )
+      val jdk21 = System.getenv("JDK21")
+      if (jdk21 != null) {
+        buildJdk(
+            basePath = jdk21,
+            frayJarPath = frayJarPath,
+            outputPath = "${layout.buildDirectory.get().asFile}/java-inst-jdk21"
+        )
       }
     }
   }
