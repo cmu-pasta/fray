@@ -107,6 +107,8 @@ and Selector classes, enabling connect and accept operations.
 - Fix fray command line duplicate `--path` exception.
 - Delete fray log file when fray command line is run, fixing stale logs.
 - Use gcc to build jvmti.so on Darwin as well.
+- Fix Fray hang while using condition in static field.
+- Fix Fray hang when two threads a deadlock eath other through condition wait.
 
 ## 0.4.2 - 2025-04-16
 
