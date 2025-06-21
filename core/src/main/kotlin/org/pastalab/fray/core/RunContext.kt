@@ -242,7 +242,7 @@ class RunContext(val config: Configuration) {
   fun done() {
     verifyOrReport(syncManager.synchronizationPoints.isEmpty())
     lockManager.done(false)
-    signalManager.done()
+    signalManager.done(false)
     stampedLockManager.done()
     semaphoreManager.done()
     latchManager.done()
@@ -415,7 +415,7 @@ class RunContext(val config: Configuration) {
     checkDeadlock {
       signalContext.unblockThread(t, InterruptionType.FORCE)
       verifyOrReport(lockContext.lock(context, false, true, false))
-      syncManager.wait(signalContext.getSyncObject())
+      syncManager.removeWait(signalContext.getSyncObject())
       context.pendingOperation = ThreadResumeOperation(true)
       context.state = ThreadState.Running
     }

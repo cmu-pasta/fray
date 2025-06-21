@@ -10,18 +10,12 @@ import org.pastalab.fray.core.TestRunner;
 import org.pastalab.fray.core.command.*;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
-import org.pastalab.fray.core.scheduler.POSScheduler;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 import org.pastalab.fray.core.utils.UtilsKt;
-import org.pastalab.fray.test.controllers.network.reactive.success.SimpleHttpClient;
-import org.pastalab.fray.test.core.fail.monitor.SynchronizedMethodDeadlock;
-import org.pastalab.fray.test.core.fail.network.AsyncClientSelectAfterCloseDeadlock;
+import org.pastalab.fray.test.core.fail.wait.TwoWaitDeadlock;
 import org.pastalab.fray.test.core.success.abq.ArrayBlockingQueueNormalOffer;
-import org.pastalab.fray.test.core.success.classconstructor.ClassConstructorNoDeadlock;
-import org.pastalab.fray.test.core.success.constructor.ThreadCreatedInStaticConstructor;
-import org.pastalab.fray.test.core.success.lock.ReentrantLockTryLock;
-import org.pastalab.fray.test.core.success.rwlock.ReentrantReadWriteLockMultipleThreadUnlock;
+import org.pastalab.fray.test.core.success.condition.ConditionAwaitStaticField;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
 
 import java.io.IOException;
@@ -93,7 +87,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                ArrayBlockingQueueNormalOffer.main(new String[]{});
+                                TwoWaitDeadlock.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -109,7 +103,7 @@ public class FrayTestCase {
                 new RandomScheduler(new ControlledRandom()),
                 new ControlledRandom(),
                 true,
-                false,
+                true,
                 true,
                 false,
                 false,
