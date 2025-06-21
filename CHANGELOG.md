@@ -16,6 +16,7 @@
 - Instrument sleep statements in java.util.concurrent
 - Introduce `onSkipPrimitive` and `onSkipScheduling` to better support
 internal primitives and class constructors.
+- Only compute the stack trace hash when using SURW algorithm
 
 ### Deprecated
 

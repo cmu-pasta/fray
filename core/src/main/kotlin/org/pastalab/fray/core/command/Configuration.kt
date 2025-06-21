@@ -190,6 +190,7 @@ class PCT : ScheduleAlgorithm("pct", false) {
 
 class SURW : ScheduleAlgorithm("surw", false) {
   override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
+    System.setProperty("fray.resolveRacingOperationStackTraceHash", "true")
     return Triple(SURWScheduler(), ControlledRandom(), null)
   }
 }
