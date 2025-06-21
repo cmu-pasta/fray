@@ -36,7 +36,8 @@ class RunContextReentrantLockTest {
               false,
               NetworkDelegateType.PROACTIVE,
               SystemTimeDelegateType.MOCK,
-              true))
+              true,
+              false))
 
   @BeforeEach
   fun setUp() {

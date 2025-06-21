@@ -53,9 +53,15 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   override fun onThreadCreateDone(t: Thread) = onThreadSkip(t) { context.threadCreateDone(t) }
 
-  override fun onThreadStart(t: Thread) = onThreadSkip(t) { context.threadStart(t) }
+  override fun onThreadStart(t: Thread) {
+    synchronizer.onSkipScheduling("Thread.start")
+    onThreadSkip(t) { context.threadStart(t) }
+  }
 
-  override fun onThreadStartDone(t: Thread) = onThreadSkip(t) { context.threadStartDone(t) }
+  override fun onThreadStartDone(t: Thread) {
+    onThreadSkip(t) { context.threadStartDone(t) }
+    synchronizer.onSkipSchedulingDone("Thread.start")
+  }
 
   override fun onThreadRun() = synchronizer.runInFrayStartNoSkip { context.threadRun() }
 

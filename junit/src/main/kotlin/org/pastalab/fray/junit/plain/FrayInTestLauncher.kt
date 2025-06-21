@@ -49,7 +49,8 @@ object FrayInTestLauncher {
             false,
             false,
             NetworkDelegateType.PROACTIVE,
-            SystemTimeDelegateType.MOCK,
+            SystemTimeDelegateType.NONE,
+            true,
             true)
     additionalConfigs(config)
     val runner = TestRunner(config)
