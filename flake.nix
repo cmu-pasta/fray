@@ -49,6 +49,7 @@
               buildInputs = with pkgs; [
                 jdk23
                 jdk11
+                jdk21
                 gcc
                 cmake
               ];
@@ -56,6 +57,7 @@
                 export CC="${pkgs.gcc}/bin/gcc"
                 export CXX="${pkgs.gcc}/bin/g++"
                 export JDK11="${pkgs.jdk11.home}"
+                export JDK21="${pkgs.jdk21.home}"
                 export JRE="${pkgs.jdk23.home}"
                 export JAVA_HOME="${pkgs.jdk23.home}"
                 ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
@@ -72,6 +74,7 @@
                 cp core/build/libs/*.jar $out/libs
                 cp instrumentation/agent/build/libs/*.jar $out/libs
                 cp -r instrumentation/jdk/build/java-inst $out/
+                cp -r instrumentation/jdk/build/java-inst-jdk21 $out/
                 cp -r jvmti/build/native-libs $out/
                 gradle --no-daemon -Pfray.installDir=$out/ genRunner
                 cp bin/fray $out/bin/
