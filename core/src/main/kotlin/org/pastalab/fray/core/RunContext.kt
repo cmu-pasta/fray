@@ -174,7 +174,7 @@ class RunContext(val config: Configuration) {
               "Elapsed time: ${config.elapsedTime()}ms",
           true,
       )
-      config.frayLogger.info(sw.toString())
+      config.frayLogger.info(sw.toString(), true)
       val recordingIndex = config.nextSavedIndex++
       if (!config.isReplay) {
         val path = config.saveToReportFolder(recordingIndex)
