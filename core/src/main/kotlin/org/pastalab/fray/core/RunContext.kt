@@ -134,10 +134,6 @@ class RunContext(val config: Configuration) {
   }
 
   fun reportError(e: Throwable) {
-    if (e is LivenessException) {
-      // Let's do not report liveness exceptions.
-      return
-    }
     if (bugFound == null && !config.executionInfo.ignoreUnhandledExceptions) {
       bugFound = e
       val sw = StringWriter()
