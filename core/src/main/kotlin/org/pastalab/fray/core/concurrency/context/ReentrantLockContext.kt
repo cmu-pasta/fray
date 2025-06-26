@@ -62,11 +62,11 @@ class ReentrantLockContext(lock: Any) : LockContext(lock) {
   }
 
   override fun unlock(
-      threadContext: ThreadContext,
+      lockThread: ThreadContext,
       unlockBecauseOfWait: Boolean,
       earlyExit: Boolean
   ): Boolean {
-    val tid = threadContext.thread.id
+    val tid = lockThread.thread.id
     verifyOrReport(lockHolder == tid || earlyExit)
     if (lockHolder != tid && earlyExit) {
       return false
@@ -92,7 +92,7 @@ class ReentrantLockContext(lock: Any) : LockContext(lock) {
         }
       }
       lockWaiters.clear()
-      threadContext.acquiredResources.remove(this)
+      lockThread.acquiredResources.remove(this)
       return true
     }
     return false

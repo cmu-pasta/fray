@@ -50,11 +50,11 @@ class ReadLockContext(lock: Lock) : LockContext(lock) {
   }
 
   override fun unlock(
-      threadContext: ThreadContext,
+      lockThread: ThreadContext,
       unlockBecauseOfWait: Boolean,
       earlyExit: Boolean
   ): Boolean {
-    val tid = threadContext.thread.id
+    val tid = lockThread.thread.id
     verifyOrReport(lockHolders.contains(tid))
     verifyOrReport(!unlockBecauseOfWait) // Read lock does not have `Condition`
     lockTimes[tid] = lockTimes[tid]!! - 1
@@ -64,7 +64,7 @@ class ReadLockContext(lock: Lock) : LockContext(lock) {
       if (lockHolders.isEmpty() && writeLockContext.lockHolder == null) {
         writeLockContext.unlockWaiters()
         unlockWaiters()
-        threadContext.acquiredResources.remove(this)
+        lockThread.acquiredResources.remove(this)
         return true
       }
     }
