@@ -125,7 +125,7 @@ class RunContext(val config: Configuration) {
         }
         StampedLockContext(it as StampedLock)
       }
-  private var step = 0
+  var step = 0
   val syncManager = SynchronizationManager()
   var executor = HelperThread()
 
@@ -1080,6 +1080,7 @@ class RunContext(val config: Configuration) {
     }
     unblockTimedBlocking()
     unblockThreadsInReactiveQueue()
+    enabledOperationBuffer.clear()
     registeredThreads.values
         .filterTo(enabledOperationBuffer) { it.state == ThreadState.Runnable }
         .sortBy { it.thread.id }
