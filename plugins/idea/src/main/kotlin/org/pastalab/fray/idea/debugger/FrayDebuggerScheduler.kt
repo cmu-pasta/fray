@@ -14,15 +14,15 @@ class FrayDebuggerScheduler(
     val replayMode: Boolean
 ) : RemoteScheduler {
 
-  override fun scheduleNextOperation(threads: List<ThreadInfo>, scheduledThread: ThreadInfo?): Int {
+  override fun scheduleNextOperation(threads: List<ThreadInfo>, selectedThread: ThreadInfo?): Int {
     // Schedule is only enabled in debug mode.
-    assert(replayMode || scheduledThread == null)
+    assert(replayMode || selectedThread == null)
     val cdl = CountDownLatch(1)
     var selected = 0
     val threadContexts = threads.map { ThreadExecutionContext(it, debugSession.project) }.toList()
     schedulerPanel.schedule(
         threadContexts,
-        scheduledThread?.let { ThreadExecutionContext(it, debugSession.project) },
+        selectedThread?.let { ThreadExecutionContext(it, debugSession.project) },
         {
           selected = threads.indexOf(it)
           cdl.countDown()
@@ -33,8 +33,8 @@ class FrayDebuggerScheduler(
     }
     cdl.await()
     val nextThreadIndex =
-        if (scheduledThread != null) {
-          threads.indexOf(scheduledThread)
+        if (selectedThread != null) {
+          threads.indexOf(selectedThread)
         } else {
           selected
         }

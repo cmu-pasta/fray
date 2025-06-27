@@ -42,7 +42,7 @@ public class TestUniformSampling {
                         event(test("testUniformSampling"), finishedSuccessfully())
                 );
         Map<Integer, Integer> values = org.pastalab.fray.junit.internal.surw.TestUniformSampling.xValues;
-        Assertions.assertTrue(calculateStandardDeviation(new ArrayList(values.values())) < 50);
+        Assertions.assertTrue(calculateStandardDeviation(new ArrayList<>(values.values())) < 50);
     }
 
     // We disable this test because Fray currently considers both read and write operations

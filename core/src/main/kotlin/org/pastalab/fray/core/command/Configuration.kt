@@ -108,6 +108,7 @@ class JsonExecutionConfig : ExecutionConfig("json") {
     }
     val json = Json {
       serializersModule = module
+      @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
       namingStrategy = JsonNamingStrategy.SnakeCase
     }
     return json.decodeFromString<ExecutionInfo>(path.readText())
