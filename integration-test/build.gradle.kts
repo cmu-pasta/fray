@@ -48,8 +48,8 @@ tasks.register("testRunnerScript") {
         .redirectErrorStream(true)
         .directory(file("${rootProject.projectDir.absolutePath}/bin/"))
         .start()
-    val output = process.inputStream.bufferedReader().readText()
     process.waitFor()
+    val output = process.inputStream.bufferedReader().readText()
     if (!output.contains("[INFO]: Error: org.pastalab.fray.runtime.DeadlockException")) {
       throw GradleException("Runner script test failed. Output:\n$output")
     }
