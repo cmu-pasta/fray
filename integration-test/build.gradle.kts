@@ -35,3 +35,27 @@ tasks.test {
   dependsOn(":instrumentation:agent:build")
   dependsOn(":jvmti:build")
 }
+
+tasks.register("testRunnerScript") {
+  val integrationTestJar = project.tasks.jar.get().archiveFile.get().asFile.absolutePath
+  dependsOn(":core:genRunner")
+  doLast {
+    val process = ProcessBuilder(
+        "./fray",
+        "-cp", integrationTestJar,
+        "org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal"
+    )
+        .redirectErrorStream(true)
+        .directory(file("${rootProject.projectDir.absolutePath}/bin/"))
+        .start()
+    process.waitFor()
+    val output = process.inputStream.bufferedReader().readText()
+    if (!output.contains("[INFO]: Error: org.pastalab.fray.runtime.DeadlockException")) {
+      throw GradleException("Runner script test failed. Output:\n$output")
+    }
+  }
+}
+
+tasks.named("check") {
+  dependsOn("testRunnerScript")
+}
