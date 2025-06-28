@@ -35,7 +35,7 @@ tasks.build {
   outputs.dirs(jdkPath)
   doLast {
     if (!state.upToDate) {
-      exec {
+      providers.exec {
         if (File(jdkPath).exists()) {
           delete(file(jdkPath))
         }
@@ -52,7 +52,7 @@ tasks.build {
             "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH",  "--fray-instrumentation")
         println(command.joinToString(" "))
         commandLine(command)
-      }
+      }.result.get()
     }
   }
 }

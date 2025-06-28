@@ -1,8 +1,12 @@
 {
   "permissions": {
     "allow": [
+      "Bash(*)",
+      "Bash(ls)",
       "Bash(./gradlew build:*)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Bash(ls:*)",
+      "Bash(gradle --version)"
     ],
     "deny": []
   }
