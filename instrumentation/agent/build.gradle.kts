@@ -21,6 +21,10 @@ tasks.named<ShadowJar>("shadowJar") {
   relocate("org.objectweb.asm", "org.pastalab.fray.instrumentation.agent.asm")
   dependencies {
     exclude(project(":runtime"))
+    exclude(dependency("org.jetbrains.kotlin:kotlin-stdlib"))
+    exclude(dependency("org.jetbrains.kotlin:kotlin-reflect"))
+    exclude(dependency("org.intellij.lang.annotations:annotations"))
+    exclude(dependency("org.jetbrains:annotations:.*"))
   }
   manifest {
     attributes(mapOf("Premain-Class" to "org.pastalab.fray.instrumentation.agent.PreMainKt"))

@@ -17,10 +17,10 @@ class FrayPlugin : Plugin<Project> {
     target.afterEvaluate {
       val frayVersion = extension.version
       val os = DefaultNativePlatform.getCurrentOperatingSystem().toFamilyName()
-      val arch = DefaultNativePlatform.getCurrentArchitecture().name
+      val arch = DefaultNativePlatform.getCurrentArchitecture().name.replace("-", "")
       val frayJdk =
           target.dependencies.add(
-              "testImplementation",
+              "testCompileOnly",
               "org.pastalab.fray.instrumentation:fray-instrumentation-jdk:$frayVersion")
       val frayJvmti =
           target.dependencies.add(

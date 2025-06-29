@@ -8,7 +8,7 @@ plugins {
 
 dependencies {
   api("org.hamcrest:hamcrest:3.0")
-  implementation(project(":core", configuration = "shadow"))
+  implementation(project(":core"))
   compileOnly(project(":runtime"))
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
   compileOnly("org.junit.platform:junit-platform-engine:1.11.3")

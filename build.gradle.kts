@@ -101,7 +101,7 @@ configure(allprojects.filter {
       publications {
         create<MavenPublication>("maven") {
           val os = DefaultNativePlatform.getCurrentOperatingSystem().toFamilyName()
-          val arch = DefaultNativePlatform.getCurrentArchitecture().name
+          val arch = DefaultNativePlatform.getCurrentArchitecture().name.replace("-", "")
           pom {
             name = "Fray Testing Framework"
             description = "Fray testing framework for concurrency programs."
@@ -125,7 +125,7 @@ configure(allprojects.filter {
               url = "https://github.com/cmu-pasta/fray"
             }
           }
-          if (components.findByName("shadow") == null) from(components["java"])
+          if (components.findByName("shadow") == null || project.name == "core") from(components["java"])
           else {
             from(components["shadow"])
             artifact(tasks["sourceJar"])

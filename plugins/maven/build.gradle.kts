@@ -15,7 +15,7 @@ dependencies {
   testImplementation(platform("org.junit:junit-bom:5.10.0"))
   testImplementation("org.junit.jupiter:junit-jupiter")
 
-  implementation(project(":instrumentation:jdk"))
+  compileOnly(project(":instrumentation:jdk"))
   implementation(project(":plugins:base", configuration = "shadow"))
   implementation(project(":instrumentation:agent", configuration = "shadow"))
   implementation("org.pastalab.fray:fray-jvmti-linux-x86-64:0.2.0")
