@@ -28,22 +28,25 @@ tasks.named("build") {
 }
 
 tasks.register("genRunner") {
+  val currentProject = project
+  val currentRootProject = rootProject
+  val currentVersion = version
   doLast {
-    val binDir = "${rootProject.projectDir.absolutePath}/bin"
+    val binDir = "${currentRootProject.projectDir.absolutePath}/bin"
     var runner = file("${binDir}/fray.template").readText()
-    if (project.hasProperty("fray.installDir")) {
-      val installDir = project.property("fray.installDir")
+    if (currentProject.hasProperty("fray.installDir")) {
+      val installDir = currentProject.property("fray.installDir")
       runner = runner.replace("#JAVA_PATH#", "$installDir/java-inst/bin/java")
       runner = runner.replace("#JVM_TI_PATH#", "$installDir/native-libs/libjvmti.so")
-      runner = runner.replace("#AGENT_PATH#", "$installDir/libs/fray-instrumentation-agent-$version.jar")
-      runner = runner.replace("#CORE_PATH#", "$installDir/libs/fray-core-$version.jar")
+      runner = runner.replace("#AGENT_PATH#", "$installDir/libs/fray-instrumentation-agent-$currentVersion.jar")
+      runner = runner.replace("#CORE_PATH#", "$installDir/libs/fray-core-$currentVersion.jar")
     } else {
       val instrumentationTask = evaluationDependsOn(":instrumentation:agent")
           .tasks.named("shadowJar").get()
       val instrumentation = instrumentationTask.outputs.files.first().absolutePath
       val core = tasks.named("shadowJar").get().outputs.files.first().absolutePath
-      val jvmti = project(":jvmti")
-      val jdk = project(":instrumentation:jdk")
+      val jvmti = currentProject.project(":jvmti")
+      val jdk = currentProject.project(":instrumentation:jdk")
       runner = runner.replace("#JAVA_PATH#", "${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
       runner = runner.replace("#JVM_TI_PATH#", "${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
       runner = runner.replace("#AGENT_PATH#", instrumentation)

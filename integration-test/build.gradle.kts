@@ -12,7 +12,8 @@ java {
 
 dependencies {
   testImplementation(platform("org.junit:junit-bom:5.10.0"))
-  testImplementation("org.junit.jupiter:junit-jupiter")
+  testImplementation("org.junit.jupiter:junit-jupiter-api")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testImplementation(project(":core", configuration = "shadow"))
   testImplementation("io.github.classgraph:classgraph:4.8.177")
   testCompileOnly(project(":runtime"))
@@ -34,4 +35,28 @@ tasks.test {
   dependsOn(":instrumentation:jdk:build")
   dependsOn(":instrumentation:agent:build")
   dependsOn(":jvmti:build")
+}
+
+tasks.register("testRunnerScript") {
+  val integrationTestJar = project.tasks.jar.get().archiveFile.get().asFile.absolutePath
+  dependsOn(":core:genRunner")
+  doLast {
+    val process = ProcessBuilder(
+        "./fray",
+        "-cp", integrationTestJar,
+        "org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal"
+    )
+        .redirectErrorStream(true)
+        .directory(file("${rootProject.projectDir.absolutePath}/bin/"))
+        .start()
+    process.waitFor()
+    val output = process.inputStream.bufferedReader().readText()
+    if (!output.contains("[INFO]: Error: org.pastalab.fray.runtime.DeadlockException")) {
+      throw GradleException("Runner script test failed. Output:\n$output")
+    }
+  }
+}
+
+tasks.named("check") {
+  dependsOn("testRunnerScript")
 }

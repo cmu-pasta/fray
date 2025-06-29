@@ -1,4 +1,4 @@
-#!bash
+#!/usr/bin/env bash
 
 JAVA_PATH="#JAVA_PATH#"
 JVMTI_PATH="#JVM_TI_PATH#"
