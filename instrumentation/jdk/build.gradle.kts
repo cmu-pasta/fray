@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-test")
+  implementation(kotlin("reflect"))
   implementation(project(":runtime"))
   implementation(project(":instrumentation:base"))
 }

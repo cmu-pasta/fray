@@ -7,10 +7,11 @@ plugins {
 
 dependencies {
   compileOnly(project(":runtime"))
-  api(project(":rmi"))
   implementation(project(":instrumentation:agent", configuration = "shadow"))
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+  api(project(":rmi"))
   api("com.github.ajalt.clikt:clikt:4.2.2")
+  runtimeOnly(kotlin("reflect"))
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   testImplementation(project(":runtime"))
   testImplementation(project(":instrumentation:base"))
@@ -63,15 +64,15 @@ tasks.register<Copy>("copyDependencies") {
 }
 
 tasks.jar {
-  enabled = false
+  manifest {
+    attributes(mapOf("Main-Class" to "org.pastalab.fray.core.MainKt"))
+  }
 }
 
 tasks.named<ShadowJar>("shadowJar") {
-  archiveClassifier.set("")
   relocate("org.objectweb.asm", "org.pastalab.fray.instrumentation.agent.asm")
   manifest {
     attributes(mapOf("Main-Class" to "org.pastalab.fray.core.MainKt"))
-    attributes(mapOf("Premain-Class" to "org.pastalab.fray.core.PreMainKt"))
   }
 }
 
