@@ -33,11 +33,28 @@
       packages = forEachSupportedSystem (
         { pkgs }:
         let
+          commonPackages = with pkgs; [
+            gcc
+            cmake
+            jdk23
+            jdk11
+          ];
+
+          commonEnv = ''
+            export CC="${pkgs.gcc}/bin/gcc"
+            export CXX="${pkgs.gcc}/bin/g++"
+            export JDK11="${pkgs.jdk11.home}"
+            export JRE="${pkgs.jdk23.home}"
+            export JAVA_HOME="${pkgs.jdk23.home}"
+            ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
+              export JETBRAINS_JDK_HOME="${pkgs.jetbrains.jdk.home}"
+            ''}
+          '';
+
           project =
             (gradle2nix.builders.${pkgs.system}.buildGradlePackage {
               pname = "fray";
               version = "0.5.2-SNAPSHOT";
-
               src = ./.;
               lockFile = ./gradle.lock;
               gradleBuildFlags = [
@@ -45,23 +62,14 @@
                 "build"
                 "-x"
                 "test"
+                "-x"
+                "check"
               ];
-              buildInputs = with pkgs; [
-                jdk23
-                jdk11
-                gcc
-                cmake
-              ];
+              buildInputs = commonPackages;
               preBuild = ''
-                export CC="${pkgs.gcc}/bin/gcc"
-                export CXX="${pkgs.gcc}/bin/g++"
-                export JDK11="${pkgs.jdk11.home}"
-                export JRE="${pkgs.jdk23.home}"
-                export JAVA_HOME="${pkgs.jdk23.home}"
-                ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
-                  export JETBRAINS_JDK_HOME="${pkgs.jetbrains.jdk.home}"
-                ''}
+                ${commonEnv}
                 sed -i '/include("plugins/d' settings.gradle.kts
+                sed -i '/include("integration-test")/d' settings.gradle.kts
               '';
             }).overrideAttrs (_: prev: {
               gradleFlags = pkgs.lib.lists.remove "--console=plain" prev.gradleFlags;
@@ -86,17 +94,14 @@
 
       devShells = forEachSupportedSystem ({ pkgs }: {
         default = pkgs.mkShell {
-          packages = with pkgs;
-            [
-              gcc
-              cmake
-              gradle
-              jdk23
-              jdk11
-            ]
-            ++ lib.optionals (pkgs.stdenv.isLinux) [
-              jetbrains.jdk
-            ];
+          packages = (with pkgs; [
+            gcc
+            cmake
+            jdk23
+            jdk11
+          ]) ++ pkgs.lib.optionals (pkgs.stdenv.isLinux) [
+            pkgs.jetbrains.jdk
+          ];
           shellHook = ''
             export CC="${pkgs.gcc}/bin/gcc"
             export CXX="${pkgs.gcc}/bin/g++"
