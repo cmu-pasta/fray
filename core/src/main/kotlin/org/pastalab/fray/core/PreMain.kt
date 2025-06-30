@@ -9,11 +9,14 @@ import org.pastalab.fray.runtime.Delegate
 import org.pastalab.fray.runtime.Runtime
 
 fun premain(arguments: String, instrumentation: Instrumentation) {
-  instrumentation.addTransformer(ApplicationCodeTransformer())
-  println(arguments)
+  val applicationCodeTransformer = ApplicationCodeTransformer()
+  instrumentation.addTransformer(applicationCodeTransformer)
   val args = arguments.split(":") + "--run-config" + "empty"
   val config = MainCommand().apply { main(args) }.toConfiguration()
-  println("Run Fray in agent mode")
+  if (config.noFray) {
+    instrumentation.removeTransformer(applicationCodeTransformer)
+    return
+  }
   val frayContext = RunContext(config)
 
   // We only switch the runtime delegates when main thread is running. Otherwise we
