@@ -72,8 +72,12 @@ tasks.jar {
 tasks.named<ShadowJar>("shadowJar") {
   relocate("org.objectweb.asm", "org.pastalab.fray.instrumentation.agent.asm")
   manifest {
-    attributes(mapOf("Main-Class" to "org.pastalab.fray.core.MainKt"))
-    attributes(mapOf("Premain-Class" to "org.pastalab.fray.core.PreMainKt"))
+    attributes(
+      mapOf(
+        "Main-Class" to "org.pastalab.fray.core.MainKt",
+        "Premain-Class" to "org.pastalab.fray.core.PreMainKt"
+      )
+    )
   }
 }
 
