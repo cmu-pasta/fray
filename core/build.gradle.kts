@@ -16,6 +16,8 @@ dependencies {
   testImplementation(project(":runtime"))
   testImplementation(project(":instrumentation:base"))
   testImplementation(kotlin("test"))
+  implementation("com.antithesis:sdk:1.4.3")
+  implementation("com.fasterxml.jackson.core:jackson-databind:2.19.0")
 }
 
 tasks.test {
