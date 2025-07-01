@@ -37,7 +37,7 @@ jobs:
         if: runner.os == 'macOS' 
         run: ./gradlew :jvmti:publish -Pversion=$VERSION
       - name: Create stage deploy (Windows)
-        if: runner.os == 'windows' 
+        if: runner.os == 'Windows' 
         run: ./gradlew :jvmti:publish -Pversion=$VERSION
       - name: Create stage deploy (Linux)
         if: runner.os == 'Linux'
