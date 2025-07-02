@@ -1,3 +1,4 @@
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem
 import java.util.regex.Pattern
 
 plugins {
@@ -32,10 +33,11 @@ tasks.test {
   val jdk = project(":instrumentation:jdk")
   val jvmti = project(":jvmti")
   val instrumentation = instrumentationTask.outputs.files.first().absolutePath
+  val soSuffix = if (getCurrentOperatingSystem().toFamilyName() == "windows") "dll" else "so"
   println(instrumentation)
   classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
   executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
-  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
+  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.$soSuffix")
   jvmArgs("-javaagent:$instrumentation")
   jvmArgs("-ea")
   jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
@@ -59,10 +61,11 @@ tasks.withType<JavaExec> {
   val jdk = project(":instrumentation:jdk")
   val jvmti = project(":jvmti")
   val instrumentation = instrumentationTask.outputs.files.first().absolutePath
+  val soSuffix = if (getCurrentOperatingSystem().toFamilyName() == "windows") "dll" else "so"
   classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
   executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
   mainClass = "org.pastalab.fray.core.MainKt"
-  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
+  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.$soSuffix")
   jvmArgs("-javaagent:$instrumentation")
   jvmArgs("-ea")
   jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
