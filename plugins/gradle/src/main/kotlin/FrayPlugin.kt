@@ -32,6 +32,7 @@ class FrayPlugin : Plugin<Project> {
       val javaPath = "${target.rootProject.layout.buildDirectory.get().asFile}/${Commons.JAVA_PATH}"
       val jvmtiPath =
           "${target.rootProject.layout.buildDirectory.get().asFile}/${Commons.JVMTI_BASE}"
+      val soSuffix = if (os == "windows") "dll" else "so"
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-core:$frayVersion")
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-junit:$frayVersion")
       target.dependencies.add("testCompileOnly", "org.pastalab.fray:fray-runtime:$frayVersion")
@@ -56,7 +57,7 @@ class FrayPlugin : Plugin<Project> {
           is TestNGOptions -> it.useTestNG()
           else -> throw IllegalArgumentException("Unsupported test framework $testFramework")
         }
-        it.jvmArgs("-agentpath:$jvmtiPath/libjvmti.so")
+        it.jvmArgs("-agentpath:$jvmtiPath/libjvmti.$soSuffix")
         it.jvmArgs(
             "-javaagent:${it.project.configurations.detachedConfiguration(frayInstrumentation).resolve().first()}")
         it.jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
