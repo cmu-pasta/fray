@@ -28,7 +28,8 @@ tasks.test {
   val jdk = project(":instrumentation:jdk")
   val agent = project(":instrumentation:agent")
   val soSuffix = if (getCurrentOperatingSystem().toFamilyName() == "windows") "dll" else "so"
-  executable("${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}java")
+  val javaExec = if (getCurrentOperatingSystem().toFamilyName() == "windows") "java.exe" else "java"
+  executable("${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}$javaExec")
   jvmArgs("-ea")
   jvmArgs("-verify")
   jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix")
