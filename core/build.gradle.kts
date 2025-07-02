@@ -63,7 +63,7 @@ tasks.register("genRunner") {
 
 tasks.register<Copy>("copyDependencies") {
   from(configurations.runtimeClasspath)
-  into("${layout.buildDirectory.get().asFile}/dependency")
+  into(File(layout.buildDirectory.get().asFile, "dependency"))
 }
 
 tasks.jar {

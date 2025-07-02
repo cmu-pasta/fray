@@ -1,3 +1,5 @@
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem
+
 plugins {
     kotlin("jvm")
     java
@@ -31,26 +33,26 @@ tasks.jar {
 
 tasks.build {
   dependsOn("jar")
-  val path = "${layout.buildDirectory.get().asFile}/dependency"
-  val jdkPath = "${layout.buildDirectory.get().asFile}/java-inst"
+  val path = layout.buildDirectory.get().asFile.resolve("dependency")
+  val jdkPath = layout.buildDirectory.get().asFile.resolve("java-inst")
   outputs.dirs(jdkPath)
   doLast {
     if (!state.upToDate) {
       providers.exec {
-        if (File(jdkPath).exists()) {
-          delete(file(jdkPath))
+        if (jdkPath.exists()) {
+          delete(jdkPath)
         }
-        var runtimeJar = "$path/../libs/${base.archivesName.get()}-$version.jar"
-        val jarDir = file(path)
+        var runtimeJar = layout.buildDirectory.get().asFile.resolve("libs").resolve("${base.archivesName.get()}-$version.jar").absolutePath
 
-        val jars = jarDir.listFiles { file -> file.extension == "jar" }
-            ?.joinToString(separator = ":") { it.absolutePath }
+        val jars = path.listFiles { file -> file.extension == "jar" }
+            ?.joinToString(separator = File.pathSeparator) { it.absolutePath }
           ?: "No JAR files found."
-        val command = listOf("jlink", "-J-javaagent:$runtimeJar", "-J--module-path=$jars:$runtimeJar",
+        val jlinkExe = if (getCurrentOperatingSystem().toFamilyName() == "windows") "jlink.exe" else "jlink"
+        val command = listOf(jlinkExe, "-J-javaagent:$runtimeJar", "-J--module-path=$jars${File.pathSeparator}$runtimeJar",
             "-J--add-modules=org.pastalab.fray.instrumentation.jdk",
             "-J-Dfray.debug=true",
-            "-J--class-path=$jars:$runtimeJar",
-            "--output=$jdkPath", "--add-modules=ALL-MODULE-PATH",  "--fray-instrumentation")
+            "-J--class-path=$jars${File.pathSeparator}$runtimeJar",
+            "--output=${jdkPath.absolutePath}", "--add-modules=ALL-MODULE-PATH",  "--fray-instrumentation")
         println(command.joinToString(" "))
         commandLine(command)
       }.result.get()
@@ -60,5 +62,5 @@ tasks.build {
 
 tasks.register<Copy>("copyDependencies") {
     from(configurations.runtimeClasspath)
-    into("${layout.buildDirectory.get().asFile}/dependency")
+    into(layout.buildDirectory.get().asFile.resolve("dependency"))
 }

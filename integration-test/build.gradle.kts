@@ -28,11 +28,11 @@ tasks.test {
   val jdk = project(":instrumentation:jdk")
   val agent = project(":instrumentation:agent")
   val soSuffix = if (getCurrentOperatingSystem().toFamilyName() == "windows") "dll" else "so"
-  executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
+  executable("${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}java")
   jvmArgs("-ea")
   jvmArgs("-verify")
-  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.$soSuffix")
-  jvmArgs("-javaagent:${agent.layout.buildDirectory.get().asFile}/libs/" +
+  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix")
+  jvmArgs("-javaagent:${agent.layout.buildDirectory.get().asFile}${File.separator}libs${File.separator}" +
       "${agent.base.archivesName.get()}-${agent.version}.jar")
   jvmArgs("-Dfray.debug=true")
   dependsOn(":instrumentation:jdk:build")
@@ -51,7 +51,7 @@ if (getCurrentOperatingSystem().toFamilyName() != "windows") {
           "org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal"
       )
           .redirectErrorStream(true)
-          .directory(file("${rootProject.projectDir.absolutePath}/bin/"))
+          .directory(file("${rootProject.projectDir.absolutePath}${File.separator}bin${File.separator}"))
           .start()
       process.waitFor()
       val output = process.inputStream.bufferedReader().readText()
