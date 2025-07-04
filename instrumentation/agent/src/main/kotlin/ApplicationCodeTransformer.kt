@@ -55,11 +55,11 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       // This is likely a JDK class, so skip transformation
       return classfileBuffer
     }
-    if (DEBUG_MODE) {
-      writeClassFile(className, classfileBuffer, false)
-    }
     try {
       Runtime.onSkipPrimitive("instrumentation")
+      if (DEBUG_MODE) {
+        writeClassFile(className, classfileBuffer, false)
+      }
       val classReader = ClassReader(classfileBuffer)
       val cn = ClassNode()
       var cv: ClassVisitor = ObjectNotifyInstrumenter(cn)
