@@ -12,10 +12,10 @@ object Utils {
 
   fun writeClassFile(className: String, classBytes: ByteArray, instrumented: Boolean) {
     if (instrumented) {
-      INSTRUMENTED_CLASS_LOCATION.resolve(className.replace("/", ".").removePrefix("."))
+      INSTRUMENTED_CLASS_LOCATION.resolve(className.replace("/", ".").removePrefix(".") + ".class")
           .writeBytes(classBytes)
     } else {
-      ORIGIN_CLASS_LOCATION.resolve(className.replace("/", ".").removePrefix("."))
+      ORIGIN_CLASS_LOCATION.resolve(className.replace("/", ".").removePrefix(".") + ".class")
           .writeBytes(classBytes)
     }
   }
