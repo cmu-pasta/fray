@@ -1,3 +1,4 @@
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem
 import java.util.regex.Pattern
 
 plugins {
@@ -32,10 +33,12 @@ tasks.test {
   val jdk = project(":instrumentation:jdk")
   val jvmti = project(":jvmti")
   val instrumentation = instrumentationTask.outputs.files.first().absolutePath
+  val soSuffix = if (getCurrentOperatingSystem().toFamilyName() == "windows") "dll" else "so"
+  val javaExe = if (getCurrentOperatingSystem().toFamilyName() == "windows") "java.exe" else "java"
   println(instrumentation)
   classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
-  executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
-  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
+  executable("${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}$javaExe")
+  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix")
   jvmArgs("-javaagent:$instrumentation")
   jvmArgs("-ea")
   jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
@@ -48,7 +51,7 @@ tasks.test {
 
 tasks.register<Copy>("copyDependencies") {
   from(configurations.runtimeClasspath)
-  into("${layout.buildDirectory.get().asFile}/dependency")
+  into("${layout.buildDirectory.get().asFile}${File.separator}dependency")
 }
 
 
@@ -59,10 +62,12 @@ tasks.withType<JavaExec> {
   val jdk = project(":instrumentation:jdk")
   val jvmti = project(":jvmti")
   val instrumentation = instrumentationTask.outputs.files.first().absolutePath
+  val soSuffix = if (getCurrentOperatingSystem().toFamilyName() == "windows") "dll" else "so"
+  val javaExe = if (getCurrentOperatingSystem().toFamilyName() == "windows") "java.exe" else "java"
   classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
-  executable("${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
+  executable("${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}$javaExe")
   mainClass = "org.pastalab.fray.core.MainKt"
-  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.so")
+  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix")
   jvmArgs("-javaagent:$instrumentation")
   jvmArgs("-ea")
   jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
@@ -88,7 +93,7 @@ tasks.register<JavaExec>("runFray") {
     else -> emptyList()
   }
   if (!File(configPath).isAbsolute) {
-    configPath = System.getProperty("user.dir") + "/" + configPath
+    configPath = System.getProperty("user.dir") + File.separator + configPath
   }
   args = listOf("--run-config", "json", "--config-path", configPath) + extraArgs
 }

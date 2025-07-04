@@ -18,7 +18,7 @@ tasks.named<ShadowJar>("shadowJar") {
 
 val createVersionProperties by tasks.registering(WriteProperties::class) {
   val filePath = sourceSets.main.map {
-    it.output.resourcesDir!!.resolve("org/pastalab/fray/plugins/base/version.properties")
+    it.output.resourcesDir!!.resolve("org").resolve("pastalab").resolve("fray").resolve("plugins").resolve("base").resolve("version.properties")
   }
   destinationFile = filePath
   property("version", project.version.toString())
