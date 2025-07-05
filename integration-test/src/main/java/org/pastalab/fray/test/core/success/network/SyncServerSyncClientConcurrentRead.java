@@ -2,6 +2,7 @@ package org.pastalab.fray.test.core.success.network;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.StandardProtocolFamily;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -36,7 +37,7 @@ public class SyncServerSyncClientConcurrentRead {
     }
 
     private static void runServer() throws IOException, InterruptedException {
-        ServerSocketChannel serverChannel = ServerSocketChannel.open();
+        ServerSocketChannel serverChannel = ServerSocketChannel.open(StandardProtocolFamily.INET);
         serverChannel.configureBlocking(true);
         serverChannel.bind(new InetSocketAddress(PORT));
         latch.countDown();
@@ -51,7 +52,7 @@ public class SyncServerSyncClientConcurrentRead {
     }
 
     private static void runClient(int clientId) throws IOException, InterruptedException {
-        SocketChannel channel = SocketChannel.open();
+        SocketChannel channel = SocketChannel.open(StandardProtocolFamily.INET);
         channel.configureBlocking(true);
         latch.await();
         channel.connect(new InetSocketAddress(SERVER_ADDRESS, PORT));

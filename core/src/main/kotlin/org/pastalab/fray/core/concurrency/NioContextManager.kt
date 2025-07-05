@@ -109,7 +109,7 @@ class NioContextManager {
 
   fun socketChannelConnected(channel: SocketChannel) {
     val context = socketChannelContextManager.getContext(channel)
-    val port = (channel.localAddress as? InetSocketAddress)?.port ?: return
+    val port = (channel.localAddress as? InetSocketAddress?)?.port ?: return
     context.remotePort = (channel.remoteAddress as? InetSocketAddress)?.port ?: SERVER_PORT_UNDEF
     context.localPort = port
     verifyOrReport(!portToConnectedSockets.containsKey(port)) {
@@ -120,7 +120,7 @@ class NioContextManager {
 
   fun serverSocketChannelBind(channel: ServerSocketChannel) {
     val context = serverSocketChannelContextManager.getContext(channel)
-    val newPort = (channel.localAddress as InetSocketAddress?)?.port ?: -1
+    val newPort = (channel.localAddress as? InetSocketAddress?)?.port ?: -1
     verifyOrReport(context.port != SERVER_PORT_UNDEF) {
       "Server socket channel is already bound to port ${context.port}"
     }

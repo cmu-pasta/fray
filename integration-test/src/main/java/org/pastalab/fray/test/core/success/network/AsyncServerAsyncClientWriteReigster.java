@@ -2,6 +2,7 @@ package org.pastalab.fray.test.core.success.network;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.StandardProtocolFamily;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -37,7 +38,7 @@ public class AsyncServerAsyncClientWriteReigster {
 
     private static void runServer() throws IOException, InterruptedException {
         Selector selector = Selector.open();
-        ServerSocketChannel serverChannel = ServerSocketChannel.open();
+        ServerSocketChannel serverChannel = ServerSocketChannel.open(StandardProtocolFamily.INET);
         serverChannel.configureBlocking(false);
         serverChannel.bind(new InetSocketAddress(PORT));
         latch.countDown();
@@ -49,7 +50,7 @@ public class AsyncServerAsyncClientWriteReigster {
     }
 
     private static void runClient(int clientId) throws IOException, InterruptedException {
-        SocketChannel channel = SocketChannel.open();
+        SocketChannel channel = SocketChannel.open(StandardProtocolFamily.INET);
         channel.configureBlocking(false);
         Selector selector = Selector.open();
         channel.register(selector, SelectionKey.OP_CONNECT);
