@@ -1,11 +1,11 @@
 package org.pastalab.fray.instrumentation.base.visitors
 
+import java.nio.channels.Selector
 import java.nio.channels.spi.AbstractSelector
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.pastalab.fray.runtime.Runtime
-import java.nio.channels.Selector
 
 class SelectorVisitor(cv: ClassVisitor) :
     ClassVisitorBase(
@@ -14,8 +14,7 @@ class SelectorVisitor(cv: ClassVisitor) :
         "sun/nio/ch/KQueueSelectorImpl",
         "sun/nio/ch/EPollSelectorImpl",
         AbstractSelector::class.java.name,
-        Selector::class.java.name
-    ) {
+        Selector::class.java.name) {
   override fun instrumentMethod(
       mv: MethodVisitor,
       access: Int,
