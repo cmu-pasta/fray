@@ -15,6 +15,13 @@ class ProactiveNetworkDelegate(
     val controller: ProactiveNetworkController,
     val synchronizer: DelegateSynchronizer
 ) : NetworkDelegate() {
+
+  override fun onSelectorOpen() =
+      synchronizer.runInFrayStart("Selector.open") { Result.success(Unit) }
+
+  override fun onSelectorOpenDone() =
+      synchronizer.runInFrayDone("Selector.open") { Result.success(Unit) }
+
   override fun onSelectorCancelKeyDone(selector: Selector, key: SelectionKey) =
       synchronizer.runInFrayDoneNoSkip { controller.selectorCancelKey(selector, key) }
 

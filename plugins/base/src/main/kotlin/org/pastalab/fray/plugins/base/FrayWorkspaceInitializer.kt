@@ -37,9 +37,7 @@ class FrayWorkspaceInitializer(
               "--add-modules=ALL-MODULE-PATH",
               "--fray-instrumentation",
           )
-      val logFile = File("/tmp/tmp.log")
-      val process =
-          ProcessBuilder(*command).redirectOutput(logFile).redirectErrorStream(true).start()
+      val process = ProcessBuilder(*command).start()
       process.waitFor()
       jdkVersionPath.createNewFile()
       jdkVersionPath.writeText(frayVersion)
@@ -69,8 +67,8 @@ class FrayWorkspaceInitializer(
       }
     }
     val downloadUrl = getDownloadUrl(osName)
-    val fileName = "$workDir/${downloadUrl.substringAfterLast("/")}"
-    val jdkFolder = File("$workDir/${getJDKFolderName(osName)}")
+    val fileName = "$workDir${File.separator}${downloadUrl.substringAfterLast("/")}"
+    val jdkFolder = File("$workDir${File.separator}${getJDKFolderName(osName)}")
     if (jdkFolder.exists()) {
       jdkFolder.deleteRecursively()
     }
@@ -114,7 +112,7 @@ class FrayWorkspaceInitializer(
     ZipInputStream(FileInputStream(zipFilePath)).use { zip ->
       var entry = zip.nextEntry
       while (entry != null) {
-        val filePath = "$outputDir/${entry.name}"
+        val filePath = "$outputDir${File.separator}${entry.name}"
         if (!entry.isDirectory) {
           FileOutputStream(filePath).use { output -> zip.copyTo(output) }
         } else {

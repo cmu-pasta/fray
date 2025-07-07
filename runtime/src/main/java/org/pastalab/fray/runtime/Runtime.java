@@ -504,6 +504,13 @@ public class Runtime {
         LOCK_DELEGATE.onRangerCondition(condition);
     }
 
+    public static void onSelectorOpen() {
+        NETWORK_DELEGATE.onSelectorOpen();
+    }
+
+    public static void onSelectorOpenDone() {
+        NETWORK_DELEGATE.onSelectorOpenDone();
+    }
 
     public static void onSelectorSelect(Selector selector) {
         NETWORK_DELEGATE.onSelectorSelect(selector);

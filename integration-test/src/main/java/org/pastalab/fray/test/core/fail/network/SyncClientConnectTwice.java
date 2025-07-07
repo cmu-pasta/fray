@@ -2,6 +2,7 @@ package org.pastalab.fray.test.core.fail.network;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.StandardProtocolFamily;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.CountDownLatch;
@@ -32,7 +33,7 @@ public class SyncClientConnectTwice {
     }
 
     private static void runServer() throws IOException, InterruptedException {
-        ServerSocketChannel serverChannel = ServerSocketChannel.open();
+        ServerSocketChannel serverChannel = ServerSocketChannel.open(StandardProtocolFamily.INET);
         serverChannel.configureBlocking(false);
         serverChannel.bind(new InetSocketAddress(PORT));
         latch.countDown();
