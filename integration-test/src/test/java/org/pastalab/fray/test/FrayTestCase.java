@@ -16,6 +16,7 @@ import org.pastalab.fray.core.utils.UtilsKt;
 import org.pastalab.fray.test.core.fail.wait.TwoWaitDeadlock;
 import org.pastalab.fray.test.core.success.abq.ArrayBlockingQueueNormalOffer;
 import org.pastalab.fray.test.core.success.condition.ConditionAwaitStaticField;
+import org.pastalab.fray.test.core.success.network.AsyncServerAsyncClient;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
 
 import java.io.IOException;
@@ -87,7 +88,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                TwoWaitDeadlock.main(new String[]{});
+                                AsyncServerAsyncClient.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }

@@ -9,6 +9,13 @@ import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.AbstractInterruptibleChannel;
 
 public class NetworkDelegate {
+
+    public void onSelectorOpen() {
+    }
+
+    public void onSelectorOpenDone() {
+    }
+
     public void onSelectorSetEventOpsDone(Selector selector, SelectionKey key) {
     }
 

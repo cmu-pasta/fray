@@ -5,6 +5,7 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.pastalab.fray.runtime.Runtime
+import java.nio.channels.Selector
 
 class SelectorVisitor(cv: ClassVisitor) :
     ClassVisitorBase(
@@ -12,7 +13,9 @@ class SelectorVisitor(cv: ClassVisitor) :
         "sun/nio/ch/SelectorImpl",
         "sun/nio/ch/KQueueSelectorImpl",
         "sun/nio/ch/EPollSelectorImpl",
-        AbstractSelector::class.java.name) {
+        AbstractSelector::class.java.name,
+        Selector::class.java.name
+    ) {
   override fun instrumentMethod(
       mv: MethodVisitor,
       access: Int,
@@ -64,6 +67,12 @@ class SelectorVisitor(cv: ClassVisitor) :
           true,
           false,
           className)
+    }
+    if (name == "open") {
+      val eMv =
+          MethodEnterVisitor(mv, Runtime::onSelectorOpen, access, name, descriptor, false, false)
+      return MethodExitVisitor(
+          eMv, Runtime::onSelectorOpenDone, access, name, descriptor, false, false, true, className)
     }
     return mv
   }
