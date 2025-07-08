@@ -23,6 +23,7 @@ jobs:
           java-version: '23'
           cache: 'gradle'
       - name: Read and update version
+        shell: bash
         run: |
           if [[ -n "${{ github.event.inputs.version }}" ]]; then
             BASE_VERSION="${{ github.event.inputs.version }}"
@@ -38,12 +39,14 @@ jobs:
         run: ./gradlew :jvmti:publish -Pversion=$VERSION
       - name: Create stage deploy (Windows)
         if: runner.os == 'Windows' 
+        shell: bash
         run: ./gradlew :jvmti:publish -Pversion=$VERSION
       - name: Create stage deploy (Linux)
         if: runner.os == 'Linux'
         run: ./gradlew publish -Pversion=$VERSION
       - name: Publish to Maven Central
         continue-on-error: true
+        shell: bash
         run: ./gradlew jreleaserFullRelease -Pversion=$VERSION
         env:
           JRELEASER_MAVENCENTRAL_USERNAME: ${{secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -102,4 +105,3 @@ jobs:
           body: Update readme to reflect release changes
           branch: update-readme
           base: main
-
