@@ -4,6 +4,20 @@
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 0.6.0 - 2025-07-08
+
+### Added
+
 - Allow Fray to use real-world time to decide if an operation should be unblocked.
 - Skip class constructors in `sun/security/ssl/SSLContextImpl`
 - Add instrumentation points at `NioSocket::accept`
@@ -18,18 +32,12 @@
 internal primitives and class constructors.
 - Only compute the stack trace hash when using SURW algorithm
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 
 - Fix incorrect blocking time for `Unsafe.park(false, 0)`.
 - Fix thread created in the `onSkipMethod` state is not tracked.
 - Fix concurrent modification exception in read write lock.
 - Fix `/tmp` does not exist error on macOS.
-
-### Security
 
 ## 0.5.1 - 2025-06-02
 
