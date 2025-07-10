@@ -6,12 +6,8 @@ import org.junit.jupiter.api.extension.*
 import org.junit.jupiter.api.extension.ConditionEvaluationResult.disabled
 import org.junit.jupiter.api.extension.ConditionEvaluationResult.enabled
 import org.pastalab.fray.core.RunContext
-import org.pastalab.fray.core.controllers.ProactiveNetworkController
-import org.pastalab.fray.core.controllers.TimeController
 import org.pastalab.fray.core.delegates.DelegateSynchronizer
-import org.pastalab.fray.core.delegates.ProactiveNetworkDelegate
 import org.pastalab.fray.core.delegates.RuntimeDelegate
-import org.pastalab.fray.core.delegates.TimeDelegate
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.runtime.Runtime
 
@@ -36,8 +32,9 @@ class FrayExtension(
     }
     val synchronizer = DelegateSynchronizer(frayContext)
     Runtime.NETWORK_DELEGATE =
-        ProactiveNetworkDelegate(ProactiveNetworkController(frayContext), synchronizer)
-    Runtime.TIME_DELEGATE = TimeDelegate(TimeController(frayContext), synchronizer)
+        frayContext.config.networkDelegateType.produce(frayContext, synchronizer)
+    Runtime.TIME_DELEGATE =
+        frayContext.config.systemTimeDelegateType.produce(frayContext, synchronizer)
     Runtime.LOCK_DELEGATE = RuntimeDelegate(frayContext, synchronizer)
     Runtime.start()
     val result = invocation.proceed()

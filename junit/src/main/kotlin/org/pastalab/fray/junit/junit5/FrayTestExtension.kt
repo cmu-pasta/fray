@@ -90,7 +90,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             concurrencyTest.replay.isNotEmpty(),
             false,
             true,
-            NetworkDelegateType.PROACTIVE,
+            NetworkDelegateType.NONE,
             SystemTimeDelegateType.NONE,
             true,
             true)
