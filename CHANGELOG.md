@@ -10,6 +10,8 @@
 
 ### Removed
 
+- Disable `testReactiveNetworkController` because it relies on external APIs which is flaky.
+
 ### Fixed
 
 ### Security
