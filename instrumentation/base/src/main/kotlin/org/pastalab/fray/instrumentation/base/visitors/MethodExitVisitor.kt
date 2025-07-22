@@ -33,6 +33,7 @@ class MethodExitVisitor(
   var methodEnterLabel = Label()
   var methodExitLabel = Label()
   var methodExitInsnCount = 0
+  val tryCatchBlockLabelPairs = mutableListOf<Pair<Label, Label>>()
 
   override fun visitCode() {
     methodEnterLabel = mark()
@@ -112,27 +113,7 @@ class MethodExitVisitor(
 
   fun insertTryCatchBlock() {
     if (methodExitInsnCount > 0) {
-      catchException(
-          methodEnterLabel,
-          methodExitLabel,
-          Type.getObjectType("java/lang/Throwable"),
-      )
-      val locals = getLocals(thisType)
-      visitFrame(Opcodes.F_NEW, locals.size, locals, 1, arrayOf("java/lang/Throwable"))
-      if (loadThis) {
-        loadThis()
-      }
-      if (loadArgs) {
-        loadArgs()
-      }
-      customizer(this, true)
-      invokeStatic(
-          Type.getObjectType(
-              Runtime::class.java.name.replace(".", "/"),
-          ),
-          Utils.kFunctionToASMMethod(method),
-      )
-      throwException()
+      tryCatchBlockLabelPairs.add(Pair(methodEnterLabel, methodExitLabel))
     }
     methodEnterLabel = mark()
     methodExitInsnCount = 0
@@ -175,6 +156,31 @@ class MethodExitVisitor(
     if (addFinalBlock) {
       methodExitLabel = mark()
       insertTryCatchBlock()
+      if (tryCatchBlockLabelPairs.isNotEmpty()) {
+        for ((start, end) in tryCatchBlockLabelPairs) {
+          catchException(
+              start,
+              end,
+              Type.getObjectType("java/lang/Throwable"),
+          )
+        }
+        val locals = getLocals(thisType)
+        visitFrame(Opcodes.F_NEW, locals.size, locals, 1, arrayOf("java/lang/Throwable"))
+        if (loadThis) {
+          loadThis()
+        }
+        if (loadArgs) {
+          loadArgs()
+        }
+        customizer(this, true)
+        invokeStatic(
+            Type.getObjectType(
+                Runtime::class.java.name.replace(".", "/"),
+            ),
+            Utils.kFunctionToASMMethod(method),
+        )
+        throwException()
+      }
     }
     super.visitMaxs(maxStack, maxLocals)
   }

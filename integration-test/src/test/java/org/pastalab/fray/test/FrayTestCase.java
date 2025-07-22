@@ -13,6 +13,7 @@ import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 import org.pastalab.fray.core.utils.UtilsKt;
+import org.pastalab.fray.test.controllers.network.reactive.success.NetworkCallWithSocketNoDeadlock;
 import org.pastalab.fray.test.core.fail.wait.TwoWaitDeadlock;
 import org.pastalab.fray.test.core.success.abq.ArrayBlockingQueueNormalOffer;
 import org.pastalab.fray.test.core.success.condition.ConditionAwaitStaticField;
@@ -88,7 +89,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                AsyncServerAsyncClient.main(new String[]{});
+                                NetworkCallWithSocketNoDeadlock.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -109,7 +110,7 @@ public class FrayTestCase {
                 false,
                 false,
                 false,
-                NetworkDelegateType.PROACTIVE,
+                NetworkDelegateType.REACTIVE,
                 SystemTimeDelegateType.NONE,
                 true,
                 false

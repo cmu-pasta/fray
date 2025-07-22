@@ -1,5 +1,6 @@
 plugins {
   java
+  application
   kotlin("jvm")
 }
 
@@ -26,6 +27,9 @@ tasks.compileJava {
   })
 }
 
+application {
+  mainClass = "org.pastalab.fray.instrumentation.base.MainKt"
+}
 
 tasks.test {
   useJUnitPlatform()
