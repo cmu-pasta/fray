@@ -12,6 +12,8 @@
 
 ### Removed
 
+- Disable `testReactiveNetworkController` because it relies on external APIs which are flaky.
+
 ### Fixed
 
 - Fix IllegalArgumentException while trying  to instrument class constructors.
