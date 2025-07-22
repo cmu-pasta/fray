@@ -6,11 +6,15 @@
 
 ### Changed
 
+- Move ApplicationCodeTransformer to `:instrumentation:base`.
+
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+
+- Fix IllegalArgumentException while trying  to instrument class constructors.
 
 ### Security
 

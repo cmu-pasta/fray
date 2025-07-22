@@ -7,7 +7,12 @@ import java.io.File
 fun main(args: Array<String>) {
   var ba = File(args[0]).inputStream()
 
-  instrumentClass(args[0], ba)
-  //  val appTransformer = ApplicationCodeTransformer()
-  //  appTransformer.transform(null, "", null, null, ba.readBytes())
+  //  val byteArray = ba.readBytes()
+  val appTransformer = ApplicationCodeTransformer()
+  appTransformer.transform(null, "", null, null, ba.readBytes())
+  //  val classReader = ClassReader(byteArray)
+  //  val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
+  //  val cn = ClassNode()
+  //  classReader.accept(cn, ClassReader.EXPAND_FRAMES)
+  //  cn.accept(CheckClassAdapter(classWriter))
 }

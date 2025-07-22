@@ -4,14 +4,14 @@ import java.lang.instrument.Instrumentation
 import org.pastalab.fray.core.command.MainCommand
 import org.pastalab.fray.core.delegates.DelegateSynchronizer
 import org.pastalab.fray.core.delegates.RuntimeDelegate
-import org.pastalab.fray.instrumentation.agent.ApplicationCodeTransformer
+import org.pastalab.fray.instrumentation.base.ApplicationCodeTransformer
 import org.pastalab.fray.runtime.Delegate
 import org.pastalab.fray.runtime.Runtime
 
 fun premain(arguments: String, instrumentation: Instrumentation) {
+  val args = arguments.split(":") + "--run-config" + "empty"
   val applicationCodeTransformer = ApplicationCodeTransformer()
   instrumentation.addTransformer(applicationCodeTransformer)
-  val args = arguments.split(":") + "--run-config" + "empty"
   val config = MainCommand().apply { main(args) }.toConfiguration()
   if (config.noFray) {
     instrumentation.removeTransformer(applicationCodeTransformer)

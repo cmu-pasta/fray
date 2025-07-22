@@ -1,4 +1,4 @@
-package org.pastalab.fray.instrumentation.agent
+package org.pastalab.fray.instrumentation.base
 
 import java.lang.instrument.ClassFileTransformer
 import java.security.ProtectionDomain
@@ -8,9 +8,21 @@ import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.util.CheckClassAdapter
-import org.pastalab.fray.instrumentation.base.Configs.DEBUG_MODE
-import org.pastalab.fray.instrumentation.base.Utils.writeClassFile
-import org.pastalab.fray.instrumentation.base.visitors.*
+import org.pastalab.fray.instrumentation.base.visitors.ArrayOperationInstrumenter
+import org.pastalab.fray.instrumentation.base.visitors.ClassConstructorInstrumenter
+import org.pastalab.fray.instrumentation.base.visitors.ClassVersionInstrumenter
+import org.pastalab.fray.instrumentation.base.visitors.ConditionInstrumenter
+import org.pastalab.fray.instrumentation.base.visitors.LoadClassInstrumenter
+import org.pastalab.fray.instrumentation.base.visitors.MonitorInstrumenter
+import org.pastalab.fray.instrumentation.base.visitors.ObjectNotifyInstrumenter
+import org.pastalab.fray.instrumentation.base.visitors.SkipPrimitiveInstrumenter
+import org.pastalab.fray.instrumentation.base.visitors.SkipScheduleInstrumenter
+import org.pastalab.fray.instrumentation.base.visitors.SleepInstrumenter
+import org.pastalab.fray.instrumentation.base.visitors.SynchronizedMethodInstrumenter
+import org.pastalab.fray.instrumentation.base.visitors.TargetExitInstrumenter
+import org.pastalab.fray.instrumentation.base.visitors.TimeInstrumenter
+import org.pastalab.fray.instrumentation.base.visitors.TimedWaitInstrumenter
+import org.pastalab.fray.instrumentation.base.visitors.VolatileFieldsInstrumenter
 import org.pastalab.fray.runtime.Runtime
 
 class ApplicationCodeTransformer : ClassFileTransformer {
@@ -57,8 +69,8 @@ class ApplicationCodeTransformer : ClassFileTransformer {
     }
     try {
       Runtime.onSkipPrimitive("instrumentation")
-      if (DEBUG_MODE) {
-        writeClassFile(className, classfileBuffer, false)
+      if (Configs.DEBUG_MODE) {
+        Utils.writeClassFile(className, classfileBuffer, false)
       }
       val classReader = ClassReader(classfileBuffer)
       val cn = ClassNode()
@@ -94,8 +106,8 @@ class ApplicationCodeTransformer : ClassFileTransformer {
         cn.accept(classWriter)
       }
       val out = classWriter.toByteArray()
-      if (DEBUG_MODE) {
-        writeClassFile(className, out, true)
+      if (Configs.DEBUG_MODE) {
+        Utils.writeClassFile(className, out, true)
       }
       return out
     } catch (e: Throwable) {
