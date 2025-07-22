@@ -20,7 +20,10 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '23'
+          java-version: |
+            11
+            21
+            23
           cache: 'gradle'
       - name: Build fray and run tests
         run: ./gradlew build
