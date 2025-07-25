@@ -440,11 +440,12 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
   override fun start() {
     // The first thread is not registered.
     // Therefor we cannot call `synchronizer.checkEntered` here.
+    val originEntered = synchronizer.entered.get()
     synchronizer.entered.set(true)
     try {
       context.start()
     } finally {
-      synchronizer.entered.set(false)
+      synchronizer.entered.set(originEntered)
     }
   }
 
@@ -772,4 +773,12 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   override fun onRangerCondition(condition: RangerCondition) =
       synchronizer.runInFrayStartNoSkip { context.rangerCondition(condition) }
+
+  override fun onClassPrepare(clazz: Class<*>) =
+      synchronizer.runInFrayStartNoSkip { context.clinitEnter(clazz.name) }
+
+  override fun onClassPrepareDone(clazz: Class<*>) =
+      synchronizer.runInFrayDoneNoSkip {
+        context.clinitDone(clazz.name)
+      }
 }

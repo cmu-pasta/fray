@@ -53,6 +53,7 @@ import org.pastalab.fray.runtime.TargetTerminateException
 
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 class RunContext(val config: Configuration) {
+  val clinitMap = mutableMapOf<String, Any>()
   val registeredThreads = mutableMapOf<Long, ThreadContext>()
   var currentThreadId: Long = -1
   var mainThreadId: Long = -1
@@ -590,10 +591,8 @@ class RunContext(val config: Configuration) {
     while (!lockContext.lock(context, blockingWait, false, canInterrupt) && blockingWait) {
       context.state = ThreadState.Blocked
       context.pendingOperation = LockBlocked(blockedUntil, lockContext)
-      // We want to block current thread because we do
-      // not want to rely on ReentrantLock. This allows
-      // us to pick which Thread to run next if multiple
-      // threads hold the same lock.
+      // When `shouldRetry` is true, Fray will not throw `DeadlockException` when no thread can be
+      // scheduled to run. Instead, it will try to unblock one of the threads and schedule again.
       if (shouldRetry) {
         scheduleNextOperationAndCheckDeadlock(true)
       } else {
@@ -609,6 +608,25 @@ class RunContext(val config: Configuration) {
         break
       }
     }
+  }
+
+  fun clinitEnter(className: String) = mustBeCaught {
+    val obj = clinitMap.getOrPut(className) {
+      Object()
+    }
+    println("Clinit enter: $className, thread: ${Thread.currentThread().name}")
+    monitorEnter(obj, false)
+    return@mustBeCaught
+  }
+
+  fun clinitDone(className: String) = verifyNoThrow {
+    if (!clinitMap.containsKey(className)) {
+      return@verifyNoThrow
+    }
+    println("Clinit done: $className, thread: ${Thread.currentThread().name}")
+    val obj = clinitMap[className]!!
+    monitorExit(obj)
+    return@verifyNoThrow
   }
 
   fun monitorEnter(lock: Any, shouldRetry: Boolean) = mustBeCaught {

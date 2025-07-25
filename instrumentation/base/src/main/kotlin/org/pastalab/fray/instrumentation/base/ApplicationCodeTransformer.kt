@@ -34,18 +34,43 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       classfileBuffer: ByteArray
   ): ByteArray {
     val dotClassName = className.replace('/', '.')
-    // Check if the class loader is null (bootstrap class loader)
-    // and if the class name starts with known JDK prefixes.
-    if (dotClassName.startsWith("java.") ||
+    // Check if the class name starts with known JDK prefixes.
+    if ((dotClassName.startsWith("java.") ||
         dotClassName.startsWith("javax.") ||
         dotClassName.startsWith(
             "jdk.",
         ) ||
         dotClassName.startsWith("sun.") ||
-        dotClassName.startsWith("com.sun.") ||
-        dotClassName.startsWith(
-            "kotlin.",
-        ) ||
+        dotClassName.startsWith("com.sun."))) {
+      // We delay the class constructor instrumentation of the JDK classes
+      // to avoid JDK crash during the bootstrap phase.
+      try {
+        Runtime.onSkipPrimitive("instrumentation")
+        if (Configs.DEBUG_MODE) {
+          Utils.writeClassFile(className, classfileBuffer, false)
+        }
+        val classReader = ClassReader(classfileBuffer)
+        val cn = ClassNode()
+        val cv = ClassConstructorInstrumenter(cn, true)
+        classReader.accept(cv, ClassReader.EXPAND_FRAMES)
+        val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
+        val checkClassAdapter = CheckClassAdapter(classWriter)
+        cn.accept(checkClassAdapter)
+        val out = classWriter.toByteArray()
+        if (Configs.DEBUG_MODE) {
+          Utils.writeClassFile(className, out, true)
+        }
+        return out
+      } catch (e: Throwable) {
+        e.printStackTrace()
+        return classfileBuffer
+      } finally {
+        Runtime.onSkipPrimitiveDone("instrumentation")
+      }
+    }
+    if (dotClassName.startsWith(
+        "kotlin.",
+    ) ||
         dotClassName.startsWith("kotlinx.") ||
         (dotClassName.startsWith("org.junit.") &&
             !(dotClassName.contains("ConsoleLauncher") ||

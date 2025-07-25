@@ -616,4 +616,12 @@ public class Runtime {
     public static void onNioSocketAcceptDone(SocketImpl socket) {
         NETWORK_DELEGATE.onNioSocketAcceptDone(socket);
     }
+
+    public static void onClassPrepare(Class<?> clazz) {
+        LOCK_DELEGATE.onClassPrepare(clazz);
+    }
+
+    public static void onClassPrepareDone(Class<?> clazz) {
+        LOCK_DELEGATE.onClassPrepareDone(clazz);
+    }
 }

@@ -2,10 +2,14 @@ package org.pastalab.fray.instrumentation.base.visitors
 
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ASM9
+import org.objectweb.asm.Type
 
 class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : ClassVisitor(ASM9, cv) {
   var className = ""
+  var clinitVisited = false
+  var shouldInstrument = true
 
   override fun visit(
       version: Int,
@@ -16,6 +20,13 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
       interfaces: Array<out String?>?
   ) {
     className = name
+    if (isJDK && className.contains("internal")) {
+      shouldInstrument = false
+    }
+    if (className == "java/lang/Module\$ReflectionData" ||
+      className.startsWith("org/gradle/api/internal")) {
+      shouldInstrument = false
+    }
     super.visit(version, access, name, signature, superName, interfaces)
   }
 
@@ -27,24 +38,11 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
       exceptions: Array<out String>?
   ): MethodVisitor {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
-    if (name == "<clinit>") {
-      if (isJDK && ALLOWED_JDK_CLASSES.none { className.contains(it) }) {
-        return mv
-      }
-      val methodSignature = "#$name$descriptor"
-      val eMv =
-          MethodEnterVisitor(
-              mv,
-              org.pastalab.fray.runtime.Runtime::onSkipScheduling,
-              access,
-              name,
-              descriptor,
-              false,
-              false,
-              preCustomizer = { it.push(methodSignature) })
+    if (name == "<clinit>" && shouldInstrument) {
+      clinitVisited = true
       return MethodExitVisitor(
-          eMv,
-          org.pastalab.fray.runtime.Runtime::onSkipSchedulingDone,
+          mv,
+          org.pastalab.fray.runtime.Runtime::onClassPrepareDone,
           access,
           name,
           descriptor,
@@ -52,23 +50,25 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
           false,
           true,
           className,
-          customizer = { mv, isFinalBlock -> mv.push(methodSignature) })
+          customizer = { mv, isFinalBlock -> push(Type.getObjectType(className)) })
     }
     return mv
   }
 
-  companion object {
-    val ALLOWED_JDK_CLASSES =
-        arrayOf(
-            "sun/security/ssl/SSLExtension\$ClientExtensions",
-            "sun/security/ssl/SSLContextImpl",
-            "sun/security/validator/CADistrustPolicy",
-            "sun/security/util/UntrustedCertificates",
-            "sun/nio/cs/ThreadLocalCoders",
-            "java/net/IDN",
-            "sun/security/ssl/ClientHandshakeContext",
-            "java/security/cert/X509CertSelector",
-            "sun/net/httpserver/",
-        )
+  override fun visitEnd() {
+    if (!clinitVisited && shouldInstrument) {
+      val mv = super.visitMethod(Opcodes.ACC_STATIC, "<clinit>", "()V", null, null)
+      mv.visitCode()
+      mv.visitLdcInsn(Type.getObjectType(className))
+      mv.visitMethodInsn(
+          Opcodes.INVOKESTATIC,
+          "org/pastalab/fray/runtime/Runtime",
+          "onClassPrepareDone",
+          "(Ljava/lang/Class;)V",
+          false)
+      mv.visitInsn(Opcodes.RETURN)
+      mv.visitEnd()
+    }
+    super.visitEnd()
   }
 }

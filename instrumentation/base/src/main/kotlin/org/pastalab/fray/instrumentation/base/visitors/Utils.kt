@@ -1,5 +1,6 @@
 package org.pastalab.fray.instrumentation.base.visitors
 
+import java.lang.reflect.ParameterizedType
 import kotlin.reflect.KFunction
 import kotlin.reflect.javaType
 import org.objectweb.asm.commons.Method
@@ -28,7 +29,13 @@ object Utils {
       FloatArray::class -> "[F"
       DoubleArray::class -> "[D"
       else -> {
-        val className = kType.javaType.typeName
+        val type = kType.javaType
+        val className =
+            if (type is ParameterizedType) {
+              type.rawType.typeName
+            } else {
+              type.typeName
+            }
         "L${className.replace('.', '/')};"
       }
     }

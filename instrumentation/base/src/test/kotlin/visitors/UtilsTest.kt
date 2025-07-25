@@ -20,4 +20,11 @@ class UtilsTest {
         Utils.kFunctionToJvmMethodDescriptor(
             org.pastalab.fray.runtime.Runtime::onSemaphoreAcquirePermits))
   }
+
+  @Test
+  fun kFunctionToJvmMethodDescriptorNoGenerics() {
+    assertEquals(
+        "(Ljava/lang/Class;)V",
+        Utils.kFunctionToJvmMethodDescriptor(org.pastalab.fray.runtime.Runtime::onClassPrepareDone))
+  }
 }

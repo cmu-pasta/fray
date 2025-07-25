@@ -16,6 +16,7 @@ import org.pastalab.fray.core.utils.UtilsKt;
 import org.pastalab.fray.test.controllers.network.reactive.success.NetworkCallWithSocketNoDeadlock;
 import org.pastalab.fray.test.core.fail.wait.TwoWaitDeadlock;
 import org.pastalab.fray.test.core.success.abq.ArrayBlockingQueueNormalOffer;
+import org.pastalab.fray.test.core.success.classconstructor.YieldInClassConstructor;
 import org.pastalab.fray.test.core.success.condition.ConditionAwaitStaticField;
 import org.pastalab.fray.test.core.success.network.AsyncServerAsyncClient;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
@@ -89,7 +90,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                NetworkCallWithSocketNoDeadlock.main(new String[]{});
+                                YieldInClassConstructor.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -100,7 +101,7 @@ public class FrayTestCase {
                         -1
                 ),
                 "/tmp/report2",
-                50,
+                1,
                 60,
                 new RandomScheduler(new ControlledRandom()),
                 new ControlledRandom(),

@@ -34,15 +34,15 @@
         { pkgs }:
         let
           commonPackages = with pkgs; [
-            gcc
+            llvmPackages_latest.clang
             cmake
             jdk23
             jdk11
           ];
 
           commonEnv = ''
-            export CC="${pkgs.gcc}/bin/gcc"
-            export CXX="${pkgs.gcc}/bin/g++"
+            export CC="${pkgs.llvmPackages_latest.clang}/bin/clang"
+            export CXX="${pkgs.llvmPackages_latest.clang}/bin/clang++"
             export JDK11="${pkgs.jdk11.home}"
             export JRE="${pkgs.jdk23.home}"
             export JAVA_HOME="${pkgs.jdk23.home}"
@@ -95,16 +95,17 @@
       devShells = forEachSupportedSystem ({ pkgs }: {
         default = pkgs.mkShell {
           packages = (with pkgs; [
-            gcc
             cmake
             jdk23
             jdk11
+            llvmPackages_latest.clang-tools
+            llvmPackages_latest.clang
           ]) ++ pkgs.lib.optionals (pkgs.stdenv.isLinux) [
             pkgs.jetbrains.jdk
           ];
           shellHook = ''
-            export CC="${pkgs.gcc}/bin/gcc"
-            export CXX="${pkgs.gcc}/bin/g++"
+            export CC="${pkgs.llvmPackages_latest.clang}/bin/clang"
+            export CXX="${pkgs.llvmPackages_latest.clang}/bin/clang++"
             export JDK11="${pkgs.jdk11.home}"
             export JRE="${pkgs.jdk23.home}"
             export JAVA_HOME="${pkgs.jdk23.home}"

@@ -365,5 +365,11 @@ public class Delegate {
 
     public void onRangerCondition(RangerCondition condition) {
     }
+
+    public void onClassPrepare(Class<?> clazz) {
+    }
+
+    public void onClassPrepareDone(Class<?> clazz) {
+    }
 }
 
