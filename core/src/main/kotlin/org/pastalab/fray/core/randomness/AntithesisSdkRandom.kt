@@ -6,11 +6,12 @@ import kotlin.math.absoluteValue
 class AntithesisSdkRandom : Randomness {
   override fun nextInt(): Int {
     val randomValue = Random.getRandom()
-    val value = if (randomValue == Long.MIN_VALUE) {
-        0 // Handle Long.MIN_VALUE explicitly
-    } else {
-        (randomValue.absoluteValue % Int.MAX_VALUE).toInt()
-    }
+    val value =
+        if (randomValue == Long.MIN_VALUE) {
+          0 // Handle Long.MIN_VALUE explicitly
+        } else {
+          (randomValue.absoluteValue % Int.MAX_VALUE).toInt()
+        }
     return value
   }
 
