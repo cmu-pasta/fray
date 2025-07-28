@@ -12,7 +12,9 @@ import org.pastalab.fray.core.command.LambdaExecutor
 import org.pastalab.fray.core.command.NetworkDelegateType
 import org.pastalab.fray.core.command.SystemTimeDelegateType
 import org.pastalab.fray.core.observers.ScheduleVerifier
-import org.pastalab.fray.core.randomness.ControlledRandom
+import org.pastalab.fray.core.randomness.ControlledRandomProvider
+import org.pastalab.fray.core.randomness.RandomnessProvider
+import org.pastalab.fray.core.randomness.RecordedRandomProvider
 import org.pastalab.fray.core.scheduler.POSScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
 import org.pastalab.fray.junit.Common.WORK_DIR
@@ -22,7 +24,7 @@ object FrayInTestLauncher {
   fun launchFray(
       runnable: Runnable,
       scheduler: Scheduler,
-      randomnessProvider: ControlledRandom,
+      randomnessProvider: RandomnessProvider,
       iteration: Int,
       timeout: Int,
       isReplay: Boolean,
@@ -58,13 +60,13 @@ object FrayInTestLauncher {
   }
 
   fun launchFrayTest(test: Runnable) {
-    launchFray(test, POSScheduler(), ControlledRandom(), 10000, 120, false)
+    launchFray(test, POSScheduler(), ControlledRandomProvider(), 10000, 120, false)
   }
 
   fun launchFrayReplay(test: Runnable, path: String) {
     val randomPath = "${path}/random.json"
     val schedulerPath = "${path}/schedule.json"
-    val randomnessProvider = Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
+    val randomnessProvider = RecordedRandomProvider(randomPath)
     val scheduler = Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
     launchFray(test, scheduler, randomnessProvider, 1, 10000, true) {
       val recording = Path("${path}/recording.json")

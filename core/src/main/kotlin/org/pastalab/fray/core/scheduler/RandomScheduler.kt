@@ -3,9 +3,10 @@ package org.pastalab.fray.core.scheduler
 import kotlinx.serialization.Serializable
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.randomness.ControlledRandom
+import org.pastalab.fray.core.randomness.Randomness
 
 @Serializable
-class RandomScheduler(val rand: ControlledRandom) : Scheduler {
+class RandomScheduler(val rand: Randomness) : Scheduler {
   constructor() : this(ControlledRandom())
 
   override fun scheduleNextOperation(
@@ -20,7 +21,7 @@ class RandomScheduler(val rand: ControlledRandom) : Scheduler {
     return threads[index]
   }
 
-  override fun nextIteration(): Scheduler {
-    return RandomScheduler(ControlledRandom())
+  override fun nextIteration(randomness: Randomness): Scheduler {
+    return RandomScheduler(randomness)
   }
 }

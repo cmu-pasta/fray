@@ -8,7 +8,6 @@ import org.junit.jupiter.api.extension.ConditionEvaluationResult.enabled
 import org.pastalab.fray.core.RunContext
 import org.pastalab.fray.core.delegates.DelegateSynchronizer
 import org.pastalab.fray.core.delegates.RuntimeDelegate
-import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.runtime.Runtime
 
 class FrayExtension(
@@ -27,8 +26,10 @@ class FrayExtension(
     if (frayJupiterContext.bugFound) return invocation.proceed()
     frayContext.config.currentIteration = index
     if (frayContext.config.currentIteration != 1) {
-      frayContext.config.scheduler = frayContext.config.scheduler.nextIteration()
-      frayContext.config.randomnessProvider = ControlledRandom()
+      frayContext.config.scheduler =
+          frayContext.config.scheduler.nextIteration(
+              frayContext.config.randomnessProvider.getRandomness())
+      frayContext.config.randomness = frayContext.config.randomnessProvider.getRandomness()
     }
     val synchronizer = DelegateSynchronizer(frayContext)
     Runtime.NETWORK_DELEGATE =

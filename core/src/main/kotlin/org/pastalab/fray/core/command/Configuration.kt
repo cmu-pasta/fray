@@ -26,11 +26,16 @@ import kotlinx.serialization.modules.subclass
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.debugger.DebuggerRegistry
 import org.pastalab.fray.core.logger.FrayLogger
+import org.pastalab.fray.core.observers.AntithesisErrorReporter
 import org.pastalab.fray.core.observers.ScheduleRecorder
 import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.observers.ScheduleVerifier
 import org.pastalab.fray.core.observers.ThreadPausingTimeLogger
-import org.pastalab.fray.core.randomness.ControlledRandom
+import org.pastalab.fray.core.randomness.AntithesisSdkRandomProvider
+import org.pastalab.fray.core.randomness.ControlledRandomProvider
+import org.pastalab.fray.core.randomness.Randomness
+import org.pastalab.fray.core.randomness.RandomnessProvider
+import org.pastalab.fray.core.randomness.RecordedRandomProvider
 import org.pastalab.fray.core.scheduler.*
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_DEBUG
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_DISABLED
@@ -115,64 +120,73 @@ class JsonExecutionConfig : ExecutionConfig("json") {
   }
 }
 
+sealed class RandomnessProviderOption(name: String) : OptionGroup(name) {
+  open fun getRandomnessProvider(): RandomnessProvider {
+    return ControlledRandomProvider()
+  }
+}
+
+class ControlledRandomOption : RandomnessProviderOption("controlled-random") {
+  override fun getRandomnessProvider(): RandomnessProvider {
+    return ControlledRandomProvider()
+  }
+}
+
+class RecordedRandomOption : RandomnessProviderOption("recorded-random") {
+  val path by option("--path-to-random").file().required()
+
+  override fun getRandomnessProvider(): RandomnessProvider {
+    return RecordedRandomProvider(path.absolutePath)
+  }
+}
+
+class AntithesisSdkRandomOption : RandomnessProviderOption("antithesis-sdk-random") {
+  override fun getRandomnessProvider(): RandomnessProvider {
+    return AntithesisSdkRandomProvider()
+  }
+}
+
 sealed class ScheduleAlgorithm(name: String, val isReplay: Boolean) : OptionGroup(name) {
-  open fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
-    return Triple(FifoScheduler(), ControlledRandom(), null)
+  open fun getScheduler(randomness: Randomness): Scheduler {
+    return FifoScheduler()
   }
 }
 
 class Fifo : ScheduleAlgorithm("fifo", false) {
-  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
-    return Triple(FifoScheduler(), ControlledRandom(), null)
+  override fun getScheduler(randomness: Randomness): Scheduler {
+    return FifoScheduler()
   }
 }
 
 class POS : ScheduleAlgorithm("pos", false) {
-  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
-    return Triple(POSScheduler(), ControlledRandom(), null)
+  override fun getScheduler(randomness: Randomness): Scheduler {
+    return POSScheduler(randomness)
   }
 }
 
 class ReplayFromRecordings : ScheduleAlgorithm("replay-from-recordings", true) {
   val path by option("--path-to-recordings").file().required()
 
-  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
-    val randomPath = "${path.absolutePath}/random.json"
+  override fun getScheduler(randomness: Randomness): Scheduler {
     val recordingPath = "${path.absolutePath}/recording.json"
     val scheduleRecordings =
         Json.decodeFromString<List<ScheduleRecording>>(File(recordingPath).readText())
-    val scheduler = ReplayScheduler(scheduleRecordings)
-    val randomnessProvider = Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
-
-    return Triple(scheduler, randomnessProvider, null)
+    return ReplayScheduler(scheduleRecordings)
   }
 }
 
 class Replay : ScheduleAlgorithm("replay-from-scheduler", true) {
   val path by option("--path-to-scheduler").file().required()
 
-  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
-    val randomPath = "${path.absolutePath}/random.json"
+  override fun getScheduler(randomness: Randomness): Scheduler {
     val schedulerPath = "${path.absolutePath}/schedule.json"
-    val randomnessProvider = Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
-    val scheduler = Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
-    val recordingPath = "${path.absolutePath}/recording.json"
-    val scheduleVerifier =
-        if (System.getProperty("fray.verifySchedule", "true").toBoolean() &&
-            File(recordingPath).exists()) {
-          val scheduleRecordings =
-              Json.decodeFromString<List<ScheduleRecording>>(File(recordingPath).readText())
-          ScheduleVerifier(scheduleRecordings)
-        } else {
-          null
-        }
-    return Triple(scheduler, randomnessProvider, scheduleVerifier)
+    return Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
   }
 }
 
 class Rand : ScheduleAlgorithm("random", false) {
-  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
-    return Triple(RandomScheduler(), ControlledRandom(), null)
+  override fun getScheduler(randomness: Randomness): Scheduler {
+    return RandomScheduler(randomness)
   }
 }
 
@@ -180,29 +194,26 @@ class PCT : ScheduleAlgorithm("pct", false) {
   val numSwitchPoints by option().int().default(3)
   val maxStep by option().int().default(0)
 
-  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
-    return Triple(
-        PCTScheduler(ControlledRandom(), numSwitchPoints, maxStep),
-        ControlledRandom(),
-        null,
-    )
+  override fun getScheduler(randomness: Randomness): Scheduler {
+    return PCTScheduler(randomness, numSwitchPoints, maxStep)
   }
 }
 
 class SURW : ScheduleAlgorithm("surw", false) {
-  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
+  override fun getScheduler(randomness: Randomness): Scheduler {
     System.setProperty("fray.resolveRacingOperationStackTraceHash", "true")
-    return Triple(SURWScheduler(), ControlledRandom(), null)
+    return SURWScheduler(randomness, mutableMapOf(), mutableSetOf())
   }
 }
 
 class Dynamic : ScheduleAlgorithm("dynamic", false) {
   val schedulerName by option("--scheduler-name")
 
-  override fun getScheduler(): Triple<Scheduler, ControlledRandom, ScheduleVerifier?> {
+  override fun getScheduler(randomness: Randomness): Scheduler {
     val clazz = this::class.java.classLoader.loadClass(schedulerName)
-    val scheduler = clazz.getConstructor().newInstance() as Scheduler
-    return Triple(scheduler, ControlledRandom(), null)
+    val scheduler =
+        clazz.getConstructor(Randomness::class.java).newInstance(randomness) as Scheduler
+    return scheduler
   }
 }
 
@@ -233,6 +244,14 @@ class MainCommand : CliktCommand() {
               "replay" to Replay(),
           )
           .defaultByName("random")
+  val randomnessProvider by
+      option(help = "Randomness provider.")
+          .groupChoice(
+              "controlled-random" to ControlledRandomOption(),
+              "recorded-random" to RecordedRandomOption(),
+              "antithesis-sdk-random" to AntithesisSdkRandomOption(),
+          )
+          .defaultByName("controlled-random")
   val noFray by option("--no-fray", help = "Runnning in no-Fray mode.").flag()
   val exploreMode by
       option(
@@ -299,15 +318,15 @@ class MainCommand : CliktCommand() {
 
   fun toConfiguration(): Configuration {
     val executionInfo = runConfig.getExecutionInfo()
-    val s = scheduler.getScheduler()
+    val randomnessProvider = randomnessProvider.getRandomnessProvider()
     val configuration =
         Configuration(
             executionInfo,
             report,
             iter,
             timeout,
-            s.first,
-            s.second,
+            scheduler.getScheduler(randomnessProvider.getRandomness()),
+            randomnessProvider,
             fullSchedule,
             exploreMode,
             noExitWhenBugFound,
@@ -318,9 +337,16 @@ class MainCommand : CliktCommand() {
             systemTimeDelegateType,
             ignoreTimedBlock,
             sleepAsYield)
-    if (s.third != null) {
-      configuration.scheduleObservers.add(s.third!!)
-      configuration.testStatusObservers.add(s.third!!)
+    val recordingPath = System.getProperty("fray.verifySchedule")
+    if (recordingPath != null && scheduler.isReplay) {
+      val recordings =
+          Json.decodeFromString<List<ScheduleRecording>>(File(recordingPath).readText())
+      val verifier = ScheduleVerifier(recordings)
+      configuration.scheduleObservers.add(verifier)
+      configuration.testStatusObservers.add(verifier)
+    }
+    if (System.getProperty("fray.antithesisSdk", "false").toBoolean()) {
+      configuration.testStatusObservers.add(AntithesisErrorReporter())
     }
     return configuration
   }
@@ -332,7 +358,7 @@ data class Configuration(
     var iter: Int,
     val timeout: Int,
     var scheduler: Scheduler,
-    var randomnessProvider: ControlledRandom,
+    val randomnessProvider: RandomnessProvider,
     val fullSchedule: Boolean,
     val exploreMode: Boolean,
     var noExitWhenBugFound: Boolean,
@@ -349,6 +375,7 @@ data class Configuration(
   var nextSavedIndex = 0
   var currentIteration = 0
   val startTime = TimeSource.Monotonic.markNow()
+  var randomness = randomnessProvider.getRandomness()
 
   fun saveToReportFolder(index: Int): String {
     val path =
@@ -359,7 +386,7 @@ data class Configuration(
         }
     Paths.get(path).createDirectories()
     File("$path/schedule.json").writeText(Json.encodeToString(scheduler))
-    File("$path/random.json").writeText(Json.encodeToString(randomnessProvider))
+    File("$path/random.json").writeText(Json.encodeToString(randomness))
     testStatusObservers.forEach { it.saveToReportFolder(path) }
     return path
   }
@@ -400,6 +427,12 @@ data class Configuration(
 
   fun shouldRun(): Boolean {
     return elapsedTime() / 1000 <= timeout && currentIteration != iter
+  }
+
+  fun nextIteration() {
+    currentIteration++
+    scheduler = scheduler.nextIteration(randomnessProvider.getRandomness())
+    randomness = randomnessProvider.getRandomness()
   }
 
   @OptIn(ExperimentalPathApi::class)

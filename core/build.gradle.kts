@@ -12,6 +12,8 @@ dependencies {
   implementation(project(":instrumentation:agent", configuration = "shadow"))
   api(project(":rmi"))
   api("com.github.ajalt.clikt:clikt:4.2.2")
+  compileOnly("com.antithesis:sdk:1.4.4")
+  compileOnly("com.fasterxml.jackson.core:jackson-databind:2.19.0")
   runtimeOnly(kotlin("reflect"))
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
   testImplementation("org.jetbrains.kotlin:kotlin-test")

@@ -4,6 +4,7 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.debugger.DebuggerRegistry
+import org.pastalab.fray.core.randomness.Randomness
 
 @Serializable
 class FrayIdeaPluginScheduler(val scheduler: Scheduler?) : Scheduler {
@@ -31,7 +32,7 @@ class FrayIdeaPluginScheduler(val scheduler: Scheduler?) : Scheduler {
     }
   }
 
-  override fun nextIteration(): Scheduler {
+  override fun nextIteration(randomness: Randomness): Scheduler {
     return this
   }
 }

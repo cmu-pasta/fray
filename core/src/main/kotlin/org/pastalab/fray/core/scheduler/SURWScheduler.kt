@@ -8,12 +8,13 @@ import org.pastalab.fray.core.concurrency.operations.MemoryOperation
 import org.pastalab.fray.core.concurrency.operations.RacingOperation
 import org.pastalab.fray.core.concurrency.operations.ThreadStartOperation
 import org.pastalab.fray.core.randomness.ControlledRandom
+import org.pastalab.fray.core.randomness.Randomness
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
 // See https://dl.acm.org/doi/10.1145/3669940.3707214
 @Serializable
 class SURWScheduler(
-    val rand: ControlledRandom,
+    val rand: Randomness,
     val executionLengths: MutableMap<Int, Int>,
     val interestingOperations: MutableSet<Int>
 ) : Scheduler {
@@ -177,9 +178,9 @@ class SURWScheduler(
     return ops
   }
 
-  override fun nextIteration(): Scheduler {
+  override fun nextIteration(randomness: Randomness): Scheduler {
     return SURWScheduler(
-        ControlledRandom(),
+        randomness,
         if (executionLengths.isEmpty()) {
           buildThreadWeights()
         } else {

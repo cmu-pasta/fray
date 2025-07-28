@@ -2,6 +2,7 @@ package org.pastalab.fray.core.scheduler
 
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.observers.ScheduleRecording
+import org.pastalab.fray.core.randomness.Randomness
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
 class ReplayScheduler(val recording: List<ScheduleRecording>) : Scheduler {
@@ -23,7 +24,7 @@ class ReplayScheduler(val recording: List<ScheduleRecording>) : Scheduler {
     return thread
   }
 
-  override fun nextIteration(): Scheduler {
+  override fun nextIteration(randomness: Randomness): Scheduler {
     return ReplayScheduler(recording)
   }
 }
