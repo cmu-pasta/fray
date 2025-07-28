@@ -4,6 +4,8 @@
 
 ### Added
 
+- Add [Antithesis](https://antithesis.com/) support.
+
 ### Changed
 
 - Move ApplicationCodeTransformer to `:instrumentation:base`.

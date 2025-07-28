@@ -10,7 +10,7 @@ import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
 
 class ThreadContext(val thread: Thread, val index: Int, context: RunContext, parentId: Int) {
-  val localRandomProbe = context.config.randomnessProvider.nextInt()
+  val localRandomProbe = context.config.randomness.nextInt()
   var state = ThreadState.Created
   var unparkSignaled = false
   var interruptSignaled = false

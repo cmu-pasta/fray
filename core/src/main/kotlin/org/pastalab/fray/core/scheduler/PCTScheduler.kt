@@ -4,10 +4,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.randomness.ControlledRandom
+import org.pastalab.fray.core.randomness.Randomness
 
 @Serializable
-class PCTScheduler(val rand: ControlledRandom, val numSwitchPoints: Int, var maxStep: Int) :
-    Scheduler {
+class PCTScheduler(val rand: Randomness, val numSwitchPoints: Int, var maxStep: Int) : Scheduler {
   constructor() : this(ControlledRandom(), 3, 0) {}
 
   @Transient var currentStep = 0
@@ -46,8 +46,8 @@ class PCTScheduler(val rand: ControlledRandom, val numSwitchPoints: Int, var max
     return next
   }
 
-  override fun nextIteration(): Scheduler {
-    return PCTScheduler(ControlledRandom(), numSwitchPoints, maxStep.coerceAtLeast(currentStep))
+  override fun nextIteration(randomness: Randomness): Scheduler {
+    return PCTScheduler(randomness, numSwitchPoints, maxStep.coerceAtLeast(currentStep))
   }
 
   private fun preparePriorityChangePoints() {

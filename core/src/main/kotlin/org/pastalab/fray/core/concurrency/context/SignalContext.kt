@@ -2,7 +2,7 @@ package org.pastalab.fray.core.concurrency.context
 
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
-import org.pastalab.fray.core.randomness.ControlledRandom
+import org.pastalab.fray.core.randomness.Randomness
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.rmi.ThreadState
 
@@ -45,7 +45,7 @@ abstract class SignalContext(val lockContext: LockContext) : InterruptibleContex
     return false
   }
 
-  fun signal(randomnessProvider: ControlledRandom, all: Boolean) {
+  fun signal(randomnessProvider: Randomness, all: Boolean) {
     if (waitingThreads.isNotEmpty()) {
       if (all) {
         waitingThreads

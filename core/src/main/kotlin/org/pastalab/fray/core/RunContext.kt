@@ -58,7 +58,7 @@ class RunContext(val config: Configuration) {
   var mainThreadId: Long = -1
   var bugFound: Throwable? = null
   val runFinishedHandlers = mutableListOf<RunFinishedHandler>()
-  val hashCodeMapper = ReferencedContextManager<Int>({ config.randomnessProvider.nextInt() })
+  val hashCodeMapper = ReferencedContextManager<Int>({ config.randomness.nextInt() })
   var forkJoinPool: ForkJoinPool? = null
   val reactiveResumedThreadQueue = ConcurrentLinkedQueue<Long>()
   val reactiveBlockedThreadQueue = ConcurrentLinkedQueue<Long>()
@@ -296,7 +296,7 @@ class RunContext(val config: Configuration) {
     val context = registeredThreads[t.id]!!
 
     if (!context.unparkSignaled && !context.interruptSignaled) {
-      val spuriousWakeup = config.randomnessProvider.nextInt() % 2 == 0
+      val spuriousWakeup = config.randomness.nextInt() % 2 == 0
       // We only enable spurious wakeup in testing mode.
       if (spuriousWakeup && config.scheduler !is FrayIdeaPluginScheduler) {
         context.pendingOperation = ThreadResumeOperation(true)
@@ -405,7 +405,7 @@ class RunContext(val config: Configuration) {
 
     unlockImpl(lockContext, t, true, true, signalContext is ObjectNotifyContext)
 
-    val spuriousWakeup = config.randomnessProvider.nextInt() % 2 == 0
+    val spuriousWakeup = config.randomness.nextInt() % 2 == 0
     // This is a spurious wakeup.
     // https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html#wait(long,int)
     if (spuriousWakeup && config.scheduler !is FrayIdeaPluginScheduler) {
@@ -527,7 +527,7 @@ class RunContext(val config: Configuration) {
   fun objectNotifyImpl(waitingObject: Any) {
     if (signalManager.hasContext(waitingObject)) {
       val waitingContext = signalManager.getContext(waitingObject)
-      waitingContext.signal(config.randomnessProvider, false)
+      waitingContext.signal(config.randomness, false)
     }
   }
 
@@ -537,7 +537,7 @@ class RunContext(val config: Configuration) {
 
   fun objectNotifyAllImpl(waitingObject: Any) {
     val waitingContext = signalManager.getContext(waitingObject)
-    waitingContext.signal(config.randomnessProvider, true)
+    waitingContext.signal(config.randomness, true)
   }
 
   fun objectNotifyAll(o: Any) = verifyNoThrow { objectNotifyAllImpl(o) }

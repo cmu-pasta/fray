@@ -6,9 +6,10 @@ import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.NonRacingOperation
 import org.pastalab.fray.core.concurrency.operations.RacingOperation
 import org.pastalab.fray.core.randomness.ControlledRandom
+import org.pastalab.fray.core.randomness.Randomness
 
 @Serializable
-class POSScheduler(val rand: ControlledRandom) : Scheduler {
+class POSScheduler(val rand: Randomness) : Scheduler {
   constructor() : this(ControlledRandom()) {}
 
   @Transient val threadPriority = mutableMapOf<ThreadContext, Double>()
@@ -51,7 +52,7 @@ class POSScheduler(val rand: ControlledRandom) : Scheduler {
     return next
   }
 
-  override fun nextIteration(): Scheduler {
-    return POSScheduler(ControlledRandom())
+  override fun nextIteration(randomness: Randomness): Scheduler {
+    return POSScheduler(randomness)
   }
 }

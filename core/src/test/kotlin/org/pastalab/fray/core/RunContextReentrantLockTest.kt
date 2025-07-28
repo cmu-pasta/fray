@@ -9,7 +9,7 @@ import org.pastalab.fray.core.command.ExecutionInfo
 import org.pastalab.fray.core.command.LambdaExecutor
 import org.pastalab.fray.core.command.NetworkDelegateType
 import org.pastalab.fray.core.command.SystemTimeDelegateType
-import org.pastalab.fray.core.randomness.ControlledRandom
+import org.pastalab.fray.core.randomness.ControlledRandomProvider
 import org.pastalab.fray.core.scheduler.RandomScheduler
 import org.pastalab.fray.rmi.ResourceType
 
@@ -27,7 +27,7 @@ class RunContextReentrantLockTest {
               1,
               1000,
               RandomScheduler(),
-              ControlledRandom(),
+              ControlledRandomProvider(),
               false,
               false,
               true,

@@ -2,6 +2,7 @@ package org.pastalab.fray.core.scheduler
 
 import kotlinx.serialization.Serializable
 import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.core.randomness.Randomness
 
 @Serializable
 sealed interface Scheduler {
@@ -10,5 +11,5 @@ sealed interface Scheduler {
       allThreads: Collection<ThreadContext>
   ): ThreadContext
 
-  fun nextIteration(): Scheduler
+  fun nextIteration(randomness: Randomness): Scheduler
 }

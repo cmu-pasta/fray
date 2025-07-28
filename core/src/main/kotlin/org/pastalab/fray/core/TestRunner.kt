@@ -3,7 +3,6 @@ package org.pastalab.fray.core
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.delegates.DelegateSynchronizer
 import org.pastalab.fray.core.delegates.RuntimeDelegate
-import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.runtime.Runtime
 
 class TestRunner(val config: Configuration) {
@@ -40,10 +39,6 @@ class TestRunner(val config: Configuration) {
         } catch (e: Throwable) {}
       } else {
         try {
-          if (config.currentIteration != 0) {
-            config.scheduler = config.scheduler.nextIteration()
-            config.randomnessProvider = ControlledRandom()
-          }
           val synchronizer = DelegateSynchronizer(context)
           Runtime.NETWORK_DELEGATE = config.networkDelegateType.produce(context, synchronizer)
           Runtime.TIME_DELEGATE = config.systemTimeDelegateType.produce(context, synchronizer)
@@ -60,7 +55,7 @@ class TestRunner(val config: Configuration) {
           ((context.bugFound != null && context.bugFound !is FrayInternalError) &&
               !config.exploreMode))
           break
-      config.currentIteration++
+      config.nextIteration()
     }
     context.shutDown()
     config.frayLogger.info(

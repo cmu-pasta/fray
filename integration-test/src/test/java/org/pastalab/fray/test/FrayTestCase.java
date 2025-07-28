@@ -9,15 +9,13 @@ import org.pastalab.fray.core.FrayInternalError;
 import org.pastalab.fray.core.TestRunner;
 import org.pastalab.fray.core.command.*;
 import org.pastalab.fray.core.randomness.ControlledRandom;
+import org.pastalab.fray.core.randomness.ControlledRandomProvider;
+import org.pastalab.fray.core.randomness.RecordedRandomProvider;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 import org.pastalab.fray.core.utils.UtilsKt;
 import org.pastalab.fray.test.controllers.network.reactive.success.NetworkCallWithSocketNoDeadlock;
-import org.pastalab.fray.test.core.fail.wait.TwoWaitDeadlock;
-import org.pastalab.fray.test.core.success.abq.ArrayBlockingQueueNormalOffer;
-import org.pastalab.fray.test.core.success.condition.ConditionAwaitStaticField;
-import org.pastalab.fray.test.core.success.network.AsyncServerAsyncClient;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
 
 import java.io.IOException;
@@ -47,7 +45,7 @@ public class FrayTestCase {
     public void replay() throws IOException {
         String basePath = "/tmp/report-ba/recording/";
         Scheduler scheduler = org.pastalab.fray.core.utils.UtilsKt.schedulerFromRecording(basePath);
-        ControlledRandom randomnessProvider = UtilsKt.randomFromRecording(basePath);
+        RecordedRandomProvider randomnessProvider = new RecordedRandomProvider(basePath + "/random.json");
         Configuration config = new Configuration(
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
@@ -103,7 +101,7 @@ public class FrayTestCase {
                 50,
                 60,
                 new RandomScheduler(new ControlledRandom()),
-                new ControlledRandom(),
+                new ControlledRandomProvider(),
                 true,
                 true,
                 true,
@@ -155,7 +153,7 @@ public class FrayTestCase {
                     iteration,
                     60 * 10,
                     new PCTScheduler(),
-                    new ControlledRandom(),
+                    new ControlledRandomProvider(),
                     true,
                     false,
                     true,

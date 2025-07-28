@@ -17,7 +17,8 @@ import org.pastalab.fray.core.command.LambdaExecutor
 import org.pastalab.fray.core.command.NetworkDelegateType
 import org.pastalab.fray.core.command.SystemTimeDelegateType
 import org.pastalab.fray.core.observers.ScheduleRecording
-import org.pastalab.fray.core.randomness.ControlledRandom
+import org.pastalab.fray.core.randomness.ControlledRandomProvider
+import org.pastalab.fray.core.randomness.RecordedRandomProvider
 import org.pastalab.fray.core.scheduler.ReplayScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
 import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest
@@ -64,12 +65,11 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
                 val schedulerPath = "${path.absolutePath}/schedule.json"
                 Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
               }
-          val randomnessProvider =
-              Json.decodeFromString<ControlledRandom>(File(randomPath).readText())
+          val randomnessProvider = RecordedRandomProvider(randomPath)
           Pair(scheduler, randomnessProvider)
         } else {
           val scheduler = concurrencyTest.scheduler.java.getConstructor().newInstance()
-          Pair(scheduler, ControlledRandom())
+          Pair(scheduler, ControlledRandomProvider())
         }
     val config =
         Configuration(
