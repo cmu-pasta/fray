@@ -236,6 +236,14 @@ class RunContext(val config: Configuration) {
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this, -1)
     registeredThreads[t.id]?.state = ThreadState.Runnable
     config.testStatusObservers.forEach { it.onExecutionStart() }
+    // We still need to add an uncaught exception handler in case the main thread
+    // is registered through Fray agent.
+    val originalHandler = t.uncaughtExceptionHandler
+    val handler = UncaughtExceptionHandler { t, e ->
+      onReportError(e)
+      originalHandler?.uncaughtException(t, e)
+    }
+    t.setUncaughtExceptionHandler(handler)
     scheduleNextOperation(true)
   }
 
@@ -271,7 +279,11 @@ class RunContext(val config: Configuration) {
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this, parentContext.index)
   }
 
-  fun threadStart(t: Thread) = verifyNoThrow { syncManager.createWait(t, 1) }
+  fun threadStart(t: Thread) = verifyNoThrow {
+    if (registeredThreads.containsKey(t.id)) {
+      syncManager.createWait(t, 1)
+    }
+  }
 
   fun threadStartDone(t: Thread) = verifyNoThrow {
     // Wait for the new thread runs.
@@ -386,9 +398,12 @@ class RunContext(val config: Configuration) {
     val context = registeredThreads[t]!!
     context.pendingOperation = ObjectWaitOperation(objId)
     context.state = ThreadState.Runnable
-    scheduleNextOperation(true)
+    try {
+      scheduleNextOperation(true)
+    } finally {
+      context.pendingOperation = ThreadResumeOperation(true)
+    }
 
-    context.pendingOperation = ThreadResumeOperation(true)
     // First we need to check if current thread is interrupted.
     if (canInterrupt) {
       context.checkInterrupt()
