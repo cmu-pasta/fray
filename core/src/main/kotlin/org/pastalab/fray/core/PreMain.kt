@@ -18,7 +18,6 @@ fun premain(arguments: String, instrumentation: Instrumentation) {
     return
   }
   val frayContext = RunContext(config)
-
   // We only switch the runtime delegates when main thread is running. Otherwise we
   // may register system threads.
   val notifier =
