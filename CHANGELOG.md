@@ -5,6 +5,7 @@
 ### Added
 
 - Add [Antithesis](https://antithesis.com/) support.
+- Add uncaught exception handler to the main thread.
 
 ### Changed
 
@@ -19,6 +20,7 @@
 ### Fixed
 
 - Fix IllegalArgumentException while trying  to instrument class constructors.
+- Fix fray hang when main waits for an unregistered thread.
 
 ### Security
 
