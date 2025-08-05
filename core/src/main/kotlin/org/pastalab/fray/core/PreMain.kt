@@ -1,5 +1,6 @@
 package org.pastalab.fray.core
 
+import com.github.ajalt.clikt.core.main
 import java.lang.instrument.Instrumentation
 import org.pastalab.fray.core.command.MainCommand
 import org.pastalab.fray.core.delegates.DelegateSynchronizer
@@ -10,9 +11,11 @@ import org.pastalab.fray.runtime.Runtime
 
 fun premain(arguments: String, instrumentation: Instrumentation) {
   val args = arguments.split(":") + "--run-config" + "empty"
-  val applicationCodeTransformer = ApplicationCodeTransformer()
-  instrumentation.addTransformer(applicationCodeTransformer)
   val config = MainCommand().apply { main(args) }.toConfiguration()
+
+  val applicationCodeTransformer =
+      ApplicationCodeTransformer(config.executionInfo.interleaveMemoryOps)
+  instrumentation.addTransformer(applicationCodeTransformer)
   if (config.noFray) {
     instrumentation.removeTransformer(applicationCodeTransformer)
     return

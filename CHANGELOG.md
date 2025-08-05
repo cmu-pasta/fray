@@ -10,6 +10,7 @@
 ### Changed
 
 - Move ApplicationCodeTransformer to `:instrumentation:base`.
+- Upgrade clikt to 5.0.3.
 
 ### Deprecated
 
@@ -21,6 +22,7 @@
 
 - Fix IllegalArgumentException while trying  to instrument class constructors.
 - Fix fray hang when main waits for an unregistered thread.
+- Pass `interleaveMemoryOps` to the instrumenter as well.
 
 ### Security
 

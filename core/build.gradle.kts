@@ -11,7 +11,7 @@ dependencies {
   compileOnly(project(":runtime"))
   implementation(project(":instrumentation:agent", configuration = "shadow"))
   api(project(":rmi"))
-  api("com.github.ajalt.clikt:clikt:4.2.2")
+  api("com.github.ajalt.clikt:clikt:5.0.3")
   compileOnly("com.antithesis:sdk:1.4.4")
   compileOnly("com.fasterxml.jackson.core:jackson-databind:2.19.0")
   runtimeOnly(kotlin("reflect"))

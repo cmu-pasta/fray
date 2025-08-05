@@ -4,6 +4,7 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.groups.defaultByName
 import com.github.ajalt.clikt.parameters.groups.groupChoice
+import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.file
@@ -53,23 +54,31 @@ data class ExecutionInfo(
 )
 
 sealed class ExecutionConfig(name: String) : OptionGroup(name) {
-  open fun getExecutionInfo(): ExecutionInfo {
+  open fun getExecutionInfo(
+      ignoreUnhandledExceptions: Boolean,
+      interleaveMemoryOps: Boolean,
+      maxScheduledStep: Int
+  ): ExecutionInfo {
     return ExecutionInfo(
         MethodExecutor("", "", emptyList(), emptyList(), emptyMap()),
-        false,
-        false,
-        10000000,
+        ignoreUnhandledExceptions,
+        interleaveMemoryOps,
+        maxScheduledStep,
     )
   }
 }
 
 class EmptyExecutionConfig : ExecutionConfig("empty") {
-  override fun getExecutionInfo(): ExecutionInfo {
+  override fun getExecutionInfo(
+      ignoreUnhandledExceptions: Boolean,
+      interleaveMemoryOps: Boolean,
+      maxScheduledStep: Int
+  ): ExecutionInfo {
     return ExecutionInfo(
         LambdaExecutor {},
-        false,
-        false,
-        -1,
+        ignoreUnhandledExceptions,
+        interleaveMemoryOps,
+        maxScheduledStep,
     )
   }
 }
@@ -85,12 +94,13 @@ class CliExecutionConfig : ExecutionConfig("cli") {
       option("-cp", "--classpath", help = "Arguments passed to target application")
           .split(":")
           .default(emptyList())
-  val ignoreUnhandledExceptions by option("-e", "--ignore-unhandled-exceptions").flag()
-  val interleaveMemoryOps by option("-m", "--memory").flag()
-  val maxScheduledStep by option("-s", "--max-scheduled-step").int().default(10000)
   val properties by option("-D", help = "System properties").pair().multiple()
 
-  override fun getExecutionInfo(): ExecutionInfo {
+  override fun getExecutionInfo(
+      ignoreUnhandledExceptions: Boolean,
+      interleaveMemoryOps: Boolean,
+      maxScheduledStep: Int
+  ): ExecutionInfo {
     val propertyMap = properties.toMap()
     return ExecutionInfo(
         MethodExecutor(clazz, method, targetArgs, classpaths, propertyMap),
@@ -104,7 +114,11 @@ class CliExecutionConfig : ExecutionConfig("cli") {
 class JsonExecutionConfig : ExecutionConfig("json") {
   val path by option("--config-path").file().required()
 
-  override fun getExecutionInfo(): ExecutionInfo {
+  override fun getExecutionInfo(
+      ignoreUnhandledExceptions: Boolean,
+      interleaveMemoryOps: Boolean,
+      maxScheduledStep: Int
+  ): ExecutionInfo {
     val module = SerializersModule {
       polymorphic(Executor::class) {
         subclass(MethodExecutor::class)
@@ -231,6 +245,9 @@ class MainCommand : CliktCommand() {
           )
           .flag()
 
+  val ignoreUnhandledExceptions by option("-e", "--ignore-unhandled-exceptions").flag()
+  val interleaveMemoryOps by option("-m", "--memory").flag()
+  val maxScheduledStep by option("-s", "--max-scheduled-step").int().default(-1)
   val scheduler by
       option(help = "Scheduling algorithm.")
           .groupChoice(
@@ -317,7 +334,8 @@ class MainCommand : CliktCommand() {
   override fun run() {}
 
   fun toConfiguration(): Configuration {
-    val executionInfo = runConfig.getExecutionInfo()
+    val executionInfo =
+        runConfig.getExecutionInfo(ignoreUnhandledExceptions, interleaveMemoryOps, maxScheduledStep)
     val randomnessProvider = randomnessProvider.getRandomnessProvider()
     val configuration =
         Configuration(

@@ -1,5 +1,6 @@
 package org.pastalab.fray.core
 
+import com.github.ajalt.clikt.core.main
 import kotlin.system.exitProcess
 import org.pastalab.fray.core.command.MainCommand
 

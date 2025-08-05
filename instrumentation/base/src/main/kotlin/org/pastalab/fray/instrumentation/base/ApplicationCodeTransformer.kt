@@ -25,7 +25,8 @@ import org.pastalab.fray.instrumentation.base.visitors.TimedWaitInstrumenter
 import org.pastalab.fray.instrumentation.base.visitors.VolatileFieldsInstrumenter
 import org.pastalab.fray.runtime.Runtime
 
-class ApplicationCodeTransformer : ClassFileTransformer {
+class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
+    ClassFileTransformer {
   override fun transform(
       loader: ClassLoader?,
       className: String,
@@ -77,7 +78,7 @@ class ApplicationCodeTransformer : ClassFileTransformer {
       var cv: ClassVisitor = ObjectNotifyInstrumenter(cn)
       cv = TargetExitInstrumenter(cv)
       cv = TimedWaitInstrumenter(cv)
-      cv = VolatileFieldsInstrumenter(cv, false)
+      cv = VolatileFieldsInstrumenter(cv, false, interleaveAllMemoryOps)
       cv = ObjectNotifyInstrumenter(cv)
 
       cv =
