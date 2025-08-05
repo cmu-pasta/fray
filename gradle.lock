@@ -475,88 +475,216 @@
       "hash": "sha256-EOfKWazmMwqKqW4zMs+Sn8BmcWnei0EvvPxfOgFMVNE="
     }
   },
-  "com.github.ajalt.clikt:clikt:4.2.2": {
-    "clikt-4.2.2.jar": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt/4.2.2/clikt-4.2.2.jar",
-      "hash": "sha256-g154dwennkh7/bSHX0/nllV1vqoO7QN1xrYM5bADDsI="
+  "com.github.ajalt.clikt:clikt:5.0.3": {
+    "clikt-5.0.3.jar": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt/5.0.3/clikt-5.0.3.jar",
+      "hash": "sha256-qLzj6fI3DFVs1FG2AY5Yfu1LCfO3jr72SP2D874LgPw="
     },
-    "clikt-4.2.2.module": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt/4.2.2/clikt-4.2.2.module",
-      "hash": "sha256-xb8y1B6fBrN7XrjNHCfUfYnDdpAQbickJzdKdGOrnnA="
+    "clikt-5.0.3.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt/5.0.3/clikt-5.0.3.module",
+      "hash": "sha256-vNNPHTxGfvq1FuoiqeeazD8SRJxIl/DF6sGCEnMizsY="
     },
-    "clikt-4.2.2.pom": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt/4.2.2/clikt-4.2.2.pom",
-      "hash": "sha256-/LDCT8jH/bMNj5QRLhv+04UMesgBG/L86UM0VovY30M="
+    "clikt-5.0.3.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt/5.0.3/clikt-5.0.3.pom",
+      "hash": "sha256-GwUigSeaOs6FY7svHtP1Khs9Rq15w9T2wzMjI+VzX9g="
     }
   },
-  "com.github.ajalt.clikt:clikt-jvm:4.2.2": {
-    "clikt-jvm-4.2.2.jar": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt-jvm/4.2.2/clikt-jvm-4.2.2.jar",
-      "hash": "sha256-DEkQ6MU/TtWj11g0+RcrnrGcfDAL4vFljvgKiRdWLjE="
+  "com.github.ajalt.clikt:clikt-core:5.0.3": {
+    "clikt-core-5.0.3.jar": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt-core/5.0.3/clikt-core-5.0.3.jar",
+      "hash": "sha256-KeBaQXAKBp8NEHSOp9Xwyb8OFjbUsQNXPj98X3q7fDo="
     },
-    "clikt-jvm-4.2.2.module": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt-jvm/4.2.2/clikt-jvm-4.2.2.module",
-      "hash": "sha256-t7xsmPLS4XOdnkOglZrdzpjosuxIvTSSaJGFTJ3ySJc="
+    "clikt-core-5.0.3.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt-core/5.0.3/clikt-core-5.0.3.module",
+      "hash": "sha256-CmMddfhkwX5dYQBfYDwSaUtGcy3s1cOckU0pLQXo6zM="
     },
-    "clikt-jvm-4.2.2.pom": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt-jvm/4.2.2/clikt-jvm-4.2.2.pom",
-      "hash": "sha256-ibGmH+a8ul7YhGNRPr72ZW3r/mXOc02JAInjNEi8eo0="
+    "clikt-core-5.0.3.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt-core/5.0.3/clikt-core-5.0.3.pom",
+      "hash": "sha256-wrBLaB6IqaGSgLZW2mBKIfLj4lUih2i4maaLoejuYBU="
     }
   },
-  "com.github.ajalt.colormath:colormath:3.3.1": {
-    "colormath-3.3.1.jar": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/colormath/colormath/3.3.1/colormath-3.3.1.jar",
-      "hash": "sha256-uAv0eqNH23e34PtFGK9+hCUgJ8R+LEQ8OLBPqXnYuX0="
+  "com.github.ajalt.clikt:clikt-core-jvm:5.0.3": {
+    "clikt-core-jvm-5.0.3.jar": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt-core-jvm/5.0.3/clikt-core-jvm-5.0.3.jar",
+      "hash": "sha256-acupSiKR90t4yII5zYtn6vPwjg2tKXdJq+ZHez6bgbE="
     },
-    "colormath-3.3.1.module": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/colormath/colormath/3.3.1/colormath-3.3.1.module",
-      "hash": "sha256-AdTWjQLyoy0wMkcviLHSweDIv6s73TTgA9ssAxnq0Lo="
+    "clikt-core-jvm-5.0.3.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt-core-jvm/5.0.3/clikt-core-jvm-5.0.3.module",
+      "hash": "sha256-dFtZmw9KoAz3AVYz429KVvJdGLy292htyrOxoRQZ3PE="
     },
-    "colormath-3.3.1.pom": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/colormath/colormath/3.3.1/colormath-3.3.1.pom",
-      "hash": "sha256-gMVPKp3C6yFQELVmlVAvb1Gseh8rFX8t5vT/OSBxuIk="
+    "clikt-core-jvm-5.0.3.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt-core-jvm/5.0.3/clikt-core-jvm-5.0.3.pom",
+      "hash": "sha256-CPpCgzMVYwi9KLYyNih6MXIVLcu/ccgx4LOshiPl4XE="
     }
   },
-  "com.github.ajalt.colormath:colormath-jvm:3.3.1": {
-    "colormath-jvm-3.3.1.jar": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/colormath/colormath-jvm/3.3.1/colormath-jvm-3.3.1.jar",
-      "hash": "sha256-JhMoNBXi4SZhaX3HKVra2g9g7Bfs/K8+8cTuD9t4iRM="
+  "com.github.ajalt.clikt:clikt-jvm:5.0.3": {
+    "clikt-jvm-5.0.3.jar": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt-jvm/5.0.3/clikt-jvm-5.0.3.jar",
+      "hash": "sha256-nNGeBHgvRh3/6xg9F+V2mE/rt5NJMstAZkasQeQohjs="
     },
-    "colormath-jvm-3.3.1.module": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/colormath/colormath-jvm/3.3.1/colormath-jvm-3.3.1.module",
-      "hash": "sha256-K/dgVNyyOnblJlGQa8aiUFW6btBa/ja3kggwnyvokk8="
+    "clikt-jvm-5.0.3.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt-jvm/5.0.3/clikt-jvm-5.0.3.module",
+      "hash": "sha256-nSm2J+l1mRLhJ+r7136GAYceul6qUthMgXUKiYIC8Xc="
     },
-    "colormath-jvm-3.3.1.pom": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/colormath/colormath-jvm/3.3.1/colormath-jvm-3.3.1.pom",
-      "hash": "sha256-5neriCzRIBZKj0diPoqP3AGS1cdk4jQsS6P3777xOrI="
+    "clikt-jvm-5.0.3.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/clikt/clikt-jvm/5.0.3/clikt-jvm-5.0.3.pom",
+      "hash": "sha256-CcAbsS0foX/hKcoSgvHpmpCAEbGDA5ptT8z2tclaTos="
     }
   },
-  "com.github.ajalt.mordant:mordant:2.2.0": {
-    "mordant-2.2.0.jar": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant/2.2.0/mordant-2.2.0.jar",
-      "hash": "sha256-aFf/hhBGGgwN8XMYxYmLhichc8rOx2ojCcHCpYMFOFw="
+  "com.github.ajalt.colormath:colormath:3.6.0": {
+    "colormath-3.6.0.jar": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/colormath/colormath/3.6.0/colormath-3.6.0.jar",
+      "hash": "sha256-49ox0EqJXlNfXQh2TM9fODQcQr99aNqW6h8ACfclmdY="
     },
-    "mordant-2.2.0.module": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant/2.2.0/mordant-2.2.0.module",
-      "hash": "sha256-PZssDh6kPGPNyZu+qao4tUOmyMiJUo69Kl5OU+I0Hic="
+    "colormath-3.6.0.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/colormath/colormath/3.6.0/colormath-3.6.0.module",
+      "hash": "sha256-aQeqSXrbmvY4EsdTZjic7T5ruL7oDnsjmttMU2c/iIQ="
     },
-    "mordant-2.2.0.pom": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant/2.2.0/mordant-2.2.0.pom",
-      "hash": "sha256-wQN/2QjFbifYOyz1aECrgETj24rgvwvqFM2SAJdWfZQ="
+    "colormath-3.6.0.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/colormath/colormath/3.6.0/colormath-3.6.0.pom",
+      "hash": "sha256-zh3tjA259LxNNjS64Vn9jVu2qWDyzTuWoAyPDnnOZAs="
     }
   },
-  "com.github.ajalt.mordant:mordant-jvm:2.2.0": {
-    "mordant-jvm-2.2.0.jar": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm/2.2.0/mordant-jvm-2.2.0.jar",
-      "hash": "sha256-L6WeW4GvzHG2q2EosnZ2/8YR0KPBguvA5DezZmq1YgE="
+  "com.github.ajalt.colormath:colormath-jvm:3.6.0": {
+    "colormath-jvm-3.6.0.jar": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/colormath/colormath-jvm/3.6.0/colormath-jvm-3.6.0.jar",
+      "hash": "sha256-WfdBrf5iBTBmeC2LGkWv0GaFpLxkszJ35Uh2uZPtiFw="
     },
-    "mordant-jvm-2.2.0.module": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm/2.2.0/mordant-jvm-2.2.0.module",
-      "hash": "sha256-pBEiZJIyB65iFkJJi1cvpoimOHmheofC37dgUS71OfI="
+    "colormath-jvm-3.6.0.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/colormath/colormath-jvm/3.6.0/colormath-jvm-3.6.0.module",
+      "hash": "sha256-P6dnMPmJ4ChN8YL87IViDZtIrjIhOYhBrGyviEYvYvg="
     },
-    "mordant-jvm-2.2.0.pom": {
-      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm/2.2.0/mordant-jvm-2.2.0.pom",
-      "hash": "sha256-7kQyTDf8M0oNmj8qn83usit+RyaePq7Ad67OtE6dpeI="
+    "colormath-jvm-3.6.0.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/colormath/colormath-jvm/3.6.0/colormath-jvm-3.6.0.pom",
+      "hash": "sha256-8Dw11QURDQZzNF9HQOVbzZdqmp+lobE8qirTmPO8Hl0="
+    }
+  },
+  "com.github.ajalt.mordant:mordant:3.0.1": {
+    "mordant-3.0.1.jar": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant/3.0.1/mordant-3.0.1.jar",
+      "hash": "sha256-CQmE0gJpL/70R+iN/ixjaTpd4pZw2ggxuGO8KE2hR+I="
+    },
+    "mordant-3.0.1.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant/3.0.1/mordant-3.0.1.module",
+      "hash": "sha256-lJLcf2NgJt8ulCkim52Ae1d00uZBUQ2Qv4Kb0qyzthU="
+    },
+    "mordant-3.0.1.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant/3.0.1/mordant-3.0.1.pom",
+      "hash": "sha256-BlK5t9Y0kro8J8ZIkANIZRxbKFdEAph7j+KqBUlqkaQ="
+    }
+  },
+  "com.github.ajalt.mordant:mordant-core:3.0.1": {
+    "mordant-core-3.0.1.jar": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-core/3.0.1/mordant-core-3.0.1.jar",
+      "hash": "sha256-c/UXnY6U+FEUR18Zlo0WWURZTmszjbcciwv9sJUe6z4="
+    },
+    "mordant-core-3.0.1.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-core/3.0.1/mordant-core-3.0.1.module",
+      "hash": "sha256-BWl6xcBV8Uh2cJ/U6f1ejD0VphrHesVy+RZEmTKgjC8="
+    },
+    "mordant-core-3.0.1.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-core/3.0.1/mordant-core-3.0.1.pom",
+      "hash": "sha256-Ah3YAdKdWJlqDJv/ux8VHWkHytU20syNGnoHuck4UNo="
+    }
+  },
+  "com.github.ajalt.mordant:mordant-core-jvm:3.0.1": {
+    "mordant-core-jvm-3.0.1.jar": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-core-jvm/3.0.1/mordant-core-jvm-3.0.1.jar",
+      "hash": "sha256-nPm0bR9J8tbPJjVGKyncWeDCmx+y8IWzMSiIu+nHzTE="
+    },
+    "mordant-core-jvm-3.0.1.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-core-jvm/3.0.1/mordant-core-jvm-3.0.1.module",
+      "hash": "sha256-5HRMRxB05ezUFh9wcLRZTfAO8XivBEJlkF5e0c61rJI="
+    },
+    "mordant-core-jvm-3.0.1.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-core-jvm/3.0.1/mordant-core-jvm-3.0.1.pom",
+      "hash": "sha256-1Ylt5eNKnVarJ4Y5iyYHJLGB85zAUIy7Kh9+iGzSXYc="
+    }
+  },
+  "com.github.ajalt.mordant:mordant-jvm:3.0.1": {
+    "mordant-jvm-3.0.1.jar": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm/3.0.1/mordant-jvm-3.0.1.jar",
+      "hash": "sha256-ntO5dvzMx42nRtSYZvqOu48QUwqTxUTqBCAlmmB92V4="
+    },
+    "mordant-jvm-3.0.1.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm/3.0.1/mordant-jvm-3.0.1.module",
+      "hash": "sha256-peTyMSt69CDG2DLDA4kcGg2GN8z6WpTYnxFGxIZpgLo="
+    },
+    "mordant-jvm-3.0.1.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm/3.0.1/mordant-jvm-3.0.1.pom",
+      "hash": "sha256-sAnaTDfbjhc2uEgrRPIJ2Cdx/xyNO9+UbraE07nOmWU="
+    }
+  },
+  "com.github.ajalt.mordant:mordant-jvm-ffm:3.0.1": {
+    "mordant-jvm-ffm-3.0.1.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-ffm/3.0.1/mordant-jvm-ffm-3.0.1.module",
+      "hash": "sha256-2Frg+0n7bXFHibQ/MbVnUoybit+G0Ou5hpSkGpHgmmc="
+    },
+    "mordant-jvm-ffm-3.0.1.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-ffm/3.0.1/mordant-jvm-ffm-3.0.1.pom",
+      "hash": "sha256-/MzpL8GhnxYzgGhDyuVTLIx/2YSnkxRbb7y3iUpk/s0="
+    }
+  },
+  "com.github.ajalt.mordant:mordant-jvm-ffm-jvm:3.0.1": {
+    "mordant-jvm-ffm-jvm-3.0.1.jar": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-ffm-jvm/3.0.1/mordant-jvm-ffm-jvm-3.0.1.jar",
+      "hash": "sha256-IEHC9fe4cJWxFcsZFV7pJXRRhU0I5bhnEWW0O8fhFM8="
+    },
+    "mordant-jvm-ffm-jvm-3.0.1.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-ffm-jvm/3.0.1/mordant-jvm-ffm-jvm-3.0.1.module",
+      "hash": "sha256-iE1x/LfBAQrm11qoka5UqYmGEVSwfxIVzVRfDkg34V0="
+    },
+    "mordant-jvm-ffm-jvm-3.0.1.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-ffm-jvm/3.0.1/mordant-jvm-ffm-jvm-3.0.1.pom",
+      "hash": "sha256-azbnZhrYKN4DoomS2K6WJWzq3z/aEo+OxImo1lu7rFM="
+    }
+  },
+  "com.github.ajalt.mordant:mordant-jvm-graal-ffi:3.0.1": {
+    "mordant-jvm-graal-ffi-3.0.1.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-graal-ffi/3.0.1/mordant-jvm-graal-ffi-3.0.1.module",
+      "hash": "sha256-qu/aIGckg7OwsmDdHvE0LOazTs6IutbfOa4bJgUMjAo="
+    },
+    "mordant-jvm-graal-ffi-3.0.1.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-graal-ffi/3.0.1/mordant-jvm-graal-ffi-3.0.1.pom",
+      "hash": "sha256-VAicrH9XCzo84x3cCD+ORgs7ED62oXM8kUE1GgaLR/M="
+    }
+  },
+  "com.github.ajalt.mordant:mordant-jvm-graal-ffi-jvm:3.0.1": {
+    "mordant-jvm-graal-ffi-jvm-3.0.1.jar": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-graal-ffi-jvm/3.0.1/mordant-jvm-graal-ffi-jvm-3.0.1.jar",
+      "hash": "sha256-bdS+vBZK6s3azI+Y6Phx4A/SHOe8LrDRgjDqg73fyGo="
+    },
+    "mordant-jvm-graal-ffi-jvm-3.0.1.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-graal-ffi-jvm/3.0.1/mordant-jvm-graal-ffi-jvm-3.0.1.module",
+      "hash": "sha256-DYGba/u8pO6XszB4ZoEpaQdmr/lI/ByDF4j04DSFOsM="
+    },
+    "mordant-jvm-graal-ffi-jvm-3.0.1.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-graal-ffi-jvm/3.0.1/mordant-jvm-graal-ffi-jvm-3.0.1.pom",
+      "hash": "sha256-Cm95LxyTYJX4dGmR1k2os/+ECazeOUir5d4v1WiIeDo="
+    }
+  },
+  "com.github.ajalt.mordant:mordant-jvm-jna:3.0.1": {
+    "mordant-jvm-jna-3.0.1.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-jna/3.0.1/mordant-jvm-jna-3.0.1.module",
+      "hash": "sha256-cn+1FiNOi6/JJ5Xi7L0No4VNcjoWxphCrGGSC/WIebk="
+    },
+    "mordant-jvm-jna-3.0.1.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-jna/3.0.1/mordant-jvm-jna-3.0.1.pom",
+      "hash": "sha256-xbxkikqeKmz3+dGAJMi/ZrIYCVDpPxYIODTHv/OqeGE="
+    }
+  },
+  "com.github.ajalt.mordant:mordant-jvm-jna-jvm:3.0.1": {
+    "mordant-jvm-jna-jvm-3.0.1.jar": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-jna-jvm/3.0.1/mordant-jvm-jna-jvm-3.0.1.jar",
+      "hash": "sha256-QQY0QsiJGyd0U2qbh6UGKn/SDm8ZSZdMbacvSUctb00="
+    },
+    "mordant-jvm-jna-jvm-3.0.1.module": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-jna-jvm/3.0.1/mordant-jvm-jna-jvm-3.0.1.module",
+      "hash": "sha256-eBcNkl07qnWGYvl2M2FjkN6Q1CoslON2PqpZBXY3jh4="
+    },
+    "mordant-jvm-jna-jvm-3.0.1.pom": {
+      "url": "https://repo.maven.apache.org/maven2/com/github/ajalt/mordant/mordant-jvm-jna-jvm/3.0.1/mordant-jvm-jna-jvm-3.0.1.pom",
+      "hash": "sha256-/hWoxktH4H8vmdiDKG5O+xR0YkVlh0ayVQ9vlohkX4A="
     }
   },
   "com.github.luben:zstd-jni:1.5.6-8": {
@@ -1633,16 +1761,6 @@
       "hash": "sha256-td6R8Ml3wFv7QtkZtQvV6WPxfWxDRu1qM9Xdod3fEHQ="
     }
   },
-  "it.unimi.dsi:fastutil-core:8.5.12": {
-    "fastutil-core-8.5.12.jar": {
-      "url": "https://repo.maven.apache.org/maven2/it/unimi/dsi/fastutil-core/8.5.12/fastutil-core-8.5.12.jar",
-      "hash": "sha256-8xwg9bBjEvPV4G5hYKMuJ02BmqbOvydSiya2tcDB3xk="
-    },
-    "fastutil-core-8.5.12.pom": {
-      "url": "https://repo.maven.apache.org/maven2/it/unimi/dsi/fastutil-core/8.5.12/fastutil-core-8.5.12.pom",
-      "hash": "sha256-g5JDu+YWEfk3uwtdmzHQyOCWx9DWeZIs9u05+Cxu4NI="
-    }
-  },
   "jakarta.activation:jakarta.activation-api:1.2.1": {
     "jakarta.activation-api-1.2.1.jar": {
       "url": "https://repo.maven.apache.org/maven2/jakarta/activation/jakarta.activation-api/1.2.1/jakarta.activation-api-1.2.1.jar",
@@ -1727,14 +1845,14 @@
       "hash": "sha256-trE4eOS66Ldo1+pXMstNZqsvXp/nB8Chp3bN6d5SBRs="
     }
   },
-  "net.java.dev.jna:jna:5.13.0": {
-    "jna-5.13.0.jar": {
-      "url": "https://repo.maven.apache.org/maven2/net/java/dev/jna/jna/5.13.0/jna-5.13.0.jar",
-      "hash": "sha256-ZtT4GaBipRodVie//CP6xV0Wd/Dgof66FEqr3WcKZLs="
+  "net.java.dev.jna:jna:5.14.0": {
+    "jna-5.14.0.jar": {
+      "url": "https://repo.maven.apache.org/maven2/net/java/dev/jna/jna/5.14.0/jna-5.14.0.jar",
+      "hash": "sha256-NO0eHyf6iWvKUNvE6ZzzcylnzsOHp6DV40hsCWc/6MY="
     },
-    "jna-5.13.0.pom": {
-      "url": "https://repo.maven.apache.org/maven2/net/java/dev/jna/jna/5.13.0/jna-5.13.0.pom",
-      "hash": "sha256-9RXCV4F49FJH7Mp6nh2xCVMbHELyQk4lPO6w9rjUI3Q="
+    "jna-5.14.0.pom": {
+      "url": "https://repo.maven.apache.org/maven2/net/java/dev/jna/jna/5.14.0/jna-5.14.0.pom",
+      "hash": "sha256-4E4llRUB3yWtx7Hc22xTNzyUiXuE0+FJISknY+4Hrj0="
     }
   },
   "net.java.dev.jna:jna:5.6.0": {
@@ -2469,20 +2587,6 @@
       "hash": "sha256-EeUuCmQOVKSzsjDRSFyVukuneyx7H8KENzkPngEicUc="
     }
   },
-  "org.jetbrains:markdown:0.5.2": {
-    "markdown-0.5.2.jar": {
-      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/markdown/0.5.2/markdown-0.5.2.jar",
-      "hash": "sha256-HGsba7nOgwSLhkiZCsHTQnv6z+vI5Y4y7pBD3dDcOio="
-    },
-    "markdown-0.5.2.module": {
-      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/markdown/0.5.2/markdown-0.5.2.module",
-      "hash": "sha256-bpFAGmpLbnc1auIzdjDoovLcQawmG3BbOpZv/GI/I+Q="
-    },
-    "markdown-0.5.2.pom": {
-      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/markdown/0.5.2/markdown-0.5.2.pom",
-      "hash": "sha256-mH5hITw/ERPsyi/8I6b0hpvuig+zCR8n3xvfq1KMhSg="
-    }
-  },
   "org.jetbrains:markdown-jvm:0.7.3": {
     "markdown-jvm-0.7.3.jar": {
       "url": "https://repo.maven.apache.org/maven2/org/jetbrains/markdown-jvm/0.7.3/markdown-jvm-0.7.3.jar",
@@ -2495,20 +2599,6 @@
     "markdown-jvm-0.7.3.pom": {
       "url": "https://repo.maven.apache.org/maven2/org/jetbrains/markdown-jvm/0.7.3/markdown-jvm-0.7.3.pom",
       "hash": "sha256-rLnRV//Hpk7mK+jt2WANJrXbAycKdOi+U815/gsm880="
-    }
-  },
-  "org.jetbrains:markdown-jvm:0.5.2": {
-    "markdown-jvm-0.5.2.jar": {
-      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/markdown-jvm/0.5.2/markdown-jvm-0.5.2.jar",
-      "hash": "sha256-cmSER3JgpVLcfBmwnUZWxIrjsQ2yclAA4YLWFZUptG4="
-    },
-    "markdown-jvm-0.5.2.module": {
-      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/markdown-jvm/0.5.2/markdown-jvm-0.5.2.module",
-      "hash": "sha256-fzA2ZgQteNJMVVEgyIJHjDCaIo7pK1G9ca2/+knDO1A="
-    },
-    "markdown-jvm-0.5.2.pom": {
-      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/markdown-jvm/0.5.2/markdown-jvm-0.5.2.pom",
-      "hash": "sha256-D58z0tjpkbt1C7VZ2q1YtsVH5raHQAA4Jne3XFtYpG0="
     }
   },
   "org.jetbrains.changelog:org.jetbrains.changelog.gradle.plugin:2.2.1": {
@@ -3151,16 +3241,6 @@
       "hash": "sha256-YFWRuJs3ISfmspxpMl+i9qjEb0aMRdCUEOeOtZ/IChc="
     }
   },
-  "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10": {
-    "kotlin-stdlib-jdk7-1.9.10.jar": {
-      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.9.10/kotlin-stdlib-jdk7-1.9.10.jar",
-      "hash": "sha256-rGNhv5rR7TgsIQPZcSxHzewWYjK0kD7VluiHawaBybc="
-    },
-    "kotlin-stdlib-jdk7-1.9.10.pom": {
-      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.9.10/kotlin-stdlib-jdk7-1.9.10.pom",
-      "hash": "sha256-x/pnx5YTILidhaPKWaLhjCxlhQhFWV3K5LRq9pRe3NU="
-    }
-  },
   "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.0": {
     "kotlin-stdlib-jdk7-1.9.0.jar": {
       "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.9.0/kotlin-stdlib-jdk7-1.9.0.jar",
@@ -3189,16 +3269,6 @@
     "kotlin-stdlib-jdk7-1.8.20.pom": {
       "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.8.20/kotlin-stdlib-jdk7-1.8.20.pom",
       "hash": "sha256-NiLRBleM3cwKnsIPjOgV9/Sf9UL2QCKNIUH8r4BhawY="
-    }
-  },
-  "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10": {
-    "kotlin-stdlib-jdk8-1.9.10.jar": {
-      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10.jar",
-      "hash": "sha256-pMdNlNZM4avlN2D+A4ndlB9vxVjQ2rNeR8CFoR7IDyg="
-    },
-    "kotlin-stdlib-jdk8-1.9.10.pom": {
-      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10.pom",
-      "hash": "sha256-X0uU3TBlp3ZMN/oV3irW2B9A1Z+Msz8X0YHGOE+3py4="
     }
   },
   "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.0": {

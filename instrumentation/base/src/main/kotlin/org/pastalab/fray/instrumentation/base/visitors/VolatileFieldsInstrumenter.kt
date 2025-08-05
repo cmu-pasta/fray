@@ -8,8 +8,11 @@ import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.commons.AdviceAdapter
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
 
-class VolatileFieldsInstrumenter(cv: ClassVisitor, private val instrumentingJdk: Boolean) :
-    ClassVisitor(ASM9, cv) {
+class VolatileFieldsInstrumenter(
+    cv: ClassVisitor,
+    private val instrumentingJdk: Boolean,
+    private val interleaveAllMemoryOps: Boolean
+) : ClassVisitor(ASM9, cv) {
   var className = ""
   var shouldInstrument = !instrumentingJdk
 
@@ -54,8 +57,9 @@ class VolatileFieldsInstrumenter(cv: ClassVisitor, private val instrumentingJdk:
     }
     return object : AdviceAdapter(ASM9, mv, access, name, descriptor) {
       override fun visitFieldInsn(opcode: Int, owner: String, name: String, descriptor: String) {
-        if ((recursiveVisitClass(owner) || volatileManager.isVolatile(owner, name)) &&
-            !owner.startsWith("org/pastalab/fray/runtime/")) {
+        if ((recursiveVisitClass(owner) ||
+            volatileManager.isVolatile(owner, name) ||
+            interleaveAllMemoryOps) && !owner.startsWith("org/pastalab/fray/runtime/")) {
 
           if (opcode == Opcodes.GETFIELD) {
             dup()
