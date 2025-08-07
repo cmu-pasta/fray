@@ -169,6 +169,7 @@ class RunContext(val config: Configuration) {
         config.nextSavedIndex++
         return
       }
+      config.testStatusObservers.forEach { it.onReportError(e) }
       config.frayLogger.info(
           "Error found at iter: ${config.currentIteration}, step: $step, " +
               "Elapsed time: ${config.elapsedTime()}ms",

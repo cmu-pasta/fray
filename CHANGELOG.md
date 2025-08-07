@@ -6,6 +6,7 @@
 
 - Add [Antithesis](https://antithesis.com/) support.
 - Add uncaught exception handler to the main thread.
+- Add `onReportError` to `TestStatusObserver`.
 
 ### Changed
 
