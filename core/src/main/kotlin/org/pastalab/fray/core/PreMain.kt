@@ -10,7 +10,19 @@ import org.pastalab.fray.runtime.Delegate
 import org.pastalab.fray.runtime.Runtime
 
 fun premain(arguments: String, instrumentation: Instrumentation) {
-  val args = arguments.split(":") + "--run-config" + "empty"
+  val args =
+      arguments.split(":") +
+          "--run-config" +
+          "empty" +
+          "--iter" +
+          "1" +
+          "--max-scheduled-step" +
+          "-1" +
+          "--network-delegate-type" +
+          "reactive" +
+          "--system-time-delegate-type" +
+          "none" +
+          "--no-ignore-timed-block"
   val config = MainCommand().apply { main(args) }.toConfiguration()
 
   val applicationCodeTransformer =

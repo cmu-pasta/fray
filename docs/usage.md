@@ -155,3 +155,37 @@ shellHook = ''
   export JDK23_HOME="${pkgs.jdk23.home}"
 ''
 ```
+
+## Agent Mode
+
+Fray also provides a Java agent that lets you run Fray with existing Java applications without using the Fray launcher. This is useful when your application runs in a deterministic environment (such as [Antithesis](https://antithesis.com)) and you want Fray to explore different thread interleavings.
+
+To use the agent, you can start from Fray's prebuilt Docker image.
+
+```dockerfile
+FROM ghcr.io/cmu-pasta/fray:0.6.3 as fray
+
+COPY --from=fray /nix /nix
+COPY --from=fray /opt/fray /opt/fray
+```
+
+After you have the image, run your application with the Fray agent:
+
+- Replace the `java` command with the instrumented `/opt/fray/java-inst/bin/java`.
+- If you use launchers such as Gradle or Maven, set `JAVA_HOME` to `/opt/fray/java-inst`.
+- Add the following two agents:
+  - `-javaagent:/opt/fray/libs/fray-core-FRAY_VERSION-SNAPSHOT-all.jar=FRAY_ARGS`
+    - `FRAY_ARGS` are the same arguments you would pass to the Fray launcher, separated by colons (:).
+    - For example, to use the `pos` scheduler and enable memory interleaving:
+      ```
+      -javaagent:/opt/fray/libs/fray-core-0.6.3-SNAPSHOT-all.jar=-m:--scheduler:pos
+      ```
+  - `-agentpath:/opt/fray/native-libs/libjvmti.so`
+
+
+### Use Fray inside Antithesis
+
+To fully leverage Antithesis's fuzzing capabilities, add the following argument to the Fray agent: `--randomness-provider:antithesis-sdk-random`. You can also set this system property to have Fray report errors through the Antithesis SDK: `-Dfray.antithesisSdk=true`.
+
+> [!NOTE]  
+> Ensure the Antithesis SDK is available on your application's classpath. Fray does not package the Antithesis SDK.
