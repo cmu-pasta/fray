@@ -9,6 +9,7 @@ jobs:
   publish:
     runs-on: ${{ matrix.operating-system }}
     permissions:
+      packages: write
       contents: write
       pull-requests: write
     strategy:
@@ -22,6 +23,10 @@ jobs:
           distribution: 'corretto'
           java-version: '23'
           cache: 'gradle'
+      - uses: cachix/install-nix-action@v31
+        if: runner.os == 'Linux'
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Read and update version
         shell: bash
         run: |
@@ -32,6 +37,18 @@ jobs:
           fi
           echo "VERSION=${BASE_VERSION}" >> $GITHUB_ENV
           echo "Version: $BASE_VERSION"
+      - name: Upload docker image
+        if: runner.os == 'Linux'
+        run: |
+          nix build .#dockerImage
+          docker load < result
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/fray
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          docker images
+          docker tag fray:latest $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
       - name: Create jreleaser work directory
         run: mkdir -p ./build/jreleaser
       - name: Create stage deploy (MacOs)
