@@ -155,3 +155,9 @@ shellHook = ''
   export JDK23_HOME="${pkgs.jdk23.home}"
 ''
 ```
+
+## Agent Mode
+
+Fray also provides a Java agent that allows you to run Fray on existing Java applications without relying on the 
+launcher provided by Fray. This is useful when you test your application in a deterministic environment such as 
+[Antithesis](https://antithesis.com/).
