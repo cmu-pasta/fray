@@ -88,7 +88,7 @@
             });
           dockerImage = pkgs.dockerTools.buildImage {
             name = "fray";
-            tag = project.version;
+            tag = "latest";
             copyToRoot = pkgs.runCommand "image-root" {}
               ''
               mkdir -p $out/opt
