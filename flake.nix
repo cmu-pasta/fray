@@ -86,9 +86,19 @@
                 runHook postInstall
               '';
             });
+          dockerImage = pkgs.dockerTools.buildImage {
+            name = "fray";
+            tag = project.version;
+            copyToRoot = pkgs.runCommand "image-root" {}
+              ''
+              mkdir -p $out/opt
+              ln -s ${project} $out/opt/fray
+              '';
+          };
         in
         {
           default = project;
+          dockerImage = dockerImage;
         }
       );
 

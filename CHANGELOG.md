@@ -7,6 +7,7 @@
 - Add [Antithesis](https://antithesis.com/) support.
 - Add uncaught exception handler to the main thread.
 - Add `onReportError` to `TestStatusObserver`.
+- Add docker image configuration to the flake.nix.
 
 ### Changed
 
