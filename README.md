@@ -1,6 +1,6 @@
 # Fray: General-Purpose Concurrency Testing 
 
-[![Build](https://github.com/cmu-pasta/fray/actions/workflows/main.yml/badge.svg)](https://github.com/cmu-pasta/fray/actions/workflows/main.yml)
+[![Build](https://github.com/cmu-pasta/fray/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/cmu-pasta/fray/actions/workflows/build-and-test.yml)
 [![Gradle](https://img.shields.io/gradle-plugin-portal/v/org.pastalab.fray.gradle)](https://plugins.gradle.org/plugin/org.pastalab.fray.gradle)
 [![Maven](https://img.shields.io/maven-central/v/org.pastalab.fray.maven/fray-plugins-maven)](https://central.sonatype.com/artifact/org.pastalab.fray.maven/fray-plugins-maven)
 [![JetBrain Plugin](https://img.shields.io/jetbrains/plugin/v/26623-fray-debugger)](https://plugins.jetbrains.com/plugin/26623-fray-debugger)
