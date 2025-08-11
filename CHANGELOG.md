@@ -4,6 +4,20 @@
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 0.6.3 - 2025-08-11
+
+### Added
+
 - Add [Antithesis](https://antithesis.com/) support.
 - Add uncaught exception handler to the main thread.
 - Add `onReportError` to `TestStatusObserver`.
@@ -14,8 +28,6 @@
 - Move ApplicationCodeTransformer to `:instrumentation:base`.
 - Upgrade clikt to 5.0.3.
 
-### Deprecated
-
 ### Removed
 
 - Disable `testReactiveNetworkController` because it relies on external APIs which are flaky.
@@ -25,8 +37,6 @@
 - Fix IllegalArgumentException while trying  to instrument class constructors.
 - Fix fray hang when main waits for an unregistered thread.
 - Pass `interleaveMemoryOps` to the instrumenter as well.
-
-### Security
 
 ## 0.6.0 - 2025-07-08
 
