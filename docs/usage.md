@@ -9,7 +9,7 @@ Add the following plugin to your `build.gradle` file:
 
 ```kotlin
 plugins {
-    id("org.pastalab.fray.gradle") version "0.2.5"
+    id("org.pastalab.fray.gradle") version "0.6.3"
 }
 ```
 
@@ -158,7 +158,7 @@ shellHook = ''
 
 ## Agent Mode
 
-Fray also provides a Java agent that lets you run Fray with existing Java applications without using the Fray launcher. This is useful when your application runs in a deterministic environment (such as [Antithesis](https://antithesis.com)) and you want Fray to explore different thread interleavings.
+Fray also provides a Java agent that lets you run Fray with existing Java applications without using the Fray launcher. This is useful when your application is already running inside a deterministic environment (such as [Antithesis](https://antithesis.com)) and you only want Fray to control thread interleavings.
 
 To use the agent, you can start from Fray's prebuilt Docker image.
 
