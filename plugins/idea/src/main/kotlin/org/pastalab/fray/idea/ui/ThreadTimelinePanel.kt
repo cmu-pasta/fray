@@ -163,7 +163,7 @@ class ThreadTimelinePanel : JPanel() {
     }
 
     override fun getToolTipText(event: MouseEvent): String? {
-      return hoveredEvent?.let { (threadIndex, eventData) ->
+      return hoveredEvent?.let { (_, eventData) ->
         val (timeStep, frameInfo) = eventData
         "Step: ${timeStep + 1}\n$frameInfo"
       }

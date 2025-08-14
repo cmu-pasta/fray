@@ -36,24 +36,24 @@ object FrayInTestLauncher {
                 LambdaExecutor(
                     { runnable.run() },
                 ),
-                false,
-                false,
-                -1),
+                ignoreUnhandledExceptions = false,
+                interleaveMemoryOps = false,
+                maxScheduledStep = -1),
             WORK_DIR.absolutePathString(),
             iteration,
             timeout,
             scheduler,
             randomnessProvider,
-            true,
-            false,
-            true,
-            isReplay,
-            false,
-            false,
-            NetworkDelegateType.PROACTIVE,
-            SystemTimeDelegateType.NONE,
-            true,
-            true)
+            fullSchedule = true,
+            exploreMode = false,
+            noExitWhenBugFound = true,
+            isReplay = isReplay,
+            noFray = false,
+            dummyRun = false,
+            networkDelegateType = NetworkDelegateType.PROACTIVE,
+            systemTimeDelegateType = SystemTimeDelegateType.NONE,
+            ignoreTimedBlock = true,
+            sleepAsYield = true)
     additionalConfigs(config)
     val runner = TestRunner(config)
     runner.run()?.let { throw it }

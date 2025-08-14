@@ -14,7 +14,7 @@ class TestTryCatchStackFrameNoException {
             .openStream()
             .readBytes()
     val appTransformer = ApplicationCodeTransformer()
-    var newBuffer = appTransformer.transform(null, "", null, null, ba)
+    val newBuffer = appTransformer.transform(null, "", null, null, ba)
     assertNotEquals(newBuffer, ba)
   }
 }

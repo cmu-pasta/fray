@@ -34,15 +34,6 @@ class ObjectNotifyInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
     }
     return object :
         MethodVisitor(ASM9, super.visitMethod(access, name, descriptor, signature, exceptions)) {
-      override fun visitFrame(
-          type: Int,
-          numLocal: Int,
-          local: Array<out Any>?,
-          numStack: Int,
-          stack: Array<out Any>?
-      ) {
-        super.visitFrame(type, numLocal, local, numStack, stack)
-      }
 
       override fun visitMethodInsn(
           opcode: Int,

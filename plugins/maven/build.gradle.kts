@@ -8,9 +8,9 @@ group = "org.pastalab.fray.maven"
 dependencies {
   implementation("org.apache.maven:maven-plugin-api:3.0")
   implementation("org.apache.maven.shared:maven-dependency-tree:3.3.0")
-  implementation("org.apache.maven.shared:file-management:3.1.0")
+  implementation("org.apache.maven.shared:file-management:3.2.0")
   implementation("org.apache.maven.surefire:surefire-api:3.0.0")
-  compileOnly("org.apache.maven:maven-core:3.0")
+  compileOnly("org.apache.maven:maven-core:3.9.11")
   compileOnly("org.apache.maven.plugin-tools:maven-plugin-annotations:3.0")
   testImplementation(platform("org.junit:junit-bom:5.10.0"))
   testImplementation("org.junit.jupiter:junit-jupiter")

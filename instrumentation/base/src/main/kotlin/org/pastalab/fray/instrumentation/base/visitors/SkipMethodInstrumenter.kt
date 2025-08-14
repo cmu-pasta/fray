@@ -41,8 +41,8 @@ open class SkipMethodInstrumenter(
             access,
             name,
             descriptor,
-            false,
-            false,
+            loadThis = false,
+            loadArgs = false,
             preCustomizer = { push(methodSignature) })
     return MethodExitVisitor(
         eMv,
@@ -50,10 +50,10 @@ open class SkipMethodInstrumenter(
         access,
         name,
         descriptor,
-        false,
-        false,
-        true,
-        className,
+        loadThis = false,
+        loadArgs = false,
+        addFinalBlock = true,
+        thisType = className,
         customizer = { mv, isFinalBlock -> push(methodSignature) })
   }
 }

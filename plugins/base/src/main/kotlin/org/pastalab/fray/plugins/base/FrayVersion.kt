@@ -10,6 +10,6 @@ object FrayVersion {
     javaClass.getResourceAsStream("/org/pastalab/fray/plugins/base/version.properties")?.let {
       properties.load(InputStreamReader(it, StandardCharsets.UTF_8))
     }
-    properties.getProperty("version")
+    properties.getProperty("version")!!
   }
 }

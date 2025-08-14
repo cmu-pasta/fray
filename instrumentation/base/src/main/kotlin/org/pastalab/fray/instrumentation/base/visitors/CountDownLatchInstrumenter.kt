@@ -22,18 +22,18 @@ class CountDownLatchInstrumenter(cv: ClassVisitor) :
               access,
               name,
               descriptor,
-              true,
-              false)
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onLatchAwaitDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "countDown") {
       val eMv =
@@ -43,18 +43,18 @@ class CountDownLatchInstrumenter(cv: ClassVisitor) :
               access,
               name,
               descriptor,
-              true,
-              false)
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onLatchCountDownDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     return super.instrumentMethod(mv, access, name, descriptor, signature, exceptions)
   }

@@ -125,7 +125,7 @@ class DelegateSynchronizer(val context: RunContext) {
 
   /**
    * Fray provides two ways to skip instrumented primitive: [onSkipPrimitive] and
-   * [onSkipScheduling]. [onSkipPrimitive] skips the primitives completely, meaning that [Fray] will
+   * [onSkipScheduling]. [onSkipPrimitive] skips the primitives completely, meaning that Fray will
    * not run instrumented code at all. This method should be used if the primitive is modeled
    * through Fray, and we want to skip its internal implementation (e.g.,
    * [java.util.concurrent.locks.ReentrantLock]). [onSkipScheduling] on the other hand, still runs

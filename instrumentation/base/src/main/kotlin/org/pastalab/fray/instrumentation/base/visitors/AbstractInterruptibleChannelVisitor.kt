@@ -18,17 +18,23 @@ class AbstractInterruptibleChannelVisitor(cv: ClassVisitor) :
     if (name == "close") {
       val eMv =
           MethodEnterVisitor(
-              mv, Runtime::onSocketChannelClose, access, name, descriptor, true, false)
+              mv,
+              Runtime::onSocketChannelClose,
+              access,
+              name,
+              descriptor,
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           Runtime::onSocketChannelCloseDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
     return mv
   }

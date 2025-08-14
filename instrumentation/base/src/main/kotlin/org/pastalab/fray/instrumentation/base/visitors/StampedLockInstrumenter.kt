@@ -16,48 +16,55 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
       exceptions: Array<out String>?
   ): MethodVisitor {
     val skipMv =
-        MethodEnterVisitor(mv, Runtime::onStampedLockSkip, access, name, descriptor, false, false)
+        MethodEnterVisitor(
+            mv,
+            Runtime::onStampedLockSkip,
+            access,
+            name,
+            descriptor,
+            loadThis = false,
+            loadArgs = false)
     if (name == "writeLock") {
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onStampedLockWriteLock,
+              Runtime::onStampedLockWriteLock,
               access,
               name,
               descriptor,
-              true,
-              false)
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onStampedLockSkipDone,
+          Runtime::onStampedLockSkipDone,
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className)
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "readLock") {
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onStampedLockReadLock,
+              Runtime::onStampedLockReadLock,
               access,
               name,
               descriptor,
-              true,
-              false)
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
-          org.pastalab.fray.runtime.Runtime::onStampedLockSkipDone,
+          Runtime::onStampedLockSkipDone,
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className)
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "tryReadLock") {
       val method =
@@ -73,8 +80,8 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
               access,
               name,
               descriptor,
-              true,
-              true,
+              loadThis = true,
+              loadArgs = true,
           ) {
             if (descriptor != "()J") {
               storeArg(0)
@@ -86,10 +93,10 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className)
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "tryWriteLock") {
       val method =
@@ -99,21 +106,22 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
             Runtime::onStampedLockWriteLockTryLockTimeout
           }
       val eMv =
-          MethodEnterVisitor(mv, method, access, name, descriptor, true, true) {
-            if (descriptor != "()J") {
-              storeArg(0)
-            }
-          }
+          MethodEnterVisitor(
+              mv, method, access, name, descriptor, loadThis = true, loadArgs = true) {
+                if (descriptor != "()J") {
+                  storeArg(0)
+                }
+              }
       return MethodExitVisitor(
           eMv,
           Runtime::onStampedLockSkipDone,
           access,
           name,
           descriptor,
-          false,
-          false,
-          false,
-          className)
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "readLockInterruptibly") {
       val eMv =
@@ -123,18 +131,18 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
               access,
               name,
               descriptor,
-              true,
-              false)
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           Runtime::onStampedLockSkipDone,
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className)
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "writeLockInterruptibly") {
       val eMv =
@@ -144,18 +152,18 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
               access,
               name,
               descriptor,
-              true,
-              false)
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           Runtime::onStampedLockSkipDone,
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className)
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "unlockWrite") {
       return MethodExitVisitor(
@@ -164,10 +172,10 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          true,
-          false,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "unlockRead") {
       return MethodExitVisitor(
@@ -176,10 +184,10 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          true,
-          false,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "tryConvertToWriteLock") {
       return MethodExitVisitor(
@@ -188,10 +196,10 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          true,
-          true,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = true,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "tryConvertToReadLock") {
       return MethodExitVisitor(
@@ -200,10 +208,10 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          true,
-          true,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = true,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "tryConvertToOptimisticRead") {
       return MethodExitVisitor(
@@ -212,10 +220,10 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          true,
-          true,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = true,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "tryUnlockRead") {
       return MethodExitVisitor(
@@ -224,10 +232,10 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          true,
-          false,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "tryUnlockWrite") {
       return MethodExitVisitor(
@@ -236,10 +244,10 @@ class StampedLockInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          true,
-          false,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
     return super.instrumentMethod(mv, access, name, descriptor, signature, exceptions)
   }

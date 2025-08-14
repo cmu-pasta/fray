@@ -59,8 +59,8 @@ class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
               access,
               name,
               descriptor,
-              false,
-              false,
+              loadThis = false,
+              loadArgs = false,
               preCustomizer = {
                 // We do not use loadThis() here because we are instrumenting both static and
                 // instance methods
@@ -74,10 +74,10 @@ class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className)
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     return mv
   }

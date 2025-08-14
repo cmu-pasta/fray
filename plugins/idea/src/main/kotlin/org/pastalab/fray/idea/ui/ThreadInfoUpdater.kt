@@ -24,18 +24,12 @@ class ThreadInfoUpdater(val editor: Editor) : EditorMouseMotionListener {
   var threadInfoBalloon: Balloon? = null
 
   fun getBalloonLabelOf(offset: Int): String {
-    val threadInfos = threadNameMapping[offset]
-    if (threadInfos == null) {
-      return ""
-    }
+    val threadInfos = threadNameMapping[offset] ?: return ""
     return threadInfos.joinToString("\n")
   }
 
   fun buildBalloonComponent(offset: Int): JComponent? {
-    val threadInfos = threadNameMapping[offset]
-    if (threadInfos == null) {
-      return null
-    }
+    val threadInfos = threadNameMapping[offset] ?: return null
 
     val label = JLabel()
     val iconTextGap = (label.iconTextGap * 1.5).toInt()

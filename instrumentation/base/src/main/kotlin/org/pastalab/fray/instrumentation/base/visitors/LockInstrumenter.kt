@@ -29,18 +29,18 @@ class LockInstrumenter(cv: ClassVisitor) :
               access,
               name,
               descriptor,
-              true,
-              false)
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onLockTryLockDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "tryLock" && descriptor == "(JLjava/util/concurrent/TimeUnit;)Z") {
       val eMv =
@@ -50,8 +50,8 @@ class LockInstrumenter(cv: ClassVisitor) :
               access,
               name,
               descriptor,
-              true,
-              true,
+              loadThis = true,
+              loadArgs = true,
               postCustomizer = { storeArg(0) })
       return MethodExitVisitor(
           eMv,
@@ -59,10 +59,10 @@ class LockInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "hasQueuedThreads") {
       return MethodExitVisitor(
@@ -71,10 +71,10 @@ class LockInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          true,
-          false,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "hasQueuedThread") {
       return MethodExitVisitor(
@@ -83,10 +83,10 @@ class LockInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          true,
-          true,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = true,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "lock" || name == "lockInterruptibly") {
       val eMv =
@@ -97,8 +97,8 @@ class LockInstrumenter(cv: ClassVisitor) :
                 access,
                 name,
                 descriptor,
-                true,
-                false)
+                loadThis = true,
+                loadArgs = false)
           } else {
             MethodEnterVisitor(
                 mv,
@@ -106,8 +106,8 @@ class LockInstrumenter(cv: ClassVisitor) :
                 access,
                 name,
                 descriptor,
-                true,
-                false)
+                loadThis = true,
+                loadArgs = false)
           }
       return MethodExitVisitor(
           eMv,
@@ -115,10 +115,10 @@ class LockInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className)
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "unlock") {
       val eMv =
@@ -128,18 +128,18 @@ class LockInstrumenter(cv: ClassVisitor) :
               access,
               name,
               descriptor,
-              true,
-              false)
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onLockUnlockDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "newCondition") {
       return NewConditionVisitor(

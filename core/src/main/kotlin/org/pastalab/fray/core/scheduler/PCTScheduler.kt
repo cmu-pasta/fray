@@ -8,7 +8,7 @@ import org.pastalab.fray.core.randomness.Randomness
 
 @Serializable
 class PCTScheduler(val rand: Randomness, val numSwitchPoints: Int, var maxStep: Int) : Scheduler {
-  constructor() : this(ControlledRandom(), 3, 0) {}
+  constructor() : this(ControlledRandom(), 3, 0)
 
   @Transient var currentStep = 0
   @Transient val threadPriorityQueue = mutableListOf<ThreadContext>()
@@ -30,7 +30,7 @@ class PCTScheduler(val rand: Randomness, val numSwitchPoints: Int, var maxStep: 
     currentStep += 1
     for (thread in threads) {
       if (!threadPriorityQueue.contains(thread)) {
-        if (threadPriorityQueue.size == 0) {
+        if (threadPriorityQueue.isEmpty()) {
           threadPriorityQueue.add(thread)
           continue
         }

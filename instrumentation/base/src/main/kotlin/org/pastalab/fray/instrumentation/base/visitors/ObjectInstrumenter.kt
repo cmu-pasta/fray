@@ -17,15 +17,23 @@ class ObjectInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Object::class.
       val eMv =
           MethodEnterVisitor(
               mv,
-              org.pastalab.fray.runtime.Runtime::onObjectWait,
+              Runtime::onObjectWait,
               access,
               name,
               descriptor,
-              true,
-              true,
+              loadThis = true,
+              loadArgs = true,
           )
       return MethodExitVisitor(
-          eMv, Runtime::onObjectWaitDone, access, name, descriptor, true, false, true, className)
+          eMv,
+          Runtime::onObjectWaitDone,
+          access,
+          name,
+          descriptor,
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     return mv
   }

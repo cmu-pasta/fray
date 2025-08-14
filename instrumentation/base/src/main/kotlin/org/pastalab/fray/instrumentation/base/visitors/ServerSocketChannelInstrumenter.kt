@@ -25,25 +25,31 @@ class ServerSocketChannelInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          true,
-          false,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "accept") {
       val eMv =
           MethodEnterVisitor(
-              mv, Runtime::onServerSocketChannelAccept, access, name, descriptor, true, false)
+              mv,
+              Runtime::onServerSocketChannelAccept,
+              access,
+              name,
+              descriptor,
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           Runtime::onServerSocketChannelAcceptDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className) { mv, isFinalBlock ->
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className) { mv, isFinalBlock ->
             if (isFinalBlock) {
               visitInsn(ACONST_NULL)
             } else {

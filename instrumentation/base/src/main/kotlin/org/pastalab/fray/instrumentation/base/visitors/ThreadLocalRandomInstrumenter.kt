@@ -22,10 +22,10 @@ class ThreadLocalRandomInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          false,
-          false,
-          false,
-          className)
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
     return mv
   }

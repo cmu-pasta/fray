@@ -69,15 +69,19 @@ class ProactiveNetworkDelegate(
 
   override fun onSocketChannelCloseDone(channel: AbstractInterruptibleChannel) =
       synchronizer.runInFrayDone("SocketChannel.close") {
-        if (channel is ServerSocketChannel) {
-          controller.serverSocketChannelClose(channel)
-        } else if (channel is SocketChannel) {
-          controller.socketChannelClose(channel)
-        } else {
-          verifyOrReport(false) {
-            "Unknown channel type: ${channel::class.java.name}. Expected ServerSocketChannel or SocketChannel."
+        when (channel) {
+          is ServerSocketChannel -> {
+            controller.serverSocketChannelClose(channel)
           }
-          Result.success(Unit)
+          is SocketChannel -> {
+            controller.socketChannelClose(channel)
+          }
+          else -> {
+            verifyOrReport(false) {
+              "Unknown channel type: ${channel::class.java.name}. Expected ServerSocketChannel or SocketChannel."
+            }
+            Result.success(Unit)
+          }
         }
       }
 

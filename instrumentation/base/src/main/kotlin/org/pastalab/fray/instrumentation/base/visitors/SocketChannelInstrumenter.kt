@@ -20,17 +20,23 @@ class SocketChannelInstrumenter(cv: ClassVisitor) :
     if (name == "connect" && descriptor.startsWith("(Ljava/net/SocketAddress;)")) {
       val eMv =
           MethodEnterVisitor(
-              mv, Runtime::onSocketChannelConnect, access, name, descriptor, true, true)
+              mv,
+              Runtime::onSocketChannelConnect,
+              access,
+              name,
+              descriptor,
+              loadThis = true,
+              loadArgs = true)
       return MethodExitVisitor(
           eMv,
           Runtime::onSocketChannelConnectDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className) { mv, isFinalBlock ->
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className) { mv, isFinalBlock ->
             if (isFinalBlock) {
               push(false)
             } else {
@@ -42,17 +48,23 @@ class SocketChannelInstrumenter(cv: ClassVisitor) :
     if (name == "finishConnect") {
       val eMv =
           MethodEnterVisitor(
-              mv, Runtime::onSocketChannelFinishConnect, access, name, descriptor, true, false)
+              mv,
+              Runtime::onSocketChannelFinishConnect,
+              access,
+              name,
+              descriptor,
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           Runtime::onSocketChannelFinishConnectDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className) { mv, isFinalBlock ->
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className) { mv, isFinalBlock ->
             if (isFinalBlock) {
               push(false)
             } else {
@@ -68,10 +80,10 @@ class SocketChannelInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className) { mv, isFinalBlock ->
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className) { mv, isFinalBlock ->
             if (isFinalBlock) {
               push(0)
               loadThis()
@@ -88,10 +100,10 @@ class SocketChannelInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className) { mv, isFinalBlock ->
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className) { mv, isFinalBlock ->
             if (isFinalBlock) {
               push(0L)
               loadThis()
@@ -104,17 +116,23 @@ class SocketChannelInstrumenter(cv: ClassVisitor) :
     if (name == "read" && descriptor.startsWith("(Ljava/nio/ByteBuffer;)")) {
       val eMv =
           MethodEnterVisitor(
-              mv, Runtime::onSocketChannelRead, access, name, descriptor, true, false)
+              mv,
+              Runtime::onSocketChannelRead,
+              access,
+              name,
+              descriptor,
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           Runtime::onSocketChannelReadDoneInt,
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className) { mv, isFinalBlock ->
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className) { mv, isFinalBlock ->
             if (isFinalBlock) {
               push(0)
               loadThis()
@@ -127,17 +145,23 @@ class SocketChannelInstrumenter(cv: ClassVisitor) :
     if (name == "read" && descriptor.startsWith("([Ljava/nio/ByteBuffer;II)")) {
       val eMv =
           MethodEnterVisitor(
-              mv, Runtime::onSocketChannelRead, access, name, descriptor, true, false)
+              mv,
+              Runtime::onSocketChannelRead,
+              access,
+              name,
+              descriptor,
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           Runtime::onSocketChannelReadDone,
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className) { mv, isFinalBlock ->
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className) { mv, isFinalBlock ->
             if (isFinalBlock) {
               push(0L)
               loadThis()

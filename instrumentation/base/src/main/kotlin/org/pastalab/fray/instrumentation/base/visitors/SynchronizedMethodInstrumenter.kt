@@ -51,14 +51,14 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
 
       override fun onMethodEnter() {
         super.onMethodEnter()
-        if (access and Opcodes.ACC_STATIC != 0) {
+        if (access and ACC_STATIC != 0) {
           push(Type.getObjectType(className))
         } else {
           loadThis()
         }
         dup()
         super.visitMethodInsn(
-            Opcodes.INVOKESTATIC,
+            INVOKESTATIC,
             org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
             org.pastalab.fray.runtime.Runtime::onMonitorEnter.name,
             Utils.kFunctionToJvmMethodDescriptor(org.pastalab.fray.runtime.Runtime::onMonitorEnter),
@@ -68,7 +68,7 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
       }
 
       fun insertMonitorExit() {
-        if (access and Opcodes.ACC_STATIC != 0) {
+        if (access and ACC_STATIC != 0) {
           push(Type.getObjectType(className))
         } else {
           loadThis()
@@ -76,14 +76,14 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
         dup()
         dup()
         super.visitMethodInsn(
-            Opcodes.INVOKESTATIC,
+            INVOKESTATIC,
             org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
             org.pastalab.fray.runtime.Runtime::onMonitorExit.name,
             Utils.kFunctionToJvmMethodDescriptor(org.pastalab.fray.runtime.Runtime::onMonitorExit),
             false)
         visitInsn(MONITOREXIT)
         super.visitMethodInsn(
-            Opcodes.INVOKESTATIC,
+            INVOKESTATIC,
             org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
             org.pastalab.fray.runtime.Runtime::onMonitorExitDone.name,
             Utils.kFunctionToJvmMethodDescriptor(
@@ -102,8 +102,7 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
         val label = mark()
         catchException(enterLabel, label, Type.getObjectType("java/lang/Throwable"))
         val locals = getLocals(className)
-        visitFrame(
-            Opcodes.F_NEW, locals.size, getLocals(className), 1, arrayOf("java/lang/Throwable"))
+        visitFrame(F_NEW, locals.size, getLocals(className), 1, arrayOf("java/lang/Throwable"))
         insertMonitorExit()
         visitInsn(ATHROW)
         super.visitMaxs(maxStack, maxLocals)

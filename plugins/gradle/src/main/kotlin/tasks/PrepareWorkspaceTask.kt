@@ -37,7 +37,7 @@ abstract class PrepareWorkspaceTask : DefaultTask() {
             project.configurations.detachedConfiguration(frayJdk.get()).resolve().first(),
             resolveDependencyFiles(frayJdk.get()),
             jvmtiPath,
-            resolveDependencyFiles(frayJvmti.get()).filter { it.name.contains("jvmti") }.first(),
+            resolveDependencyFiles(frayJvmti.get()).first { it.name.contains("jvmti") },
             "${project.rootProject.layout.buildDirectory.get().asFile}/${Commons.DIR_BASE}")
     initializer.createInstrumentedJDK(frayVersion.get())
     initializer.createJVMTiRuntime()

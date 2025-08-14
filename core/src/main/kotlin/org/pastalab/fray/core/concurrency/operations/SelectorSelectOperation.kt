@@ -7,9 +7,6 @@ import org.pastalab.fray.runtime.MemoryOpType
 class SelectorSelectOperation(selectorContext: SelectorContext) :
     RacingOperation(0, MemoryOpType.MEMORY_WRITE) {
   override fun isRacing(op: Operation): Boolean {
-    if (op is SelectorSelectOperation) {
-      return true
-    }
-    return false
+    return op is SelectorSelectOperation
   }
 }

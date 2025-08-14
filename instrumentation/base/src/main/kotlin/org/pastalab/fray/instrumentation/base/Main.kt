@@ -5,7 +5,7 @@ import java.io.File
 // --patch-module
 // org.pastalab.fray.instrumentation=PATH_TO_SFUZZ/fray/instrumentation/build/classes/kotlin/main
 fun main(args: Array<String>) {
-  var ba = File(args[0]).inputStream()
+  val ba = File(args[0]).inputStream()
 
   //  val byteArray = ba.readBytes()
   val appTransformer = ApplicationCodeTransformer()

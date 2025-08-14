@@ -39,8 +39,8 @@ class LoadClassInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
               access,
               name,
               descriptor,
-              false,
-              false,
+              loadThis = false,
+              loadArgs = false,
               preCustomizer = { push(methodSignature) })
       return MethodExitVisitor(
           eMv,
@@ -48,10 +48,10 @@ class LoadClassInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className,
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className,
           customizer = { mv, isFinalBlock -> push(methodSignature) })
     }
     return mv

@@ -25,10 +25,10 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           access,
           name,
           descriptor,
-          true,
-          false,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "start") {
       val eMv =
@@ -38,22 +38,28 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
               access,
               name,
               descriptor,
-              true,
-              false,
-              true,
-              className)
+              loadThis = true,
+              loadArgs = false,
+              addFinalBlock = true,
+              thisType = className)
       return MethodEnterVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onThreadStart,
           access,
           name,
           descriptor,
-          true,
-          false)
+          loadThis = true,
+          loadArgs = false)
     }
     if (name == "yield") {
       return MethodEnterVisitor(
-          mv, org.pastalab.fray.runtime.Runtime::onYield, access, name, descriptor, false, false)
+          mv,
+          org.pastalab.fray.runtime.Runtime::onYield,
+          access,
+          name,
+          descriptor,
+          loadThis = false,
+          loadArgs = false)
     }
     if (name == "getAndClearInterrupt") {
       return MethodExitVisitor(
@@ -62,10 +68,10 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           access,
           name,
           descriptor,
-          true,
-          false,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "isInterrupted") {
       return MethodExitVisitor(
@@ -74,10 +80,10 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           access,
           name,
           descriptor,
-          true,
-          false,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "clearInterrupt") {
       return MethodExitVisitor(
@@ -86,10 +92,10 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           access,
           name,
           descriptor,
-          true,
-          false,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "setInterrupt") {
       val eMv =
@@ -99,18 +105,18 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
               access,
               name,
               descriptor,
-              true,
-              false)
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onThreadInterruptDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "getState") {
       return MethodExitVisitor(
@@ -119,10 +125,10 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           access,
           name,
           descriptor,
-          true,
-          false,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
 
     if (name == "interrupt") {
@@ -133,8 +139,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
               access,
               name,
               descriptor,
-              true,
-              false)
+              loadThis = true,
+              loadArgs = false)
 
       return object : GeneratorAdapter(ASM9, eMv, access, name, descriptor) {
 

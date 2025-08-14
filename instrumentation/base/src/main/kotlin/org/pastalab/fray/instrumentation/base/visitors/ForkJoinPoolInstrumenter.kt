@@ -24,8 +24,7 @@ class ForkJoinPoolInstrumenter(cv: ClassVisitor) :
         if (owner == ForkJoinPool::class.java.name.replace(".", "/")) {
           if (opcode == GETSTATIC && name == "common") {
             invokeStatic(
-                Type.getObjectType(
-                    org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+                Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
                 Utils.kFunctionToASMMethod(Runtime::onForkJoinPoolCommonPool))
             return
           }
