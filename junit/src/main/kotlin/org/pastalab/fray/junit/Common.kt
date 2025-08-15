@@ -4,7 +4,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 object Common {
-  val WORK_DIR = Paths.get(System.getProperty("fray.workDir", "build/fray/fray-report"))
+  val WORK_DIR: Path = Paths.get(System.getProperty("fray.workDir", "build/fray/fray-report"))
 
   fun getTestDir(className: String? = null, methodName: String? = null): Path {
     val baseDir = WORK_DIR

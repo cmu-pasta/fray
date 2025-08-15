@@ -11,7 +11,7 @@ import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 
 class FrayGradleRunConfiguration(project: Project, factory: ConfigurationFactory, name: String) :
     GradleRunConfiguration(project, factory, name) {
-  override fun getState(executor: Executor, env: ExecutionEnvironment): RunProfileState? {
+  override fun getState(executor: Executor, env: ExecutionEnvironment): RunProfileState {
     // Allow debugging for Fray
     val isStateForDebug =
         ToolWindowId.DEBUG == executor.id ||

@@ -39,8 +39,8 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
               access,
               name,
               descriptor,
-              false,
-              false,
+              loadThis = false,
+              loadArgs = false,
               preCustomizer = { it.push(methodSignature) })
       return MethodExitVisitor(
           eMv,
@@ -48,10 +48,10 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className,
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className,
           customizer = { mv, isFinalBlock -> mv.push(methodSignature) })
     }
     return mv

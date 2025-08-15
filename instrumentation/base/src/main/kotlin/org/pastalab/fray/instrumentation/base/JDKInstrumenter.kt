@@ -27,7 +27,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
     val cn = ClassNode()
     var cv: ClassVisitor = ThreadInstrumenter(cn)
-    cv = VolatileFieldsInstrumenter(cv, true, false)
+    cv = VolatileFieldsInstrumenter(cv, instrumentingJdk = true, interleaveAllMemoryOps = false)
     cv = SleepInstrumenter(cv, true)
     cv = FieldInstanceReadWriteInstrumenter(cv)
     cv = ReentrantReadWriteLockInstrumenter(cv)
@@ -79,17 +79,17 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
 }
 
 fun instrumentModuleInfo(inputStream: InputStream, packages: List<String>): ByteArray {
-  var cn = ClassNode()
-  var cr = ClassReader(inputStream)
+  val cn = ClassNode()
+  val cr = ClassReader(inputStream)
 
-  var attrs =
+  val attrs =
       mutableListOf(ModuleTargetAttribute(), ModuleResolutionAttribute(), ModuleHashesAttribute())
   cr.accept(cn, attrs.toTypedArray(), 0)
   cn.module.exports.add(ModuleExportNode("org/pastalab/fray/runtime", 0, null))
   cn.module.packages.addAll(packages)
-  var cw = ClassWriter(0)
+  val cw = ClassWriter(0)
   cn.accept(cw)
-  var out = cw.toByteArray()
+  val out = cw.toByteArray()
   if (DEBUG_MODE) {
     writeClassFile("java.base.module-info.class", out, true)
   }

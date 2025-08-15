@@ -10,7 +10,7 @@ import org.pastalab.fray.core.randomness.Randomness
 
 @Serializable
 class POSScheduler(val rand: Randomness) : Scheduler {
-  constructor() : this(ControlledRandom()) {}
+  constructor() : this(ControlledRandom())
 
   @Transient val threadPriority = mutableMapOf<ThreadContext, Double>()
   @Transient val nonRacingOperationBuffer = mutableListOf<ThreadContext>()

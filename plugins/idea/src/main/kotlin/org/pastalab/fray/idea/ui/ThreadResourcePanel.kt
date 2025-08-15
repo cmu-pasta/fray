@@ -7,8 +7,6 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.util.ui.JBUI
 import java.awt.*
 import javax.swing.*
-import kotlin.collections.fill
-import kotlin.inc
 import kotlin.toString
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 

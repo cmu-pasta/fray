@@ -30,10 +30,7 @@ class SchedulerServer(
 
   // Utility functions to simplify argument extraction
   private fun CallToolRequest.getStringArg(name: String): String? {
-    val value = arguments[name]?.jsonPrimitive?.content
-    if (value == null) {
-      return null
-    }
+    val value = arguments[name]?.jsonPrimitive?.content ?: return null
     return value
   }
 
@@ -105,12 +102,11 @@ class SchedulerServer(
       val className =
           request.getStringArg("class_name") ?: return@addTool missingArgError("class_name")
 
-      val source = classSourceProvider.getClassSource(className)
-      if (source == null) {
-        return@addTool CallToolResult(
-            content = listOf(TextContent("No source file found for class $className.")),
-        )
-      }
+      val source =
+          classSourceProvider.getClassSource(className)
+              ?: return@addTool CallToolResult(
+                  content = listOf(TextContent("No source file found for class $className.")),
+              )
       CallToolResult(
           content = listOf(TextContent(source)),
       )

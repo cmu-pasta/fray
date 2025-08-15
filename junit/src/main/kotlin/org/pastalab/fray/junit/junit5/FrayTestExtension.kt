@@ -75,25 +75,25 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
         Configuration(
             ExecutionInfo(
                 LambdaExecutor {},
-                false,
-                false,
-                -1,
+                ignoreUnhandledExceptions = false,
+                interleaveMemoryOps = false,
+                maxScheduledStep = -1,
             ),
             testDir.toString(),
             totalRepetition(concurrencyTest, testMethod),
             60,
             scheduler,
             random,
-            false,
-            false,
-            true,
-            concurrencyTest.replay.isNotEmpty(),
-            false,
-            true,
-            NetworkDelegateType.NONE,
-            SystemTimeDelegateType.NONE,
-            true,
-            true)
+            fullSchedule = false,
+            exploreMode = false,
+            noExitWhenBugFound = true,
+            isReplay = concurrencyTest.replay.isNotEmpty(),
+            noFray = false,
+            dummyRun = true,
+            networkDelegateType = NetworkDelegateType.NONE,
+            systemTimeDelegateType = SystemTimeDelegateType.NONE,
+            ignoreTimedBlock = true,
+            sleepAsYield = true)
     val frayContext = RunContext(config)
     val frayJupiterContext = FrayJupiterContext()
     return Stream.iterate(1, { it + 1 })

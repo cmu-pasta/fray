@@ -16,30 +16,44 @@ class NioSocketImplInstrumenter(cv: ClassVisitor) :
   ): MethodVisitor {
     if (name == "connect" && descriptor.startsWith("(Ljava/net/SocketAddress;I")) {
       val eMv =
-          MethodEnterVisitor(mv, Runtime::onNioSocketConnect, access, name, descriptor, true, false)
+          MethodEnterVisitor(
+              mv,
+              Runtime::onNioSocketConnect,
+              access,
+              name,
+              descriptor,
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           Runtime::onNioSocketConnectDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     } else if (name == "read") {
       val eMv =
-          MethodEnterVisitor(mv, Runtime::onNioSocketRead, access, name, descriptor, true, false)
+          MethodEnterVisitor(
+              mv,
+              Runtime::onNioSocketRead,
+              access,
+              name,
+              descriptor,
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           Runtime::onNioSocketReadDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className) { mv, isFinalBlock ->
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className) { mv, isFinalBlock ->
             if (isFinalBlock) {
               push(0)
             } else {
@@ -49,17 +63,24 @@ class NioSocketImplInstrumenter(cv: ClassVisitor) :
           }
     } else if (name == "accept") {
       val eMv =
-          MethodEnterVisitor(mv, Runtime::onNioSocketAccept, access, name, descriptor, true, false)
+          MethodEnterVisitor(
+              mv,
+              Runtime::onNioSocketAccept,
+              access,
+              name,
+              descriptor,
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           Runtime::onNioSocketAcceptDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     return mv
   }

@@ -2,29 +2,11 @@ package org.pastalab.fray.mcp
 
 import com.sun.jdi.ArrayReference
 import com.sun.jdi.ArrayType
-import com.sun.jdi.Bootstrap
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.PrimitiveType
 import com.sun.jdi.StackFrame
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.Value
-
-fun removeVMConnectorWithHostAndPort(hostAndPort: String): RemoteVMConnector {
-  val (hostname, port) = hostAndPort.split(":")
-  //  return RemoteVMConnector(hostname, port.toInt())
-  val connectors = Bootstrap.virtualMachineManager().attachingConnectors()
-  val connector = connectors.first { it.name() == "com.sun.jdi.SocketAttach" }
-  val arguments = connector.defaultArguments()
-  arguments["hostname"]?.setValue(hostname)
-  arguments["port"]?.setValue(port.toString())
-  val vm = connector.attach(arguments)
-  return RemoteVMConnector(
-      object : VirtualMachineProxy {
-        override fun allThreads(): List<ThreadReference> {
-          return vm.allThreads()
-        }
-      })
-}
 
 class RemoteVMConnector(val vm: VirtualMachineProxy) : DebuggerProvider {
 

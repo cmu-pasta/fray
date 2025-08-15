@@ -11,9 +11,10 @@ class RangerEvaluationDelegate(
     val rangerRunContext: RangerEvaluationContext,
     val evaluatingThread: Thread
 ) : Delegate() {
-  var entered = ThreadLocal.withInitial { false }
-  var skipFunctionEntered = ThreadLocal.withInitial { 0 }
-  val stackTrace = ThreadLocal.withInitial { mutableListOf<String>() }
+  var entered: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
+  var skipFunctionEntered: ThreadLocal<Int> = ThreadLocal.withInitial { 0 }
+  val stackTrace: ThreadLocal<MutableList<String>> =
+      ThreadLocal.withInitial { mutableListOf<String>() }
 
   private fun checkEntered(): Boolean {
     if (skipFunctionEntered.get() > 0) {

@@ -29,12 +29,16 @@ class TimedWaitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
     if (owner == "java/util/concurrent/locks/Condition" &&
         name.contains("await") &&
         descriptor != "()V") {
-      return if (name == "await") {
-        org.pastalab.fray.runtime.Runtime::onConditionAwaitTime
-      } else if (name == "awaitNanos") {
-        org.pastalab.fray.runtime.Runtime::onConditionAwaitNanos
-      } else {
-        org.pastalab.fray.runtime.Runtime::onConditionAwaitUntil
+      return when (name) {
+        "await" -> {
+          org.pastalab.fray.runtime.Runtime::onConditionAwaitTime
+        }
+        "awaitNanos" -> {
+          org.pastalab.fray.runtime.Runtime::onConditionAwaitNanos
+        }
+        else -> {
+          org.pastalab.fray.runtime.Runtime::onConditionAwaitUntil
+        }
       }
     }
     if (owner == "java/util/concurrent/CountDownLatch" &&

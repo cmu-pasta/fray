@@ -14,30 +14,27 @@ import org.pastalab.fray.core.concurrency.context.SocketChannelContext
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
 class NioContextManager {
-  private val selectorContextManager =
-      ReferencedContextManager<SelectorContext> {
-        verifyOrReport(it is Selector) { "Selector expected" }
-        SelectorContext(it)
-      }
-  private val serverSocketChannelContextManager =
-      ReferencedContextManager<ServerSocketChannelContext> {
-        verifyOrReport(it is ServerSocketChannel) { "ServerSocketChannel expected" }
-        val serverSocketChannel = it as ServerSocketChannel
-        val socketAddress = serverSocketChannel.localAddress
-        val context = ServerSocketChannelContext(it)
-        if (socketAddress is InetSocketAddress) {
-          context.port = socketAddress.port
-          portToServerSocketChannelContext[socketAddress.port] = context
-        }
-        context
-      }
-  private val socketChannelContextManager =
-      ReferencedContextManager<SocketChannelContext> {
-        verifyOrReport(it is SocketChannel) { "SocketChannel expected" }
-        val socketChannel = it as SocketChannel
-        val context = SocketChannelContext(socketChannel)
-        context
-      }
+  private val selectorContextManager = ReferencedContextManager {
+    verifyOrReport(it is Selector) { "Selector expected" }
+    SelectorContext(it)
+  }
+  private val serverSocketChannelContextManager = ReferencedContextManager {
+    verifyOrReport(it is ServerSocketChannel) { "ServerSocketChannel expected" }
+    val serverSocketChannel = it as ServerSocketChannel
+    val socketAddress = serverSocketChannel.localAddress
+    val context = ServerSocketChannelContext(it)
+    if (socketAddress is InetSocketAddress) {
+      context.port = socketAddress.port
+      portToServerSocketChannelContext[socketAddress.port] = context
+    }
+    context
+  }
+  private val socketChannelContextManager = ReferencedContextManager {
+    verifyOrReport(it is SocketChannel) { "SocketChannel expected" }
+    val socketChannel = it as SocketChannel
+    val context = SocketChannelContext(socketChannel)
+    context
+  }
   /*
    * Connected sockets meaning sockets that are created by clients and connects to a server
    * through [SocketChannel.connect].
@@ -47,20 +44,24 @@ class NioContextManager {
       mutableMapOf()
 
   fun getChannelContext(channel: SelectableChannel): SelectableChannelContext? {
-    return if (channel is SocketChannel) {
-      getSocketChannelContext(channel)
-    } else if (channel is ServerSocketChannel) {
-      getServerSocketChannelContext(channel)
-    } else {
-      null
+    return when (channel) {
+      is SocketChannel -> {
+        getSocketChannelContext(channel)
+      }
+      is ServerSocketChannel -> {
+        getServerSocketChannelContext(channel)
+      }
+      else -> {
+        null
+      }
     }
   }
 
   fun getServerSocketChannelAtPort(port: Int): ServerSocketChannelContext? {
-    if (portToServerSocketChannelContext.containsKey(port)) {
-      return portToServerSocketChannelContext[port]
+    return if (portToServerSocketChannelContext.containsKey(port)) {
+      portToServerSocketChannelContext[port]
     } else {
-      return null
+      null
     }
   }
 

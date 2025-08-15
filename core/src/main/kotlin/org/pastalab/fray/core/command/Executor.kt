@@ -31,7 +31,7 @@ data class MethodExecutor(
     }
     val classLoader =
         URLClassLoader(
-            classpaths.map { it -> URI("file://$it").toURL() }.toTypedArray(),
+            classpaths.map { URI("file://$it").toURL() }.toTypedArray(),
             Thread.currentThread().contextClassLoader)
     Thread.currentThread().contextClassLoader = classLoader
   }

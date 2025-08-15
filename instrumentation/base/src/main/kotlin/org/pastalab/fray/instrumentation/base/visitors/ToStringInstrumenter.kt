@@ -39,8 +39,8 @@ class ToStringInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
               access,
               name,
               descriptor,
-              false,
-              false,
+              loadThis = false,
+              loadArgs = false,
               preCustomizer = { it.push("toString") })
       MethodExitVisitor(
           eMv,
@@ -48,10 +48,10 @@ class ToStringInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className,
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className,
           customizer = { mv, isFinalBlock -> push("toString") })
     } else {
       mv

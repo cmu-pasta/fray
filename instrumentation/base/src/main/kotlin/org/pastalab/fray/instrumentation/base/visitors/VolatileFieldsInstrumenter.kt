@@ -3,7 +3,6 @@ package org.pastalab.fray.instrumentation.base.visitors
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.FieldVisitor
 import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ASM9
 import org.objectweb.asm.commons.AdviceAdapter
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
@@ -61,10 +60,10 @@ class VolatileFieldsInstrumenter(
             volatileManager.isVolatile(owner, name) ||
             interleaveAllMemoryOps) && !owner.startsWith("org/pastalab/fray/runtime/")) {
 
-          if (opcode == Opcodes.GETFIELD) {
+          if (opcode == GETFIELD) {
             dup()
           }
-          if (opcode == Opcodes.PUTFIELD) {
+          if (opcode == PUTFIELD) {
             if (descriptor == "J" || descriptor == "D") {
               dup2X1() // value, objectref, value
               pop2() // value, objectref
@@ -77,36 +76,36 @@ class VolatileFieldsInstrumenter(
           visitLdcInsn(name)
           visitLdcInsn(descriptor)
           when (opcode) {
-            Opcodes.GETFIELD ->
+            GETFIELD ->
                 super.visitMethodInsn(
-                    Opcodes.INVOKESTATIC,
+                    INVOKESTATIC,
                     org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
                     org.pastalab.fray.runtime.Runtime::onFieldRead.name,
                     Utils.kFunctionToJvmMethodDescriptor(
                         org.pastalab.fray.runtime.Runtime::onFieldRead),
                     false,
                 )
-            Opcodes.PUTFIELD ->
+            PUTFIELD ->
                 super.visitMethodInsn(
-                    Opcodes.INVOKESTATIC,
+                    INVOKESTATIC,
                     org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
                     org.pastalab.fray.runtime.Runtime::onFieldWrite.name,
                     Utils.kFunctionToJvmMethodDescriptor(
                         org.pastalab.fray.runtime.Runtime::onFieldWrite),
                     false,
                 )
-            Opcodes.PUTSTATIC ->
+            PUTSTATIC ->
                 super.visitMethodInsn(
-                    Opcodes.INVOKESTATIC,
+                    INVOKESTATIC,
                     org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
                     org.pastalab.fray.runtime.Runtime::onStaticFieldWrite.name,
                     Utils.kFunctionToJvmMethodDescriptor(
                         org.pastalab.fray.runtime.Runtime::onStaticFieldWrite),
                     false,
                 )
-            Opcodes.GETSTATIC ->
+            GETSTATIC ->
                 super.visitMethodInsn(
-                    Opcodes.INVOKESTATIC,
+                    INVOKESTATIC,
                     org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
                     org.pastalab.fray.runtime.Runtime::onStaticFieldRead.name,
                     Utils.kFunctionToJvmMethodDescriptor(
@@ -114,7 +113,7 @@ class VolatileFieldsInstrumenter(
                     false,
                 )
           }
-          if (opcode == Opcodes.PUTFIELD) {
+          if (opcode == PUTFIELD) {
             if (descriptor == "J" || descriptor == "D") {
               dupX2()
               pop()

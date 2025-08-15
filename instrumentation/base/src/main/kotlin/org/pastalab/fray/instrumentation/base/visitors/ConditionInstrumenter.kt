@@ -27,9 +27,19 @@ class ConditionInstrumenter(cv: ClassVisitor) :
                 org.pastalab.fray.runtime.Runtime::onConditionAwaitUninterruptibly,
                 org.pastalab.fray.runtime.Runtime::onConditionAwaitUninterruptiblyDone)
           }
-      val eMv = MethodEnterVisitor(mv, method.first, access, name, descriptor, true, false)
+      val eMv =
+          MethodEnterVisitor(
+              mv, method.first, access, name, descriptor, loadThis = true, loadArgs = false)
       return MethodExitVisitor(
-          eMv, method.second, access, name, descriptor, true, false, true, className)
+          eMv,
+          method.second,
+          access,
+          name,
+          descriptor,
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "signal") {
       val eMv =
@@ -39,18 +49,18 @@ class ConditionInstrumenter(cv: ClassVisitor) :
               access,
               name,
               descriptor,
-              true,
-              false)
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onConditionSignalDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "signalAll") {
       val eMv =
@@ -60,18 +70,18 @@ class ConditionInstrumenter(cv: ClassVisitor) :
               access,
               name,
               descriptor,
-              true,
-              false)
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onConditionSignalDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     return mv
   }

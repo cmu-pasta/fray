@@ -13,7 +13,7 @@ class TargetExitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       signature: String?,
       exceptions: Array<out String>?
   ): MethodVisitor {
-    var mv = super.visitMethod(access, name, descriptor, signature, exceptions)
+    val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
     return object : MethodVisitor(ASM9, mv) {
       override fun visitMethodInsn(
           opcode: Int,

@@ -12,7 +12,7 @@ class SynchronizationManager {
 
   fun createWait(obj: Any, times: Int) {
     val id = System.identityHashCode(obj)
-    Utils.verifyOrReport(!synchronizationPoints.contains(id))
+    verifyOrReport(!synchronizationPoints.contains(id))
     synchronizationPoints[id] = Sync(times)
   }
 

@@ -22,8 +22,8 @@ class MethodHandleNativesInstrumenter(cv: ClassVisitor) :
               access,
               name,
               descriptor,
-              false,
-              false,
+              loadThis = false,
+              loadArgs = false,
               preCustomizer = { it.push(methodSignature) })
       return MethodExitVisitor(
           eMv,
@@ -31,10 +31,10 @@ class MethodHandleNativesInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          false,
-          false,
-          true,
-          className // pass thisType
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className // pass thisType
           ) { mv, isFinalBlock ->
             mv.push(methodSignature)
           }

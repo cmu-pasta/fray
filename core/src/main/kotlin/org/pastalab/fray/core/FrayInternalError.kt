@@ -1,3 +1,3 @@
 package org.pastalab.fray.core
 
-class FrayInternalError(message: String) : RuntimeException(message) {}
+class FrayInternalError(message: String) : RuntimeException(message)

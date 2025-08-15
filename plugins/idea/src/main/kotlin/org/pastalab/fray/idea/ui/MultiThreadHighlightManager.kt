@@ -17,7 +17,7 @@ class MultiThreadHighlightManager {
   // Map to track highlighters by line
   private val lineHighlightersMap = mutableMapOf<Int, MutableMap<Editor, RangeHighlighter>>()
 
-  private val THREAD_HIGHLIGHT_LAYER = HighlighterLayer.SELECTION + 100
+  private val threadHighlightLayer = HighlighterLayer.SELECTION + 100
 
   // Add a thread to a line and update highlighting
   fun addThreadToLine(
@@ -40,7 +40,7 @@ class MultiThreadHighlightManager {
 
     val highlighter =
         editor.markupModel.addRangeHighlighter(
-            start, end, THREAD_HIGHLIGHT_LAYER, attributes, HighlighterTargetArea.LINES_IN_RANGE)
+            start, end, threadHighlightLayer, attributes, HighlighterTargetArea.LINES_IN_RANGE)
 
     lineHighlightersMap.getOrPut(line) { mutableMapOf() }[editor] = highlighter
 
@@ -49,7 +49,7 @@ class MultiThreadHighlightManager {
 
   fun clear() {
     // For each line and editor, remove highlighters
-    lineHighlightersMap.forEach { (line, editorMap) ->
+    lineHighlightersMap.forEach { (_, editorMap) ->
       editorMap.forEach { (editor, highlighter) ->
         editor.markupModel.removeHighlighter(highlighter)
       }

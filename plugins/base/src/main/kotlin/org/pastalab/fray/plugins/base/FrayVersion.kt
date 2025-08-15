@@ -11,5 +11,6 @@ object FrayVersion {
       properties.load(InputStreamReader(it, StandardCharsets.UTF_8))
     }
     properties.getProperty("version")
+        ?: throw IllegalStateException("Version property is missing in version.properties")
   }
 }

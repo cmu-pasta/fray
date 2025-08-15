@@ -8,7 +8,7 @@ class ReactiveBlockingBlocked(val threadContext: ThreadContext) :
     BlockedOperation(
         ResourceInfo(System.identityHashCode(threadContext), ResourceType.NETWORK),
         BLOCKED_OPERATION_NOT_TIMED) {
-  override fun unblockThread(tid: Long, type: InterruptionType): Any? {
+  override fun unblockThread(tid: Long, type: InterruptionType): Any {
     threadContext.interruptSignaled = true
     threadContext.thread.interrupt()
     return threadContext

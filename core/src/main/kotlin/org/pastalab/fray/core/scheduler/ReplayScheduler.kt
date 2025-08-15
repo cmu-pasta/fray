@@ -15,7 +15,6 @@ class ReplayScheduler(val recording: List<ScheduleRecording>) : Scheduler {
     if (index >= recording.size) {
       return threads[0]
     }
-    verifyOrReport(index < recording.size) { "The execution is longer than recording." }
     val rec = recording[index]
     val thread = threads.firstOrNull { it.index == rec.scheduled }
     verifyOrReport(

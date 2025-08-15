@@ -26,23 +26,45 @@ class SelectorVisitor(cv: ClassVisitor) :
   ): MethodVisitor {
     if (name == "lockAndDoSelect" && access and Opcodes.ACC_ABSTRACT == 0) {
       val eMv =
-          MethodEnterVisitor(mv, Runtime::onSelectorSelect, access, name, descriptor, true, false)
+          MethodEnterVisitor(
+              mv,
+              Runtime::onSelectorSelect,
+              access,
+              name,
+              descriptor,
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
           eMv,
           Runtime::onSelectorSelectDone,
           access,
           name,
           descriptor,
-          true,
-          false,
-          true,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "close" && access and Opcodes.ACC_ABSTRACT == 0) {
       val eMv =
-          MethodEnterVisitor(mv, Runtime::onSelectorClose, access, name, descriptor, true, false)
+          MethodEnterVisitor(
+              mv,
+              Runtime::onSelectorClose,
+              access,
+              name,
+              descriptor,
+              loadThis = true,
+              loadArgs = false)
       return MethodExitVisitor(
-          eMv, Runtime::onSelectorCloseDone, access, name, descriptor, true, false, true, className)
+          eMv,
+          Runtime::onSelectorCloseDone,
+          access,
+          name,
+          descriptor,
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     if (name == "setEventOps" && access and Opcodes.ACC_ABSTRACT == 0) {
       return MethodExitVisitor(
@@ -51,10 +73,10 @@ class SelectorVisitor(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          true,
-          true,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = true,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "cancel" && access and Opcodes.ACC_ABSTRACT == 0) {
       return MethodExitVisitor(
@@ -63,16 +85,31 @@ class SelectorVisitor(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          true,
-          true,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = true,
+          addFinalBlock = false,
+          thisType = className)
     }
     if (name == "open") {
       val eMv =
-          MethodEnterVisitor(mv, Runtime::onSelectorOpen, access, name, descriptor, false, false)
+          MethodEnterVisitor(
+              mv,
+              Runtime::onSelectorOpen,
+              access,
+              name,
+              descriptor,
+              loadThis = false,
+              loadArgs = false)
       return MethodExitVisitor(
-          eMv, Runtime::onSelectorOpenDone, access, name, descriptor, false, false, true, className)
+          eMv,
+          Runtime::onSelectorOpenDone,
+          access,
+          name,
+          descriptor,
+          loadThis = false,
+          loadArgs = false,
+          addFinalBlock = true,
+          thisType = className)
     }
     return mv
   }

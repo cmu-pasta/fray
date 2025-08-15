@@ -19,25 +19,25 @@ class RunContextReentrantLockTest {
           Configuration(
               ExecutionInfo(
                   LambdaExecutor({}),
-                  false,
-                  false,
-                  -1,
+                  ignoreUnhandledExceptions = false,
+                  interleaveMemoryOps = false,
+                  maxScheduledStep = -1,
               ),
               "/tmp/fray",
               1,
               1000,
               RandomScheduler(),
               ControlledRandomProvider(),
-              false,
-              false,
-              true,
-              false,
-              false,
-              false,
-              NetworkDelegateType.PROACTIVE,
-              SystemTimeDelegateType.MOCK,
-              true,
-              false))
+              fullSchedule = false,
+              exploreMode = false,
+              noExitWhenBugFound = true,
+              isReplay = false,
+              noFray = false,
+              dummyRun = false,
+              networkDelegateType = NetworkDelegateType.PROACTIVE,
+              systemTimeDelegateType = SystemTimeDelegateType.MOCK,
+              ignoreTimedBlock = true,
+              sleepAsYield = false))
 
   @BeforeEach
   fun setUp() {

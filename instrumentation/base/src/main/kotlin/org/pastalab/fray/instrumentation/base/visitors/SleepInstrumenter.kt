@@ -45,18 +45,22 @@ class SleepInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : ClassVisitor(ASM
           isInterface: Boolean
       ) {
         if (owner == "java/lang/Thread" && name == "sleep") {
-          if (descriptor == "(J)V") {
-            invokeStatic(
-                Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
-                Utils.kFunctionToASMMethod(Runtime::onThreadSleepMillis))
-          } else if (descriptor == "(JI)V") {
-            invokeStatic(
-                Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
-                Utils.kFunctionToASMMethod(Runtime::onThreadSleepMillisNanos))
-          } else {
-            invokeStatic(
-                Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
-                Utils.kFunctionToASMMethod(Runtime::onThreadSleepDuration))
+          when (descriptor) {
+            "(J)V" -> {
+              invokeStatic(
+                  Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+                  Utils.kFunctionToASMMethod(Runtime::onThreadSleepMillis))
+            }
+            "(JI)V" -> {
+              invokeStatic(
+                  Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+                  Utils.kFunctionToASMMethod(Runtime::onThreadSleepMillisNanos))
+            }
+            else -> {
+              invokeStatic(
+                  Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+                  Utils.kFunctionToASMMethod(Runtime::onThreadSleepDuration))
+            }
           }
         } else {
           super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)

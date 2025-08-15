@@ -7,7 +7,6 @@ import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.MemoryOperation
 import org.pastalab.fray.core.concurrency.operations.RacingOperation
 import org.pastalab.fray.core.concurrency.operations.ThreadStartOperation
-import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.randomness.Randomness
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
@@ -49,8 +48,6 @@ class SURWScheduler(
       }
     }
   }
-
-  constructor() : this(ControlledRandom(), mutableMapOf(), mutableSetOf())
 
   fun checkNewThreads(threads: List<ThreadContext>) {
     threads
@@ -181,11 +178,7 @@ class SURWScheduler(
   override fun nextIteration(randomness: Randomness): Scheduler {
     return SURWScheduler(
         randomness,
-        if (executionLengths.isEmpty()) {
-          buildThreadWeights()
-        } else {
-          executionLengths
-        },
+        executionLengths.ifEmpty { buildThreadWeights() },
         if (interestingOperations.isEmpty()) {
           buildInterestingOperations()
         } else {

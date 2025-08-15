@@ -30,7 +30,7 @@ class TestRunner(val config: Configuration) {
   fun run(): Throwable? {
     config.executionInfo.executor.beforeExecution()
     config.frayLogger.info("Fray started.")
-    var bugsFound = 0
+    val bugsFound = 0
     while (config.shouldRun()) {
       reportProgress(config.currentIteration, bugsFound)
       if (config.noFray) {

@@ -21,10 +21,10 @@ class ReentrantReadWriteLockInstrumenter(cv: ClassVisitor) :
           access,
           name,
           descriptor,
-          true,
-          false,
-          false,
-          className)
+          loadThis = true,
+          loadArgs = false,
+          addFinalBlock = false,
+          thisType = className)
     }
     return mv
   }

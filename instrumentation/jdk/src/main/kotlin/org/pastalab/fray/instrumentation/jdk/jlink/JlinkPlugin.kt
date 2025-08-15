@@ -36,7 +36,7 @@ class JlinkPlugin : Plugin {
             if (resourcePoolEntry.path().startsWith("/java.base") &&
                 resourcePoolEntry.path().endsWith("module-info.class")) {
               // We need to add runtime.jar to JDK
-              var runtime =
+              val runtime =
                   ZipFile(
                       File(
                           org.pastalab.fray.runtime.Runtime::class
@@ -45,7 +45,7 @@ class JlinkPlugin : Plugin {
                               .codeSource
                               .location
                               .toURI()))
-              var packages = HashSet<String>()
+              val packages = HashSet<String>()
               for (re in runtime.entries()) {
                 if (re.name.contains("module-info.class") || !re.name.endsWith(".class")) continue
                 if (DEBUG_MODE) {
