@@ -9,6 +9,7 @@ plugins {
 
 dependencies {
   compileOnly(project(":runtime"))
+  compileOnly(project(":instrumentation:base"))
   implementation(project(":instrumentation:agent", configuration = "shadow"))
   api(project(":rmi"))
   api("com.github.ajalt.clikt:clikt:5.0.3")

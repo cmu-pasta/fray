@@ -6,6 +6,8 @@
 
 ### Changed
 
+- Pass static string in the AntithesisErrorReporter.
+
 ### Deprecated
 
 ### Removed
