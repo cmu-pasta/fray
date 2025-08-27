@@ -104,7 +104,7 @@ configure(allprojects.filter {
           val arch = DefaultNativePlatform.getCurrentArchitecture().name.replace("-", "")
           pom {
             name = "Fray Testing Framework"
-            description = "Fray testing framework for concurrency programs."
+            description = "Fray testing framework for concurrent programs."
             url = "github.com/cmu-pasta/fray"
             licenses {
               license {
