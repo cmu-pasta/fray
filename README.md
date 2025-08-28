@@ -108,10 +108,27 @@ plugins {
 
 Contributions to Fray are both welcomed and appreciated! Please see our [contributing guide](./docs/contributing.md) for more information on how to contribute to Fray. 
 
+# Publications and Media
+
+Fray's design and evaluation is described in the following research paper (please cite this if you are referencing Fray from any other work):
+
+> Ao Li, Byeongjee Kang, Vasudev Vikram, Isabella Laybourn, Samvid Dharanikota, Shrey Tiwari, and Rohan
+> Padhye. 2025. Fray: An Efficient General-Purpose Concurrency Testing Platform for the JVM. Proc. ACM
+> Program. Lang. 9, OOPSLA2, Article 417 (October 2025), 28 pages. https://doi.org/10.1145/3764119
+
+An extended version of the paper with detailed formalizations and proofs is available at: https://arxiv.org/abs/2501.12618
+
+See also a YouTube video of a talk given by Rohan Padhye at the [DC Systems Meetup](https://dcsystems.wtf/) hosted by [Antithesis](https://antithesis.com).
+
+<a href="https://www.youtube.com/watch?v=AX6Pqz8gSYY">
+  <img width="601" height="334" alt="image" src="https://github.com/user-attachments/assets/a67304e3-3769-40e3-bd6d-9187837f80d4" />
+</a>
+
+
 # Acknowledgements
 
-This material is based upon work supported by the National Science Foundation under Grant No. 2120955. 
+This material is based upon work supported in part by the National Science Foundation and by an Amazon Research Award.
+ 
 Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) 
-and do not necessarily reflect the views of the National Science Foundation.
+and do not necessarily reflect the views of any sponsor.
 
-The Fray project was also supported by an Amazon Research Award.
