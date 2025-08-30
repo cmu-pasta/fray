@@ -18,6 +18,7 @@ dependencies {
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testImplementation(project(":core", configuration = "shadow"))
   testImplementation("io.github.classgraph:classgraph:4.8.177")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
   testCompileOnly(project(":runtime"))
 }
 
