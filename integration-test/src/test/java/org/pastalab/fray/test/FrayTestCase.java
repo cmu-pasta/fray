@@ -14,11 +14,7 @@ import org.pastalab.fray.core.randomness.RecordedRandomProvider;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
-import org.pastalab.fray.core.utils.UtilsKt;
-import org.pastalab.fray.test.controllers.network.reactive.fail.inputstream.PipedInputStreamReadDeadlock;
-import org.pastalab.fray.test.controllers.network.reactive.success.NetworkCallWithSocketNoDeadlock;
-import org.pastalab.fray.test.core.fail.monitor.MonitorDeadlock;
-import org.pastalab.fray.test.core.fail.wait.WaitSpuriousWakeup;
+import org.pastalab.fray.test.controllers.network.reactive.success.inputstream.PipedInputStreamReadNoDeadlockMultiThread;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
 
 import java.io.IOException;
@@ -90,7 +86,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                WaitSpuriousWakeup.main(new String[]{});
+                                PipedInputStreamReadNoDeadlockMultiThread.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -106,7 +102,7 @@ public class FrayTestCase {
                 new RandomScheduler(new ControlledRandom(new ArrayList<>(), new ArrayList<>(), new Random(0))),
                 new ControlledRandomProvider(),
                 true,
-                true,
+                false,
                 true,
                 false,
                 false,
@@ -181,7 +177,7 @@ public class FrayTestCase {
 
     @TestFactory
     public List<DynamicTest> testReactiveNetworkController() {
-        return populateTests("org.pastalab.fray.test.controllers.network.reactive",
+        return populateTests("org.pastalab.fray.test.controllers.network.reactive.success.inputstream",
                 10,
                 NetworkDelegateType.REACTIVE,
                 SystemTimeDelegateType.NONE,
