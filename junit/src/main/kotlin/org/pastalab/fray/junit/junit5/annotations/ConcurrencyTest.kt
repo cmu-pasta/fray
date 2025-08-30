@@ -2,6 +2,8 @@ package org.pastalab.fray.junit.junit5.annotations
 
 import kotlin.reflect.KClass
 import org.junit.jupiter.api.TestTemplate
+import org.pastalab.fray.core.command.NetworkDelegateType
+import org.pastalab.fray.core.command.SystemTimeDelegateType
 import org.pastalab.fray.core.scheduler.POSScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
 
@@ -18,7 +20,9 @@ import org.pastalab.fray.core.scheduler.Scheduler
 annotation class ConcurrencyTest(
     val iterations: Int = 1000,
     val scheduler: KClass<out Scheduler> = POSScheduler::class,
-    val replay: String = ""
+    val replay: String = "",
+    val networkDelegateType: NetworkDelegateType = NetworkDelegateType.NONE,
+    val systemTimeDelegateType: SystemTimeDelegateType = SystemTimeDelegateType.NONE,
 ) {
   companion object {
 

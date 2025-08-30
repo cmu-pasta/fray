@@ -14,8 +14,6 @@ import org.pastalab.fray.core.RunContext
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.command.ExecutionInfo
 import org.pastalab.fray.core.command.LambdaExecutor
-import org.pastalab.fray.core.command.NetworkDelegateType
-import org.pastalab.fray.core.command.SystemTimeDelegateType
 import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.randomness.ControlledRandomProvider
 import org.pastalab.fray.core.randomness.RecordedRandomProvider
@@ -90,8 +88,8 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             isReplay = concurrencyTest.replay.isNotEmpty(),
             noFray = false,
             dummyRun = true,
-            networkDelegateType = NetworkDelegateType.NONE,
-            systemTimeDelegateType = SystemTimeDelegateType.NONE,
+            networkDelegateType = concurrencyTest.networkDelegateType,
+            systemTimeDelegateType = concurrencyTest.systemTimeDelegateType,
             ignoreTimedBlock = true,
             sleepAsYield = true)
     val frayContext = RunContext(config)

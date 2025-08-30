@@ -1,5 +1,6 @@
 package org.pastalab.fray.core.delegates
 
+import java.io.PipedInputStream
 import java.net.SocketImpl
 import java.nio.channels.Selector
 import java.nio.channels.ServerSocketChannel
@@ -66,6 +67,14 @@ class ReactiveNetworkDelegate(
   }
 
   override fun onNioSocketAcceptDone(socket: SocketImpl?) {
+    reactiveBlockingEnterDone()
+  }
+
+  override fun onPipedInputStreamRead(reader: PipedInputStream) {
+    reactiveBlockingEnter()
+  }
+
+  override fun onPipedInputStreamReadDone(reader: PipedInputStream) {
     reactiveBlockingEnterDone()
   }
 }

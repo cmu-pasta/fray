@@ -1,5 +1,6 @@
 package org.pastalab.fray.runtime;
 
+import java.io.PipedInputStream;
 import java.net.SocketAddress;
 import java.net.SocketImpl;
 import java.nio.channels.SelectionKey;
@@ -615,5 +616,13 @@ public class Runtime {
 
     public static void onNioSocketAcceptDone(SocketImpl socket) {
         NETWORK_DELEGATE.onNioSocketAcceptDone(socket);
+    }
+
+    public static void onPipedInputStreamRead(PipedInputStream inputStream) {
+        NETWORK_DELEGATE.onPipedInputStreamRead(inputStream);
+    }
+
+    public static void onPipedInputStreamReadDone(PipedInputStream inputStream) {
+        NETWORK_DELEGATE.onPipedInputStreamReadDone(inputStream);
     }
 }
