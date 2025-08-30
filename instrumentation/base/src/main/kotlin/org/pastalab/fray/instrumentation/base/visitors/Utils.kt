@@ -3,6 +3,7 @@ package org.pastalab.fray.instrumentation.base.visitors
 import kotlin.reflect.KFunction
 import kotlin.reflect.javaType
 import org.objectweb.asm.commons.Method
+import org.pastalab.fray.instrumentation.base.RuntimeDescriptors
 
 object Utils {
 
@@ -36,13 +37,7 @@ object Utils {
 
   // Function to convert a KFunction to a JVM method descriptor
   fun kFunctionToJvmMethodDescriptor(function: KFunction<*>): String {
-    val parameterDescriptors =
-        function.parameters
-            .filter { it.kind == kotlin.reflect.KParameter.Kind.VALUE }
-            .joinToString(separator = "", transform = { kotlinTypeToJvmDescriptor(it.type) })
-
-    val returnDescriptor = kotlinTypeToJvmDescriptor(function.returnType)
-    return "($parameterDescriptors)$returnDescriptor"
+    return RuntimeDescriptors.runtimeMethodMap[function.name] ?: "L$function;"
   }
 
   fun kFunctionToASMMethod(function: KFunction<*>): Method {
