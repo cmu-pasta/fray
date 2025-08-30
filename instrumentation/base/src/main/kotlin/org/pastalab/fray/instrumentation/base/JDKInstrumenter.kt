@@ -50,6 +50,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = SocketChannelInstrumenter(cv)
     cv = ServerSocketChannelInstrumenter(cv)
     cv = AbstractInterruptibleChannelVisitor(cv)
+    cv = PipedInputStreamInstrumenter(cv)
     cv = SemaphoreInstrumenter(cv)
     cv = StampedLockInstrumenter(cv)
     cv = CountDownLatchInstrumenter(cv)

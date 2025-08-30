@@ -15,6 +15,7 @@ import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
 import org.pastalab.fray.core.utils.UtilsKt;
+import org.pastalab.fray.test.controllers.network.reactive.fail.inputstream.PipedInputStreamReadDeadlock;
 import org.pastalab.fray.test.controllers.network.reactive.success.NetworkCallWithSocketNoDeadlock;
 import org.pastalab.fray.test.core.fail.monitor.MonitorDeadlock;
 import org.pastalab.fray.test.core.fail.wait.WaitSpuriousWakeup;
@@ -178,11 +179,14 @@ public class FrayTestCase {
                 SystemTimeDelegateType.MOCK, true);
     }
 
-//    @TestFactory
-//    public List<DynamicTest> testReactiveNetworkController() {
-//        return populateTests("org.pastalab.fray.test.controllers.network.reactive", 10, NetworkDelegateType.REACTIVE,
-//                SystemTimeDelegateType.MOCK, true);
-//    }
+    @TestFactory
+    public List<DynamicTest> testReactiveNetworkController() {
+        return populateTests("org.pastalab.fray.test.controllers.network.reactive",
+                10,
+                NetworkDelegateType.REACTIVE,
+                SystemTimeDelegateType.NONE,
+                true);
+    }
 
     @TestFactory
     public List<DynamicTest> testTimedOperations() {
