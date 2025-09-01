@@ -53,6 +53,7 @@ class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
                 //                dotClassName.contains("NamespacedHierarchicalStore") ||
                 dotClassName.contains("LauncherConfigurationParameters"))) ||
         dotClassName.startsWith("org.jetbrains.") ||
+        dotClassName.startsWith("com.intellij.rt") ||
         dotClassName.startsWith("worker.org.gradle.") ||
         dotClassName.startsWith(
             "com.github.ajalt",

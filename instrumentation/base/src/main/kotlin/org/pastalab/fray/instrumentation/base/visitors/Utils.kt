@@ -37,7 +37,8 @@ object Utils {
 
   // Function to convert a KFunction to a JVM method descriptor
   fun kFunctionToJvmMethodDescriptor(function: KFunction<*>): String {
-    return RuntimeDescriptors.runtimeMethodMap[function.name] ?: "L$function;"
+    return RuntimeDescriptors.runtimeMethodMap[function.name]
+        ?: "Descriptor not available for method ${function.name}"
   }
 
   fun kFunctionToASMMethod(function: KFunction<*>): Method {

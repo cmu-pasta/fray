@@ -16,27 +16,29 @@ tasks.named<ShadowJar>("shadowJar") {
   relocate("org.apache.commons", "org.pastalab.fray.apache.commons")
 }
 
-val createVersionProperties by tasks.registering(WriteProperties::class) {
-  val filePath = sourceSets.main.map {
-    it.output.resourcesDir!!.resolve("org").resolve("pastalab").resolve("fray").resolve("plugins").resolve("base").resolve("version.properties")
-  }
-  destinationFile = filePath
-  property("version", project.version.toString())
-}
+val createVersionProperties by
+    tasks.registering(WriteProperties::class) {
+      val filePath =
+          sourceSets.main.map {
+            it.output.resourcesDir!!
+                .resolve("org")
+                .resolve("pastalab")
+                .resolve("fray")
+                .resolve("plugins")
+                .resolve("base")
+                .resolve("version.properties")
+          }
+      destinationFile = filePath
+      property("version", project.version.toString())
+    }
 
-tasks.classes {
-  dependsOn(createVersionProperties)
-}
+tasks.classes { dependsOn(createVersionProperties) }
 
-tasks.jar {
-  enabled = false
-}
+tasks.jar { enabled = false }
 
 tasks.register<Jar>("sourceJar") {
   archiveClassifier.set("sources")
   from(sourceSets.main.get().allSource)
 }
 
-tasks.test {
-  useJUnitPlatform()
-}
+tasks.test { useJUnitPlatform() }

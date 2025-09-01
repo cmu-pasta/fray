@@ -1184,7 +1184,7 @@ class RunContext(val config: Configuration) {
     }
 
     step += 1
-    if (config.executionInfo.maxScheduledStep in 1 ..< step &&
+    if (config.executionInfo.maxScheduledStep in 1..<step &&
         !currentThread.isExiting &&
         Thread.currentThread() !is HelperThread &&
         currentThread.state != ThreadState.MainExiting) {

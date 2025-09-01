@@ -1,5 +1,5 @@
-import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem
 import java.util.regex.Pattern
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem
 
 plugins {
   id("java")
@@ -23,13 +23,11 @@ dependencies {
 }
 
 tasks.test {
-  useJUnitPlatform {
-    includeEngines("junit-jupiter")
-  }
+  useJUnitPlatform { includeEngines("junit-jupiter") }
   dependsOn(":instrumentation:jdk:build")
   exclude("org/pastalab/fray/junit/internal/**")
-  val instrumentationTask = evaluationDependsOn(":instrumentation:agent")
-      .tasks.named("shadowJar").get()
+  val instrumentationTask =
+      evaluationDependsOn(":instrumentation:agent").tasks.named("shadowJar").get()
   val jdk = project(":instrumentation:jdk")
   val jvmti = project(":jvmti")
   val instrumentation = instrumentationTask.outputs.files.first().absolutePath
@@ -37,8 +35,10 @@ tasks.test {
   val javaExe = if (getCurrentOperatingSystem().toFamilyName() == "windows") "java.exe" else "java"
   println(instrumentation)
   classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
-  executable("${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}$javaExe")
-  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix")
+  executable(
+      "${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}$javaExe")
+  jvmArgs(
+      "-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix")
   jvmArgs("-javaagent:$instrumentation")
   jvmArgs("-ea")
   jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
@@ -54,20 +54,21 @@ tasks.register<Copy>("copyDependencies") {
   into("${layout.buildDirectory.get().asFile}${File.separator}dependency")
 }
 
-
 tasks.withType<JavaExec> {
   dependsOn(":instrumentation:jdk:build")
-  val instrumentationTask = evaluationDependsOn(":instrumentation:agent")
-      .tasks.named("shadowJar").get()
+  val instrumentationTask =
+      evaluationDependsOn(":instrumentation:agent").tasks.named("shadowJar").get()
   val jdk = project(":instrumentation:jdk")
   val jvmti = project(":jvmti")
   val instrumentation = instrumentationTask.outputs.files.first().absolutePath
   val soSuffix = if (getCurrentOperatingSystem().toFamilyName() == "windows") "dll" else "so"
   val javaExe = if (getCurrentOperatingSystem().toFamilyName() == "windows") "java.exe" else "java"
   classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
-  executable("${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}$javaExe")
+  executable(
+      "${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}$javaExe")
   mainClass = "org.pastalab.fray.core.MainKt"
-  jvmArgs("-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix")
+  jvmArgs(
+      "-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix")
   jvmArgs("-javaagent:$instrumentation")
   jvmArgs("-ea")
   jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
@@ -80,21 +81,21 @@ tasks.withType<JavaExec> {
 
 tasks.register<JavaExec>("runFray") {
   var configPath = properties["configPath"] as String? ?: ""
-  val extraArgs = when (val extraArgs = properties["extraArgs"]) {
-    is String -> {
-      val pattern = Pattern.compile("""("[^"]+"|\S+)""")
-      val matcher = pattern.matcher(extraArgs)
-      val result = mutableListOf<String>()
-      while (matcher.find()) {
-        result.add(matcher.group(1).replace("\"", ""))
+  val extraArgs =
+      when (val extraArgs = properties["extraArgs"]) {
+        is String -> {
+          val pattern = Pattern.compile("""("[^"]+"|\S+)""")
+          val matcher = pattern.matcher(extraArgs)
+          val result = mutableListOf<String>()
+          while (matcher.find()) {
+            result.add(matcher.group(1).replace("\"", ""))
+          }
+          result
+        }
+        else -> emptyList()
       }
-      result
-    }
-    else -> emptyList()
-  }
   if (!File(configPath).isAbsolute) {
     configPath = System.getProperty("user.dir") + File.separator + configPath
   }
   args = listOf("--run-config", "json", "--config-path", configPath) + extraArgs
 }
-

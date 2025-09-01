@@ -23,9 +23,7 @@ dependencies {
   testImplementation(kotlin("test"))
 }
 
-tasks.test {
-  useJUnitPlatform()
-}
+tasks.test { useJUnitPlatform() }
 
 tasks.named("build") {
   dependsOn("shadowJar")
@@ -44,17 +42,24 @@ tasks.register("genRunner") {
       val installDir = currentProject.property("fray.installDir")
       runner = runner.replace("#JAVA_PATH#", "$installDir/java-inst/bin/java")
       runner = runner.replace("#JVM_TI_PATH#", "$installDir/native-libs/libjvmti.$soSuffix")
-      runner = runner.replace("#AGENT_PATH#", "$installDir/libs/fray-instrumentation-agent-$currentVersion.jar")
+      runner =
+          runner.replace(
+              "#AGENT_PATH#", "$installDir/libs/fray-instrumentation-agent-$currentVersion.jar")
       runner = runner.replace("#CORE_PATH#", "$installDir/libs/fray-core-$currentVersion.jar")
     } else {
-      val instrumentationTask = evaluationDependsOn(":instrumentation:agent")
-          .tasks.named("shadowJar").get()
+      val instrumentationTask =
+          evaluationDependsOn(":instrumentation:agent").tasks.named("shadowJar").get()
       val instrumentation = instrumentationTask.outputs.files.first().absolutePath
       val core = tasks.named("shadowJar").get().outputs.files.first().absolutePath
       val jvmti = currentProject.project(":jvmti")
       val jdk = currentProject.project(":instrumentation:jdk")
-      runner = runner.replace("#JAVA_PATH#", "${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
-      runner = runner.replace("#JVM_TI_PATH#", "${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.$soSuffix")
+      runner =
+          runner.replace(
+              "#JAVA_PATH#", "${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
+      runner =
+          runner.replace(
+              "#JVM_TI_PATH#",
+              "${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.$soSuffix")
       runner = runner.replace("#AGENT_PATH#", instrumentation)
       runner = runner.replace("#CORE_PATH#", core)
     }
@@ -69,21 +74,15 @@ tasks.register<Copy>("copyDependencies") {
   into(File(layout.buildDirectory.get().asFile, "dependency"))
 }
 
-tasks.jar {
-  manifest {
-    attributes(mapOf("Main-Class" to "org.pastalab.fray.core.MainKt"))
-  }
-}
+tasks.jar { manifest { attributes(mapOf("Main-Class" to "org.pastalab.fray.core.MainKt")) } }
 
 tasks.named<ShadowJar>("shadowJar") {
   relocate("org.objectweb.asm", "org.pastalab.fray.instrumentation.agent.asm")
   manifest {
     attributes(
-      mapOf(
-        "Main-Class" to "org.pastalab.fray.core.MainKt",
-        "Premain-Class" to "org.pastalab.fray.core.PreMainKt"
-      )
-    )
+        mapOf(
+            "Main-Class" to "org.pastalab.fray.core.MainKt",
+            "Premain-Class" to "org.pastalab.fray.core.PreMainKt"))
   }
 }
 
@@ -91,4 +90,3 @@ tasks.register<Jar>("sourceJar") {
   archiveClassifier.set("sources")
   from(sourceSets.main.get().allSource)
 }
-

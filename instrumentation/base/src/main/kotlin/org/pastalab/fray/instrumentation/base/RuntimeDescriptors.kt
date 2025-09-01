@@ -169,5 +169,8 @@ object RuntimeDescriptors {
           "onNioSocketRead" to "(Ljava/net/SocketImpl;)V",
           "onNioSocketReadDone" to "(Ljava/net/SocketImpl;I)V",
           "onNioSocketAccept" to "(Ljava/net/SocketImpl;)V",
-          "onNioSocketAcceptDone" to "(Ljava/net/SocketImpl;)V")
+          "onNioSocketAcceptDone" to "(Ljava/net/SocketImpl;)V",
+          "onPipedInputStreamRead" to "(Ljava/io/PipedInputStream;)V",
+          "onPipedInputStreamReadDone" to "(Ljava/io/PipedInputStream;)V",
+      )
 }
