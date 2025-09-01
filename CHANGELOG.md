@@ -8,6 +8,7 @@
 
 - Pass static string in the AntithesisErrorReporter.
 - Use static string map to store method signatures in instrumenters instead of relying on reflection.
+- Remove stdlib dependency in jvmti module.
 
 ### Deprecated
 
