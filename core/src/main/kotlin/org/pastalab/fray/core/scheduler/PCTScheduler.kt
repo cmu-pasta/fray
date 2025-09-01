@@ -52,7 +52,7 @@ class PCTScheduler(val rand: Randomness, val numSwitchPoints: Int, var maxStep: 
 
   private fun preparePriorityChangePoints() {
     val listOfInts = (1..maxStep).toMutableList()
-    for (i in 0 ..< numSwitchPoints) {
+    for (i in 0..<numSwitchPoints) {
       val index = rand.nextInt() % (listOfInts.size)
       priorityChangePoints.add(listOfInts[index])
       listOfInts.removeAt(index)

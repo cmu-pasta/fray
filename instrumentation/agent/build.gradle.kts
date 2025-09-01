@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
   id("java")
   kotlin("jvm")
@@ -12,9 +13,7 @@ dependencies {
   compileOnly(project(":runtime"))
 }
 
-tasks.build {
-  dependsOn("shadowJar")
-}
+tasks.build { dependsOn("shadowJar") }
 
 tasks.named<ShadowJar>("shadowJar") {
   archiveClassifier.set("")
@@ -31,15 +30,11 @@ tasks.named<ShadowJar>("shadowJar") {
   }
 }
 
-tasks.jar {
-  enabled = false
-}
+tasks.jar { enabled = false }
 
 tasks.register<Jar>("sourceJar") {
   archiveClassifier.set("sources")
   from(sourceSets.main.get().allSource)
 }
 
-tasks.test {
-  useJUnitPlatform()
-}
+tasks.test { useJUnitPlatform() }

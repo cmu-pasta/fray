@@ -4,13 +4,9 @@ plugins {
   id("java")
 }
 
-dependencies {
-  implementation(project(":plugins:base", configuration = "shadow"))
-}
+dependencies { implementation(project(":plugins:base", configuration = "shadow")) }
 
-tasks.test {
-  useJUnitPlatform()
-}
+tasks.test { useJUnitPlatform() }
 
 gradlePlugin {
   website = "https://github.com/cmu-pasta/fray"

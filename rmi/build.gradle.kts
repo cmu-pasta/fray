@@ -1,11 +1,5 @@
-plugins {
-    kotlin("jvm")
-}
+plugins { kotlin("jvm") }
 
-dependencies {
-    testImplementation(kotlin("test"))
-}
+dependencies { testImplementation(kotlin("test")) }
 
-tasks.test {
-    useJUnitPlatform()
-}
+tasks.test { useJUnitPlatform() }

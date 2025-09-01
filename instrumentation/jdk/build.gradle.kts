@@ -1,8 +1,8 @@
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem
 
 plugins {
-    kotlin("jvm")
-    java
+  kotlin("jvm")
+  java
 }
 
 dependencies {
@@ -12,23 +12,24 @@ dependencies {
   implementation(project(":instrumentation:base"))
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
+tasks.test { useJUnitPlatform() }
 
 tasks.compileJava {
-    options.compilerArgumentProviders.add(CommandLineArgumentProvider {
+  options.compilerArgumentProviders.add(
+      CommandLineArgumentProvider {
         // Provide compiled Kotlin classes to javac – needed for Java/Kotlin mixed sources to work
-        listOf("--patch-module", "org.pastalab.fray.instrumentation.jdk=${sourceSets["main"].output
+        listOf(
+            "--patch-module",
+            "org.pastalab.fray.instrumentation.jdk=${sourceSets["main"].output
             .asPath}")
-    })
+      })
 }
 
 tasks.jar {
-    manifest {
-        attributes(mapOf("Premain-Class" to "org.pastalab.fray.instrumentation.jdk.agent.AgentKt"))
-    }
-    dependsOn("copyDependencies")
+  manifest {
+    attributes(mapOf("Premain-Class" to "org.pastalab.fray.instrumentation.jdk.agent.AgentKt"))
+  }
+  dependsOn("copyDependencies")
 }
 
 tasks.build {
@@ -38,29 +39,48 @@ tasks.build {
   outputs.dirs(jdkPath)
   doLast {
     if (!state.upToDate) {
-      providers.exec {
-        if (jdkPath.exists()) {
-          delete(jdkPath)
-        }
-        var runtimeJar = layout.buildDirectory.get().asFile.resolve("libs").resolve("${base.archivesName.get()}-$version.jar").absolutePath
+      providers
+          .exec {
+            if (jdkPath.exists()) {
+              delete(jdkPath)
+            }
+            var runtimeJar =
+                layout.buildDirectory
+                    .get()
+                    .asFile
+                    .resolve("libs")
+                    .resolve("${base.archivesName.get()}-$version.jar")
+                    .absolutePath
 
-        val jars = path.listFiles { file -> file.extension == "jar" }
-            ?.joinToString(separator = File.pathSeparator) { it.absolutePath }
-          ?: "No JAR files found."
-        val jlinkExe = if (getCurrentOperatingSystem().toFamilyName() == "windows") "jlink.exe" else "jlink"
-        val command = listOf(jlinkExe, "-J-javaagent:$runtimeJar", "-J--module-path=$jars${File.pathSeparator}$runtimeJar",
-            "-J--add-modules=org.pastalab.fray.instrumentation.jdk",
-            "-J-Dfray.debug=true",
-            "-J--class-path=$jars${File.pathSeparator}$runtimeJar",
-            "--output=${jdkPath.absolutePath}", "--add-modules=ALL-MODULE-PATH",  "--fray-instrumentation")
-        println(command.joinToString(" "))
-        commandLine(command)
-      }.result.get()
+            val jars =
+                path
+                    .listFiles { file -> file.extension == "jar" }
+                    ?.joinToString(separator = File.pathSeparator) { it.absolutePath }
+                    ?: "No JAR files found."
+            val jlinkExe =
+                if (getCurrentOperatingSystem().toFamilyName() == "windows") "jlink.exe"
+                else "jlink"
+            val command =
+                listOf(
+                    jlinkExe,
+                    "-J-javaagent:$runtimeJar",
+                    "-J--module-path=$jars${File.pathSeparator}$runtimeJar",
+                    "-J--add-modules=org.pastalab.fray.instrumentation.jdk",
+                    "-J-Dfray.debug=true",
+                    "-J--class-path=$jars${File.pathSeparator}$runtimeJar",
+                    "--output=${jdkPath.absolutePath}",
+                    "--add-modules=ALL-MODULE-PATH",
+                    "--fray-instrumentation")
+            println(command.joinToString(" "))
+            commandLine(command)
+          }
+          .result
+          .get()
     }
   }
 }
 
 tasks.register<Copy>("copyDependencies") {
-    from(configurations.runtimeClasspath)
-    into(layout.buildDirectory.get().asFile.resolve("dependency"))
+  from(configurations.runtimeClasspath)
+  into(layout.buildDirectory.get().asFile.resolve("dependency"))
 }

@@ -22,10 +22,6 @@ dependencies {
   implementation("org.pastalab.fray:fray-jvmti-macos-aarch64:0.2.0")
 }
 
-tasks.test {
-  useJUnitPlatform()
-}
+tasks.test { useJUnitPlatform() }
 
-mavenPlugin {
-  artifactId = "fray-plugins-maven"
-}
+mavenPlugin { artifactId = "fray-plugins-maven" }
