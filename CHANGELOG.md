@@ -6,10 +6,6 @@
 
 ### Changed
 
-- Pass static string in the AntithesisErrorReporter.
-- Use static string map to store method signatures in instrumenters instead of relying on reflection.
-- Remove stdlib dependency in jvmti module.
-
 ### Deprecated
 
 ### Removed
@@ -17,6 +13,14 @@
 ### Fixed
 
 ### Security
+
+## 0.6.5 - 2025-09-02
+
+### Changed
+
+- Pass static string in the AntithesisErrorReporter.
+- Use static string map to store method signatures in instrumenters instead of relying on reflection.
+- Remove stdlib dependency in jvmti module.
 
 ## 0.6.3 - 2025-08-11
 
