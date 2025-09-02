@@ -91,7 +91,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             networkDelegateType = concurrencyTest.networkDelegateType,
             systemTimeDelegateType = concurrencyTest.systemTimeDelegateType,
             ignoreTimedBlock = true,
-            sleepAsYield = true)
+            sleepAsYield = concurrencyTest.sleepAsYield)
     val frayContext = RunContext(config)
     val frayJupiterContext = FrayJupiterContext()
     return Stream.iterate(1, { it + 1 })

@@ -6,6 +6,9 @@
 
 ### Changed
 
+- Expose sleepAsYield to ConcurrencyTest annotation.
+- Add `fray-runtime` to the class path so that normal tests can run properly (without Fray JDK).
+
 ### Deprecated
 
 ### Removed
