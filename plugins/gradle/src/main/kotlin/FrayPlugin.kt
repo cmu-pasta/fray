@@ -35,7 +35,7 @@ class FrayPlugin : Plugin<Project> {
       val soSuffix = if (os == "windows") "dll" else "so"
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-core:$frayVersion")
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-junit:$frayVersion")
-      target.dependencies.add("testCompileOnly", "org.pastalab.fray:fray-runtime:$frayVersion")
+      target.dependencies.add("testImplementation", "org.pastalab.fray:fray-runtime:$frayVersion")
       val jlink =
           target.tasks.register("jlink", PrepareWorkspaceTask::class.java).get().apply {
             this.frayJdk.set(frayJdk)

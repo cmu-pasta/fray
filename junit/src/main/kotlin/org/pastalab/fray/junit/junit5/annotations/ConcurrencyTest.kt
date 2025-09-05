@@ -20,9 +20,10 @@ import org.pastalab.fray.core.scheduler.Scheduler
 annotation class ConcurrencyTest(
     val iterations: Int = 1000,
     val scheduler: KClass<out Scheduler> = POSScheduler::class,
-    val replay: String = "",
     val networkDelegateType: NetworkDelegateType = NetworkDelegateType.NONE,
     val systemTimeDelegateType: SystemTimeDelegateType = SystemTimeDelegateType.NONE,
+    val sleepAsYield: Boolean = false,
+    val replay: String = "",
 ) {
   companion object {
 
