@@ -4,6 +4,8 @@
 
 ### Added
 
+- Add configuration in plugins to allow user to specify local JDK path.
+
 ### Changed
 
 - Expose sleepAsYield to ConcurrencyTest annotation.

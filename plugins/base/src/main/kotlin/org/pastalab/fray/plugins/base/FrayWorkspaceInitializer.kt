@@ -20,10 +20,11 @@ class FrayWorkspaceInitializer(
 ) {
   val jdkVersionPath = File(jdkPath, "fray-version")
 
-  fun createInstrumentedJDK(frayVersion: String) {
+  fun createInstrumentedJDK(frayVersion: String, originalJDKPath: String?) {
     if (readJDKFrayVersion() != frayVersion) {
       jdkPath.deleteRecursively()
-      val jdk = downloadJDK()
+      val jdk = originalJDKPath ?: downloadJDK()
+      verifyJDKVersion(jdk)
       val classPaths = jlinkDependencies.joinToString(":")
       val command =
           arrayOf(
@@ -79,6 +80,18 @@ class FrayWorkspaceInitializer(
       throw RuntimeException("Download failed: ${e.message}", e)
     }
     return jdkFolder.absolutePath
+  }
+
+  private fun verifyJDKVersion(jdkPath: String) {
+    val process = ProcessBuilder("$jdkPath/bin/java", "-version").start()
+    val exitCode = process.waitFor()
+    if (exitCode != 0) {
+      throw RuntimeException("Failed to execute java -version, exit code: $exitCode")
+    }
+    val output = process.errorStream.bufferedReader().readText()
+    if (!output.contains("23.")) {
+      throw RuntimeException("JDK version is not 23.x, found: $output")
+    }
   }
 
   fun downloadFile(fileURL: String, fileName: String) {

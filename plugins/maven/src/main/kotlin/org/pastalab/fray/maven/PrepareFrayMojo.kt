@@ -24,6 +24,8 @@ class PrepareFrayMojo : AbstractMojo() {
   @Parameter(property = "plugin.artifactMap", required = true, readonly = true)
   private val pluginArtifactMap: Map<String, Artifact>? = null
 
+  @Parameter(property = "plugin.jdkPath") private val jdkPath: String? = null
+
   @Parameter(property = "fray.workDir", defaultValue = "\${project.build.directory}/fray")
   private val destFile: File? = null
 
@@ -51,7 +53,7 @@ class PrepareFrayMojo : AbstractMojo() {
             File(jvmtiPath),
             getJvmtiJarFile(),
             destFile.absolutePath)
-    initializer.createInstrumentedJDK(FrayVersion.version)
+    initializer.createInstrumentedJDK(FrayVersion.version, jdkPath)
     initializer.createJVMTiRuntime()
 
     val oldValue = project!!.properties.getProperty("argLine") ?: ""

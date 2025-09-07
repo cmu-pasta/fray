@@ -41,6 +41,9 @@ class FrayPlugin : Plugin<Project> {
             this.frayJdk.set(frayJdk)
             this.frayJvmti.set(frayJvmti)
             this.frayVersion.set(frayVersion)
+            if (extension.jdkPath != null) {
+              this.originalJdkPath.set(extension.jdkPath!!)
+            }
           }
       target.tasks.register("frayTest", Test::class.java) {
         it.executable(javaPath)
