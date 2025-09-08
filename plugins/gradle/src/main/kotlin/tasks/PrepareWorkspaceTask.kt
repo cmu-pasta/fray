@@ -19,6 +19,8 @@ abstract class PrepareWorkspaceTask : DefaultTask() {
 
   @get:Input abstract val frayVersion: Property<String>
 
+  @get:Input abstract val originalJdkPath: Property<String>
+
   @Internal
   val jdkPath =
       File("${project.rootProject.layout.buildDirectory.get().asFile}/${Commons.JDK_BASE}")
@@ -39,7 +41,7 @@ abstract class PrepareWorkspaceTask : DefaultTask() {
             jvmtiPath,
             resolveDependencyFiles(frayJvmti.get()).first { it.name.contains("jvmti") },
             "${project.rootProject.layout.buildDirectory.get().asFile}/${Commons.DIR_BASE}")
-    initializer.createInstrumentedJDK(frayVersion.get())
+    initializer.createInstrumentedJDK(frayVersion.get(), originalJdkPath.orNull)
     initializer.createJVMTiRuntime()
   }
 
