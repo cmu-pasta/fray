@@ -7,6 +7,7 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.pastalab.fray.gradle.Commons
 import org.pastalab.fray.plugins.base.FrayWorkspaceInitializer
@@ -19,7 +20,7 @@ abstract class PrepareWorkspaceTask : DefaultTask() {
 
   @get:Input abstract val frayVersion: Property<String>
 
-  @get:Input abstract val originalJdkPath: Property<String>
+  @get:Optional @get:Input abstract val originalJdkPath: Property<String>
 
   @Internal
   val jdkPath =
