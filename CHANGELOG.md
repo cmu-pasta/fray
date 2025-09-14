@@ -4,12 +4,7 @@
 
 ### Added
 
-- Add configuration in plugins to allow user to specify local JDK path.
-
 ### Changed
-
-- Expose sleepAsYield to ConcurrencyTest annotation.
-- Add `fray-runtime` to the class path so that normal tests can run properly (without Fray JDK).
 
 ### Deprecated
 
@@ -18,6 +13,17 @@
 ### Fixed
 
 ### Security
+
+## 0.6.6 - 2025-09-14
+
+### Added
+
+- Add configuration in plugins to allow user to specify local JDK path.
+
+### Changed
+
+- Expose sleepAsYield to ConcurrencyTest annotation.
+- Add `fray-runtime` to the class path so that normal tests can run properly (without Fray JDK).
 
 ## 0.6.5 - 2025-09-02
 
