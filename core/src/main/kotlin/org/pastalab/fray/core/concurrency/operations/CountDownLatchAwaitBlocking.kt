@@ -8,7 +8,7 @@ class CountDownLatchAwaitBlocking(blockedUntil: Long, val latchContext: CountDow
     BlockedOperation(ResourceInfo(latchContext.latchId, ResourceType.CDL), blockedUntil) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
     if (latchContext.unblockThread(tid, type)) {
-      return this
+      return latchContext.latchReference.get()
     }
     return null
   }

@@ -12,6 +12,8 @@
 
 ### Fixed
 
+- Fix Fray hang when a thread is interrupted while waiting on a CountDownLatch.
+
 ### Security
 
 ## 0.6.6 - 2025-09-14
