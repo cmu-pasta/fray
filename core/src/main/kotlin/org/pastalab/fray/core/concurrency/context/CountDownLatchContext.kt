@@ -24,7 +24,12 @@ class CountDownLatchContext(latch: CountDownLatch, val syncManager: Synchronizat
   fun await(canInterrupt: Boolean, thread: ThreadContext): Boolean {
     if (count > 0) {
       if (canInterrupt) {
-        thread.checkInterrupt()
+        try {
+          thread.checkInterrupt()
+        } catch (e: InterruptedException) {
+          thread.pendingOperation = ThreadResumeOperation(true)
+          throw e
+        }
       }
       latchWaiters[Thread.currentThread().id] = LockWaiter(canInterrupt, thread)
       return true
