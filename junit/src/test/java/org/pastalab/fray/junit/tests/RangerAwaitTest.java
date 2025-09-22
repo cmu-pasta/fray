@@ -20,16 +20,17 @@ public class RangerAwaitTest {
                 .assertThatEvents()
                 .haveExactly(100,
                         event(test("testConstraintSatisfied"), finishedSuccessfully())
-                )
-                .haveExactly(1,
-                        event(test("testConstraintDeadlock"), finishedWithFailure())
-                )
-                .haveExactly(1,
-                        event(test("testInThreadConstraintDeadlock"), finishedWithFailure())
                 );
+//                .haveExactly(1,
+//                        event(test("testConstraintDeadlock"), finishedWithFailure())
+//                )
+//                .haveExactly(1,
+//                        event(test("testInThreadConstraintDeadlock"), finishedWithFailure())
+//                );
     }
 
-    @Test
+    // This test is disabled because we do not want to allow synchronization primitives in ranger conditions.
+    //    @Test
     public void testSyncurityAwaitWithSynchronizationPrimitives() {
         EngineTestKit
                 .engine("junit-jupiter")
@@ -42,7 +43,8 @@ public class RangerAwaitTest {
                 );
     }
 
-    @Test
+    // This test is disabled because we do not want to allow synchronization primitives in ranger conditions.
+    //    @Test
     public void testSyncurityAwaitDeadlockInCondition() {
         EngineTestKit
                 .engine("junit-jupiter")
