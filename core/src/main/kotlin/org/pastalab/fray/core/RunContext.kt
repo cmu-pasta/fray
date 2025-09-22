@@ -33,8 +33,6 @@ import org.pastalab.fray.core.concurrency.context.WriteLockContext
 import org.pastalab.fray.core.concurrency.operations.*
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.core.controllers.RunFinishedHandler
-import org.pastalab.fray.core.ranger.RangerEvaluationContext
-import org.pastalab.fray.core.ranger.RangerEvaluationDelegate
 import org.pastalab.fray.core.scheduler.FrayIdeaPluginScheduler
 import org.pastalab.fray.core.utils.HelperThread
 import org.pastalab.fray.core.utils.ReentrantReadWriteLockCache
@@ -986,17 +984,11 @@ class RunContext(val config: Configuration) {
   }
 
   fun evaluateRangerCondition(condition: RangerCondition): Boolean {
-    val currentRuntimeDelegate = Runtime.LOCK_DELEGATE
     val result =
         try {
-          val rangerEvaluationContext = RangerEvaluationContext(this)
-          Runtime.LOCK_DELEGATE =
-              RangerEvaluationDelegate(rangerEvaluationContext, Thread.currentThread())
           condition.satisfied()
         } catch (e: Throwable) {
           false
-        } finally {
-          Runtime.LOCK_DELEGATE = currentRuntimeDelegate
         }
     return result
   }

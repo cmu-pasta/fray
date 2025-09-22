@@ -6,6 +6,8 @@
 
 ### Changed
 
+- Do not switch context while evaluating ranger conditions.
+
 ### Deprecated
 
 ### Removed
@@ -13,6 +15,7 @@
 ### Fixed
 
 - Fix Fray hang when a thread is interrupted while waiting on a CountDownLatch.
+- Fix reactive network controller deadlock when interrupt is called.
 
 ### Security
 
