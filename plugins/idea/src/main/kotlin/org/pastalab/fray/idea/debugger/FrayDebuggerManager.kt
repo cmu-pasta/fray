@@ -6,7 +6,6 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebugSessionListener
-import java.rmi.Remote
 import java.rmi.registry.LocateRegistry
 import java.rmi.registry.Registry
 import java.rmi.server.UnicastRemoteObject
@@ -27,7 +26,8 @@ class FrayDebuggerManager(val debugSession: XDebugSession, val replayMode: Boole
     }
     val schedulerStub = UnicastRemoteObject.exportObject(scheduler, 15214) as RemoteScheduler
     registry.bind(RemoteScheduler.NAME, schedulerStub)
-    val observerStub = UnicastRemoteObject.exportObject(testStatusObserver, 15214) as Remote
+    val observerStub =
+        UnicastRemoteObject.exportObject(testStatusObserver, 15214) as TestStatusObserver
     registry.bind(TestStatusObserver.NAME, observerStub)
   }
 

@@ -18,6 +18,10 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) :
     index = 0
   }
 
+  override fun onReportError(throwable: Throwable) {
+    // No-op for schedule verifier
+  }
+
   override fun onNewSchedule(allThreads: Collection<ThreadContext>, scheduled: ThreadContext) {
     if (index >= schedules.size) {
       return

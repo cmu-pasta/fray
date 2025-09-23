@@ -193,6 +193,8 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
     mcpServer.onExecutionStart()
   }
 
+  override fun onReportError(throwable: Throwable) {}
+
   override fun onExecutionDone(bugFound: Throwable?) {
     mcpServer.onExecutionDone(bugFound)
   }

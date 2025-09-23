@@ -16,6 +16,7 @@
 
 - Fix Fray hang when a thread is interrupted while waiting on a CountDownLatch.
 - Fix reactive network controller deadlock when interrupt is called.
+- Remove default implementations in `TestStatusObserver` to avoid `IllegalArgumentException`
 
 ### Security
 
