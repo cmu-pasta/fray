@@ -10,6 +10,10 @@ class FrayRemoteTestObserver(val project: Project) : TestStatusObserver {
     observers.forEach { it.onExecutionStart() }
   }
 
+  override fun onReportError(throwable: Throwable) {
+    observers.forEach { it.onReportError(throwable) }
+  }
+
   override fun onExecutionDone(bugFound: Throwable?) {
     observers.forEach { it.onExecutionDone(bugFound) }
   }

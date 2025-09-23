@@ -14,6 +14,10 @@ class ScheduleRecorder : ScheduleObserver<ThreadContext>, TestStatusObserver {
     recordings.clear()
   }
 
+  override fun onReportError(throwable: Throwable) {
+    // No-op for schedule recorder
+  }
+
   override fun onNewSchedule(allThreads: Collection<ThreadContext>, scheduled: ThreadContext) {
     val enabled = allThreads.map { it.index }.toList()
     val scheduledIndex = scheduled.index
