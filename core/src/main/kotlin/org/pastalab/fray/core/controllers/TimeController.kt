@@ -2,11 +2,13 @@ package org.pastalab.fray.core.controllers
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit
-import org.pastalab.fray.core.RunContext
+import org.pastalab.fray.core.command.Configuration
+import org.pastalab.fray.core.command.SystemTimeDelegateType
 import org.pastalab.fray.core.utils.Utils.verifyNoThrow
 
-class TimeController(val context: RunContext) : RunFinishedHandler(context) {
+class TimeController(config: Configuration) {
   var nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
+  val isVirtualTimeMode = config.systemTimeDelegateType == SystemTimeDelegateType.MOCK
 
   private fun getAndIncrementNanoTime(): Long {
     val currentNanoTime = nanoTime
@@ -14,13 +16,19 @@ class TimeController(val context: RunContext) : RunFinishedHandler(context) {
     return currentNanoTime
   }
 
-  fun nanoTime() = verifyNoThrow { getAndIncrementNanoTime() }
+  fun nanoTime() = verifyNoThrow {
+    if (!isVirtualTimeMode) System.nanoTime() else getAndIncrementNanoTime()
+  }
 
-  fun currentTimeMillis() = verifyNoThrow { getAndIncrementNanoTime() / 1000000 }
+  fun currentTimeMillis() = verifyNoThrow { currentTimeMillisRaw() }
 
-  fun instantNow() = verifyNoThrow { Instant.ofEpochMilli(getAndIncrementNanoTime() / 1000000) }
+  fun currentTimeMillisRaw(): Long {
+    return if (!isVirtualTimeMode) System.currentTimeMillis()
+    else getAndIncrementNanoTime() / 1000000
+  }
 
-  override fun done() {
-    nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
+  fun instantNow() = verifyNoThrow {
+    if (!isVirtualTimeMode) Instant.now()
+    else Instant.ofEpochMilli(getAndIncrementNanoTime() / 1000000)
   }
 }

@@ -1,6 +1,7 @@
 package org.pastalab.fray.core.delegates
 
 import java.time.Duration
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ForkJoinPool
@@ -76,7 +77,8 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
   override fun onObjectWait(o: Any, timeout: Long) =
       synchronizer.runInFrayStartNoSkip {
         val timeout =
-            if (timeout == 0L) BLOCKED_OPERATION_NOT_TIMED else timeout + System.currentTimeMillis()
+            if (timeout == 0L) BLOCKED_OPERATION_NOT_TIMED
+            else timeout + context.timeController.currentTimeMillisRaw()
         context.objectWait(o, timeout)
       }
 
@@ -119,7 +121,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
                 .lockTryLock(
                     l,
                     canInterrupt = true,
-                    System.currentTimeMillis() + unit.toMillis(timeout),
+                    context.timeController.currentTimeMillisRaw() + unit.toMillis(timeout),
                 )
                 .map { 0 }
           },
@@ -325,7 +327,8 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
                     permits,
                     shouldBlock = true,
                     canInterrupt = true,
-                    blockedUntil = unit.toMillis(timeout) + System.currentTimeMillis(),
+                    blockedUntil =
+                        unit.toMillis(timeout) + context.timeController.currentTimeMillisRaw(),
                 )
                 .map { 0L }
           },
@@ -398,7 +401,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       synchronizer.runInFrayStart("Latch.await") {
         context.latchAwait(
             latch,
-            System.currentTimeMillis() + unit.toMillis(timeout),
+            context.timeController.currentTimeMillisRaw() + unit.toMillis(timeout),
         )
       }
     }
@@ -465,7 +468,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
   private fun onThreadParkNanosInternal(timed: Boolean, nanos: Long) {
     val blockedUntil =
         if (timed) {
-          System.currentTimeMillis() + nanos / 1_000_000
+          context.timeController.currentTimeMillisRaw() + nanos / 1_000_000
         } else {
           BLOCKED_OPERATION_NOT_TIMED
         }
@@ -476,7 +479,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       onThreadParkTimed(deadline) { LockSupport.parkUntil(deadline) }
 
   override fun onThreadParkNanosWithBlocker(blocker: Any?, nanos: Long) =
-      onThreadParkTimed(System.currentTimeMillis() + nanos / 1_000_000) {
+      onThreadParkTimed(context.timeController.currentTimeMillisRaw() + nanos / 1_000_000) {
         LockSupport.parkNanos(blocker, nanos)
       }
 
@@ -516,7 +519,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   override fun onConditionAwaitTime(o: Condition, time: Long, unit: TimeUnit): Boolean =
       onConditionAwaitTimed(
-          unit.toMillis(time) + System.currentTimeMillis(),
+          unit.toMillis(time) + context.timeController.currentTimeMillisRaw(),
           o,
           { o.await(time, unit) },
       ) {
@@ -525,7 +528,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   override fun onConditionAwaitNanos(o: Condition, nanos: Long): Long =
       onConditionAwaitTimed(
-          nanos / 1_000_000L + System.currentTimeMillis(),
+          nanos / 1_000_000L + context.timeController.currentTimeMillisRaw(),
           o,
           { o.awaitNanos(nanos) },
       ) {
@@ -571,19 +574,22 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   override fun onThreadSleepDuration(duration: Duration) =
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
-          { context.threadSleepOperation(duration.toMillis() + System.currentTimeMillis()) },
+          {
+            context.threadSleepOperation(
+                duration.toMillis() + context.timeController.currentTimeMillisRaw())
+          },
           { Thread.sleep(duration.toMillis()) },
       )
 
   override fun onThreadSleepMillis(millis: Long) =
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
-          { context.threadSleepOperation(millis + System.currentTimeMillis()) },
+          { context.threadSleepOperation(millis + context.timeController.currentTimeMillisRaw()) },
           { Thread.sleep(millis) },
       )
 
   override fun onThreadSleepMillisNanos(millis: Long, nanos: Int) =
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
-          { context.threadSleepOperation(millis + System.currentTimeMillis()) },
+          { context.threadSleepOperation(millis + context.timeController.currentTimeMillisRaw()) },
           { Thread.sleep(millis, nanos) },
       )
 
@@ -737,7 +743,8 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
                     lock,
                     shouldBlock = true,
                     canInterrupt = true,
-                    blockedUntil = System.currentTimeMillis() + unit.toMillis(timeout),
+                    blockedUntil =
+                        context.timeController.currentTimeMillisRaw() + unit.toMillis(timeout),
                     isReadLock = true,
                 )
                 .map { 0L }
@@ -760,7 +767,8 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
                     lock,
                     shouldBlock = true,
                     canInterrupt = true,
-                    blockedUntil = System.currentTimeMillis() + unit.toMillis(timeout),
+                    blockedUntil =
+                        context.timeController.currentTimeMillisRaw() + unit.toMillis(timeout),
                     isReadLock = false,
                 )
                 .map { 0L }
@@ -772,4 +780,22 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   override fun onRangerCondition(condition: RangerCondition) =
       synchronizer.runInFrayStartNoSkip { context.rangerCondition(condition) }
+
+  override fun onNanoTime(): Long =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { context.timeController.nanoTime() },
+          { System.nanoTime() },
+      )
+
+  override fun onCurrentTimeMillis(): Long =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { context.timeController.currentTimeMillis() },
+          { System.currentTimeMillis() },
+      )
+
+  override fun onInstantNow(): Instant =
+      synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
+          { context.timeController.instantNow() },
+          { Instant.now() },
+      )
 }

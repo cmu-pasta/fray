@@ -41,7 +41,6 @@ class TestRunner(val config: Configuration) {
         try {
           val synchronizer = DelegateSynchronizer(context)
           Runtime.NETWORK_DELEGATE = config.networkDelegateType.produce(context, synchronizer)
-          Runtime.TIME_DELEGATE = config.systemTimeDelegateType.produce(context, synchronizer)
           Runtime.LOCK_DELEGATE = RuntimeDelegate(context, synchronizer)
           Runtime.start()
           config.executionInfo.executor.execute()

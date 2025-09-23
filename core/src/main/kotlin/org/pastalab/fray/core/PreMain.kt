@@ -41,7 +41,6 @@ fun premain(arguments: String, instrumentation: Instrumentation) {
           if (Thread.currentThread().id == 1L) {
             val synchronizer = DelegateSynchronizer(frayContext)
             Runtime.NETWORK_DELEGATE = config.networkDelegateType.produce(frayContext, synchronizer)
-            Runtime.TIME_DELEGATE = config.systemTimeDelegateType.produce(frayContext, synchronizer)
             Runtime.LOCK_DELEGATE = RuntimeDelegate(frayContext, synchronizer)
             Runtime.start()
           }

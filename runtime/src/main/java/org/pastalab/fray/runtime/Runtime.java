@@ -24,12 +24,10 @@ import java.util.concurrent.locks.StampedLock;
 public class Runtime {
     public static Delegate LOCK_DELEGATE = new Delegate();
     public static NetworkDelegate NETWORK_DELEGATE = new NetworkDelegate();
-    public static TimeDelegate TIME_DELEGATE = new TimeDelegate();
 
     public static void resetAllDelegate() {
         LOCK_DELEGATE = new Delegate();
         NETWORK_DELEGATE = new NetworkDelegate();
-        TIME_DELEGATE = new TimeDelegate();
     }
 
     public static void onThreadCreateDone(Thread t) {
@@ -398,15 +396,15 @@ public class Runtime {
     }
 
     public static long onNanoTime() {
-        return TIME_DELEGATE.onNanoTime();
+        return LOCK_DELEGATE.onNanoTime();
     }
 
     public static long onCurrentTimeMillis() {
-        return TIME_DELEGATE.onCurrentTimeMillis();
+        return LOCK_DELEGATE.onCurrentTimeMillis();
     }
 
     public static Instant onInstantNow() {
-        return TIME_DELEGATE.onInstantNow();
+        return LOCK_DELEGATE.onInstantNow();
     }
 
     public static int onObjectHashCode(Object t) {
