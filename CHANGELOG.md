@@ -6,19 +6,25 @@
 
 ### Changed
 
-- Do not switch context while evaluating ranger conditions.
-
 ### Deprecated
 
 ### Removed
 
 ### Fixed
 
+### Security
+
+## 0.6.7 - 2025-09-23
+
+### Changed
+
+- Do not switch context while evaluating ranger conditions.
+
+### Fixed
+
 - Fix Fray hang when a thread is interrupted while waiting on a CountDownLatch.
 - Fix reactive network controller deadlock when interrupt is called.
 - Remove default implementations in `TestStatusObserver` to avoid `IllegalArgumentException`
-
-### Security
 
 ## 0.6.6 - 2025-09-14
 
