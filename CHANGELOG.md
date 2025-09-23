@@ -6,6 +6,8 @@
 
 ### Changed
 
+- Allow `sleep` and timed wait operation to be unblocked by mocked time.
+
 ### Deprecated
 
 ### Removed

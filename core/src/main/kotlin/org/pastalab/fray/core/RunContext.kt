@@ -33,6 +33,7 @@ import org.pastalab.fray.core.concurrency.context.WriteLockContext
 import org.pastalab.fray.core.concurrency.operations.*
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.core.controllers.RunFinishedHandler
+import org.pastalab.fray.core.controllers.TimeController
 import org.pastalab.fray.core.scheduler.FrayIdeaPluginScheduler
 import org.pastalab.fray.core.utils.HelperThread
 import org.pastalab.fray.core.utils.ReentrantReadWriteLockCache
@@ -60,6 +61,7 @@ class RunContext(val config: Configuration) {
   var forkJoinPool: ForkJoinPool? = null
   val reactiveResumedThreadQueue = ConcurrentLinkedQueue<Long>()
   val reactiveBlockedThreadQueue = ConcurrentLinkedQueue<Long>()
+  val timeController = TimeController(config)
   val prioritizedThreads = mutableSetOf<ThreadContext>()
   private val semaphoreManager = ReferencedContextManager {
     verifyOrReport(it is Semaphore) { "SemaphoreManager can only manage Semaphore objects" }
@@ -1069,11 +1071,11 @@ class RunContext(val config: Configuration) {
 
   fun unblockTimedBlocking(): Long {
     var blockingTime = 0L
-    val currentTime = System.currentTimeMillis()
     if (config.ignoreTimedBlock &&
         registeredThreads.any { it.value.state == ThreadState.Runnable }) {
       return 0
     }
+    val currentTime = timeController.currentTimeMillisRaw()
     registeredThreads.values.forEach {
       val op = it.pendingOperation
       if (op is BlockedOperation && op.blockedUntil != BLOCKED_OPERATION_NOT_TIMED) {
@@ -1126,7 +1128,11 @@ class RunContext(val config: Configuration) {
           }
         }
       } else if (blockingTime > 0) {
-        Thread.sleep(blockingTime)
+        if (timeController.isVirtualTimeMode) {
+          timeController.nanoTime += TimeUnit.MILLISECONDS.toNanos(blockingTime)
+        } else {
+          Thread.sleep(blockingTime)
+        }
       }
     }
     unblockTimedBlocking()
