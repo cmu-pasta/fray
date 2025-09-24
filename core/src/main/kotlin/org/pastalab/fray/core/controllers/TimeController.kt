@@ -12,7 +12,7 @@ class TimeController(config: Configuration) {
 
   private fun getAndIncrementNanoTime(): Long {
     val currentNanoTime = nanoTime
-    nanoTime += TimeUnit.MILLISECONDS.toNanos(10000)
+    nanoTime += 100_000;
     return currentNanoTime
   }
 

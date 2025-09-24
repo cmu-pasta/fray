@@ -23,6 +23,7 @@ annotation class ConcurrencyTest(
     val networkDelegateType: NetworkDelegateType = NetworkDelegateType.NONE,
     val systemTimeDelegateType: SystemTimeDelegateType = SystemTimeDelegateType.NONE,
     val sleepAsYield: Boolean = false,
+    val ignoreTimedBlock: Boolean = true,
     val replay: String = "",
 ) {
   companion object {
