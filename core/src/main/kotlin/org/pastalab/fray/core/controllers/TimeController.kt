@@ -10,9 +10,13 @@ class TimeController(config: Configuration) {
   var nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
   val isVirtualTimeMode = config.systemTimeDelegateType == SystemTimeDelegateType.MOCK
 
+  fun done() {
+    nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
+  }
+
   private fun getAndIncrementNanoTime(): Long {
     val currentNanoTime = nanoTime
-    nanoTime += TimeUnit.MILLISECONDS.toNanos(10000)
+    nanoTime += 100_000
     return currentNanoTime
   }
 

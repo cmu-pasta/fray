@@ -87,10 +87,10 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             noExitWhenBugFound = true,
             isReplay = concurrencyTest.replay.isNotEmpty(),
             noFray = false,
-            dummyRun = true,
+            dummyRun = false,
             networkDelegateType = concurrencyTest.networkDelegateType,
             systemTimeDelegateType = concurrencyTest.systemTimeDelegateType,
-            ignoreTimedBlock = true,
+            ignoreTimedBlock = concurrencyTest.ignoreTimedBlock,
             sleepAsYield = concurrencyTest.sleepAsYield)
     val frayContext = RunContext(config)
     val frayJupiterContext = FrayJupiterContext()

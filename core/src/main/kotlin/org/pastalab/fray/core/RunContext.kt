@@ -257,6 +257,7 @@ class RunContext(val config: Configuration) {
     latchManager.done()
     nioContextManager.done()
     reactiveResumedThreadQueue.clear()
+    timeController.done()
 
     registeredThreads.clear()
     config.testStatusObservers.forEach { it.onExecutionDone(bugFound) }
@@ -1124,7 +1125,11 @@ class RunContext(val config: Configuration) {
       if (!reactiveBlockedThreadQueue.isEmpty()) {
         synchronized(reactiveResumedThreadQueue) {
           if (reactiveResumedThreadQueue.isEmpty()) {
-            (reactiveResumedThreadQueue as Object).wait(blockingTime)
+            if (timeController.isVirtualTimeMode && blockingTime > 0) {
+              timeController.nanoTime += TimeUnit.MILLISECONDS.toNanos(blockingTime)
+            } else {
+              (reactiveResumedThreadQueue as Object).wait(blockingTime)
+            }
           }
         }
       } else if (blockingTime > 0) {
