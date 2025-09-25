@@ -41,6 +41,7 @@ import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_DEBUG
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_DISABLED
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_PROPERTY_KEY
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_REPLAY
+import org.pastalab.fray.rmi.ExecutionObserver
 import org.pastalab.fray.rmi.ScheduleObserver
 import org.pastalab.fray.rmi.TestStatusObserver
 
@@ -389,6 +390,7 @@ data class Configuration(
 ) {
   val scheduleObservers = mutableListOf<ScheduleObserver<ThreadContext>>()
   val testStatusObservers = mutableListOf<TestStatusObserver>()
+  val executionObservers = mutableListOf<ExecutionObserver>()
   var nextSavedIndex = 0
   var currentIteration = 0
   val startTime = TimeSource.Monotonic.markNow()

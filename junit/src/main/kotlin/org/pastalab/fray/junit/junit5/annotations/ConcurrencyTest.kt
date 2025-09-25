@@ -6,6 +6,7 @@ import org.pastalab.fray.core.command.NetworkDelegateType
 import org.pastalab.fray.core.command.SystemTimeDelegateType
 import org.pastalab.fray.core.scheduler.POSScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
+import org.pastalab.fray.rmi.ExecutionObserver
 
 @Target(
     AnnotationTarget.ANNOTATION_CLASS,
@@ -25,6 +26,7 @@ annotation class ConcurrencyTest(
     val sleepAsYield: Boolean = false,
     val ignoreTimedBlock: Boolean = true,
     val replay: String = "",
+    val executionObservers: Array<KClass<out ExecutionObserver>> = [],
 ) {
   companion object {
 

@@ -279,6 +279,9 @@ class RunContext(val config: Configuration) {
     t.setUncaughtExceptionHandler(handler)
     val parentContext = registeredThreads[Thread.currentThread().id]!!
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this, parentContext.index)
+    for (observer in config.executionObservers) {
+      observer.onNewThread(t, parentContext.thread)
+    }
   }
 
   fun threadStart(t: Thread) = verifyNoThrow {
