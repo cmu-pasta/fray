@@ -24,7 +24,7 @@ class PrepareFrayMojo : AbstractMojo() {
   @Parameter(property = "plugin.artifactMap", required = true, readonly = true)
   private val pluginArtifactMap: Map<String, Artifact>? = null
 
-  @Parameter(property = "plugin.jdkPath") private val jdkPath: String? = null
+  @Parameter(property = "plugin.jdkPath") private val originalJdkPath: String? = null
 
   @Parameter(property = "fray.workDir", defaultValue = "\${project.build.directory}/fray")
   private val destFile: File? = null
@@ -53,7 +53,7 @@ class PrepareFrayMojo : AbstractMojo() {
             File(jvmtiPath),
             getJvmtiJarFile(),
             destFile.absolutePath)
-    initializer.createInstrumentedJDK(FrayVersion.version, jdkPath)
+    initializer.createInstrumentedJDK(FrayVersion.version, originalJdkPath)
     initializer.createJVMTiRuntime()
 
     val oldValue = project!!.properties.getProperty("argLine") ?: ""
@@ -84,7 +84,8 @@ class PrepareFrayMojo : AbstractMojo() {
           else -> throw Exception("Unsupported OS")
         }
 
-    val arch = System.getProperty("os.arch")
+    val arch =
+        System.getProperty("os.arch").replace("-", "").let { if (it == "amd64") "x8664" else it }
     return pluginArtifactMap!!["org.pastalab.fray:fray-jvmti-$os-$arch"]!!.file
   }
 }
