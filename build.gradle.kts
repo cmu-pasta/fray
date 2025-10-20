@@ -10,7 +10,6 @@ plugins {
   id("com.gradleup.shadow") version "9.0.0-rc2"
   id("org.jetbrains.dokka") version "2.0.0"
   id("org.jetbrains.dokka-javadoc") version "2.0.0"
-  id("org.jetbrains.changelog") version "2.2.1"
 }
 
 dokka {

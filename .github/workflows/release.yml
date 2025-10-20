@@ -97,24 +97,15 @@ jobs:
           sed -i "s|fray-core-[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*-SNAPSHOT-all\.jar|fray-core-$LATEST_VERSION-SNAPSHOT-all.jar|g" docs/usage.md
           sed -i "s/^version=.*/version=$NEW_VERSION/" gradle.properties
           sed -i "s/\\(\\s*version\\s*=\\s*\\)\"[0-9][0-9]*\\.[0-9][0-9]*\\.[0-9][0-9]*.*\";/\\1\"$NEW_VERSION\";/" flake.nix
-          ./gradlew patchChangelog -Pversion=$LATEST_VERSION
-      - name: Get changelog
-        id: get-changelog
-        if: runner.os == 'Linux'
-        run: |
-          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-          ./gradlew getChangelog --console=plain -q --no-header --no-summary >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-      - uses: actions/create-release@v1
+      - name: Release
+        uses: softprops/action-gh-release@v2
         if: runner.os == 'Linux'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.VERSION }}
-          release_name: "Release ${{ env.VERSION }}"
-          body: |
-            ## Changelog
-            ${{ env.CHANGELOG }}
+          tag_name: "v${{ env.VERSION }}"
+          generate_release_notes: true
+          make_latest: true
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         if: runner.os == 'Linux'
