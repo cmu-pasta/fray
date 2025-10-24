@@ -175,6 +175,10 @@ public class Runtime {
         LOCK_DELEGATE.onYield();
     }
 
+    public static void onSpinWait() {
+        LOCK_DELEGATE.onSpinWait();
+    }
+
     public static void onSkipScheduling(String signature) {
         LOCK_DELEGATE.onSkipScheduling(signature);
     }
