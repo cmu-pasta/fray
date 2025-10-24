@@ -14,7 +14,7 @@ import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_REPLAY
 class RunConfigurationExtension : RunConfigurationExtension() {
   override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean {
     return configuration.type is FrayGradleRunConfigurationType ||
-        listOf("Java", "Kotlin", "Application", "JAR Application").any {
+        listOf("Java", "Kotlin", "Application", "JAR Application", "JUnit").any {
           configuration.type.displayName.startsWith(it)
         }
   }
