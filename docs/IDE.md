@@ -25,7 +25,7 @@ Fray Debugger Plugin provides an interactive interface to control the execution 
 To launch Fray tests from IntelliJ, you'll need to add the Fray-instrumented JDK to IntelliJ's configuration. This can 
 be done by first:
 
-* when using Maven, running `mvn verify`, followed by `mvn dependency:copy-dependencies`
+* when using Maven, run `mvn verify`, followed by `mvn dependency:copy-dependencies`
 * when using Gradle, TODO
 
 Then, in the `Run/Debug Configurations`, add the JDK in the `Build and run` section:
