@@ -154,7 +154,7 @@ public class FrayTestCase {
                     tempDir.toString(),
                     iteration,
                     60 * 10,
-                    new PCTScheduler(),
+                    new RandomScheduler(),
                     new ControlledRandomProvider(),
                     true,
                     false,
