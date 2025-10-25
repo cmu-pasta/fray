@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.register
+
 plugins {
   java
   id("io.github.tomtzook.gradle-cmake") version "1.2.2"
@@ -6,13 +8,16 @@ plugins {
 
 cmake {
   targets {
-    register("native_release") { cmakeLists.set(file("src/CMakeLists.txt"))
+    register("native_release", Action {
+      cmakeLists.set(file("src/CMakeLists.txt"))
       cmakeArgs.add("-DCMAKE_BUILD_TYPE=Release")
-    }
+    })
   }
 }
 
-tasks.create<Jar>("sourcesJar") {
+tasks.register<Jar>(
+    "sourcesJar"
+) {
   archiveClassifier.set("sources")
   from("src/cpp")
 }
