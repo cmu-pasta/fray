@@ -242,11 +242,12 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   override fun onYield() = synchronizer.runInFrayStartNoSkip { context.yield() }
 
-  override fun onSpinWait() = synchronizer.runInFrayStartNoSkip {
-    // both Thread.yield() and Thread.onSpinWait might be no-ops; and both indicate that some
-    // external progress should be made
-    context.yield()
-  }
+  override fun onSpinWait() =
+      synchronizer.runInFrayStartNoSkip {
+        // both Thread.yield() and Thread.onSpinWait might be no-ops; and both indicate that some
+        // external progress should be made
+        context.yield()
+      }
 
   override fun onSkipScheduling(signature: String) {
     synchronizer.onSkipScheduling(signature)
