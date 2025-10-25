@@ -3,9 +3,9 @@ import org.jreleaser.model.Active
 import org.jreleaser.model.api.deploy.maven.MavenCentralMavenDeployer.Stage
 
 plugins {
-  kotlin("jvm") version "2.2.10"
+  kotlin("jvm") version "2.2.21"
   id("maven-publish")
-  id("com.ncorti.ktfmt.gradle") version "0.23.0"
+  id("com.ncorti.ktfmt.gradle") version "0.25.0"
   id("org.jreleaser") version "1.16.0"
   id("com.gradleup.shadow") version "9.0.0-rc2"
   id("org.jetbrains.dokka") version "2.0.0"
@@ -47,13 +47,15 @@ jreleaser {
     maven {
       mavenCentral {
         active.set(Active.ALWAYS)
-        create("sonatype") {
-          snapshotSupported = true
-          stage = Stage.FULL
-          active = Active.ALWAYS
-          url = "https://central.sonatype.com/api/v1/publisher"
-          stagingRepository("build/staging-deploy")
-        }
+        create(
+            "sonatype",
+            Action {
+              snapshotSupported = true
+              stage = Stage.FULL
+              active = Active.ALWAYS
+              url = "https://central.sonatype.com/api/v1/publisher"
+              stagingRepository("build/staging-deploy")
+            })
       }
     }
   }
