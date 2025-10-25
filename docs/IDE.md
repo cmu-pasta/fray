@@ -20,8 +20,27 @@ Fray Idea Plugin allows you to control concurrent programs in your Intellij IDE!
 
 ## Usage
 
-Fray Debugger Plugin provides an interactive interface to control the execution of concurrent programs. To start 
-Fray Debugger, you may select `Debug (Fray)` from the Run/Debug Configurations dropdown:
+Fray Debugger Plugin provides an interactive interface to control the execution of concurrent programs. 
+
+To launch Fray tests from IntelliJ, you'll need to add the Fray-instrumented JDK to IntelliJ's configuration. This can 
+be done by first:
+
+* when using Maven, run `mvn verify`, followed by `mvn dependency:copy-dependencies`
+* when using Gradle, TODO
+
+Then, in the `Run/Debug Configurations`, add the JDK in the `Build and run` section:
+
+![img.png](images/fray-intellij-build-and-run.png)
+
+Click `Select alternative JRE` and navigate to the instrumented JDK: `${project_folder}/target/fray/fray-java`.
+You will also need to add the following VM options:
+
+```
+-javaagent:$MODULE_DIR$/target/dependency/fray-instrumentation-agent-0.6.8.jar
+-agentpath:$MODULE_DIR$/target/fray/fray-jvmti/libjvmti.so
+```
+
+Finally, you can then start the Fray Debugger, by selecting `Debug (Fray)` from the Run/Debug Configurations dropdown:
 
 ![img.png](images/fray-plugin-launch.png)
 
