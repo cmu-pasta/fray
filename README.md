@@ -119,7 +119,7 @@ Fray's design and evaluation is described in the following research paper (pleas
 An extended version of the paper with detailed formalizations and proofs is available at: https://arxiv.org/abs/2501.12618
 
 
-Talkes about Fray have been given at the following venues:
+Talks about Fray have been given at the following venues:
 - [SPLASH 2025 by Ao Li](https://youtu.be/zoE2w2hueYQ?t=20390) 
 - [DC Systems Meetup by Rohan Padhye](https://www.youtube.com/watch?v=AX6Pqz8gSYY)
 
