@@ -132,11 +132,40 @@ java.lang.AssertionError
 2025-02-17 13:43:40 [INFO]: The recording is saved to PATH_TO_FRAY_REPORT/recording
 ```
 
-Next, you may replay the failure using Fray by providing the recording path:
+Fray provides **two ways** to reproduce a failure:
+
+---
+
+#### 1. Replay using recorded random choices
+
+You can rerun the program with the **same scheduler** and the **recorded random choices** used in the failing execution.  
+This technique is described in detail in [our NSDI paper](https://aoli.al/papers/fest-nsdi26.pdf).
+
+By default, **Fray** uses this method to reproduce failures.  
+Each report folder includes both the scheduler type and the random choices used during the run.  
+To replay the failure, simply provide the path to the replay file—no need to specify the scheduler explicitly:
 
 ```java
 @ConcurrencyTest(
         replay = "PATH_TO_FRAY_REPORT/recording"
+)
+```
+
+#### 2. Replay using the exact thread interleaving
+
+Alternatively, you can reproduce the failure by replaying the exact thread schedule observed during the original execution.
+This requires that the schedule was recorded when the test was run.
+
+To enable schedule recording, set the following system property: `-Dfray.recordSchedule=true`.
+
+> [!NOTE]
+> This approach is less reliable if your program contains other sources of nondeterminism (e.g., random number generators, I/O operations, etc.) that influence the execution path.
+
+Once the schedule is recorded, configure your test to use the `ReplayScheduler`:
+```java
+@ConcurrencyTest(
+    scheduler = ReplayScheduler.class,
+    replay = "PATH_TO_FRAY_REPORT/recording"
 )
 ```
 
