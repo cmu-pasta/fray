@@ -118,12 +118,10 @@ Fray's design and evaluation is described in the following research paper (pleas
 
 An extended version of the paper with detailed formalizations and proofs is available at: https://arxiv.org/abs/2501.12618
 
-See also a YouTube video of a talk given by Rohan Padhye at the [DC Systems Meetup](https://dcsystems.wtf/) hosted by [Antithesis](https://antithesis.com).
 
-<a href="https://www.youtube.com/watch?v=AX6Pqz8gSYY">
-  <img width="601" height="334" alt="image" src="https://github.com/user-attachments/assets/a67304e3-3769-40e3-bd6d-9187837f80d4" />
-</a>
-
+Talks about Fray have been given at the following venues:
+- [SPLASH 2025 by Ao Li](https://youtu.be/zoE2w2hueYQ?t=20390) 
+- [DC Systems Meetup by Rohan Padhye](https://www.youtube.com/watch?v=AX6Pqz8gSYY)
 
 # Acknowledgements
 
