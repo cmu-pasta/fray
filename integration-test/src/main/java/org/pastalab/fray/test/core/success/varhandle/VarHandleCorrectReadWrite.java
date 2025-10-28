@@ -15,7 +15,7 @@ public class VarHandleCorrectReadWrite {
         public int[] intArray = new int[10];
     }
 
-    public static void main(String []args) throws InterruptedException, NoSuchFieldException, IllegalAccessException {
+    public static void main(String[] args) throws InterruptedException, NoSuchFieldException, IllegalAccessException {
         SimpleObject obj = new SimpleObject();
 
         // int
