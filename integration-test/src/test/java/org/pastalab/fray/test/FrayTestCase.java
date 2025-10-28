@@ -11,17 +11,16 @@ import org.pastalab.fray.core.command.*;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.randomness.ControlledRandomProvider;
 import org.pastalab.fray.core.randomness.RecordedRandomProvider;
-import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
-import org.pastalab.fray.test.controllers.network.reactive.success.inputstream.PipedInputStreamReadNoDeadlockMultiThread;
-import org.pastalab.fray.test.core.success.cdl.CountDownLatchInterruptNoDeadlock;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
+import org.pastalab.fray.test.core.success.varhandle.ArrayVarHandleCasNoInfLoop;
+import org.pastalab.fray.test.core.success.varhandle.ArrayVarHandleVolatileOpsNoInfLoop;
+import org.pastalab.fray.test.core.success.varhandle.VarHandleCorrectReadWrite;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
@@ -89,7 +88,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                CountDownLatchInterruptNoDeadlock.main(new String[]{});
+                                VarHandleCorrectReadWrite.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -100,7 +99,7 @@ public class FrayTestCase {
                         -1
                 ),
                 "/tmp/report2",
-                50,
+                1,
                 60,
                 new RandomScheduler(new ControlledRandom(new ArrayList<>(), new ArrayList<>(), new Random(0))),
                 new ControlledRandomProvider(),

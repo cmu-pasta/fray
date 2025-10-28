@@ -29,7 +29,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     var cv: ClassVisitor = ThreadInstrumenter(cn)
     cv = VolatileFieldsInstrumenter(cv, instrumentingJdk = true, interleaveAllMemoryOps = false)
     cv = SleepInstrumenter(cv, true)
-    cv = FieldInstanceReadWriteInstrumenter(cv)
+    cv = VarHandleInstrumenter(cv)
     cv = ReentrantReadWriteLockInstrumenter(cv)
     cv = LockSupportInstrumenter(cv)
     cv = LockInstrumenter(cv)
