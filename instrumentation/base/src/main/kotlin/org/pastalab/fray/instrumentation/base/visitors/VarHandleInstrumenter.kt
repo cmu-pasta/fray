@@ -26,7 +26,7 @@ class VarHandleMethodVisitor(
   ) {
     if (signatureMatcher(owner, name)) {
       // For var handle operations, we only need the object reference and its offset (which is
-      // always a long). However, we need to customized instrumentation for each operation.
+      // always a long). However, we need to customize instrumentation for each operation.
       // So the convention is that the customized instrumentation will always put the `offset`
       // value in the `offset` local variable after it finishes.
       val offset: Int by lazy { newLocal(Type.LONG_TYPE) }
