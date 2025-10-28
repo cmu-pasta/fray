@@ -7,7 +7,7 @@ public class ArrayVarHandleVolatileOpsNoInfLoop {
     private static final Object[] data = new Object[32];
     private static final VarHandle DATA = MethodHandles.arrayElementVarHandle(Object[].class);
 
-    public static void main(String []args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         DATA.setVolatile(data, 0, 0);
         var t1 = new Thread(() -> {
             DATA.setVolatile(data, 0, 1);
