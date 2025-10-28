@@ -3,7 +3,6 @@ package org.pastalab.fray.instrumentation.base.visitors
 import kotlin.reflect.KFunction
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes.INVOKESTATIC
 import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
 import org.pastalab.fray.runtime.Runtime
@@ -27,15 +26,9 @@ class VarHandleMethodVisitor(
   ) {
     if (signatureMatcher(owner, name)) {
       // For var handle operations, we only need the object reference and its offset (which is
-      // always a
-      // long).
-      // However, we need to customized instrumentation for each operation. So the convention is
-      // that
-      // the
-      // customized instrumentation will always put the `offset` value in the `offset` local
-      // variable
-      // after it
-      // finishes.
+      // always a long). However, we need to customized instrumentation for each operation.
+      // So the convention is that the customized instrumentation will always put the `offset`
+      // value in the `offset` local variable after it finishes.
       val offset: Int by lazy { newLocal(Type.LONG_TYPE) }
 
       // If you need to pop some stack values before accessing the offset and reference,
@@ -61,19 +54,38 @@ class VarHandleMethodVisitor(
   }
 }
 
-class FieldInstanceReadWriteInstrumenter(cv: ClassVisitor) :
-    ClassVisitorBase(
-        cv,
-        "java.lang.invoke.VarHandleInts\$FieldInstanceReadWrite",
-        "java.lang.invoke.VarHandleLongs\$FieldInstanceReadWrite",
-        "java.lang.invoke.VarHandleFloats\$FieldInstanceReadWrite",
-        "java.lang.invoke.VarHandleDoubles\$FieldInstanceReadWrite",
-        "java.lang.invoke.VarHandleBooleans\$FieldInstanceReadWrite",
-        "java.lang.invoke.VarHandleBytes\$FieldInstanceReadWrite",
-        "java.lang.invoke.VarHandleShorts\$FieldInstanceReadWrite",
-        "java.lang.invoke.VarHandleChars\$FieldInstanceReadWrite",
-        "java.lang.invoke.VarHandleReferences\$FieldInstanceReadWrite",
-        "java.lang.invoke.VarHandleReferences\$Array") {
+class VarHandleInstrumenter(cv: ClassVisitor) :
+    ClassVisitorBase(cv, *instrumentedClasses.toTypedArray()) {
+  companion object {
+    val instrumentedClasses: List<String> by lazy {
+      val varHandleNames =
+          listOf(
+              "java.lang.invoke.VarHandleInts",
+              "java.lang.invoke.VarHandleLongs",
+              "java.lang.invoke.VarHandleFloats",
+              "java.lang.invoke.VarHandleDoubles",
+              "java.lang.invoke.VarHandleBooleans",
+              "java.lang.invoke.VarHandleBytes",
+              "java.lang.invoke.VarHandleShorts",
+              "java.lang.invoke.VarHandleChars",
+              "java.lang.invoke.VarHandleReferences",
+          )
+      val subClassNames =
+          listOf(
+              "FieldInstanceReadWrite",
+              "FieldInstanceReadOnly",
+              "FieldStaticReadWrite",
+              "FieldStaticReadOnly",
+              "Array")
+      val instrumentedClasses = mutableListOf<String>()
+      for (varHandleName in varHandleNames) {
+        for (subClassName in subClassNames) {
+          instrumentedClasses.add("$varHandleName$$subClassName")
+        }
+      }
+      instrumentedClasses
+    }
+  }
 
   override fun instrumentMethod(
       mv: MethodVisitor,

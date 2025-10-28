@@ -14,7 +14,7 @@ public class ArrayVarHandleVolatileOpsNoInfLoop {
         });
         var t2 = new Thread(() -> {
             while(DATA.getVolatile(data, 0).equals(0)) {
-                // Do nothing
+                // Do nothing. getVolatile should trigger a reschedule.
             }
         });
         t1.start();
