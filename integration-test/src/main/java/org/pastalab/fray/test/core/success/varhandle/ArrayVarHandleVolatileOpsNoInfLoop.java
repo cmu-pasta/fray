@@ -3,7 +3,7 @@ package org.pastalab.fray.test.core.success.varhandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 
-public class ArrayVarHandleNoInfLoop {
+public class ArrayVarHandleVolatileOpsNoInfLoop {
     private static final Object[] data = new Object[32];
     private static final VarHandle DATA = MethodHandles.arrayElementVarHandle(Object[].class);
 

@@ -1,9 +1,65 @@
 package org.pastalab.fray.instrumentation.base.visitors
 
+import kotlin.reflect.KFunction
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes.INVOKESTATIC
 import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
+import org.pastalab.fray.runtime.Runtime
+
+class VarHandleMethodVisitor(
+    mv: MethodVisitor,
+    access: Int,
+    name: String,
+    descriptor: String,
+    val signatureMatcher: (String, String) -> Boolean,
+    val callbackFunction: KFunction<*>,
+    val instrumenter: (VarHandleMethodVisitor, String, Int, MutableList<Int>) -> Unit
+) : AdviceAdapter(ASM9, mv, access, name, descriptor) {
+
+  override fun visitMethodInsn(
+      opcodeAndSource: Int,
+      owner: String,
+      name: String,
+      descriptor: String,
+      isInterface: Boolean
+  ) {
+    if (signatureMatcher(owner, name)) {
+      // For var handle operations, we only need the object reference and its offset (which is
+      // always a
+      // long).
+      // However, we need to customized instrumentation for each operation. So the convention is
+      // that
+      // the
+      // customized instrumentation will always put the `offset` value in the `offset` local
+      // variable
+      // after it
+      // finishes.
+      val offset: Int by lazy { newLocal(Type.LONG_TYPE) }
+
+      // If you need to pop some stack values before accessing the offset and reference,
+      // create locals to store them here. Note, you also need to add offset at a proper position.
+      // They will be loaded back in reverse order.
+      val poppedValues = mutableListOf<Int>()
+      instrumenter(this, descriptor, offset, poppedValues)
+      dup()
+
+      loadLocal(offset)
+
+      visitMethodInsn(
+          INVOKESTATIC,
+          org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
+          callbackFunction.name,
+          Utils.kFunctionToJvmMethodDescriptor(callbackFunction),
+          false)
+      for (local in poppedValues.reversed()) {
+        loadLocal(local)
+      }
+    }
+    super.visitMethodInsn(opcodeAndSource, owner, name, descriptor, isInterface)
+  }
+}
 
 class FieldInstanceReadWriteInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(
@@ -16,7 +72,8 @@ class FieldInstanceReadWriteInstrumenter(cv: ClassVisitor) :
         "java.lang.invoke.VarHandleBytes\$FieldInstanceReadWrite",
         "java.lang.invoke.VarHandleShorts\$FieldInstanceReadWrite",
         "java.lang.invoke.VarHandleChars\$FieldInstanceReadWrite",
-        "java.lang.invoke.VarHandleReferences\$FieldInstanceReadWrite") {
+        "java.lang.invoke.VarHandleReferences\$FieldInstanceReadWrite",
+        "java.lang.invoke.VarHandleReferences\$Array") {
 
   override fun instrumentMethod(
       mv: MethodVisitor,
@@ -27,47 +84,57 @@ class FieldInstanceReadWriteInstrumenter(cv: ClassVisitor) :
       exceptions: Array<out String>?
   ): MethodVisitor {
     if (name == "compareAndSet") {
-      val type = Type.getArgumentTypes(descriptor)[2]!!
-      return object : AdviceAdapter(ASM9, mv, access, name, descriptor) {
-        override fun visitMethodInsn(
-            opcodeAndSource: Int,
-            owner: String,
-            name: String,
-            descriptor: String,
-            isInterface: Boolean
-        ) {
-          if (owner == "jdk/internal/misc/Unsafe" && name.contains("compareAndSet")) {
+      return VarHandleMethodVisitor(
+          mv,
+          access,
+          name,
+          descriptor,
+          { owner, methodName ->
+            owner == "jdk/internal/misc/Unsafe" && methodName.contains("compareAndSet")
+          },
+          Runtime::onUnsafeWriteVolatile,
+          { mv, descriptor, offset, poppedValues ->
             // Unsafe compareAndSet methods are called with the following arguments:
             // Object o, long offset, Type expected, Type value
             // We want to call Runtime.onUnsafeWriteVolatile(o, offset)
             // so that we need to store the expected and value arguments and load them later
-            val expected = newLocal(type)
-            val value = newLocal(type)
-            val offset = newLocal(Type.LONG_TYPE)
+            val type = Type.getArgumentTypes(descriptor)[2]!!
 
-            storeLocal(value)
-            storeLocal(expected)
-            storeLocal(offset)
+            poppedValues.add(mv.newLocal(type))
+            poppedValues.add(mv.newLocal(type))
+            poppedValues.add(offset)
 
-            dup()
+            mv.storeLocal(poppedValues[0])
+            mv.storeLocal(poppedValues[1])
+            mv.storeLocal(offset)
+          },
+      )
+    }
+    if (name == "getVolatile" || name == "setVolatile") {
+      return VarHandleMethodVisitor(
+          mv,
+          access,
+          name,
+          descriptor,
+          { owner, methodName ->
+            owner == "jdk/internal/misc/Unsafe" &&
+                (methodName.startsWith("get") || methodName.startsWith("put")) &&
+                methodName.endsWith("Volatile")
+          },
+          if (name == "getVolatile") Runtime::onUnsafeReadVolatile
+          else Runtime::onUnsafeWriteVolatile,
+          { mv, descriptor, offset, poppedValues ->
+            if (name.startsWith("set")) {
+              val type = Type.getArgumentTypes(descriptor)[2]!!
+              poppedValues.add(mv.newLocal(type))
+            }
+            poppedValues.add(offset)
 
-            loadLocal(offset)
-
-            visitMethodInsn(
-                INVOKESTATIC,
-                org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
-                org.pastalab.fray.runtime.Runtime::onUnsafeWriteVolatile.name,
-                Utils.kFunctionToJvmMethodDescriptor(
-                    org.pastalab.fray.runtime.Runtime::onUnsafeWriteVolatile),
-                false)
-
-            loadLocal(offset)
-            loadLocal(expected)
-            loadLocal(value)
-          }
-          super.visitMethodInsn(opcodeAndSource, owner, name, descriptor, isInterface)
-        }
-      }
+            for (local in poppedValues) {
+              mv.storeLocal(local)
+            }
+          },
+      )
     }
     return mv
   }
