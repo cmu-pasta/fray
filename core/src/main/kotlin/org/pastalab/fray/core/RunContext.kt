@@ -353,9 +353,19 @@ class RunContext(val config: Configuration) {
     if (state == Thread.State.WAITING ||
         state == Thread.State.TIMED_WAITING ||
         state == Thread.State.BLOCKED) {
-      val context = registeredThreads[t.id]
-      if (context?.state == ThreadState.Running || context?.state == ThreadState.Runnable) {
+      val context = registeredThreads[t.id]!!
+      if (context.state == ThreadState.Running || context.state == ThreadState.Runnable) {
         return@verifyNoThrow Thread.State.RUNNABLE
+      }
+      if (context.state == ThreadState.Blocked) {
+        val pendingOperation = context.pendingOperation
+        if (pendingOperation is BlockedOperation) {
+          if (pendingOperation.isTimed) {
+            return@verifyNoThrow Thread.State.TIMED_WAITING
+          } else {
+            return@verifyNoThrow Thread.State.WAITING
+          }
+        }
       }
     }
     return@verifyNoThrow state
