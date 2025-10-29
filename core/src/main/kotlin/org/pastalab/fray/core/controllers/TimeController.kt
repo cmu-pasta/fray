@@ -32,8 +32,7 @@ class TimeController(config: Configuration) {
   }
 
   fun currentTimeMillisRawNoIncrement(): Long {
-    return if (!isVirtualTimeMode) System.currentTimeMillis()
-    else nanoTime / 1000000
+    return if (!isVirtualTimeMode) System.currentTimeMillis() else nanoTime / 1000000
   }
 
   fun instantNow() = verifyNoThrow {

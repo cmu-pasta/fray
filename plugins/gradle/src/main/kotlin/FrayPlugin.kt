@@ -59,10 +59,6 @@ class FrayPlugin : Plugin<Project> {
           else -> throw IllegalArgumentException("Unsupported test framework $testFramework")
         }
         it.jvmArgs("-agentpath:$jvmtiPath/libjvmti.$soSuffix")
-        it.jvmArgs("-Dfray.recordSchedule=true")
-        it.jvmArgs("-Dfray.verifySchedule=/home/aoli/repos/dfray/dfray-server/build/fray/fray" +
-            "-report/org.pastalab.dfray.runtime" +
-            ".MockedSelectorTest/testBlockingSelectAndWakeup/recording/recording.json")
         it.jvmArgs(
             "-javaagent:${it.project.configurations.detachedConfiguration(frayInstrumentation).resolve().first()}")
         it.jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
