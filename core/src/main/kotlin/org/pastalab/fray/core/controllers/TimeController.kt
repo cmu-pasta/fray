@@ -31,6 +31,11 @@ class TimeController(config: Configuration) {
     else getAndIncrementNanoTime() / 1000000
   }
 
+  fun currentTimeMillisRawNoIncrement(): Long {
+    return if (!isVirtualTimeMode) System.currentTimeMillis()
+    else nanoTime / 1000000
+  }
+
   fun instantNow() = verifyNoThrow {
     if (!isVirtualTimeMode) Instant.now()
     else Instant.ofEpochMilli(getAndIncrementNanoTime() / 1000000)
