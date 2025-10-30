@@ -61,6 +61,16 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           loadThis = false,
           loadArgs = false)
     }
+    if (name == "onSpinWait") {
+      return MethodEnterVisitor(
+          mv,
+          org.pastalab.fray.runtime.Runtime::onSpinWait,
+          access,
+          name,
+          descriptor,
+          loadThis = false,
+          loadArgs = false)
+    }
     if (name == "getAndClearInterrupt") {
       return MethodExitVisitor(
           mv,

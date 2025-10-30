@@ -125,6 +125,9 @@ public class Delegate {
     public void onYield() {
     }
 
+    public void onSpinWait() {
+    }
+
     public void onSkipPrimitive(String signature) {
     }
 
