@@ -354,14 +354,6 @@ class MainCommand : CliktCommand() {
             systemTimeDelegateType,
             ignoreTimedBlock,
             sleepAsYield)
-    val recordingPath = System.getProperty("fray.verifySchedule")
-    if (recordingPath != null && scheduler.isReplay) {
-      val recordings =
-          Json.decodeFromString<List<ScheduleRecording>>(File(recordingPath).readText())
-      val verifier = ScheduleVerifier(recordings)
-      configuration.scheduleObservers.add(verifier)
-      configuration.testStatusObservers.add(verifier)
-    }
     if (System.getProperty("fray.antithesisSdk", "false").toBoolean()) {
       configuration.testStatusObservers.add(AntithesisErrorReporter())
     }
@@ -421,6 +413,14 @@ data class Configuration(
     }
     if (System.getProperty("fray.logPausingTime", "false").toBoolean()) {
       scheduleObservers.add(ThreadPausingTimeLogger(frayLogger))
+    }
+    val recordingPath = System.getProperty("fray.verifySchedule")
+    if (recordingPath != null && isReplay) {
+      val recordings =
+          Json.decodeFromString<List<ScheduleRecording>>(File(recordingPath).readText())
+      val verifier = ScheduleVerifier(recordings)
+      scheduleObservers.add(verifier)
+      testStatusObservers.add(verifier)
     }
 
     val debuggerProperty = System.getProperty(FRAY_DEBUGGER_PROPERTY_KEY, FRAY_DEBUGGER_DISABLED)

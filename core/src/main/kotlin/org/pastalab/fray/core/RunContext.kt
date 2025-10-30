@@ -350,21 +350,21 @@ class RunContext(val config: Configuration) {
   }
 
   fun threadGetState(t: Thread, state: Thread.State) = verifyNoThrow {
-    if (state == Thread.State.WAITING ||
-        state == Thread.State.TIMED_WAITING ||
-        state == Thread.State.BLOCKED) {
-      val context = registeredThreads[t.id]!!
-      if (context.state == ThreadState.Running || context.state == ThreadState.Runnable) {
-        return@verifyNoThrow Thread.State.RUNNABLE
-      }
-      if (context.state == ThreadState.Blocked) {
-        val pendingOperation = context.pendingOperation
-        if (pendingOperation is BlockedOperation) {
-          if (pendingOperation.isTimed) {
-            return@verifyNoThrow Thread.State.TIMED_WAITING
-          } else {
-            return@verifyNoThrow Thread.State.WAITING
-          }
+    val context = registeredThreads[t.id]!!
+    if (context.state == ThreadState.Running || context.state == ThreadState.Runnable) {
+      return@verifyNoThrow Thread.State.RUNNABLE
+    }
+    if (context.state == ThreadState.Blocked) {
+      val pendingOperation = context.pendingOperation
+      if (pendingOperation is BlockedOperation) {
+        if (pendingOperation.isTimed) {
+          return@verifyNoThrow Thread.State.TIMED_WAITING
+        } else if (pendingOperation is ParkBlocked ||
+            pendingOperation is ObjectWaitBlocked ||
+            pendingOperation is ConditionAwaitBlocked) {
+          return@verifyNoThrow Thread.State.WAITING
+        } else {
+          return@verifyNoThrow Thread.State.BLOCKED
         }
       }
     }
