@@ -59,12 +59,12 @@ class FrayWorkspaceInitializer(
   private fun downloadJDK(): String {
     val osName = System.getProperty("os.name").lowercase()
     if (osName.contains("linux") && isRunningOnNixOS()) {
-      val nixJdkHome = System.getenv("JDK23_HOME")
+      val nixJdkHome = System.getenv("JDK25_HOME")
       println("Running on NixOS, using system JDK: $nixJdkHome")
       if (nixJdkHome != null) {
         return nixJdkHome
       } else {
-        throw RuntimeException("Running on NixOS but JDK23_HOME is not set.")
+        throw RuntimeException("Running on NixOS but JDK25_HOME is not set.")
       }
     }
     val downloadUrl = getDownloadUrl(osName)
@@ -91,8 +91,8 @@ class FrayWorkspaceInitializer(
           "Failed to execute java -version for JDK at $jdkPath, exit code: $exitCode")
     }
     val output = process.errorStream.bufferedReader().readText()
-    if (!output.contains("23.")) {
-      throw RuntimeException("JDK version is not 23.x, found: $output")
+    if (!output.contains("25.")) {
+      throw RuntimeException("JDK version is not 25.x, found: $output")
     }
   }
 

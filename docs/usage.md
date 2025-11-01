@@ -171,17 +171,17 @@ Once the schedule is recorded, configure your test to use the `ReplayScheduler`:
 
 ## NixOS
 
-Fray downloads Corretto JDK 23 and runs `ConcurrencyTest` with it by default. However, NixOS cannot run dynamically 
-linked executables. To run Fray on NixOS, you can provide environment variable `JDK23_HOME` and Fray will use provided 
-JDK 23 instead of downloading it.
+Fray downloads Corretto JDK 25 and runs `ConcurrencyTest` with it by default. However, NixOS cannot run dynamically 
+linked executables. To run Fray on NixOS, you can provide environment variable `JDK25_HOME` and Fray will use provided 
+JDK 25 instead of downloading it.
 
 ```nix
 packages = with pkgs; [
   ...
-  jdk23
+  javaPackages.compiler.openjdk25
 ];
 shellHook = ''
-  export JDK23_HOME="${pkgs.jdk23.home}"
+  export JDK25_HOME="${pkgs.javaPackages.compiler.openjdk25.home}"
 ''
 ```
 
