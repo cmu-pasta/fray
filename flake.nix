@@ -44,6 +44,7 @@
             export CC="${pkgs.gcc}/bin/gcc"
             export CXX="${pkgs.gcc}/bin/g++"
             export JDK11="${pkgs.jdk11.home}"
+            export JDK25="${pkgs.javaPackages.compiler.openjdk25.home}"
             export JRE="${pkgs.javaPackages.compiler.openjdk25.home}"
             export JAVA_HOME="${pkgs.javaPackages.compiler.openjdk25.home}"
             ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
@@ -68,6 +69,7 @@
               buildInputs = commonPackages;
               preBuild = ''
                 ${commonEnv}
+                java -version
                 sed -i '/include("plugins/d' settings.gradle.kts
                 sed -i '/include("integration-test")/d' settings.gradle.kts
               '';
@@ -116,6 +118,7 @@
             export CC="${pkgs.gcc}/bin/gcc"
             export CXX="${pkgs.gcc}/bin/g++"
             export JDK11="${pkgs.jdk11.home}"
+            export JDK25="${pkgs.javaPackages.compiler.openjdk25.home}"
             export JRE="${pkgs.javaPackages.compiler.openjdk25.home}"
             export JAVA_HOME="${pkgs.javaPackages.compiler.openjdk25.home}"
             ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''

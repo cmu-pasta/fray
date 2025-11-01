@@ -23,7 +23,7 @@ jobs:
           java-version: |
             11
             21
-            23
+            25
           cache: 'gradle'
       - name: Build fray and run tests
         run: ./gradlew build
