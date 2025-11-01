@@ -35,6 +35,7 @@ class FrayWorkspaceInitializer(
               "-J--class-path=$classPaths",
               "--output=${jdkPath.absolutePath}",
               "--add-modules=ALL-MODULE-PATH",
+              "--module-path=$jdk/jmods",
               "--fray-instrumentation",
           )
       val process = ProcessBuilder(*command).start()
@@ -160,9 +161,9 @@ class FrayWorkspaceInitializer(
     }
   }
 
-  val jdkMajorVersion = "23"
+  val jdkMajorVersion = "25"
   val jdkMinorVersion = "0"
-  val jdkSecurityVersions = arrayOf("2", "7", "1")
+  val jdkSecurityVersions = arrayOf("1", "8", "1")
 
   val jdkVersion = "$jdkMajorVersion.$jdkMinorVersion.${jdkSecurityVersions.joinToString(".")}"
 

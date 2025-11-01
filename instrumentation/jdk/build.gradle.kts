@@ -70,6 +70,7 @@ tasks.build {
                     "-J--class-path=$jars${File.pathSeparator}$runtimeJar",
                     "--output=${jdkPath.absolutePath}",
                     "--add-modules=ALL-MODULE-PATH",
+                    "--module-path=${System.getenv("JAVA_HOME")}/jmods",
                     "--fray-instrumentation")
             println(command.joinToString(" "))
             commandLine(command)

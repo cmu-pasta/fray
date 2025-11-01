@@ -20,7 +20,8 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
   if (DEBUG_MODE) {
     writeClassFile(path, byteArray, false)
   }
-  val shouldSkipChecking = path.contains("SystemModules") || path.contains("$")
+  val shouldSkipChecking =
+      path.contains("SystemModules") || path.contains("$") || path.contains("module-info")
 
   try {
     val classReader = ClassReader(byteArray)
