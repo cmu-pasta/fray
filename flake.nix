@@ -26,8 +26,8 @@
     in
     {
       overlays.default = final: prev: {
-        jdk = prev.jdk23;
-        java = prev.jdk23;
+        jdk = prev.javaPackages.compiler.openjdk25;
+        java = prev.javaPackages.compiler.openjdk25;
       };
 
       packages = forEachSupportedSystem (
@@ -36,7 +36,7 @@
           commonPackages = with pkgs; [
             gcc
             cmake
-            jdk23
+            javaPackages.compiler.openjdk25
             jdk11
           ];
 
@@ -44,8 +44,9 @@
             export CC="${pkgs.gcc}/bin/gcc"
             export CXX="${pkgs.gcc}/bin/g++"
             export JDK11="${pkgs.jdk11.home}"
-            export JRE="${pkgs.jdk23.home}"
-            export JAVA_HOME="${pkgs.jdk23.home}"
+            export JDK25="${pkgs.javaPackages.compiler.openjdk25.home}"
+            export JRE="${pkgs.javaPackages.compiler.openjdk25.home}"
+            export JAVA_HOME="${pkgs.javaPackages.compiler.openjdk25.home}"
             ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
               export JETBRAINS_JDK_HOME="${pkgs.jetbrains.jdk.home}"
             ''}
@@ -58,7 +59,7 @@
               src = ./.;
               lockFile = ./gradle.lock;
               gradleBuildFlags = [
-                "-Porg.gradle.java.installations.paths=${pkgs.jdk11.home},${pkgs.jdk23.home}"
+                "-Porg.gradle.java.installations.paths=${pkgs.jdk11.home},${pkgs.javaPackages.compiler.openjdk25.home}"
                 "build"
                 "-x"
                 "test"
@@ -68,6 +69,7 @@
               buildInputs = commonPackages;
               preBuild = ''
                 ${commonEnv}
+                java -version
                 sed -i '/include("plugins/d' settings.gradle.kts
                 sed -i '/include("integration-test")/d' settings.gradle.kts
               '';
@@ -107,7 +109,7 @@
           packages = (with pkgs; [
             gcc
             cmake
-            jdk23
+            javaPackages.compiler.openjdk25
             jdk11
           ]) ++ pkgs.lib.optionals (pkgs.stdenv.isLinux) [
             pkgs.jetbrains.jdk
@@ -116,8 +118,9 @@
             export CC="${pkgs.gcc}/bin/gcc"
             export CXX="${pkgs.gcc}/bin/g++"
             export JDK11="${pkgs.jdk11.home}"
-            export JRE="${pkgs.jdk23.home}"
-            export JAVA_HOME="${pkgs.jdk23.home}"
+            export JDK25="${pkgs.javaPackages.compiler.openjdk25.home}"
+            export JRE="${pkgs.javaPackages.compiler.openjdk25.home}"
+            export JAVA_HOME="${pkgs.javaPackages.compiler.openjdk25.home}"
             ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
               export JETBRAINS_JDK_HOME="${pkgs.jetbrains.jdk.home}"
             ''}

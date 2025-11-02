@@ -5,10 +5,10 @@ plugins {
 }
 
 dependencies {
-  api("org.ow2.asm:asm:9.8")
-  api("org.ow2.asm:asm-tree:9.8")
-  api("org.ow2.asm:asm-commons:9.8")
-  api("org.ow2.asm:asm-util:9.8")
+  api("org.ow2.asm:asm:9.9")
+  api("org.ow2.asm:asm-tree:9.9")
+  api("org.ow2.asm:asm-commons:9.9")
+  api("org.ow2.asm:asm-util:9.9")
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation(project(":runtime"))

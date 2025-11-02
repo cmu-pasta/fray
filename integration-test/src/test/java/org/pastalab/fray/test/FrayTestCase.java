@@ -13,6 +13,7 @@ import org.pastalab.fray.core.randomness.ControlledRandomProvider;
 import org.pastalab.fray.core.randomness.RecordedRandomProvider;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.core.scheduler.Scheduler;
+import org.pastalab.fray.test.core.fail.monitor.MonitorDeadlock;
 import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
 import org.pastalab.fray.test.core.success.varhandle.ArrayVarHandleCasNoInfLoop;
 import org.pastalab.fray.test.core.success.varhandle.ArrayVarHandleVolatileOpsNoInfLoop;
@@ -88,7 +89,7 @@ public class FrayTestCase {
                 new ExecutionInfo(
                         new LambdaExecutor(() -> {
                             try {
-                                VarHandleCorrectReadWrite.main(new String[]{});
+                                MonitorDeadlock.main(new String[]{});
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -99,7 +100,7 @@ public class FrayTestCase {
                         -1
                 ),
                 "/tmp/report2",
-                1,
+                2,
                 60,
                 new RandomScheduler(new ControlledRandom(new ArrayList<>(), new ArrayList<>(), new Random(0))),
                 new ControlledRandomProvider(),
