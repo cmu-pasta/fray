@@ -45,7 +45,11 @@ class FrayPlugin : Plugin<Project> {
           }
       target.tasks.register("frayTest", Test::class.java) {
         it.executable(javaPath)
-        val testFramework = target.tasks.named("test", Test::class.java).get().testFramework.options
+        // Use the same classes and classpath as the built-in 'test' task (Gradle 9 requires this)
+        val baseTest = target.tasks.named("test", Test::class.java).get()
+        it.testClassesDirs = baseTest.testClassesDirs
+        it.classpath = baseTest.classpath
+        val testFramework = baseTest.testFramework.options
         when (testFramework) {
           is JUnitPlatformOptions ->
               it.useJUnitPlatform { options ->
@@ -77,6 +81,8 @@ class FrayPlugin : Plugin<Project> {
         if (target.hasProperty("fray.debugger")) {
           it.jvmArgs("-Dfray.debugger=${target.property("fray.debugger")}")
         }
+        // Ensure compiled test classes are available before running frayTest
+        it.mustRunAfter(baseTest)
         it.dependsOn(jlink)
       }
     }
