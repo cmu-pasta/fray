@@ -51,6 +51,7 @@ jobs:
           docker tag fray:latest $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
       - name: Start develop environment
+        if: runner.os == 'Linux'
         run: nix develop
       - name: Create jreleaser work directory
         run: mkdir -p ./build/jreleaser
