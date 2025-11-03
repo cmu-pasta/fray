@@ -2,8 +2,13 @@ package org.pastalab.fray.junit.junit5
 
 import java.io.File
 import java.lang.reflect.Method
+import java.nio.file.Files
 import java.util.stream.Stream
+import kotlin.io.path.Path
 import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.extension.ConditionEvaluationResult
+import org.junit.jupiter.api.extension.ExecutionCondition
+import org.junit.jupiter.api.extension.Extension
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.TestTemplateInvocationContext
 import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider
@@ -23,6 +28,16 @@ import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest
 
 class FrayTestExtension : TestTemplateInvocationContextProvider {
 
+  val enabled: Boolean by lazy {
+    val release = Path(System.getProperty("java.home"), "release")
+    for (line in Files.readAllLines(release)) {
+      if (line.contains("IMPLEMENTOR=Fray")) {
+        return@lazy true
+      }
+    }
+    false
+  }
+
   override fun supportsTestTemplate(context: ExtensionContext): Boolean {
     return isAnnotated(context.testMethod, ConcurrencyTest::class.java)
   }
@@ -39,6 +54,14 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
                 ConcurrencyTest::class.java,
             )
             .get()
+
+    // If Fray is not enabled in the current JRE, still provide invocations but mark them disabled
+    val repetitions = totalRepetition(concurrencyTest, testMethod)
+    if (!enabled) {
+      return Stream.iterate(1, { it + 1 }).limit(repetitions.toLong()).map {
+        alwaysDisabledInvocation(it, displayName, repetitions, "Fray is not enabled in this JVM")
+      }
+    }
 
     // Use the test class and method names for the report directory
     val className = testClass.name
@@ -78,7 +101,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
                 maxScheduledStep = -1,
             ),
             testDir.toString(),
-            totalRepetition(concurrencyTest, testMethod),
+            repetitions,
             60,
             scheduler,
             random,
@@ -91,13 +114,13 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             networkDelegateType = concurrencyTest.networkDelegateType,
             systemTimeDelegateType = concurrencyTest.systemTimeDelegateType,
             ignoreTimedBlock = concurrencyTest.ignoreTimedBlock,
-            sleepAsYield = concurrencyTest.sleepAsYield)
+            sleepAsYield = concurrencyTest.sleepAsYield,
+        )
     val frayContext = RunContext(config)
     val frayJupiterContext = FrayJupiterContext()
-    return Stream.iterate(1, { it + 1 })
-        .sequential()
-        .limit(totalRepetition(concurrencyTest, testMethod).toLong())
-        .map { FrayTestInvocationContext(it, displayName, frayContext, frayJupiterContext) }
+    return Stream.iterate(1, { it + 1 }).sequential().limit(repetitions.toLong()).map {
+      FrayTestInvocationContext(it, displayName, frayContext, frayJupiterContext)
+    }
   }
 
   private fun totalRepetition(concurrencyTest: ConcurrencyTest, method: Method): Int {
@@ -115,13 +138,38 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
     return repetition
   }
 
+  private fun alwaysDisabledInvocation(
+      index: Int,
+      displayName: String,
+      total: Int,
+      reason: String
+  ): TestTemplateInvocationContext {
+    return object : TestTemplateInvocationContext {
+      override fun getDisplayName(invocationIndex: Int): String {
+        return "$displayName repetition $index of $total (skipped)"
+      }
+
+      override fun getAdditionalExtensions(): MutableList<Extension> {
+        return mutableListOf(
+            object : ExecutionCondition {
+              override fun evaluateExecutionCondition(
+                  context: ExtensionContext
+              ): ConditionEvaluationResult {
+                return ConditionEvaluationResult.disabled(reason)
+              }
+            })
+      }
+    }
+  }
+
   fun getPath(resourceLocation: String): File {
     val classPathPrefix = "classpath:"
     return if (resourceLocation.startsWith(classPathPrefix)) {
       val classPathPath = resourceLocation.substring(classPathPrefix.length)
-      val classLoader = Thread.currentThread().getContextClassLoader()
+      val classLoader = Thread.currentThread().contextClassLoader
       val url = classLoader.getResource(classPathPath)
-      File(url.toURI())
+      val nonNullUrl = requireNotNull(url) { "Resource '$classPathPath' not found on classpath" }
+      File(nonNullUrl.toURI())
     } else {
       File(resourceLocation)
     }

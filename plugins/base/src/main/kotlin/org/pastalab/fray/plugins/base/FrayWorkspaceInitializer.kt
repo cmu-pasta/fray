@@ -36,6 +36,8 @@ class FrayWorkspaceInitializer(
               "--output=${jdkPath.absolutePath}",
               "--add-modules=ALL-MODULE-PATH",
               "--module-path=$jdk/jmods",
+              "--release-info",
+              "add:IMPLEMENTOR=Fray",
               "--fray-instrumentation",
           )
       val process = ProcessBuilder(*command).start()
@@ -91,7 +93,7 @@ class FrayWorkspaceInitializer(
           "Failed to execute java -version for JDK at $jdkPath, exit code: $exitCode")
     }
     val output = process.errorStream.bufferedReader().readText()
-    if (!output.contains("25.")) {
+    if (!output.contains("\"25")) {
       throw RuntimeException("JDK version is not 25.x, found: $output")
     }
   }

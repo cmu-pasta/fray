@@ -79,6 +79,8 @@ tasks.build {
                     "--output=${jdkPath.absolutePath}",
                     "--add-modules=ALL-MODULE-PATH",
                     "--module-path=$javaHome/jmods",
+                    "--release-info",
+                    "add:IMPLEMENTOR=Fray",
                     "--fray-instrumentation")
             println(command.joinToString(" "))
             commandLine(command)
