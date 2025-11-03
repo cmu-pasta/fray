@@ -50,7 +50,7 @@ jobs:
           docker images
           docker tag fray:latest $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
-      - name: Start develop enviroment
+      - name: Start develop environment
         run: nix develop
       - name: Create jreleaser work directory
         run: mkdir -p ./build/jreleaser
