@@ -981,19 +981,19 @@ class RunContext(val config: Configuration) {
 
   fun latchCountDownDone(latch: CountDownLatch) = verifyNoThrow { syncManager.wait(latch) }
 
-  fun threadSleepOperation(blockedUntil: Long) = verifyNoThrow {
+  fun threadSleepOperation(blockedUntil: Long) = mustBeCaught {
+    val t = Thread.currentThread().id
+    val context = registeredThreads[t]!!
+    context.checkInterrupt()
     if (config.sleepAsYield) {
-      val t = Thread.currentThread().id
-      val context = registeredThreads[t]!!
       context.state = ThreadState.Runnable
       scheduleNextOperation(true)
     } else {
-      val t = Thread.currentThread().id
-      val context = registeredThreads[t]!!
       context.pendingOperation = SleepBlockedOperation(context, blockedUntil)
       context.state = ThreadState.Blocked
       scheduleNextOperation(true)
     }
+    context.checkInterrupt()
   }
 
   fun evaluateRangerCondition(condition: RangerCondition): Boolean {
