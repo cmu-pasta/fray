@@ -38,13 +38,13 @@ class StampedLockContext(stampedLock: StampedLock) :
     readLockWaiters.values.forEach {
       it.thread.pendingOperation = ThreadResumeOperation(true)
       it.thread.state = ThreadState.Runnable
-      readLockWaiters.remove(it.thread.thread.id)
     }
+    readLockWaiters.clear()
     writeLockWaiters.values.forEach {
       it.thread.pendingOperation = ThreadResumeOperation(true)
       it.thread.state = ThreadState.Runnable
-      writeLockWaiters.remove(it.thread.thread.id)
     }
+    writeLockWaiters.clear()
   }
 
   fun unlockReadLock(threadContext: ThreadContext) {
@@ -105,14 +105,14 @@ class StampedLockContext(stampedLock: StampedLock) :
   override fun unblockThread(tid: Long, type: InterruptionType): Boolean {
     val noTimeout = type != InterruptionType.TIMEOUT
     readLockWaiters[tid]?.let {
-      if (it.canInterrupt) {
+      if (it.canInterrupt || type == InterruptionType.FORCE) {
         it.thread.pendingOperation = ThreadResumeOperation(noTimeout)
         it.thread.state = ThreadState.Runnable
         readLockWaiters.remove(tid)
       }
     }
     writeLockWaiters[tid]?.let {
-      if (it.canInterrupt) {
+      if (it.canInterrupt || type == InterruptionType.FORCE) {
         it.thread.pendingOperation = ThreadResumeOperation(noTimeout)
         it.thread.state = ThreadState.Runnable
         writeLockWaiters.remove(tid)
