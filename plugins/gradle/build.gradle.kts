@@ -12,12 +12,14 @@ gradlePlugin {
   website = "https://github.com/cmu-pasta/fray"
   vcsUrl = "https://github.com/cmu-pasta/fray"
   plugins {
-    create("fray", Action {
-      id = "org.pastalab.fray.gradle"
-      displayName = "Fray Gradle Plugin"
-      implementationClass = "org.pastalab.fray.gradle.FrayPlugin"
-      description = "Fray gradle plugin to test concurrency programs."
-      tags = listOf("fray", "testing", "concurrency")
-    })
+    create(
+        "fray",
+        Action {
+          id = "org.pastalab.fray.gradle"
+          displayName = "Fray Gradle Plugin"
+          implementationClass = "org.pastalab.fray.gradle.FrayPlugin"
+          description = "Fray gradle plugin to test concurrency programs."
+          tags = listOf("fray", "testing", "concurrency")
+        })
   }
 }
