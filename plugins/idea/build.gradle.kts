@@ -109,7 +109,7 @@ intellijPlatform {
 intellijPlatformTesting {
   runIde {
     register("runIdeForUiTests") {
-      task {
+      task(Action {
         jvmArgumentProviders += CommandLineArgumentProvider {
           listOf(
               "-Drobot-server.port=8082",
@@ -118,7 +118,7 @@ intellijPlatformTesting {
               "-Djb.consents.confirmation.enabled=false",
           )
         }
-      }
+      })
 
       plugins { robotServerPlugin() }
     }
