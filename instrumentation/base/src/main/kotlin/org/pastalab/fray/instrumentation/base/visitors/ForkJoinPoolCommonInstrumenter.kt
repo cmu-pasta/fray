@@ -8,7 +8,7 @@ import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
 import org.pastalab.fray.runtime.Runtime
 
-class ForkJoinPoolInstrumenter(cv: ClassVisitor) :
+class ForkJoinPoolCommonInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(cv, ForkJoinPool::class.java.name, ForkJoinTask::class.java.name) {
   override fun instrumentMethod(
       mv: MethodVisitor,
