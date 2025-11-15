@@ -16,7 +16,7 @@ import org.objectweb.asm.tree.MethodNode
 // https://github.com/openjdk/jdk/blob/f510b4a3bafa3f0d2c9ebf0b33d48f57f3bdef95/src/java.base/share/classes/java/util/concurrent/ForkJoinPool.java#L4303
 // This can break many things. For example,
 // https://github.com/cmu-pasta/fray/blob/c4d89a74c88c4cebe194740e926cf867df46d037/core/src/main/kotlin/org/pastalab/fray/core/RunContext.kt#L466
-// will wait for the curren thread to be blocked then schedule a new thread.
+// will wait for the current thread to be blocked then schedule a new thread.
 // If the current thread creates a new thread after it is blocked. Fray may have
 // ConcurrentModificationException or miss scheduling some threads.
 // Currently, we solve this problem by changing the `managedBlock` method to
