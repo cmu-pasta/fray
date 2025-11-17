@@ -1,5 +1,6 @@
 package org.pastalab.fray.instrumentation.base.visitors
 
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.ForkJoinTask
 import org.objectweb.asm.ClassVisitor
@@ -9,7 +10,11 @@ import org.objectweb.asm.commons.AdviceAdapter
 import org.pastalab.fray.runtime.Runtime
 
 class ForkJoinPoolCommonInstrumenter(cv: ClassVisitor) :
-    ClassVisitorBase(cv, ForkJoinPool::class.java.name, ForkJoinTask::class.java.name) {
+    ClassVisitorBase(
+        cv,
+        ForkJoinPool::class.java.name,
+        ForkJoinTask::class.java.name,
+        CompletableFuture::class.java.name) {
   override fun instrumentMethod(
       mv: MethodVisitor,
       access: Int,
@@ -23,6 +28,14 @@ class ForkJoinPoolCommonInstrumenter(cv: ClassVisitor) :
         super.visitFieldInsn(opcode, owner, name, descriptor)
         if (owner == ForkJoinPool::class.java.name.replace(".", "/")) {
           if (opcode == GETSTATIC && name == "common") {
+            invokeStatic(
+                Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
+                Utils.kFunctionToASMMethod(Runtime::onForkJoinPoolCommonPool))
+            return
+          }
+        }
+        if (owner == CompletableFuture::class.java.name.replace(".", "/")) {
+          if (opcode == GETSTATIC && name == "ASYNC_POOL") {
             invokeStatic(
                 Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
                 Utils.kFunctionToASMMethod(Runtime::onForkJoinPoolCommonPool))

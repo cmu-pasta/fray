@@ -33,7 +33,8 @@ fun configureTestTask(testTask: Test) {
   val soSuffix = if (getCurrentOperatingSystem().toFamilyName() == "windows") "dll" else "so"
   val javaExe = if (getCurrentOperatingSystem().toFamilyName() == "windows") "java.exe" else "java"
   println(instrumentation)
-  testTask.classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
+  testTask.classpath +=
+      tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
   testTask.executable(
       "${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}$javaExe")
   testTask.jvmArgs(
