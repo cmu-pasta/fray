@@ -22,8 +22,16 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     Delegate() {
 
   override fun onMainExit() {
-    context.mainCleanup()
+    // When a main thread exits, we do the following checks:
+    // 1. Wait for all threads except the ForkJoinPool common pool threads to finish.
+    // 2. Terminate the ForkJoinPool common pool threads.
+    // 3. Wait for ForkJoinPool common pool threads to finish.
     if (synchronizer.checkEntered()) return
+    context.waitForAllThreadsToFinish(false)
+    synchronizer.entered.set(false)
+    context.terminateForJoinPool()
+    if (synchronizer.checkEntered()) return
+    context.waitForAllThreadsToFinish(true)
     context.mainExit()
     synchronizer.entered.set(false)
   }

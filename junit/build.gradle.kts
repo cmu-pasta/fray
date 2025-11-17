@@ -22,10 +22,9 @@ dependencies {
   testImplementation("org.junit.platform:junit-platform-testkit:1.11.0-M1")
 }
 
-tasks.test {
-  useJUnitPlatform { includeEngines("junit-jupiter") }
-  dependsOn(":instrumentation:jdk:build")
-  exclude("org/pastalab/fray/junit/internal/**")
+fun configureTestTask(testTask: Test) {
+  testTask.useJUnitPlatform { includeEngines("junit-jupiter") }
+  testTask.dependsOn(":instrumentation:jdk:build")
   val instrumentationTask =
       evaluationDependsOn(":instrumentation:agent").tasks.named("shadowJar").get()
   val jdk = project(":instrumentation:jdk")
@@ -34,19 +33,31 @@ tasks.test {
   val soSuffix = if (getCurrentOperatingSystem().toFamilyName() == "windows") "dll" else "so"
   val javaExe = if (getCurrentOperatingSystem().toFamilyName() == "windows") "java.exe" else "java"
   println(instrumentation)
-  classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
-  executable(
+  testTask.classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
+  testTask.executable(
       "${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}$javaExe")
-  jvmArgs(
+  testTask.jvmArgs(
       "-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix")
-  jvmArgs("-javaagent:$instrumentation")
-  jvmArgs("-ea")
-  jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
-  jvmArgs("--add-opens", "java.base/java.util=ALL-UNNAMED")
-  jvmArgs("--add-opens", "java.base/java.io=ALL-UNNAMED")
-  jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
-  jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
+  testTask.jvmArgs("-javaagent:$instrumentation")
+  testTask.jvmArgs("-ea")
+  testTask.jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
+  testTask.jvmArgs("--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
+  testTask.jvmArgs("--add-opens", "java.base/java.util=ALL-UNNAMED")
+  testTask.jvmArgs("--add-opens", "java.base/java.io=ALL-UNNAMED")
+  testTask.jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
+  testTask.jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
+}
+
+tasks.test {
+  configureTestTask(this)
+  exclude("org/pastalab/fray/junit/internal/**")
+}
+
+tasks.register<Test>("debugTests") {
+  val baseTest = tasks.named("test", Test::class.java).get()
+  testClassesDirs = baseTest.testClassesDirs
+  classpath = baseTest.classpath
+  configureTestTask(this)
 }
 
 tasks.register<Copy>("copyDependencies") {

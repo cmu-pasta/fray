@@ -6,6 +6,7 @@ import java.lang.Thread.UncaughtExceptionHandler
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ForkJoinPool
+import java.util.concurrent.ForkJoinWorkerThread
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.Condition
@@ -190,7 +191,7 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun mainCleanup() {
+  fun terminateForJoinPool() {
     if (forkJoinPool != null) {
       forkJoinPool!!.shutdownNow()
       forkJoinPool!!.awaitTermination(1, TimeUnit.SECONDS)
@@ -198,13 +199,14 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun mainExit() = verifyNoThrow {
+  fun waitForAllThreadsToFinish(includeCommonPoolThreads: Boolean) = verifyNoThrow {
     val t = Thread.currentThread()
     val context = registeredThreads[t.id]!!
     while (registeredThreads.any {
       it.value.state != ThreadState.Completed &&
           it.value.state != ThreadState.Created &&
-          it.value != context
+          it.value != context &&
+          (includeCommonPoolThreads || !isManagedPoolThread(it.value.thread))
     }) {
       try {
         context.state = ThreadState.MainExiting
@@ -223,6 +225,11 @@ class RunContext(val config: Configuration) {
         }
       }
     }
+  }
+
+  fun mainExit() = verifyNoThrow {
+    val t = Thread.currentThread()
+    val context = registeredThreads[t.id]!!
     context.state = ThreadState.Completed
     Runtime.resetAllDelegate()
     done()
@@ -1187,6 +1194,7 @@ class RunContext(val config: Configuration) {
       // If no thread is blocked. We are done. Return to main thread and exit.
       if (registeredThreads.values.none { it.state == ThreadState.Blocked }) {
         if (currentThreadId != mainThreadId) {
+          currentThreadId = mainThreadId
           registeredThreads[mainThreadId]?.unblock()
         }
         return
@@ -1258,6 +1266,14 @@ class RunContext(val config: Configuration) {
       forkJoinPool = ForkJoinPool()
     }
     forkJoinPool!!
+  }
+
+  fun isManagedPoolThread(t: Thread): Boolean {
+    return if (t is ForkJoinWorkerThread) {
+      t.pool == forkJoinPool
+    } else {
+      false
+    }
   }
 
   fun getThreadLocalRandomProbe() = verifyNoThrow {
