@@ -8,7 +8,7 @@ import static org.junit.platform.testkit.engine.EventConditions.*;
 
 public class ForkJoinPoolTests {
     @Test
-    public void testForkJoinPoolAllThreadsRegistered() {
+    public void testForkJoinPool() {
         EngineTestKit
                 .engine("junit-jupiter")
                 .selectors(selectClass(org.pastalab.fray.junit.internal.thread.ForkJoinPoolTests.class))
@@ -17,6 +17,9 @@ public class ForkJoinPoolTests {
                 .assertThatEvents()
                 .haveExactly(1000,
                         event(test("testForkJoinPoolAllThreadsRegistered"), finishedSuccessfully())
+                )
+                .haveExactly(1000,
+                        event(test("testCommonPoolTerminationOrder"), finishedSuccessfully())
                 )
                 .haveExactly(1000,
                         event(test("testForkJoinPoolCountDownLatchBlock"), finishedSuccessfully())

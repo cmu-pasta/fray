@@ -5,6 +5,7 @@ import org.pastalab.fray.core.command.SystemTimeDelegateType;
 import org.pastalab.fray.junit.junit5.FrayTestExtension;
 import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.Condition;
@@ -57,5 +58,19 @@ public class ForkJoinPoolTests {
         Thread.sleep(1000);
         countDownLatch.countDown();
         pool.shutdown();
+    }
+
+    @ConcurrencyTest
+    public void testCommonPoolTerminationOrder() {
+        // Should not throw any exceptions
+        CompletableFuture.runAsync(() -> {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+            }
+            CompletableFuture.runAsync(() -> {
+                System.out.println(Thread.currentThread().getName());
+            });
+        });
     }
 }
