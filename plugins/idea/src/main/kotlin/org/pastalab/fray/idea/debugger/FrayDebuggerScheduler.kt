@@ -28,8 +28,8 @@ class FrayDebuggerScheduler(
           cdl.countDown()
         })
     UIUtil.invokeLaterIfNeeded {
-      val content = debugSession.ui.findContent(FrayDebugPanel.CONTENT_ID)
-      debugSession.ui.selectAndFocus(content, false, false)
+      val content = debugSession.ui?.findContent(FrayDebugPanel.CONTENT_ID)
+      debugSession.ui?.selectAndFocus(content!!, false, false)
     }
     cdl.await()
     val nextThreadIndex =

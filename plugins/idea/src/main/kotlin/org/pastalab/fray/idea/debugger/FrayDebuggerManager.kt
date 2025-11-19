@@ -35,11 +35,13 @@ class FrayDebuggerManager(val debugSession: XDebugSession, val replayMode: Boole
     val container = SimpleToolWindowPanel(false, true)
     container.setContent(schedulerPanel)
     val content =
-        debugSession.ui.createContent(
+        debugSession.ui?.createContent(
             FrayDebugPanel.CONTENT_ID, container, "Fray Scheduler", null, null)
-    content.isCloseable = false
+    content?.isCloseable = false
 
-    ApplicationManager.getApplication().invokeLater { debugSession.ui.addContent(content) }
+    content?.let {
+      ApplicationManager.getApplication().invokeLater { debugSession.ui?.addContent(it) }
+    }
   }
 
   override fun sessionPaused() {}
