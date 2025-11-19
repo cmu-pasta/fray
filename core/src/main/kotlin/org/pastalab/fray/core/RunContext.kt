@@ -1211,9 +1211,10 @@ class RunContext(val config: Configuration) {
     // We try to detect that case here and just return to main thread.
     if (forkJoinPool != null &&
         registeredThreads[mainThreadId]!!.state == ThreadState.MainExiting) {
-      if (registeredThreads.values
-          .filter { !isManagedPoolThread(it.thread) }
-          .none { it.state == ThreadState.Runnable || it.state == ThreadState.Blocked }) {
+      if (registeredThreads.values.none { 
+          !isManagedPoolThread(it.thread) && 
+          (it.state == ThreadState.Runnable || it.state == ThreadState.Blocked) 
+      }) {
         if (currentThreadId != mainThreadId) {
           currentThreadId = mainThreadId
           registeredThreads[mainThreadId]?.unblock()
