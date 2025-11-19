@@ -1204,6 +1204,24 @@ class RunContext(val config: Configuration) {
       throw e
     }
 
+    // This is an optimization. If main function exits, it will wait for all
+    // threads to exit before terminating the ForkJoinPool. However, we don't
+    // have a good way to understand if all other threads are finished. And in
+    // that case, we may waste iterations scheduling empty ForkJoinWorkers.
+    // We try to detect that case here and just return to main thread.
+    if (forkJoinPool != null &&
+        registeredThreads[mainThreadId]!!.state == ThreadState.MainExiting) {
+      if (registeredThreads.values
+          .filter { !isManagedPoolThread(it.thread) }
+          .none { it.state == ThreadState.Runnable || it.state == ThreadState.Blocked }) {
+        if (currentThreadId != mainThreadId) {
+          currentThreadId = mainThreadId
+          registeredThreads[mainThreadId]?.unblock()
+        }
+        return
+      }
+    }
+
     step += 1
     if (config.executionInfo.maxScheduledStep in 1..<step &&
         !currentThread.isExiting &&
