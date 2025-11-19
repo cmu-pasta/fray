@@ -39,7 +39,9 @@ class FrayDebuggerManager(val debugSession: XDebugSession, val replayMode: Boole
             FrayDebugPanel.CONTENT_ID, container, "Fray Scheduler", null, null)
     content?.isCloseable = false
 
-    ApplicationManager.getApplication().invokeLater { debugSession.ui?.addContent(content!!) }
+    content?.let {
+      ApplicationManager.getApplication().invokeLater { debugSession.ui?.addContent(it) }
+    }
   }
 
   override fun sessionPaused() {}
