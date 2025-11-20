@@ -13,12 +13,12 @@ java {
 }
 
 dependencies {
-  testImplementation(platform("org.junit:junit-bom:5.10.0"))
-  testImplementation("org.junit.jupiter:junit-jupiter-api")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+  testImplementation(platform(libs.junit.bom))
+  testImplementation(libs.junit.jupiter.api.bom)
+  testRuntimeOnly(libs.junit.jupiter.engine.bom)
   testImplementation(project(":core"))
-  testImplementation("io.github.classgraph:classgraph:4.8.177")
-  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+  testImplementation(libs.classgraph)
+  testRuntimeOnly(libs.junit.platform.launcher)
   testCompileOnly(project(":runtime"))
 }
 

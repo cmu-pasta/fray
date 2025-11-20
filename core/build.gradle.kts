@@ -2,9 +2,9 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem
 
 plugins {
-  kotlin("jvm")
-  kotlin("plugin.serialization") version "2.0.0"
-  id("com.gradleup.shadow")
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.kotlin.serialization)
+  alias(libs.plugins.shadow)
 }
 
 dependencies {
@@ -12,15 +12,15 @@ dependencies {
   compileOnly(project(":instrumentation:base"))
   implementation(project(":instrumentation:agent", configuration = "shadow"))
   api(project(":rmi"))
-  api("com.github.ajalt.clikt:clikt:5.0.3")
-  compileOnly("com.antithesis:sdk:1.4.4")
-  compileOnly("com.fasterxml.jackson.core:jackson-databind:2.19.0")
-  runtimeOnly(kotlin("reflect"))
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
-  testImplementation("org.jetbrains.kotlin:kotlin-test")
+  api(libs.clikt)
+  compileOnly(libs.antithesis.sdk)
+  compileOnly(libs.jackson.databind)
+  runtimeOnly(libs.kotlin.reflect)
+  implementation(libs.kotlinx.serialization.json)
+  testImplementation(libs.kotlin.test)
   testImplementation(project(":runtime"))
   testImplementation(project(":instrumentation:base"))
-  testImplementation(kotlin("test"))
+  testImplementation(libs.kotlin.test)
 }
 
 tasks.test { useJUnitPlatform() }

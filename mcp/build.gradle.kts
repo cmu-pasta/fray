@@ -1,14 +1,14 @@
-plugins { kotlin("jvm") }
+plugins { alias(libs.plugins.kotlin.jvm) }
 
 group = "org.pastalab.fray.mcp"
 
 dependencies {
-  testImplementation(platform("org.junit:junit-bom:5.10.0"))
-  testImplementation("org.junit.jupiter:junit-jupiter")
+  testImplementation(platform(libs.junit.bom))
+  testImplementation(libs.junit.jupiter)
   implementation(project(":rmi"))
-  implementation("io.modelcontextprotocol:kotlin-sdk-server:0.7.7")
-  implementation("io.ktor:ktor-server-cio:3.3.2")
-  implementation("io.ktor:ktor-server-sse:3.3.2")
+  implementation(libs.mcp.sdk)
+  implementation(libs.ktor.server.cio)
+  implementation(libs.ktor.server.sse)
 }
 
 tasks.test { useJUnitPlatform() }

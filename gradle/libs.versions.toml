@@ -1,0 +1,88 @@
+[versions]
+kotlin = "2.2.21"
+kotlinSerializationPlugin = "2.0.0"
+ktfmt = "0.25.0"
+jreleaser = "1.16.0"
+shadow = "9.0.0-rc2"
+dokka = "2.1.0"
+gradlePluginPublish = "1.2.1"
+intellijPlatform = "2.10.4"
+jetbrainsChangelog = "2.2.1"
+mavenPluginDevelopment = "1.0.2"
+cmake = "1.2.2"
+fooJayResolver = "1.0.0"
+clikt = "5.0.3"
+antithesisSdk = "1.4.4"
+jacksonDatabind = "2.19.0"
+kotlinxSerializationJson = "1.7.1"
+hamcrest = "3.0"
+junitBom = "5.10.0"
+junitJupiter = "5.11.3"
+junitPlatform = "1.11.3"
+junit4 = "4.13.2"
+randomizedTesting = "2.8.2"
+asm = "9.9"
+classgraph = "4.8.177"
+ktor = "3.3.2"
+mcpSdk = "0.7.7"
+commonsCompress = "1.28.0"
+mavenApi = "3.0"
+mavenDependencyTree = "3.3.0"
+mavenFileManagement = "3.2.0"
+mavenSurefire = "3.0.0"
+mavenCore = "3.9.11"
+mavenPluginAnnotations = "3.0"
+frayJvmti = "0.6.7"
+junitPlatformTestkit = "1.11.0-M1"
+
+[libraries]
+clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
+antithesis-sdk = { module = "com.antithesis:sdk", version.ref = "antithesisSdk" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jacksonDatabind" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junitBom" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junitJupiter" }
+junit-jupiter-api-bom = { module = "org.junit.jupiter:junit-jupiter-api" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junitJupiter" }
+junit-jupiter-engine-bom = { module = "org.junit.jupiter:junit-jupiter-engine" }
+junit-platform-commons = { module = "org.junit.platform:junit-platform-commons", version.ref = "junitPlatform" }
+junit-platform-engine = { module = "org.junit.platform:junit-platform-engine", version.ref = "junitPlatform" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+junit-platform-testkit = { module = "org.junit.platform:junit-platform-testkit", version.ref = "junitPlatformTestkit" }
+junit4 = { module = "junit:junit", version.ref = "junit4" }
+randomizedtesting-runner = { module = "com.carrotsearch.randomizedtesting:randomizedtesting-runner", version.ref = "randomizedTesting" }
+asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
+asm-tree = { module = "org.ow2.asm:asm-tree", version.ref = "asm" }
+asm-commons = { module = "org.ow2.asm:asm-commons", version.ref = "asm" }
+asm-util = { module = "org.ow2.asm:asm-util", version.ref = "asm" }
+classgraph = { module = "io.github.classgraph:classgraph", version.ref = "classgraph" }
+ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor" }
+ktor-server-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor" }
+mcp-sdk = { module = "io.modelcontextprotocol:kotlin-sdk-server", version.ref = "mcpSdk" }
+commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commonsCompress" }
+maven-plugin-api = { module = "org.apache.maven:maven-plugin-api", version.ref = "mavenApi" }
+maven-dependency-tree = { module = "org.apache.maven.shared:maven-dependency-tree", version.ref = "mavenDependencyTree" }
+maven-file-management = { module = "org.apache.maven.shared:file-management", version.ref = "mavenFileManagement" }
+maven-surefire-api = { module = "org.apache.maven.surefire:surefire-api", version.ref = "mavenSurefire" }
+maven-core = { module = "org.apache.maven:maven-core", version.ref = "mavenCore" }
+maven-plugin-annotations = { module = "org.apache.maven.plugin-tools:maven-plugin-annotations", version.ref = "mavenPluginAnnotations" }
+fray-jvmti-linux = { module = "org.pastalab.fray:fray-jvmti-linux-x8664", version.ref = "frayJvmti" }
+fray-jvmti-macos = { module = "org.pastalab.fray:fray-jvmti-macos-aarch64", version.ref = "frayJvmti" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinSerializationPlugin" }
+ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
+jreleaser = { id = "org.jreleaser", version.ref = "jreleaser" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+dokka-javadoc = { id = "org.jetbrains.dokka-javadoc", version.ref = "dokka" }
+gradle-plugin-publish = { id = "com.gradle.plugin-publish", version.ref = "gradlePluginPublish" }
+intellij-platform = { id = "org.jetbrains.intellij.platform", version.ref = "intellijPlatform" }
+jetbrains-changelog = { id = "org.jetbrains.changelog", version.ref = "jetbrainsChangelog" }
+maven-plugin-development = { id = "org.gradlex.maven-plugin-development", version.ref = "mavenPluginDevelopment" }
+cmake = { id = "io.github.tomtzook.gradle-cmake", version.ref = "cmake" }

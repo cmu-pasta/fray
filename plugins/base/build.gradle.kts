@@ -1,14 +1,14 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-  kotlin("jvm")
-  id("com.gradleup.shadow")
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.shadow)
 }
 
 dependencies {
-  implementation("org.apache.commons:commons-compress:1.28.0")
-  testImplementation(platform("org.junit:junit-bom:5.10.0"))
-  testImplementation("org.junit.jupiter:junit-jupiter")
+  implementation(libs.commons.compress)
+  testImplementation(platform(libs.junit.bom))
+  testImplementation(libs.junit.jupiter)
 }
 
 tasks.named<ShadowJar>("shadowJar") {

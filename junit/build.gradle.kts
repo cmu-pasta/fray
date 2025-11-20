@@ -3,23 +3,23 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurr
 
 plugins {
   id("java")
-  kotlin("jvm")
-  kotlin("plugin.serialization") version "2.0.0"
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {
-  api("org.hamcrest:hamcrest:3.0")
+  api(libs.hamcrest)
   implementation(project(":core"))
   compileOnly(project(":runtime"))
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
-  compileOnly("org.junit.platform:junit-platform-engine:1.11.3")
-  compileOnly("org.junit.platform:junit-platform-commons:1.11.3")
-  compileOnly("org.junit.jupiter:junit-jupiter-api:5.11.3")
-  compileOnly("junit:junit:4.13.2")
-  compileOnly("com.carrotsearch.randomizedtesting:randomizedtesting-runner:2.8.2")
-  testCompileOnly("org.junit.jupiter:junit-jupiter-api:5.11.3")
-  testImplementation("org.junit.jupiter:junit-jupiter-engine:5.11.3")
-  testImplementation("org.junit.platform:junit-platform-testkit:1.11.0-M1")
+  implementation(libs.kotlinx.serialization.json)
+  compileOnly(libs.junit.platform.engine)
+  compileOnly(libs.junit.platform.commons)
+  compileOnly(libs.junit.jupiter.api)
+  compileOnly(libs.junit4)
+  compileOnly(libs.randomizedtesting.runner)
+  testCompileOnly(libs.junit.jupiter.api)
+  testImplementation(libs.junit.jupiter.engine)
+  testImplementation(libs.junit.platform.testkit)
 }
 
 fun configureTestTask(testTask: Test) {

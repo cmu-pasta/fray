@@ -1,25 +1,25 @@
 plugins {
-  kotlin("jvm")
-  id("org.gradlex.maven-plugin-development") version "1.0.2"
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.maven.plugin.development)
 }
 
 group = "org.pastalab.fray.maven"
 
 dependencies {
-  implementation("org.apache.maven:maven-plugin-api:3.0")
-  implementation("org.apache.maven.shared:maven-dependency-tree:3.3.0")
-  implementation("org.apache.maven.shared:file-management:3.2.0")
-  implementation("org.apache.maven.surefire:surefire-api:3.0.0")
-  compileOnly("org.apache.maven:maven-core:3.9.11")
-  compileOnly("org.apache.maven.plugin-tools:maven-plugin-annotations:3.0")
-  testImplementation(platform("org.junit:junit-bom:5.10.0"))
-  testImplementation("org.junit.jupiter:junit-jupiter")
+  implementation(libs.maven.plugin.api)
+  implementation(libs.maven.dependency.tree)
+  implementation(libs.maven.file.management)
+  implementation(libs.maven.surefire.api)
+  compileOnly(libs.maven.core)
+  compileOnly(libs.maven.plugin.annotations)
+  testImplementation(platform(libs.junit.bom))
+  testImplementation(libs.junit.jupiter)
 
   implementation(project(":instrumentation:jdk"))
   implementation(project(":plugins:base", configuration = "shadow"))
   implementation(project(":instrumentation:agent", configuration = "shadow"))
-  implementation("org.pastalab.fray:fray-jvmti-linux-x8664:0.6.7")
-  implementation("org.pastalab.fray:fray-jvmti-macos-aarch64:0.6.7")
+  implementation(libs.fray.jvmti.linux)
+  implementation(libs.fray.jvmti.macos)
 }
 
 tasks.test { useJUnitPlatform() }
