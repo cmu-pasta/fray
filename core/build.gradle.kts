@@ -30,44 +30,46 @@ tasks.named("build") {
   finalizedBy("genRunner")
 }
 
-tasks.register("genRunner") {
-  val currentProject = project
-  val currentRootProject = rootProject
-  val currentVersion = version
-  val soSuffix = if (getCurrentOperatingSystem().toFamilyName() == "windows") "dll" else "so"
-  doLast {
-    val binDir = "${currentRootProject.projectDir.absolutePath}/bin"
-    var runner = file("${binDir}/fray.template").readText()
-    if (currentProject.hasProperty("fray.installDir")) {
-      val installDir = currentProject.property("fray.installDir")
-      runner = runner.replace("#JAVA_PATH#", "$installDir/java-inst/bin/java")
-      runner = runner.replace("#JVM_TI_PATH#", "$installDir/native-libs/libjvmti.$soSuffix")
-      runner =
-          runner.replace(
-              "#AGENT_PATH#", "$installDir/libs/fray-instrumentation-agent-$currentVersion.jar")
-      runner = runner.replace("#CORE_PATH#", "$installDir/libs/fray-core-$currentVersion.jar")
-    } else {
-      val instrumentationTask =
-          evaluationDependsOn(":instrumentation:agent").tasks.named("shadowJar").get()
-      val instrumentation = instrumentationTask.outputs.files.first().absolutePath
-      val core = tasks.named("shadowJar").get().outputs.files.first().absolutePath
-      val jvmti = currentProject.project(":jvmti")
-      val jdk = currentProject.project(":instrumentation:jdk")
-      runner =
-          runner.replace(
-              "#JAVA_PATH#", "${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
-      runner =
-          runner.replace(
-              "#JVM_TI_PATH#",
-              "${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.$soSuffix")
-      runner = runner.replace("#AGENT_PATH#", instrumentation)
-      runner = runner.replace("#CORE_PATH#", core)
-    }
-    val file = File("${binDir}/fray")
-    file.writeText(runner)
-    file.setExecutable(true)
-  }
-}
+tasks.register(
+    "genRunner",
+    Action {
+      val currentProject = project
+      val currentRootProject = rootProject
+      val currentVersion = version
+      val soSuffix = if (getCurrentOperatingSystem().toFamilyName() == "windows") "dll" else "so"
+      doLast {
+        val binDir = "${currentRootProject.projectDir.absolutePath}/bin"
+        var runner = file("${binDir}/fray.template").readText()
+        if (currentProject.hasProperty("fray.installDir")) {
+          val installDir = currentProject.property("fray.installDir")
+          runner = runner.replace("#JAVA_PATH#", "$installDir/java-inst/bin/java")
+          runner = runner.replace("#JVM_TI_PATH#", "$installDir/native-libs/libjvmti.$soSuffix")
+          runner =
+              runner.replace(
+                  "#AGENT_PATH#", "$installDir/libs/fray-instrumentation-agent-$currentVersion.jar")
+          runner = runner.replace("#CORE_PATH#", "$installDir/libs/fray-core-$currentVersion.jar")
+        } else {
+          val instrumentationTask =
+              evaluationDependsOn(":instrumentation:agent").tasks.named("shadowJar").get()
+          val instrumentation = instrumentationTask.outputs.files.first().absolutePath
+          val core = tasks.named("shadowJar").get().outputs.files.first().absolutePath
+          val jvmti = currentProject.project(":jvmti")
+          val jdk = currentProject.project(":instrumentation:jdk")
+          runner =
+              runner.replace(
+                  "#JAVA_PATH#", "${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
+          runner =
+              runner.replace(
+                  "#JVM_TI_PATH#",
+                  "${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.$soSuffix")
+          runner = runner.replace("#AGENT_PATH#", instrumentation)
+          runner = runner.replace("#CORE_PATH#", core)
+        }
+        val file = File("${binDir}/fray")
+        file.writeText(runner)
+        file.setExecutable(true)
+      }
+    })
 
 tasks.register<Copy>("copyDependencies") {
   from(configurations.runtimeClasspath)
