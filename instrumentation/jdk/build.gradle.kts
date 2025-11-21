@@ -1,13 +1,13 @@
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem
 
 plugins {
-  kotlin("jvm")
+  alias(libs.plugins.kotlin.jvm)
   java
 }
 
 dependencies {
-  testImplementation("org.jetbrains.kotlin:kotlin-test")
-  implementation(kotlin("reflect"))
+  testImplementation(libs.kotlin.test)
+  implementation(libs.kotlin.reflect)
   implementation(project(":runtime"))
   implementation(project(":instrumentation:base"))
 }

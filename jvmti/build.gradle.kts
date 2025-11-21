@@ -2,7 +2,7 @@ import org.gradle.kotlin.dsl.register
 
 plugins {
   java
-  id("io.github.tomtzook.gradle-cmake") version "1.2.2"
+  alias(libs.plugins.cmake)
   id("maven-publish")
 }
 

@@ -13,13 +13,13 @@ java {
 }
 
 dependencies {
-  testImplementation(platform("org.junit:junit-bom:5.10.0"))
-  testImplementation("org.junit.jupiter:junit-jupiter-api")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testImplementation(project(":core"))
-  testImplementation("io.github.classgraph:classgraph:4.8.177")
-  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+  testImplementation(libs.classgraph)
+  testRuntimeOnly(libs.junit.platform.launcher)
   testCompileOnly(project(":runtime"))
+  testCompileOnly(libs.junit.jupiter.api)
+  testImplementation(libs.junit.jupiter.engine)
+  testImplementation(libs.junit.platform.testkit)
 }
 
 tasks.test {
@@ -43,7 +43,7 @@ tasks.test {
 }
 
 if (getCurrentOperatingSystem().toFamilyName() != "windows") {
-  tasks.register("testRunnerScript") {
+  tasks.register("testRunnerScript", Action {
     val integrationTestJar = project.tasks.jar.get().archiveFile.get().asFile.absolutePath
     dependsOn(":core:genRunner")
     doLast {
@@ -61,7 +61,7 @@ if (getCurrentOperatingSystem().toFamilyName() != "windows") {
         throw GradleException("Runner script test failed. Output:\n$output")
       }
     }
-  }
+  })
 
   tasks.named("check") {
     dependsOn("testRunnerScript")

@@ -2,13 +2,13 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
   id("java")
-  kotlin("jvm")
-  id("com.gradleup.shadow")
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.shadow)
 }
 
 dependencies {
-  testImplementation(platform("org.junit:junit-bom:5.10.0"))
-  testImplementation("org.junit.jupiter:junit-jupiter")
+  testImplementation(platform(libs.junit.bom))
+  testImplementation(libs.junit.jupiter)
   api(project(":instrumentation:base"))
   compileOnly(project(":runtime"))
 }

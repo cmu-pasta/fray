@@ -1,16 +1,16 @@
 plugins {
   java
   application
-  kotlin("jvm")
+  alias(libs.plugins.kotlin.jvm)
 }
 
 dependencies {
-  api("org.ow2.asm:asm:9.9")
-  api("org.ow2.asm:asm-tree:9.9")
-  api("org.ow2.asm:asm-commons:9.9")
-  api("org.ow2.asm:asm-util:9.9")
-  testImplementation("org.jetbrains.kotlin:kotlin-test")
-  implementation("org.jetbrains.kotlin:kotlin-reflect")
+  api(libs.asm)
+  api(libs.asm.tree)
+  api(libs.asm.commons)
+  api(libs.asm.util)
+  testImplementation(libs.kotlin.test)
+  implementation(libs.kotlin.reflect)
   implementation(project(":runtime"))
 }
 

@@ -2,9 +2,9 @@ import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
-  kotlin("jvm")
-  id("org.jetbrains.intellij.platform") version "2.10.4"
-  id("org.jetbrains.changelog") version "2.2.1"
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.intellij.platform)
+  alias(libs.plugins.jetbrains.changelog)
 }
 
 group = project.property("pluginGroup")!!

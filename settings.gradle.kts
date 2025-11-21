@@ -1,4 +1,11 @@
-pluginManagement { repositories { gradlePluginPortal() } }
+pluginManagement {
+  plugins {
+    id("com.ncorti.ktfmt.gradle").version("0.25.0")
+    id("org.jetbrains.dokka").version("2.1.0")
+    id("org.jetbrains.dokka-javadoc").version("2.1.0")
+  }
+  repositories { gradlePluginPortal() }
+}
 
 dependencyResolutionManagement { repositories { mavenCentral() } }
 

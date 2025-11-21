@@ -3,13 +3,13 @@ import org.jreleaser.model.Active
 import org.jreleaser.model.api.deploy.maven.MavenCentralMavenDeployer.Stage
 
 plugins {
-  kotlin("jvm") version "2.2.21"
+  alias(libs.plugins.kotlin.jvm)
   id("maven-publish")
-  id("com.ncorti.ktfmt.gradle") version "0.25.0"
-  id("org.jreleaser") version "1.16.0"
-  id("com.gradleup.shadow") version "9.0.0-rc2"
-  id("org.jetbrains.dokka") version "2.1.0"
-  id("org.jetbrains.dokka-javadoc") version "2.1.0"
+  alias(libs.plugins.ktfmt)
+  alias(libs.plugins.jreleaser)
+  alias(libs.plugins.shadow)
+  alias(libs.plugins.dokka)
+  alias(libs.plugins.dokka.javadoc)
 }
 
 dokka {
