@@ -23,7 +23,7 @@ import org.pastalab.fray.rmi.ThreadState
 
 class SchedulerServer(
     val classSourceProvider: ClassSourceProvider,
-    val schedulerDelegate: SchedulerDelegate,
+    val scheduleResultListener: List<ScheduleResultListener>,
     val debuggerProvider: DebuggerProvider,
     val replayMode: Boolean
 ) {
@@ -146,16 +146,29 @@ class SchedulerServer(
                                         "description" to
                                             JsonPrimitive("The line number of the method."),
                                     )),
+                            "local_variable_name" to
+                                JsonObject(
+                                    mapOf(
+                                        "type" to JsonPrimitive("string"),
+                                        "description" to
+                                            JsonPrimitive("The local variable to get value."),
+                                    )),
                             "field_name" to
                                 JsonObject(
                                     mapOf(
                                         "type" to JsonPrimitive("string"),
                                         "description" to
-                                            JsonPrimitive("The field name of the variable."),
+                                            JsonPrimitive(
+                                                "The field of the local variable (optional)."),
                                     )),
                         )),
                 required =
-                    listOf("thread_id", "class_name", "method_name", "line_number", "field_name"),
+                    listOf(
+                        "thread_id",
+                        "class_name",
+                        "method_name",
+                        "line_number",
+                        "local_variable_name"),
             )) { request ->
           // Extract all arguments with simplified code
           val threadId =
@@ -172,13 +185,14 @@ class SchedulerServer(
               request.getStringArg("method_name") ?: return@addTool missingArgError("method_name")
           val lineNumber =
               request.getIntArg("line_number") ?: return@addTool missingArgError("line_number")
-          val fieldName =
-              request.getStringArg("field_name") ?: return@addTool missingArgError("field_name")
-          val field = request.getStringArg("field")
+          val localVariableName =
+              request.getStringArg("local_variable_name")
+                  ?: return@addTool missingArgError("local_variable_name")
+          val fieldName = request.getStringArg("field_name")
 
           val result =
               debuggerProvider.getLocalVariableValue(
-                  jvmThreadId, className, methodName, lineNumber, fieldName, field)
+                  jvmThreadId, className, methodName, lineNumber, localVariableName, fieldName)
 
           return@addTool CallToolResult(
               content =
@@ -267,7 +281,7 @@ class SchedulerServer(
   }
 
   fun schedule(thread: ThreadInfo) {
-    schedulerDelegate.scheduled(thread)
+    scheduleResultListener.forEach { it.scheduled(thread) }
     waitLatch = CountDownLatch(1)
     try {
       waitLatch?.await()
