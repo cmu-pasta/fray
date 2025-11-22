@@ -195,16 +195,18 @@ class ClasspathClassSourceProvider(
     readMavenCoordinates(jarPath)?.let { coordinates ->
       val (group, artifact, version) = coordinates
       val m2Repo = System.getenv("M2_REPO")
-      val m2Path = if (m2Repo != null && m2Repo.isNotBlank()) {
-        Paths.get(m2Repo)
-      } else {
-        Paths.get(System.getProperty("user.home"), ".m2", "repository")
-      }
-      val sourceJarPath = m2Path
-        .resolve(group.replace('.', java.io.File.separatorChar))
-        .resolve(artifact)
-        .resolve(version)
-        .resolve("$artifact-$version-sources.jar")
+      val m2Path =
+          if (m2Repo != null && m2Repo.isNotBlank()) {
+            Paths.get(m2Repo)
+          } else {
+            Paths.get(System.getProperty("user.home"), ".m2", "repository")
+          }
+      val sourceJarPath =
+          m2Path
+              .resolve(group.replace('.', java.io.File.separatorChar))
+              .resolve(artifact)
+              .resolve(version)
+              .resolve("$artifact-$version-sources.jar")
       if (Files.isRegularFile(sourceJarPath)) {
         return sourceJarPath
       }

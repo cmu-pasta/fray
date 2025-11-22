@@ -151,7 +151,8 @@ class SchedulerServer(
                                     mapOf(
                                         "type" to JsonPrimitive("string"),
                                         "description" to
-                                            JsonPrimitive("The name of the local variable to get the value of."),
+                                            JsonPrimitive(
+                                                "The name of the local variable to get the value of."),
                                     )),
                             "field_name" to
                                 JsonObject(
