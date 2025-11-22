@@ -147,7 +147,7 @@ class ClasspathClassSourceProvider(
             }
           }
         } finally {
-            jar.close()
+          jar.close()
         }
       }
       null
