@@ -45,7 +45,8 @@ class StandaloneMCPScheduler : RemoteScheduler {
     cdl = CountDownLatch(1)
     server.newSchedulingRequestReceived(threads, selectedThread)
     cdl.await()
-    return threads.indexOf(threads.first { it.threadIndex == selectedThreadIndex })
+    val selected = threads.firstOrNull { it.threadIndex == selectedThreadIndex }
+    return if (selected != null) threads.indexOf(selected) else -1
   }
 }
 
