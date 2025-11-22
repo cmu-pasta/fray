@@ -12,7 +12,9 @@ jobs:
       fail-fast: false
       matrix:
         operating-system: [ ubuntu-latest, windows-latest, macos-latest]
-    permissions: 
+    permissions:
+      checks: write
+      pull-requests: write
       contents: read
       packages: read 
     steps:
