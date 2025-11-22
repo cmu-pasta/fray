@@ -2,6 +2,6 @@ package org.pastalab.fray.mcp
 
 import org.pastalab.fray.rmi.ThreadInfo
 
-interface SchedulerDelegate {
+interface ScheduleResultListener {
   fun scheduled(thread: ThreadInfo)
 }

@@ -17,7 +17,7 @@ import org.pastalab.fray.idea.getPsiFileFromClass
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.mcp.ClassSourceProvider
 import org.pastalab.fray.mcp.RemoteVMConnector
-import org.pastalab.fray.mcp.SchedulerDelegate
+import org.pastalab.fray.mcp.ScheduleResultListener
 import org.pastalab.fray.mcp.SchedulerServer
 import org.pastalab.fray.mcp.VirtualMachineProxy
 import org.pastalab.fray.rmi.TestStatusObserver
@@ -71,11 +71,12 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
               return getPsiFileFromClass(className, project)?.text
             }
           },
-          object : SchedulerDelegate {
-            override fun scheduled(thread: ThreadInfo) {
-              scheduleButtonPressed(thread)
-            }
-          },
+          listOf(
+              object : ScheduleResultListener {
+                override fun scheduled(thread: ThreadInfo) {
+                  scheduleButtonPressed(thread)
+                }
+              }),
           RemoteVMConnector(
               object : VirtualMachineProxy {
                 override fun allThreads(): List<ThreadReference> {
