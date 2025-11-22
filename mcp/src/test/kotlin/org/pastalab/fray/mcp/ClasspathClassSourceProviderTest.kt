@@ -50,6 +50,7 @@ class ClasspathClassSourceProviderTest {
       jar.putNextEntry(JarEntry("com/example/lib/LibClass.class"))
       jar.write(classBytes)
       jar.closeEntry()
+      jar.close()
     }
 
     val sourceContent = "package com.example.lib;\nclass LibClass {}\n"
@@ -57,6 +58,7 @@ class ClasspathClassSourceProviderTest {
       jar.putNextEntry(JarEntry("com/example/lib/LibClass.java"))
       jar.write(sourceContent.toByteArray())
       jar.closeEntry()
+      jar.close()
     }
 
     URLClassLoader(arrayOf(classesJar.toUri().toURL()), null).use { loader ->
