@@ -122,7 +122,7 @@ class ClasspathClassSourceProvider(
       }
       if (depth >= WORKSPACE_MAX_DEPTH) continue
       for (child in listDirectories(dir)) {
-        if (child.fileName.toString() in WORKSPACE_BLACKLIST) continue
+        if (child.fileName.toString() in WORKSPACE_IGNORELIST) continue
         queue.add(child to depth + 1)
       }
     }
@@ -333,7 +333,7 @@ class ClasspathClassSourceProvider(
   companion object {
     private const val MAX_PARENT_DEPTH = 10
     private const val WORKSPACE_MAX_DEPTH = 3
-    private val WORKSPACE_BLACKLIST =
+    private val WORKSPACE_IGNORELIST =
         setOf(".gradle", ".git", ".idea", "build", "out", "target", "node_modules")
 
     fun defaultProvider(): ClasspathClassSourceProvider {

@@ -27,3 +27,8 @@ jobs:
           cache: 'gradle'
       - name: Build fray and run tests
         run: ./gradlew build
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v5
+        if: failure()
+        with:
+          report_paths: '**/build/test-results/test/TEST-*.xml'
