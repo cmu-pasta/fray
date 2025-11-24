@@ -103,7 +103,8 @@ plugins {
 - [Usage Guide](./docs/usage.md)
 - [IDE Settings](./docs/IDE.md)
 - [Debug Fray](./docs/debug_fray.md)
-- [Bugs Found by Fray and Testimonies](./docs/bugs.md)
+- [Articles about Fray](./docs/articles.md)
+- [Bugs Found by Fray](./docs/bugs.md)
 
 # Contributing
 
