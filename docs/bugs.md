@@ -1,7 +1,3 @@
-# Articles about Fray
-
-- [Concurrency bugs in Lucene: How to fix optimistic concurrency failures](https://www.elastic.co/search-labs/blog/optimistic-concurrency-lucene-debugging)
-
 # Bugs found by Fray
 
 ## JDK
