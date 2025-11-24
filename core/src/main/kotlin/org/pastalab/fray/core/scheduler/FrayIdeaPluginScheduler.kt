@@ -8,7 +8,7 @@ import org.pastalab.fray.core.randomness.Randomness
 
 @Serializable
 class FrayIdeaPluginScheduler(val scheduler: Scheduler?) : Scheduler {
-  @kotlinx.serialization.Transient val remoteScheduler = DebuggerRegistry.getRemoteScheduler()
+  val remoteScheduler by lazy { DebuggerRegistry.getRemoteScheduler() }
   @Contextual var previousScheduleDecision: ThreadContext? = null
 
   override fun scheduleNextOperation(
