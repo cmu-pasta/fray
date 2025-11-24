@@ -1,6 +1,7 @@
 package org.pastalab.fray.mcp
 
 import java.net.URLClassLoader
+import java.net.URLConnection
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.jar.JarEntry
@@ -9,7 +10,9 @@ import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.div
 import kotlin.io.path.writeText
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
@@ -18,6 +21,18 @@ import org.objectweb.asm.Opcodes
 class ClasspathClassSourceProviderTest {
 
   @TempDir lateinit var tmpDir: Path
+
+  companion object {
+    @BeforeAll
+    @JvmStatic
+    fun setup() {
+      if (OS.WINDOWS.isCurrentOs) {
+        URLConnection.setDefaultUseCaches("file", false)
+        URLConnection.setDefaultUseCaches("jar", false)
+        URLConnection.setDefaultUseCaches("zip", false)
+      }
+    }
+  }
 
   @Test
   fun `resolves source from local project structure`() {
@@ -50,7 +65,6 @@ class ClasspathClassSourceProviderTest {
       jar.putNextEntry(JarEntry("com/example/lib/LibClass.class"))
       jar.write(classBytes)
       jar.closeEntry()
-      jar.close()
     }
 
     val sourceContent = "package com.example.lib;\nclass LibClass {}\n"
@@ -58,7 +72,6 @@ class ClasspathClassSourceProviderTest {
       jar.putNextEntry(JarEntry("com/example/lib/LibClass.java"))
       jar.write(sourceContent.toByteArray())
       jar.closeEntry()
-      jar.close()
     }
 
     URLClassLoader(arrayOf(classesJar.toUri().toURL()), null).use { loader ->

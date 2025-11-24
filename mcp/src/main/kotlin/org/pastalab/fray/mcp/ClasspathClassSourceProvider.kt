@@ -139,15 +139,11 @@ class ClasspathClassSourceProvider(
     val entryPrefix = if (packageResourcePath.isEmpty()) "" else "$packageResourcePath/"
     return try {
       JarFile(sourceJar.toFile()).use { jar ->
-        try {
-          for (candidate in sourceFileCandidates) {
-            val entry = jar.getJarEntry(entryPrefix + candidate) ?: continue
-            jar.getInputStream(entry).use {
-              return it.bufferedReader().readText()
-            }
+        for (candidate in sourceFileCandidates) {
+          val entry = jar.getJarEntry(entryPrefix + candidate) ?: continue
+          jar.getInputStream(entry).use {
+            return it.bufferedReader().readText()
           }
-        } finally {
-          jar.close()
         }
       }
       null
