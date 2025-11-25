@@ -34,12 +34,7 @@ class StandaloneMCPScheduler : RemoteScheduler {
         }
       }
 
-  val server =
-      SchedulerServer(
-          ClasspathClassSourceProvider.defaultProvider(),
-          listOf(scheduleResultListener),
-          RemoteVMConnector(StandaloneMCPServerDebugger()),
-          false)
+  val server = SchedulerServer(listOf(scheduleResultListener), false)
 
   override fun scheduleNextOperation(threads: List<ThreadInfo>, selectedThread: ThreadInfo?): Int {
     cdl = CountDownLatch(1)

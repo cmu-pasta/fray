@@ -39,6 +39,7 @@ import org.pastalab.fray.core.randomness.RecordedRandomProvider
 import org.pastalab.fray.core.scheduler.*
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_DEBUG
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_DISABLED
+import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_MCP
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_PROPERTY_KEY
 import org.pastalab.fray.rmi.Constant.FRAY_DEBUGGER_REPLAY
 import org.pastalab.fray.rmi.ScheduleObserver
@@ -425,7 +426,7 @@ data class Configuration(
 
     val debuggerProperty = System.getProperty(FRAY_DEBUGGER_PROPERTY_KEY, FRAY_DEBUGGER_DISABLED)
     if (debuggerProperty != FRAY_DEBUGGER_DISABLED) {
-      if (debuggerProperty == FRAY_DEBUGGER_DEBUG) {
+      if (debuggerProperty == FRAY_DEBUGGER_DEBUG || debuggerProperty == FRAY_DEBUGGER_MCP) {
         scheduler = FrayIdeaPluginScheduler(null)
       } else {
         assert(debuggerProperty == FRAY_DEBUGGER_REPLAY) {
@@ -434,7 +435,12 @@ data class Configuration(
         scheduler = FrayIdeaPluginScheduler(scheduler)
       }
       testStatusObservers.add(DebuggerRegistry.getRemoteScheduleObserver())
-      iter = 1
+      iter =
+          if (debuggerProperty == FRAY_DEBUGGER_MCP) {
+            -1
+          } else {
+            1
+          }
     }
   }
 
