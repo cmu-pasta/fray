@@ -41,7 +41,7 @@ class SchedulerServer(
 
   var allThreads = listOf<ThreadInfo>()
   var waitLatch: CountDownLatch? = null
-  var finished = false
+  var finished = true
   var scheduled: ThreadInfo? = null
   var bugFound: Throwable? = null
   var serverThread =
@@ -74,6 +74,14 @@ class SchedulerServer(
         name = "get_all_threads",
         description = "Get all threads that has been created in the SUT.",
     ) { request ->
+      if (finished) {
+        CallToolResult(
+            content =
+                listOf(
+                    TextContent(
+                        "The program has completed or has not yet started. Please run it again to explore more schedules.")),
+        )
+      }
       CallToolResult(content = allThreads.map { TextContent(it.toString()) })
     }
 
@@ -137,6 +145,14 @@ class SchedulerServer(
     server.addTool(
         name = commandName, description = commandDescription, inputSchema = commandInput) { request
           ->
+          if (finished) {
+            return@addTool CallToolResult(
+                content =
+                    listOf(
+                        TextContent(
+                            "The program has completed or has not yet started. Please run it again to explore more schedules.")),
+            )
+          }
           if (!replayMode) {
             processInputInExploreMode(request)?.let {
               return@addTool it
