@@ -109,7 +109,7 @@ class SchedulerServer(
     if (replayMode) {} else {
       server.addPrompt(
           "find_concurrency_bug",
-          "Let LLM to control the thread execution of SUT to find concurrency bugs.",
+          "Let the LLM control the thread execution of the SUT to find concurrency bugs.",
           listOf(
               PromptArgument(
                   name = "Main class name",
