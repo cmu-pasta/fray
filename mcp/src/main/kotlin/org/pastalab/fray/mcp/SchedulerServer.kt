@@ -81,8 +81,9 @@ class SchedulerServer(
                     TextContent(
                         "The program has completed or has not yet started. Please run it again to explore more schedules.")),
         )
+      } else {
+        CallToolResult(content = allThreads.map { TextContent(it.toString()) })
       }
-      CallToolResult(content = allThreads.map { TextContent(it.toString()) })
     }
 
     val (commandName, commandDescription, commandInput) =
