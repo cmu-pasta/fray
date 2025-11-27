@@ -72,7 +72,7 @@ class SchedulerServer(
                     )))
     server.addTool(
         name = "get_all_threads",
-        description = "Get all threads that has been created in the SUT.",
+        description = "Get all threads that have been created in the SUT.",
     ) { request ->
       if (finished) {
         CallToolResult(
