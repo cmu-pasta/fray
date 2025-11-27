@@ -125,7 +125,7 @@ class SchedulerServer(
                         role = Role.user,
                         content =
                             TextContent(
-                                "In this task, you need to help to find concurrency bugs in the given program by scheduling the threads." +
+                                "In this task, you need to help to find concurrency bugs in the given program by scheduling the threads. " +
                                     "The main class of the program is ${result.arguments?.get("Main class name")}.\n\n" +
                                     "You are going to use the controlled concurrency testing framework Fray to schedule the threads of the program " +
                                     "execution. You can use the tool 'get_all_threads' to get all threads and their states. Then you can use the " +
