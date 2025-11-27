@@ -1,6 +1,12 @@
-plugins { alias(libs.plugins.kotlin.jvm) }
+plugins {
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.shadow)
+  application
+}
 
 group = "org.pastalab.fray.mcp"
+
+application { mainClass.set("org.pastalab.fray.mcp.StandaloneMCPSchedulerKt") }
 
 dependencies {
   implementation(project(":rmi"))

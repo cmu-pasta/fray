@@ -1,25 +1,17 @@
 package org.pastalab.fray.idea.ui
 
-import com.intellij.debugger.engine.JavaDebugProcess
-import com.intellij.debugger.engine.events.DebuggerCommandImpl
-import com.intellij.debugger.jdi.VirtualMachineProxyImpl
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.xdebugger.XDebugSession
-import com.sun.jdi.ThreadReference
 import java.awt.BorderLayout
 import javax.swing.JPanel
 import javax.swing.JSplitPane
 import org.pastalab.fray.idea.getPsiFile
-import org.pastalab.fray.idea.getPsiFileFromClass
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
-import org.pastalab.fray.mcp.ClassSourceProvider
-import org.pastalab.fray.mcp.RemoteVMConnector
 import org.pastalab.fray.mcp.ScheduleResultListener
 import org.pastalab.fray.mcp.SchedulerServer
-import org.pastalab.fray.mcp.VirtualMachineProxy
 import org.pastalab.fray.rmi.TestStatusObserver
 import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
@@ -66,32 +58,10 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
 
   private val mcpServer =
       SchedulerServer(
-          object : ClassSourceProvider {
-            override fun getClassSource(className: String): String? {
-              return getPsiFileFromClass(className, project)?.text
-            }
-          },
           listOf(
               object : ScheduleResultListener {
                 override fun scheduled(thread: ThreadInfo) {
                   scheduleButtonPressed(thread)
-                }
-              }),
-          RemoteVMConnector(
-              object : VirtualMachineProxy {
-                override fun allThreads(): List<ThreadReference> {
-                  val process = debugSession.debugProcess
-                  var proxyImpl: VirtualMachineProxyImpl? = null
-                  if (process is JavaDebugProcess) {
-                    val command =
-                        object : DebuggerCommandImpl() {
-                          override fun action() {
-                            proxyImpl = process.debuggerSession.process.virtualMachineProxy
-                          }
-                        }
-                    process.debuggerSession.process.managerThread.invokeAndWait(command)
-                  }
-                  return proxyImpl?.virtualMachine?.allThreads() ?: emptyList()
                 }
               }),
           replayMode)

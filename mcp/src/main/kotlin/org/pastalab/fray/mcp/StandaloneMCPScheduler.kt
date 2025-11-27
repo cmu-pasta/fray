@@ -16,7 +16,9 @@ class StandaloneMCPScheduler : RemoteScheduler {
           server.onExecutionStart()
         }
 
-        override fun onReportError(throwable: Throwable) {}
+        override fun onReportError(throwable: Throwable) {
+          server.onExecutionDone(throwable)
+        }
 
         override fun onExecutionDone(bugFound: Throwable?) {
           server.onExecutionDone(bugFound)
@@ -34,12 +36,7 @@ class StandaloneMCPScheduler : RemoteScheduler {
         }
       }
 
-  val server =
-      SchedulerServer(
-          ClasspathClassSourceProvider.defaultProvider(),
-          listOf(scheduleResultListener),
-          RemoteVMConnector(StandaloneMCPServerDebugger()),
-          false)
+  val server = SchedulerServer(listOf(scheduleResultListener), false)
 
   override fun scheduleNextOperation(threads: List<ThreadInfo>, selectedThread: ThreadInfo?): Int {
     cdl = CountDownLatch(1)

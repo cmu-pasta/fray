@@ -66,6 +66,7 @@ configure(
       it != rootProject &&
           it.path !in
               listOf(
+                  ":mcp",
                   ":instrumentation",
                   ":plugins",
                   ":plugins:gradle",

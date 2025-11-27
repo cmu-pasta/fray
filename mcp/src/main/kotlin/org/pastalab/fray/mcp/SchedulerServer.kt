@@ -1,19 +1,24 @@
 package org.pastalab.fray.mcp
 
-import io.ktor.server.cio.CIO
-import io.ktor.server.cio.CIOApplicationEngine
-import io.ktor.server.engine.EmbeddedServer
-import io.ktor.server.engine.embeddedServer
 import io.modelcontextprotocol.kotlin.sdk.CallToolRequest
 import io.modelcontextprotocol.kotlin.sdk.CallToolResult
+import io.modelcontextprotocol.kotlin.sdk.GetPromptResult
 import io.modelcontextprotocol.kotlin.sdk.Implementation
+import io.modelcontextprotocol.kotlin.sdk.PromptArgument
+import io.modelcontextprotocol.kotlin.sdk.PromptMessage
+import io.modelcontextprotocol.kotlin.sdk.Role
 import io.modelcontextprotocol.kotlin.sdk.ServerCapabilities
 import io.modelcontextprotocol.kotlin.sdk.TextContent
 import io.modelcontextprotocol.kotlin.sdk.Tool
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
-import io.modelcontextprotocol.kotlin.sdk.server.mcp
+import io.modelcontextprotocol.kotlin.sdk.server.StdioServerTransport
 import java.util.concurrent.CountDownLatch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.runBlocking
+import kotlinx.io.asSink
+import kotlinx.io.asSource
+import kotlinx.io.buffered
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.int
@@ -22,17 +27,9 @@ import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
 
 class SchedulerServer(
-    val classSourceProvider: ClassSourceProvider,
     val scheduleResultListener: List<ScheduleResultListener>,
-    val debuggerProvider: DebuggerProvider,
     val replayMode: Boolean
 ) {
-
-  // Utility functions to simplify argument extraction
-  private fun CallToolRequest.getStringArg(name: String): String? {
-    val value = arguments[name]?.jsonPrimitive?.content ?: return null
-    return value
-  }
 
   private fun CallToolRequest.getIntArg(name: String): Int? {
     return arguments[name]?.jsonPrimitive?.int
@@ -44,14 +41,13 @@ class SchedulerServer(
 
   var allThreads = listOf<ThreadInfo>()
   var waitLatch: CountDownLatch? = null
-  var finished = false
+  var finished = true
   var scheduled: ThreadInfo? = null
   var bugFound: Throwable? = null
-  val embeddedServer = createEmbeddedServer(8808)
   var serverThread =
       Thread {
             try {
-              embeddedServer.start(wait = true)
+              createStdIOServer()
             } catch (e: Exception) {
               e.printStackTrace()
             }
@@ -76,133 +72,19 @@ class SchedulerServer(
                     )))
     server.addTool(
         name = "get_all_threads",
-        description = "Get all threads that has been created in the SUT.",
+        description = "Get all threads that have been created in the SUT.",
     ) { request ->
-      CallToolResult(content = allThreads.map { TextContent(it.toString()) })
+      if (finished) {
+        CallToolResult(
+            content =
+                listOf(
+                    TextContent(
+                        "The program has completed or has not yet started. Please run it again to explore more schedules.")),
+        )
+      } else {
+        CallToolResult(content = allThreads.map { TextContent(it.toString()) })
+      }
     }
-
-    server.addTool(
-        name = "get_source",
-        description = "Get source file for a given class name.",
-        inputSchema =
-            Tool.Input(
-                properties =
-                    JsonObject(
-                        mapOf(
-                            "class_name" to
-                                JsonObject(
-                                    mapOf(
-                                        "type" to JsonPrimitive("string"),
-                                        "description" to
-                                            JsonPrimitive(
-                                                "The class name to get the source file for."),
-                                    )))),
-                required = listOf("class_name")),
-    ) { request ->
-      val className =
-          request.getStringArg("class_name") ?: return@addTool missingArgError("class_name")
-
-      val source =
-          classSourceProvider.getClassSource(className)
-              ?: return@addTool CallToolResult(
-                  content = listOf(TextContent("No source file found for class $className.")),
-              )
-      CallToolResult(
-          content = listOf(TextContent(source)),
-      )
-    }
-
-    server.addTool(
-        name = "get_variable_value",
-        description = "Get the value of a variable in a given method.",
-        inputSchema =
-            Tool.Input(
-                properties =
-                    JsonObject(
-                        mapOf(
-                            "thread_id" to
-                                JsonObject(
-                                    mapOf(
-                                        "type" to JsonPrimitive("number"),
-                                        "description" to JsonPrimitive("The ID of the thread."),
-                                    )),
-                            "class_name" to
-                                JsonObject(
-                                    mapOf(
-                                        "type" to JsonPrimitive("string"),
-                                        "description" to
-                                            JsonPrimitive("The full class name of the method."),
-                                    )),
-                            "method_name" to
-                                JsonObject(
-                                    mapOf(
-                                        "type" to JsonPrimitive("string"),
-                                        "description" to JsonPrimitive("The name of the method."),
-                                    )),
-                            "line_number" to
-                                JsonObject(
-                                    mapOf(
-                                        "type" to JsonPrimitive("number"),
-                                        "description" to
-                                            JsonPrimitive("The line number of the method."),
-                                    )),
-                            "local_variable_name" to
-                                JsonObject(
-                                    mapOf(
-                                        "type" to JsonPrimitive("string"),
-                                        "description" to
-                                            JsonPrimitive(
-                                                "The name of the local variable to get the value of."),
-                                    )),
-                            "field_name" to
-                                JsonObject(
-                                    mapOf(
-                                        "type" to JsonPrimitive("string"),
-                                        "description" to
-                                            JsonPrimitive(
-                                                "The field of the local variable (optional)."),
-                                    )),
-                        )),
-                required =
-                    listOf(
-                        "thread_id",
-                        "class_name",
-                        "method_name",
-                        "line_number",
-                        "local_variable_name"),
-            )) { request ->
-          // Extract all arguments with simplified code
-          val threadId =
-              request.getIntArg("thread_id") ?: return@addTool missingArgError("thread_id")
-          val jvmThreadId =
-              allThreads.firstOrNull { it.threadIndex == threadId }?.jvmThreadIndex
-                  ?: return@addTool CallToolResult(
-                      content = listOf(TextContent("The thread with ID $threadId is not found.")),
-                  )
-
-          val className =
-              request.getStringArg("class_name") ?: return@addTool missingArgError("class_name")
-          val methodName =
-              request.getStringArg("method_name") ?: return@addTool missingArgError("method_name")
-          val lineNumber =
-              request.getIntArg("line_number") ?: return@addTool missingArgError("line_number")
-          val localVariableName =
-              request.getStringArg("local_variable_name")
-                  ?: return@addTool missingArgError("local_variable_name")
-          val fieldName = request.getStringArg("field_name")
-
-          val result =
-              debuggerProvider.getLocalVariableValue(
-                  jvmThreadId, className, methodName, lineNumber, localVariableName, fieldName)
-
-          return@addTool CallToolResult(
-              content =
-                  listOf(
-                      TextContent(
-                          result.fold(
-                              onSuccess = { it },
-                              onFailure = { "Error retrieving variable: ${it.message}" }))))
-        }
 
     val (commandName, commandDescription, commandInput) =
         if (!replayMode) {
@@ -225,9 +107,53 @@ class SchedulerServer(
           Triple("next_step", "Run next scheduled thread.", Tool.Input())
         }
 
+    if (replayMode) {} else {
+      server.addPrompt(
+          "find_concurrency_bug",
+          "Let the LLM control the thread execution of the SUT to find concurrency bugs.",
+          listOf(
+              PromptArgument(
+                  name = "Main class name",
+                  description = "Main class of the program under test.",
+                  required = true,
+              ),
+          ),
+      ) { result ->
+        GetPromptResult(
+            messages =
+                listOf(
+                    PromptMessage(
+                        role = Role.user,
+                        content =
+                            TextContent(
+                                "In this task, you need to help to find concurrency bugs in the given program by scheduling the threads. " +
+                                    "The main class of the program is ${result.arguments?.get("Main class name")}.\n\n" +
+                                    "You are going to use the controlled concurrency testing framework Fray to schedule the threads of the program " +
+                                    "execution. You can use the tool 'get_all_threads' to get all threads and their states. Then you can use the " +
+                                    "tool 'run_thread' to pick one thread to run. Your goal is to find uncaught exceptions, deadlocks, or assertion " +
+                                    "failures in the program execution. The source code of the program is provided in the current folder. You can " +
+                                    "also use JDB to inspect the program state if needed with command `jdb -attach 5005`. Fray controls the concurrency " +
+                                    "by instrumenting the Java bytecode of the program and inserting additional locks and concurrency primitives to force " +
+                                    "the program to run in sequential order. Thus, if you inspect the stack trace of the program, you may see " +
+                                    "additional frames related to Fray's instrumentation. "),
+                    ),
+                ),
+            description = "The prompt for finding concurrency bugs in MCP mode.",
+        )
+      }
+    }
+
     server.addTool(
         name = commandName, description = commandDescription, inputSchema = commandInput) { request
           ->
+          if (finished) {
+            return@addTool CallToolResult(
+                content =
+                    listOf(
+                        TextContent(
+                            "The program has completed or has not yet started. Please run it again to explore more schedules.")),
+            )
+          }
           if (!replayMode) {
             processInputInExploreMode(request)?.let {
               return@addTool it
@@ -239,8 +165,9 @@ class SchedulerServer(
           if (finished) {
             val msg =
                 if (bugFound != null)
-                    "A bug has been found.\n Exception: $bugFound\n stacktrace: ${bugFound!!.stackTraceToString()}"
-                else "No bug has been found."
+                    "A bug has been found.\n Exception: $bugFound\n stacktrace: ${bugFound!!.stackTraceToString()}. You may exit now."
+                else
+                    "No bug has been found. You may restart the program execution to explore more schedules."
             CallToolResult(
                 content =
                     listOf(
@@ -298,18 +225,23 @@ class SchedulerServer(
   }
 
   fun stop() {
-    embeddedServer.stop(1000, 2000)
     serverThread.interrupt()
     waitLatch = null
   }
 
-  fun createEmbeddedServer(
-      port: Int
-  ): EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration> {
-    return embeddedServer(CIO, host = "0.0.0.0", port = port) {
-      mcp {
-        return@mcp configureServer()
-      }
+  fun createStdIOServer() {
+    val server = configureServer()
+    val transport =
+        StdioServerTransport(
+            inputStream = System.`in`.asSource().buffered(),
+            outputStream = System.out.asSink().buffered(),
+        )
+
+    runBlocking {
+      server.createSession(transport)
+      val done = Job()
+      server.onClose { done.complete() }
+      done.join()
     }
   }
 
