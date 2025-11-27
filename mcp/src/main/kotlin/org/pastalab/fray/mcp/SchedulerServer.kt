@@ -132,7 +132,7 @@ class SchedulerServer(
                                     "tool 'run_thread' to pick one thread to run. Your goal is to find uncaught exceptions, deadlocks, or assertion " +
                                     "failures in the program execution. The source code of the program is provided in the current folder. You can " +
                                     "also use JDB to inspect the program state if needed with command `jdb -attach 5005`. Fray controls the concurrency " +
-                                    "by instrumenting the Java bytecode of the program and insert additional locks and concurrency primitives to force " +
+                                    "by instrumenting the Java bytecode of the program and inserting additional locks and concurrency primitives to force " +
                                     "the program to run in sequential order. Thus, if you inspect the stack trace of the program, you may see " +
                                     "additional frames related to Fray's instrumentation. "),
                     ),
