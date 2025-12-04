@@ -85,8 +85,8 @@ class FrayPlugin : Plugin<Project> {
         // Ensure compiled test classes are available before running frayTest
         it.mustRunAfter(baseTest)
         it.dependsOn(jlink)
-        for (dependencies in baseTest.dependsOn) {
-          it.dependsOn(dependencies)
+        for (taskDependency in baseTest.dependsOn) {
+          it.dependsOn(taskDependency)
         }
       }
     }
