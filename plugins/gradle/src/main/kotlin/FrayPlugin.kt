@@ -13,6 +13,8 @@ class FrayPlugin : Plugin<Project> {
   override fun apply(target: Project) {
 
     val extension = target.extensions.create("fray", FrayExtension::class.java)
+    val jlink = target.tasks.register("jlink", PrepareWorkspaceTask::class.java)
+    val frayTest = target.tasks.register("frayTest", Test::class.java)
 
     target.afterEvaluate {
       val frayVersion = extension.version
@@ -36,14 +38,13 @@ class FrayPlugin : Plugin<Project> {
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-core:$frayVersion")
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-junit:$frayVersion")
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-runtime:$frayVersion")
-      val jlink =
-          target.tasks.register("jlink", PrepareWorkspaceTask::class.java).get().apply {
-            this.frayJdk.set(frayJdk)
-            this.frayJvmti.set(frayJvmti)
-            this.frayVersion.set(frayVersion)
-            extension.jdkPath?.let { this.originalJdkPath.set(it) }
-          }
-      target.tasks.register("frayTest", Test::class.java) {
+      jlink.configure {
+        it.frayJdk.set(frayJdk)
+        it.frayJvmti.set(frayJvmti)
+        it.frayVersion.set(frayVersion)
+        extension.jdkPath?.let(it.originalJdkPath::set)
+      }
+      frayTest.configure {
         it.executable(javaPath)
         // Use the same classes and classpath as the built-in 'test' task (Gradle 9 requires this)
         val baseTest = target.tasks.named("test", Test::class.java).get()
@@ -84,6 +85,9 @@ class FrayPlugin : Plugin<Project> {
         // Ensure compiled test classes are available before running frayTest
         it.mustRunAfter(baseTest)
         it.dependsOn(jlink)
+        for (taskDependency in baseTest.dependsOn) {
+          it.dependsOn(taskDependency)
+        }
       }
     }
   }
