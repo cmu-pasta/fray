@@ -47,7 +47,8 @@ tasks.register(
           runner =
               runner.replace(
                   "#AGENT_PATH#", "$installDir/libs/fray-instrumentation-agent-$currentVersion.jar")
-          runner = runner.replace("#CORE_PATH#", "$installDir/libs/fray-core-$currentVersion-all.jar")
+          runner =
+              runner.replace("#CORE_PATH#", "$installDir/libs/fray-core-$currentVersion-all.jar")
         } else {
           val instrumentationTask =
               evaluationDependsOn(":instrumentation:agent").tasks.named("shadowJar").get()
