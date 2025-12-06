@@ -1,7 +1,7 @@
 package org.pastalab.fray.core.command
 
+import java.io.File
 import java.lang.reflect.InvocationTargetException
-import java.net.URI
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -34,7 +34,7 @@ data class MethodExecutor(
     val originalClassLoader = Thread.currentThread().contextClassLoader
     val classLoader =
         FrayClassLoader(
-            classpaths.map { URI("file://$it").toURL() }.toTypedArray(), originalClassLoader)
+            classpaths.map { File(it).toURI().toURL() }.toTypedArray(), originalClassLoader)
     Thread.currentThread().contextClassLoader = classLoader
     val clazz = Class.forName(clazz, true, Thread.currentThread().contextClassLoader)
     try {
