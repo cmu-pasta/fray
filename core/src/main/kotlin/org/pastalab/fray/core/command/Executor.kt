@@ -2,7 +2,6 @@ package org.pastalab.fray.core.command
 
 import java.lang.reflect.InvocationTargetException
 import java.net.URI
-import java.net.URLClassLoader
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -29,17 +28,16 @@ data class MethodExecutor(
     for (property in properties) {
       System.setProperty(property.key, property.value)
     }
-    val classLoader =
-        URLClassLoader(
-            classpaths.map { URI("file://$it").toURL() }.toTypedArray(),
-            Thread.currentThread().contextClassLoader)
-    Thread.currentThread().contextClassLoader = classLoader
   }
 
   override fun execute() {
+    val originalClassLoader = Thread.currentThread().contextClassLoader
+    val classLoader =
+        FrayClassLoader(
+            classpaths.map { URI("file://$it").toURL() }.toTypedArray(), originalClassLoader)
+    Thread.currentThread().contextClassLoader = classLoader
     val clazz = Class.forName(clazz, true, Thread.currentThread().contextClassLoader)
     try {
-
       if (args.isEmpty() && method != "main") {
         val m = clazz.getMethod(method)
         if (m.modifiers and java.lang.reflect.Modifier.STATIC == 0) {
@@ -54,6 +52,8 @@ data class MethodExecutor(
       }
     } catch (e: InvocationTargetException) {
       throw e.targetException
+    } finally {
+      Thread.currentThread().contextClassLoader = originalClassLoader
     }
   }
 

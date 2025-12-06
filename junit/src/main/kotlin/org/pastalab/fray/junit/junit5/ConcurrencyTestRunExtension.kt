@@ -10,7 +10,7 @@ import org.pastalab.fray.core.delegates.DelegateSynchronizer
 import org.pastalab.fray.core.delegates.RuntimeDelegate
 import org.pastalab.fray.runtime.Runtime
 
-class FrayExtension(
+class ConcurrencyTestRunExtension(
     val index: Int,
     val frayContext: RunContext,
     val frayJupiterContext: FrayJupiterContext
