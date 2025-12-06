@@ -1,5 +1,6 @@
 package org.pastalab.fray.junit
 
+import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -16,5 +17,18 @@ object Common {
     }
 
     return baseDir
+  }
+
+  fun getPath(resourceLocation: String): File {
+    val classPathPrefix = "classpath:"
+    return if (resourceLocation.startsWith(classPathPrefix)) {
+      val classPathPath = resourceLocation.substring(classPathPrefix.length)
+      val classLoader = Thread.currentThread().contextClassLoader
+      val url = classLoader.getResource(classPathPath)
+      val nonNullUrl = requireNotNull(url) { "Resource '$classPathPath' not found on classpath" }
+      File(nonNullUrl.toURI())
+    } else {
+      File(resourceLocation)
+    }
   }
 }

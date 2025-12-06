@@ -24,7 +24,9 @@ import org.pastalab.fray.core.randomness.ControlledRandomProvider
 import org.pastalab.fray.core.randomness.RecordedRandomProvider
 import org.pastalab.fray.core.scheduler.ReplayScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
+import org.pastalab.fray.junit.Common.getPath
 import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest
+import org.pastalab.fray.junit.junit5.annotations.FrayTest
 
 class FrayTestExtension : TestTemplateInvocationContextProvider {
 
@@ -39,7 +41,8 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
   }
 
   override fun supportsTestTemplate(context: ExtensionContext): Boolean {
-    return isAnnotated(context.testMethod, ConcurrencyTest::class.java)
+    return isAnnotated(context.testMethod, ConcurrencyTest::class.java) ||
+        isAnnotated(context.testMethod, FrayTest::class.java)
   }
 
   override fun provideTestTemplateInvocationContexts(
@@ -48,6 +51,11 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
     val testMethod = context.requiredTestMethod
     val displayName = context.displayName
     val testClass = context.requiredTestClass
+
+    if (isAnnotated(testMethod, FrayTest::class.java)) {
+      return Stream.of(FrayTestInvocationContext())
+    }
+
     val concurrencyTest: ConcurrencyTest =
         AnnotationSupport.findAnnotation(
                 testMethod,
@@ -119,7 +127,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
     val frayContext = RunContext(config)
     val frayJupiterContext = FrayJupiterContext()
     return Stream.iterate(1, { it + 1 }).sequential().limit(repetitions.toLong()).map {
-      FrayTestInvocationContext(it, displayName, frayContext, frayJupiterContext)
+      ConcurrencyTestInvocationContext(it, displayName, frayContext, frayJupiterContext)
     }
   }
 
@@ -159,19 +167,6 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
               }
             })
       }
-    }
-  }
-
-  fun getPath(resourceLocation: String): File {
-    val classPathPrefix = "classpath:"
-    return if (resourceLocation.startsWith(classPathPrefix)) {
-      val classPathPath = resourceLocation.substring(classPathPrefix.length)
-      val classLoader = Thread.currentThread().contextClassLoader
-      val url = classLoader.getResource(classPathPath)
-      val nonNullUrl = requireNotNull(url) { "Resource '$classPathPath' not found on classpath" }
-      File(nonNullUrl.toURI())
-    } else {
-      File(resourceLocation)
     }
   }
 }
