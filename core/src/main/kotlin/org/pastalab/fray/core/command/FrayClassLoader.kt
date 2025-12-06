@@ -6,7 +6,7 @@ import org.pastalab.fray.instrumentation.base.Utils.isFrayRuntimeClass
 
 class FrayClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(urls, parent) {
 
-  override fun loadClass(name: String): Class<*>? {
+  override fun loadClass(name: String): Class<*> {
     synchronized(getClassLoadingLock(name)) {
       val loaded = findLoadedClass(name)
       if (loaded != null) {
