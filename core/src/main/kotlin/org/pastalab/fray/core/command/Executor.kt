@@ -43,7 +43,7 @@ data class MethodExecutor(
         m.isAccessible = true
         if (m.modifiers and java.lang.reflect.Modifier.STATIC == 0) {
           val constructor = clazz.getDeclaredConstructor()
-          // Mark the constructor and method as accessible in case it is not public
+          // Mark the constructor as accessible in case it is not public
           constructor.isAccessible = true
           val obj = constructor.newInstance()
           m.invoke(obj)
