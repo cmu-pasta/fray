@@ -39,9 +39,13 @@ data class MethodExecutor(
     val clazz = Class.forName(clazz, true, Thread.currentThread().contextClassLoader)
     try {
       if (args.isEmpty() && method != "main") {
-        val m = clazz.getMethod(method)
+        val m = clazz.getDeclaredMethod(method)
+        m.isAccessible = true
         if (m.modifiers and java.lang.reflect.Modifier.STATIC == 0) {
-          val obj = clazz.getConstructor().newInstance()
+          val constructor = clazz.getDeclaredConstructor()
+          // Mark the constructor and method as accessible in case it is not public
+          constructor.isAccessible = true
+          val obj = constructor.newInstance()
           m.invoke(obj)
         } else {
           m.invoke(null)
