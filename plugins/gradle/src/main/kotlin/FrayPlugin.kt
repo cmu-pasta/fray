@@ -82,8 +82,6 @@ class FrayPlugin : Plugin<Project> {
         if (target.hasProperty("fray.debugger")) {
           it.jvmArgs("-Dfray.debugger=${target.property("fray.debugger")}")
         }
-        // Ensure compiled test classes are available before running frayTest
-        it.mustRunAfter(baseTest)
         it.dependsOn(jlink)
         for (taskDependency in baseTest.dependsOn) {
           it.dependsOn(taskDependency)
