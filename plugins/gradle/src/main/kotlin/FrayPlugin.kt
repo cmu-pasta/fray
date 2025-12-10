@@ -38,13 +38,13 @@ class FrayPlugin : Plugin<Project> {
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-core:$frayVersion")
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-junit:$frayVersion")
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-runtime:$frayVersion")
-      jlink.configure {
+      jlink.get().let {
         it.frayJdk.set(frayJdk)
         it.frayJvmti.set(frayJvmti)
         it.frayVersion.set(frayVersion)
         extension.jdkPath?.let(it.originalJdkPath::set)
       }
-      frayTest.configure {
+      frayTest.get().let {
         it.executable(javaPath)
         // Use the same classes and classpath as the built-in 'test' task (Gradle 9 requires this)
         val baseTest = target.tasks.named("test", Test::class.java).get()
