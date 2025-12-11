@@ -15,8 +15,12 @@ class FrayClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(ur
       if (isFrayRuntimeClass(name)) {
         return super.loadClass(name)
       }
-      val classBytes = getClassBytes(name)
-      return defineClass(name, classBytes, 0, classBytes.size)
+      try {
+        val classBytes = getClassBytes(name)
+        return defineClass(name, classBytes, 0, classBytes.size)
+      } catch (exception: Exception) {
+        return super.loadClass(name)
+      }
     }
   }
 

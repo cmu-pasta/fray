@@ -4,7 +4,6 @@ JAVA_PATH="#JAVA_PATH#"
 JVMTI_PATH="#JVM_TI_PATH#"
 AGENT_PATH="#AGENT_PATH#"
 CORE_PATH="#CORE_PATH#"
-REPORT_PATH="/tmp/report" # Default report path
 
 # Function to resolve classpaths with wildcard support
 resolve_classpaths() {
@@ -44,52 +43,58 @@ resolve_classpaths() {
   echo "$resolved_paths"
 }
 
-# Process command line arguments
-CLASS_PATH=""
-SYSTEM_PROPS=""
-REPLAY=""
-CLASS=""
-MCP=""
-ITER="10000"
-ARGS=()
+# Usage: fray -cp CLASSPATH MAIN_CLASS [-J<java-arg>]... [program args...] [-- MainKt args...]
+# -J<arg> arguments are passed to the Java command (e.g., -J-Xmx4g, -J-Dfoo=bar)
+# Arguments after MAIN_CLASS (before --) are passed to the program's main method
+# Arguments after -- are passed to MainKt
 
+CLASS_PATH=""
+CLASS=""
+JAVA_ARGS=()
+PROGRAM_ARGS=()
+MAINKT_ARGS=()
+
+# Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
     -cp|--class-path)
       CLASS_PATH="$2"
       shift 2
       ;;
-    --mcp)
-      MCP="true"
+    -J*)
+      # Strip the -J prefix and add to Java args
+      JAVA_ARGS+=("${1#-J}")
       shift
       ;;
-    --system-props)
-      SYSTEM_PROPS="$2"
-      shift 2
-      ;;
-    --replay)
-      REPLAY="$2"
-      shift 2
-      ;;
-    --iter)
-      ITER="$2"
-      shift 2
+    --)
+      shift
+      break
       ;;
     -*)
-      echo "Unknown option: $1"
-      exit 1
+      if [[ -z "$CLASS" ]]; then
+        echo "Unknown option: $1"
+        echo "Usage: fray -cp CLASSPATH MAIN_CLASS [-J<java-arg>]... [program args...] [-- Fray args...]"
+        exit 1
+      else
+        # After CLASS is set, pass to program args
+        PROGRAM_ARGS+=("$1")
+        shift
+      fi
       ;;
     *)
       if [[ -z "$CLASS" ]]; then
         CLASS="$1"
         shift
       else
-        ARGS+=("$1")
+        PROGRAM_ARGS+=("$1")
         shift
       fi
       ;;
   esac
 done
+
+# Remaining arguments (after --) go to MainKt
+MAINKT_ARGS=("$@")
 
 # Set up class path
 if [[ -n "$CLASS_PATH" ]]; then
@@ -103,17 +108,10 @@ RESOLVED_CLASS_PATH=$(resolve_classpaths "$FULL_CLASS_PATH")
 # Build command
 COMMAND=("$JAVA_PATH")
 
-# Add system properties
-if [[ -n "$SYSTEM_PROPS" ]]; then
-  read -ra PROPS <<< "$SYSTEM_PROPS"
-  COMMAND+=("${PROPS[@]}")
+# Add Java arguments (passed via first --)
+if [[ ${#JAVA_ARGS[@]} -gt 0 ]]; then
+  COMMAND+=("${JAVA_ARGS[@]}")
 fi
-
-if [[ -n "$MCP" ]]; then
-  COMMAND+=("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005")
-  COMMAND+=("-Dfray.debugger=mcp")
-fi
-
 
 # Add remaining JVM arguments
 COMMAND+=("-ea")
@@ -121,29 +119,19 @@ COMMAND+=("-cp" "$RESOLVED_CLASS_PATH")
 COMMAND+=("-agentpath:$JVMTI_PATH")
 COMMAND+=("-javaagent:$AGENT_PATH")
 COMMAND+=("org.pastalab.fray.core.MainKt")
-COMMAND+=("--iter" "$ITER")
-COMMAND+=("--network-delegate-type" "reactive")
-COMMAND+=("--system-time-delegate-type" "none")
-COMMAND+=("--no-ignore-timed-block")
 COMMAND+=("--run-config" "cli")
 COMMAND+=("--clazz" "$CLASS")
 COMMAND+=("--method" "main")
 
-# Add replay if specified
-if [[ -n "$REPLAY" ]]; then
-  COMMAND+=("--scheduler" "replay" "--path-to-scheduler" "$REPLAY")
+# Add program arguments (passed to main method)
+if [[ ${#PROGRAM_ARGS[@]} -gt 0 ]]; then
+  PROGRAM_ARGS_JOINED=$(IFS=:; echo "${PROGRAM_ARGS[*]}")
+  COMMAND+=("--args" "$PROGRAM_ARGS_JOINED")
 fi
 
-# Add args if any
-if [[ ${#ARGS[@]} -gt 0 ]]; then
-  ARGS_JOINED=$(IFS=:; echo "${ARGS[*]}")
-  COMMAND+=("--args" "$ARGS_JOINED")
-fi
-
-# Remove fray log if it exists
-FRAY_LOG_PATH="${REPORT_PATH}/fray.log"
-if [[ -f "$FRAY_LOG_PATH" ]]; then
-  rm "$FRAY_LOG_PATH"
+# Add MainKt arguments (passed via --)
+if [[ ${#MAINKT_ARGS[@]} -gt 0 ]]; then
+  COMMAND+=("${MAINKT_ARGS[@]}")
 fi
 
 # Execute command

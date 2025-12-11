@@ -28,6 +28,9 @@ import org.pastalab.fray.runtime.Runtime
 
 class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
     ClassFileTransformer {
+
+  val instrumentedClassCache = mutableMapOf<String, ByteArray>()
+
   override fun transform(
       loader: ClassLoader?,
       className: String,
@@ -40,6 +43,9 @@ class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
     if (isFrayRuntimeClass(className)) {
       // This is likely a JDK class, so skip transformation
       return classfileBuffer
+    }
+    if (instrumentedClassCache.containsKey(className)) {
+      return instrumentedClassCache[className]!!
     }
     try {
       Runtime.onSkipPrimitive("instrumentation")
@@ -83,6 +89,7 @@ class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
       if (Configs.DEBUG_MODE) {
         Utils.writeClassFile(className, out, true)
       }
+      instrumentedClassCache[className] = out
       return out
     } catch (e: Throwable) {
       println("Failed to instrument: $className")
