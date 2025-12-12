@@ -12,6 +12,14 @@ plugins {
   alias(libs.plugins.dokka.javadoc)
 }
 
+buildscript {
+  dependencies {
+    // We need this for idea plugin:
+    // https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/2062
+    classpath(libs.kotlinx.serialization.json)
+  }
+}
+
 dokka {
   moduleName.set("Fray")
   dokkaSourceSets.main {
