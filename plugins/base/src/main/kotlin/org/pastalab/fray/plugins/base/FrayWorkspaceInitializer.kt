@@ -6,7 +6,11 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URI
+import java.nio.file.Path
 import java.util.zip.ZipInputStream
+import kotlin.io.path.Path
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.div
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 
@@ -23,19 +27,21 @@ class FrayWorkspaceInitializer(
   fun createInstrumentedJDK(frayVersion: String, originalJDKPath: String?) {
     if (readJDKFrayVersion() != frayVersion) {
       jdkPath.deleteRecursively()
-      val jdk = originalJDKPath ?: downloadJDK()
+      val jdk = Path(originalJDKPath ?: downloadJDK())
+      val jlinkPath = jdk / "bin" / "jlink"
+      val jmodsPath = jdk / "jmods"
       verifyJDKVersion(jdk)
       val classPaths = jlinkDependencies.joinToString(":")
       val command =
           arrayOf(
-              "$jdk/bin/jlink",
+              jlinkPath.absolutePathString(),
               "-J-javaagent:$jlinkJar",
               "-J--module-path=$classPaths",
               "-J--add-modules=org.pastalab.fray.instrumentation.jdk",
               "-J--class-path=$classPaths",
               "--output=${jdkPath.absolutePath}",
               "--add-modules=ALL-MODULE-PATH",
-              "--module-path=$jdk/jmods",
+              "--module-path=${jmodsPath.absolutePathString()}",
               "--release-info",
               "add:IMPLEMENTOR=Fray",
               "--fray-instrumentation",
@@ -85,8 +91,9 @@ class FrayWorkspaceInitializer(
     return jdkFolder.absolutePath
   }
 
-  private fun verifyJDKVersion(jdkPath: String) {
-    val process = ProcessBuilder("$jdkPath/bin/java", "-version").start()
+  private fun verifyJDKVersion(jdkPath: Path) {
+    val javaPath = jdkPath / "bin" / "java"
+    val process = ProcessBuilder(javaPath.absolutePathString(), "-version").start()
     val exitCode = process.waitFor()
     if (exitCode != 0) {
       throw RuntimeException(

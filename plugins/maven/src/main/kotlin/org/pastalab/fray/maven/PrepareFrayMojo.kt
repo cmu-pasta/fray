@@ -76,13 +76,11 @@ class PrepareFrayMojo : AbstractMojo() {
   }
 
   fun getJvmtiJarFile(): File {
+    val osName = System.getProperty("os.name").lowercase()
     val os =
-        when (System.getProperty("os.name").lowercase()) {
-          "mac os x" -> "macos"
-          "linux" -> "linux"
-          "windows" -> "windows"
-          else -> throw Exception("Unsupported OS")
-        }
+        if (osName.contains("mac")) "macos"
+        else if (osName.contains("linux")) "linux"
+        else if (osName.contains("windows")) "windows" else throw Exception("Unsupported OS")
 
     val arch =
         System.getProperty("os.arch").replace("-", "").let { if (it == "amd64") "x8664" else it }
