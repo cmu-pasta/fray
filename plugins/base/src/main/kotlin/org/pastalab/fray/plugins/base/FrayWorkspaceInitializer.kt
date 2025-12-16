@@ -31,7 +31,7 @@ class FrayWorkspaceInitializer(
       val jlinkPath = jdk / "bin" / "jlink"
       val jmodsPath = jdk / "jmods"
       verifyJDKVersion(jdk)
-      val classPaths = jlinkDependencies.joinToString(":")
+      val classPaths = jlinkDependencies.joinToString(File.pathSeparator)
       val command =
           arrayOf(
               jlinkPath.absolutePathString(),
@@ -47,7 +47,12 @@ class FrayWorkspaceInitializer(
               "--fray-instrumentation",
           )
       val process = ProcessBuilder(*command).start()
-      process.waitFor()
+      val ret = process.waitFor()
+      if (ret != 0) {
+        val stdOutput = process.inputStream.bufferedReader().readText()
+        val errorOutput = process.errorStream.bufferedReader().readText()
+        throw RuntimeException("jlink failed with exit code $ret: $errorOutput.\n $stdOutput")
+      }
       jdkVersionPath.createNewFile()
       jdkVersionPath.writeText(frayVersion)
     }
