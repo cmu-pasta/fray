@@ -9,7 +9,7 @@ Add the following plugin to your `build.gradle` file:
 
 ```kotlin
 plugins {
-    id("org.pastalab.fray.gradle") version "0.6.11"
+    id("org.pastalab.fray.gradle") version "0.7.0"
 }
 ```
 
@@ -192,7 +192,7 @@ Fray also provides a Java agent that lets you run Fray with existing Java applic
 To use the agent, you can start from Fray's prebuilt Docker image.
 
 ```dockerfile
-FROM ghcr.io/cmu-pasta/fray:0.6.11 as fray
+FROM ghcr.io/cmu-pasta/fray:0.7.0 as fray
 
 COPY --from=fray /nix /nix
 COPY --from=fray /opt/fray /opt/fray
@@ -207,7 +207,7 @@ After you have the image, run your application with the Fray agent:
     - `FRAY_ARGS` are the same arguments you would pass to the Fray launcher, separated by colons (:).
     - For example, to use the `pos` scheduler and enable memory interleaving:
       ```
-      -javaagent:/opt/fray/libs/fray-core-0.6.11-SNAPSHOT-all.jar=-m:--scheduler:pos
+      -javaagent:/opt/fray/libs/fray-core-0.7.0-SNAPSHOT-all.jar=-m:--scheduler:pos
       ```
   - `-agentpath:/opt/fray/native-libs/libjvmti.so`
 
