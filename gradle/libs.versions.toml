@@ -31,7 +31,6 @@ mavenFileManagement = "3.2.0"
 mavenSurefire = "3.0.0"
 mavenCore = "3.9.11"
 mavenPluginAnnotations = "3.0"
-frayJvmti = "0.6.7"
 junitPlatformTestkit = "1.11.0-M1"
 
 [libraries]
@@ -45,9 +44,7 @@ hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junitBom" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junitJupiter" }
-junit-jupiter-api-bom = { module = "org.junit.jupiter:junit-jupiter-api" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junitJupiter" }
-junit-jupiter-engine-bom = { module = "org.junit.jupiter:junit-jupiter-engine" }
 junit-platform-commons = { module = "org.junit.platform:junit-platform-commons", version.ref = "junitPlatform" }
 junit-platform-engine = { module = "org.junit.platform:junit-platform-engine", version.ref = "junitPlatform" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
@@ -69,8 +66,6 @@ maven-file-management = { module = "org.apache.maven.shared:file-management", ve
 maven-surefire-api = { module = "org.apache.maven.surefire:surefire-api", version.ref = "mavenSurefire" }
 maven-core = { module = "org.apache.maven:maven-core", version.ref = "mavenCore" }
 maven-plugin-annotations = { module = "org.apache.maven.plugin-tools:maven-plugin-annotations", version.ref = "mavenPluginAnnotations" }
-fray-jvmti-linux = { module = "org.pastalab.fray:fray-jvmti-linux-x8664", version.ref = "frayJvmti" }
-fray-jvmti-macos = { module = "org.pastalab.fray:fray-jvmti-macos-aarch64", version.ref = "frayJvmti" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

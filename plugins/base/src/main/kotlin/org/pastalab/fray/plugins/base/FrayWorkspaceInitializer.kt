@@ -6,42 +6,57 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URI
+import java.nio.file.Path
 import java.util.zip.ZipInputStream
+import kotlin.io.path.Path
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.div
+import kotlin.io.path.exists
+import kotlin.io.path.readText
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 
 class FrayWorkspaceInitializer(
-    val jdkPath: File,
+    val buildDir: Path,
     val jlinkJar: File,
     val jlinkDependencies: Set<File>,
-    val jvmtiPath: File,
     val jvmtiJar: File,
-    val workDir: String
 ) {
-  val jdkVersionPath = File(jdkPath, "fray-version")
+  val jdkVersionPath: File = Commons.getFrayVersionPath(buildDir).toFile()
+  val jdkPath = Commons.getFrayJavaHomePath(buildDir)
+  val workDir = Commons.getFrayWorkDir(buildDir)
+  val jvmtiPath = Commons.getFrayJvmtiDirPath(buildDir)
+  val reportPath = Commons.getFrayReportDir(buildDir)
 
   fun createInstrumentedJDK(frayVersion: String, originalJDKPath: String?) {
     if (readJDKFrayVersion() != frayVersion) {
-      jdkPath.deleteRecursively()
-      val jdk = originalJDKPath ?: downloadJDK()
+      jdkPath.toFile().deleteRecursively()
+      val jdk = Path(originalJDKPath ?: downloadJDK())
+      val jlinkPath = jdk / "bin" / "jlink"
+      val jmodsPath = jdk / "jmods"
       verifyJDKVersion(jdk)
-      val classPaths = jlinkDependencies.joinToString(":")
+      val classPaths = jlinkDependencies.joinToString(File.pathSeparator)
       val command =
           arrayOf(
-              "$jdk/bin/jlink",
+              jlinkPath.absolutePathString(),
               "-J-javaagent:$jlinkJar",
               "-J--module-path=$classPaths",
               "-J--add-modules=org.pastalab.fray.instrumentation.jdk",
               "-J--class-path=$classPaths",
-              "--output=${jdkPath.absolutePath}",
+              "--output=${jdkPath.absolutePathString()}",
               "--add-modules=ALL-MODULE-PATH",
-              "--module-path=$jdk/jmods",
+              "--module-path=${jmodsPath.absolutePathString()}",
               "--release-info",
               "add:IMPLEMENTOR=Fray",
               "--fray-instrumentation",
           )
       val process = ProcessBuilder(*command).start()
-      process.waitFor()
+      val ret = process.waitFor()
+      if (ret != 0) {
+        val stdOutput = process.inputStream.bufferedReader().readText()
+        val errorOutput = process.errorStream.bufferedReader().readText()
+        throw RuntimeException("jlink failed with exit code $ret: $errorOutput.\n $stdOutput")
+      }
       jdkVersionPath.createNewFile()
       jdkVersionPath.writeText(frayVersion)
     }
@@ -49,8 +64,8 @@ class FrayWorkspaceInitializer(
 
   fun createJVMTiRuntime() {
     if (!jvmtiPath.exists()) {
-      jvmtiPath.mkdirs()
-      unzipFile(jvmtiJar.absolutePath, jvmtiPath.absolutePath)
+      jvmtiPath.toFile().mkdirs()
+      unzipFile(jvmtiJar.absolutePath, jvmtiPath)
     }
   }
 
@@ -70,8 +85,8 @@ class FrayWorkspaceInitializer(
       }
     }
     val downloadUrl = getDownloadUrl(osName)
-    val fileName = "$workDir${File.separator}${downloadUrl.substringAfterLast("/")}"
-    val jdkFolder = File("$workDir${File.separator}${getJDKFolderName(osName)}")
+    val fileName = (workDir / downloadUrl.substringAfterLast("/")).absolutePathString()
+    val jdkFolder = (workDir / getJDKFolderName(osName)).toFile()
     if (jdkFolder.exists()) {
       jdkFolder.deleteRecursively()
     }
@@ -85,12 +100,13 @@ class FrayWorkspaceInitializer(
     return jdkFolder.absolutePath
   }
 
-  private fun verifyJDKVersion(jdkPath: String) {
-    val process = ProcessBuilder("$jdkPath/bin/java", "-version").start()
+  private fun verifyJDKVersion(frayJDKPath: Path) {
+    val javaPath = frayJDKPath / "bin" / "java"
+    val process = ProcessBuilder(javaPath.absolutePathString(), "-version").start()
     val exitCode = process.waitFor()
     if (exitCode != 0) {
       throw RuntimeException(
-          "Failed to execute java -version for JDK at $jdkPath, exit code: $exitCode")
+          "Failed to execute java -version for JDK at $frayJDKPath, exit code: $exitCode")
     }
     val output = process.errorStream.bufferedReader().readText()
     if (!output.contains("\"25")) {
@@ -115,8 +131,8 @@ class FrayWorkspaceInitializer(
     }
   }
 
-  fun decompressFile(fileName: String, outputDir: String) {
-    File(outputDir).mkdir()
+  fun decompressFile(fileName: String, outputDir: Path) {
+    outputDir.toFile().mkdirs()
     when {
       fileName.endsWith(".zip") -> unzipFile(fileName, outputDir)
       fileName.endsWith(".tar.gz") -> untarGzipFile(fileName, outputDir)
@@ -124,15 +140,15 @@ class FrayWorkspaceInitializer(
     }
   }
 
-  fun unzipFile(zipFilePath: String, outputDir: String) {
+  fun unzipFile(zipFilePath: String, outputDir: Path) {
     ZipInputStream(FileInputStream(zipFilePath)).use { zip ->
       var entry = zip.nextEntry
       while (entry != null) {
-        val filePath = "$outputDir${File.separator}${entry.name}"
+        val filePath = outputDir / entry.name
         if (!entry.isDirectory) {
-          FileOutputStream(filePath).use { output -> zip.copyTo(output) }
+          FileOutputStream(filePath.absolutePathString()).use { output -> zip.copyTo(output) }
         } else {
-          File(filePath).mkdirs()
+          filePath.toFile().mkdirs()
         }
         zip.closeEntry()
         entry = zip.nextEntry
@@ -140,13 +156,13 @@ class FrayWorkspaceInitializer(
     }
   }
 
-  fun untarGzipFile(tarGzFilePath: String, outputDir: String) {
+  fun untarGzipFile(tarGzFilePath: String, outputDir: Path) {
     FileInputStream(tarGzFilePath).use { fis ->
       GzipCompressorInputStream(fis).use { gzipIn ->
         TarArchiveInputStream(gzipIn).use { tarIn ->
           var entry = tarIn.nextEntry
           while (entry != null) {
-            val outputFile = File(outputDir, entry.name)
+            val outputFile = File(outputDir.absolutePathString(), entry.name)
             if (entry.isDirectory) {
               outputFile.mkdirs()
             } else {
