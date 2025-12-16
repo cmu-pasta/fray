@@ -4,6 +4,7 @@ import java.io.File
 import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 import org.apache.maven.artifact.Artifact
+import org.apache.maven.model.Dependency
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugins.annotations.LifecyclePhase
@@ -31,6 +32,8 @@ class PrepareFrayMojo : AbstractMojo() {
 
   @Throws(MojoExecutionException::class)
   override fun execute() {
+    addJvmtiDependency()
+
     val jlinkJar =
         pluginArtifactMap!!["org.pastalab.fray" + ".instrumentation:fray-instrumentation-jdk"]!!
             .file
@@ -61,20 +64,41 @@ class PrepareFrayMojo : AbstractMojo() {
         "jvm", Commons.getFrayJavaPath(Path(project.build.directory)).absolutePathString())
   }
 
+  private fun addJvmtiDependency() {
+    val (os, arch) = getOsAndArch()
+
+    val dependency =
+        Dependency().apply {
+          groupId = "org.pastalab.fray"
+          artifactId = "fray-jvmti-$os-$arch"
+          version = FrayVersion.version
+          scope = "runtime"
+        }
+
+    project!!.dependencies.add(dependency)
+  }
+
   fun getAgentJarFile(): File {
     return pluginArtifactMap!!["org.pastalab.fray.instrumentation:fray-instrumentation-agent"]!!
         .file
   }
 
   fun getJvmtiJarFile(): File {
+    val (os, arch) = getOsAndArch()
+    return pluginArtifactMap!!["org.pastalab.fray:fray-jvmti-$os-$arch"]!!.file
+  }
+
+  private fun getOsAndArch(): Pair<String, String> {
     val osName = System.getProperty("os.name").lowercase()
     val os =
         if (osName.contains("mac")) "macos"
         else if (osName.contains("linux")) "linux"
-        else if (osName.contains("windows")) "windows" else throw Exception("Unsupported OS")
+        else if (osName.contains("windows")) "windows"
+        else throw MojoExecutionException("Unsupported OS")
 
     val arch =
         System.getProperty("os.arch").replace("-", "").let { if (it == "amd64") "x8664" else it }
-    return pluginArtifactMap!!["org.pastalab.fray:fray-jvmti-$os-$arch"]!!.file
+
+    return Pair(os, arch)
   }
 }
