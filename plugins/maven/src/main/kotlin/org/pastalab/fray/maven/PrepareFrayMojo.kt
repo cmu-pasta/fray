@@ -1,6 +1,8 @@
 package org.pastalab.fray.maven
 
 import java.io.File
+import kotlin.io.path.Path
+import kotlin.io.path.absolutePathString
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
@@ -9,6 +11,7 @@ import org.apache.maven.plugins.annotations.Mojo
 import org.apache.maven.plugins.annotations.Parameter
 import org.apache.maven.plugins.annotations.ResolutionScope
 import org.apache.maven.project.MavenProject
+import org.pastalab.fray.plugins.base.Commons
 import org.pastalab.fray.plugins.base.FrayVersion
 import org.pastalab.fray.plugins.base.FrayWorkspaceInitializer
 
@@ -26,15 +29,8 @@ class PrepareFrayMojo : AbstractMojo() {
 
   @Parameter(property = "plugin.jdkPath") private val originalJdkPath: String? = null
 
-  @Parameter(property = "fray.workDir", defaultValue = "\${project.build.directory}/fray")
-  private val destFile: File? = null
-
   @Throws(MojoExecutionException::class)
   override fun execute() {
-    val jdkPath = destFile!!.absolutePath + "/fray-java"
-    val jvmtiPath = destFile.absolutePath + "/fray-jvmti"
-    val reportPath = destFile.absolutePath + "/fray-report"
-
     val jlinkJar =
         pluginArtifactMap!!["org.pastalab.fray" + ".instrumentation:fray-instrumentation-jdk"]!!
             .file
@@ -47,27 +43,22 @@ class PrepareFrayMojo : AbstractMojo() {
             .map { it.file }
     val initializer =
         FrayWorkspaceInitializer(
-            File(jdkPath),
-            jlinkJar,
-            jlinkDependencies.toSet(),
-            File(jvmtiPath),
-            getJvmtiJarFile(),
-            destFile.absolutePath)
+            Path(project!!.build.directory), jlinkJar, jlinkDependencies.toSet(), getJvmtiJarFile())
     initializer.createInstrumentedJDK(FrayVersion.version, originalJdkPath)
     initializer.createJVMTiRuntime()
 
-    val oldValue = project!!.properties.getProperty("argLine") ?: ""
+    val oldValue = project.properties.getProperty("argLine") ?: ""
     project.properties.setProperty(
         "argLine",
         oldValue +
             " -javaagent:" +
             getAgentJarFile().absolutePath +
             " -agentpath:" +
-            jvmtiPath +
-            "/libjvmti.so" +
+            Commons.getFrayJvmtiPath(Path(project.build.directory)).absolutePathString() +
             " -Dfray.workDir=" +
-            reportPath)
-    project.properties.setProperty("jvm", "$jdkPath/bin/java")
+            initializer.reportPath)
+    project.properties.setProperty(
+        "jvm", Commons.getFrayJavaPath(Path(project.build.directory)).absolutePathString())
   }
 
   fun getAgentJarFile(): File {

@@ -34,7 +34,7 @@ jobs:
       - name: run gradle smoke tests
         run: cd ./smoke-tests/fray-gradle && ./gradlew build --stacktrace
       - name: run maven smoke tests
-        run: cd ./smoke-tests/fray-maven && ./mvnw verify
+        run: cd ./smoke-tests/fray-maven && ./mvnw -X verify
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v5
         if: failure()

@@ -8,6 +8,7 @@ import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions
 import org.gradle.api.tasks.testing.testng.TestNGOptions
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.pastalab.fray.gradle.tasks.PrepareWorkspaceTask
+import org.pastalab.fray.plugins.base.Commons
 
 class FrayPlugin : Plugin<Project> {
   override fun apply(target: Project) {
@@ -31,10 +32,10 @@ class FrayPlugin : Plugin<Project> {
           target.dependencies.add(
               "testImplementation",
               "org.pastalab.fray.instrumentation:fray-instrumentation-agent:$frayVersion")!!
-      val javaPath = "${target.rootProject.layout.buildDirectory.get().asFile}/${Commons.JAVA_PATH}"
+      val javaPath =
+          Commons.getFrayJavaPath(target.layout.buildDirectory.get().asFile.toPath()).toString()
       val jvmtiPath =
-          "${target.rootProject.layout.buildDirectory.get().asFile}/${Commons.JVMTI_BASE}"
-      val soSuffix = if (os == "windows") "dll" else "so"
+          Commons.getFrayJvmtiPath(target.layout.buildDirectory.get().asFile.toPath()).toString()
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-core:$frayVersion")
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-junit:$frayVersion")
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-runtime:$frayVersion")
@@ -63,7 +64,7 @@ class FrayPlugin : Plugin<Project> {
           is TestNGOptions -> it.useTestNG()
           else -> throw IllegalArgumentException("Unsupported test framework $testFramework")
         }
-        it.jvmArgs("-agentpath:$jvmtiPath/libjvmti.$soSuffix")
+        it.jvmArgs("-agentpath:$jvmtiPath")
         it.jvmArgs(
             "-javaagent:${it.project.configurations.detachedConfiguration(frayInstrumentation).resolve().first()}")
         it.jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
@@ -78,7 +79,7 @@ class FrayPlugin : Plugin<Project> {
 
         // Set base directory for fray tests
         it.jvmArgs(
-            "-Dfray.workDir=${target.layout.buildDirectory.get().asFile}/${Commons.TEST_WORK_DIR}")
+            "-Dfray.workDir=${Commons.getFrayReportDir(target.layout.buildDirectory.get().asFile.toPath())}")
         if (target.hasProperty("fray.debugger")) {
           it.jvmArgs("-Dfray.debugger=${target.property("fray.debugger")}")
         }
