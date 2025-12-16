@@ -6,7 +6,7 @@
  */
 plugins {
     id("java")
-    id("org.pastalab.fray.gradle") version "0.6.12-SNAPSHOT"
+    id("org.pastalab.fray.gradle") version "0.7.1-SNAPSHOT"
 }
 
 java {
