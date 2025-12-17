@@ -21,6 +21,7 @@ class FrayPlugin : Plugin<Project> {
       val frayVersion = extension.version
       val os = DefaultNativePlatform.getCurrentOperatingSystem().toFamilyName()
       val arch = DefaultNativePlatform.getCurrentArchitecture().name.replace("-", "")
+      val frayBuildFolder = target.rootProject.layout.buildDirectory.get().asFile.toPath()
       val frayJdk =
           target.dependencies.add(
               "testCompileOnly",
@@ -32,10 +33,8 @@ class FrayPlugin : Plugin<Project> {
           target.dependencies.add(
               "testImplementation",
               "org.pastalab.fray.instrumentation:fray-instrumentation-agent:$frayVersion")!!
-      val javaPath =
-          Commons.getFrayJavaPath(target.layout.buildDirectory.get().asFile.toPath()).toString()
-      val jvmtiPath =
-          Commons.getFrayJvmtiPath(target.layout.buildDirectory.get().asFile.toPath()).toString()
+      val javaPath = Commons.getFrayJavaPath(frayBuildFolder).toString()
+      val jvmtiPath = Commons.getFrayJvmtiPath(frayBuildFolder).toString()
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-core:$frayVersion")
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-junit:$frayVersion")
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-runtime:$frayVersion")
@@ -78,8 +77,7 @@ class FrayPlugin : Plugin<Project> {
         it.systemProperty("fray.organize.by.test", "true")
 
         // Set base directory for fray tests
-        it.jvmArgs(
-            "-Dfray.workDir=${Commons.getFrayReportDir(target.layout.buildDirectory.get().asFile.toPath())}")
+        it.jvmArgs("-Dfray.workDir=${Commons.getFrayReportDir(frayBuildFolder)}")
         if (target.hasProperty("fray.debugger")) {
           it.jvmArgs("-Dfray.debugger=${target.property("fray.debugger")}")
         }
