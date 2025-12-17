@@ -55,7 +55,9 @@ class ReadLockContext(lock: Lock) : LockContext(lock) {
       earlyExit: Boolean
   ): Boolean {
     val tid = lockThread.thread.id
-    verifyOrReport(lockHolders.contains(tid))
+    if (!lockHolders.contains(tid)) {
+      return false
+    }
     verifyOrReport(!unlockBecauseOfWait) // Read lock does not have `Condition`
     lockTimes[tid] = lockTimes[tid]!! - 1
     if (lockTimes[tid] == 0) {
