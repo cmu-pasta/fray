@@ -3,7 +3,6 @@ package org.pastalab.fray.core.concurrency.context
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
-import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.rmi.ThreadState
 
 class ReentrantLockContext(lock: Any) : LockContext(lock) {
@@ -67,8 +66,7 @@ class ReentrantLockContext(lock: Any) : LockContext(lock) {
       earlyExit: Boolean
   ): Boolean {
     val tid = lockThread.thread.id
-    verifyOrReport(lockHolder == tid || earlyExit)
-    if (lockHolder != tid && earlyExit) {
+    if (lockHolder != tid) {
       return false
     }
     if (!unlockBecauseOfWait) {

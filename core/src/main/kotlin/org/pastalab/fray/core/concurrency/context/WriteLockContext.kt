@@ -4,7 +4,6 @@ import java.util.concurrent.locks.Lock
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
-import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.rmi.ThreadState
 
 class WriteLockContext(lock: Lock) : LockContext(lock) {
@@ -54,7 +53,9 @@ class WriteLockContext(lock: Lock) : LockContext(lock) {
       earlyExit: Boolean
   ): Boolean {
     val tid = lockThread.thread.id
-    verifyOrReport(lockHolder == tid) { "Thread $tid is not the lock holder" }
+    if (lockHolder != tid) {
+      return false
+    }
     if (!unlockBecauseOfWait) {
       lockTimes[tid] = lockTimes[tid]!! - 1
     }
