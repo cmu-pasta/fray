@@ -31,6 +31,7 @@ class TestRunner(val config: Configuration) {
     config.executionInfo.executor.beforeExecution()
     config.frayLogger.info("Fray started.")
     val bugsFound = 0
+
     while (config.shouldRun()) {
       reportProgress(config.currentIteration, bugsFound)
       if (config.noFray) {
@@ -38,17 +39,26 @@ class TestRunner(val config: Configuration) {
           config.executionInfo.executor.execute()
         } catch (e: Throwable) {}
       } else {
-        try {
-          val synchronizer = DelegateSynchronizer(context)
-          Runtime.NETWORK_DELEGATE = config.networkDelegateType.produce(context, synchronizer)
-          Runtime.LOCK_DELEGATE = RuntimeDelegate(context, synchronizer)
-          Runtime.start()
-          config.executionInfo.executor.execute()
-          Runtime.onMainExit()
-        } catch (e: Throwable) {
-          Runtime.onReportError(e)
-          Runtime.onMainExit()
-        }
+        val t =
+            Thread({
+              val out = System.out
+              val err = System.err
+              try {
+                val synchronizer = DelegateSynchronizer(context)
+                Runtime.NETWORK_DELEGATE = config.networkDelegateType.produce(context, synchronizer)
+                Runtime.LOCK_DELEGATE = RuntimeDelegate(context, synchronizer)
+                Runtime.start()
+                config.executionInfo.executor.execute()
+                Runtime.onMainExit()
+              } catch (e: Throwable) {
+                Runtime.onReportError(e)
+                Runtime.onMainExit()
+              }
+              System.setOut(out)
+              System.setErr(err)
+            })
+        t.start()
+        t.join()
       }
       if (config.isReplay ||
           ((context.bugFound != null && context.bugFound !is FrayInternalError) &&
@@ -56,6 +66,7 @@ class TestRunner(val config: Configuration) {
           break
       config.nextIteration()
     }
+
     context.shutDown()
     config.frayLogger.info(
         "Run finished. Total iter: ${config.currentIteration}, Elapsed time: ${config.elapsedTime()}ms",

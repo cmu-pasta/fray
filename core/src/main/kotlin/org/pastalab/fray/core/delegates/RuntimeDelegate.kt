@@ -38,7 +38,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   fun isSystemThread(thread: Thread): Boolean {
     val systemGroup = thread.threadGroup
-    return "InnocuousThreadGroup" == systemGroup?.name
+    return "InnocuousThreadGroup" == systemGroup?.name || thread.name == "JNA Cleaner"
   }
 
   private fun onThreadSkip(t: Thread, runnable: () -> Unit) {
