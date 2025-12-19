@@ -37,7 +37,6 @@ import org.pastalab.fray.core.controllers.RunFinishedHandler
 import org.pastalab.fray.core.controllers.TimeController
 import org.pastalab.fray.core.scheduler.FrayIdeaPluginScheduler
 import org.pastalab.fray.core.utils.HelperThread
-import org.pastalab.fray.core.utils.ReentrantReadWriteLockCache
 import org.pastalab.fray.core.utils.SynchronizationManager
 import org.pastalab.fray.core.utils.Utils.mustBeCaught
 import org.pastalab.fray.core.utils.Utils.verifyNoThrow
@@ -79,34 +78,12 @@ class RunContext(val config: Configuration) {
         when (it) {
           is ReentrantLock -> ReentrantLockContext(it)
           is ReadLock -> {
-            val result =
-                ReentrantReadWriteLockCache.getLock(it)?.let { lock ->
-                  reentrantReadWriteLockInitImpl(lock).first
-                }
-            if (result != null) {
-              result
-            } else {
-              val context = ReadLockContext(it)
-              context.writeLockContext = WriteLockContext(it)
-              context.writeLockContext.readLockContext = context
-              context
-            }
+            throw IllegalStateException(
+                "ReadLock should be initialized through ReentrantReadWriteLockInit")
           }
           is WriteLock -> {
-            val result =
-                ReentrantReadWriteLockCache.getLock(it)?.let { lock ->
-                  reentrantReadWriteLockInitImpl(lock).second
-                }
-            if (result != null) {
-              result
-            } else {
-              // We lost track of the read and write locks.
-              // So we just create dummy contextsto avoid crash.
-              val context = WriteLockContext(it)
-              context.readLockContext = ReadLockContext(it)
-              context.readLockContext.writeLockContext = context
-              context
-            }
+            throw IllegalStateException(
+                "WriteLock should be initialized through ReentrantReadWriteLockInit")
           }
           else -> ReentrantLockContext(it)
         }
@@ -257,8 +234,8 @@ class RunContext(val config: Configuration) {
 
   fun done() {
     verifyOrReport(syncManager.synchronizationPoints.isEmpty())
-    lockManager.done(false)
-    signalManager.done(false)
+    lockManager.done()
+    signalManager.done()
     stampedLockManager.done()
     semaphoreManager.done()
     latchManager.done()
@@ -266,10 +243,16 @@ class RunContext(val config: Configuration) {
     reactiveResumedThreadQueue.clear()
     timeController.done()
 
+    // Remove shutdown hooks to prevent memory leak
+    for (thread in registeredThreads.values) {
+      java.lang.Runtime.getRuntime().removeShutdownHook(thread.thread)
+    }
+
     registeredThreads.clear()
     config.testStatusObservers.forEach { it.onExecutionDone(bugFound) }
-    hashCodeMapper.done(false)
+    hashCodeMapper.done()
     runFinishedHandlers.forEach { it.done() }
+    runFinishedHandlers.clear()
   }
 
   fun shutDown() {
@@ -701,7 +684,6 @@ class RunContext(val config: Configuration) {
     writeLockContext.readLockContext = readLockContext
     lockManager.addContext(readLock, readLockContext)
     lockManager.addContext(writeLock, writeLockContext)
-    ReentrantReadWriteLockCache.registerLock(lock)
     return Pair(readLockContext, writeLockContext)
   }
 
