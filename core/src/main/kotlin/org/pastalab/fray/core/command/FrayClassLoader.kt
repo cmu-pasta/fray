@@ -2,6 +2,8 @@ package org.pastalab.fray.core.command
 
 import java.net.URL
 import java.net.URLClassLoader
+import java.security.CodeSource
+import java.security.ProtectionDomain
 import org.pastalab.fray.instrumentation.base.Utils.isFrayRuntimeClass
 import org.pastalab.fray.runtime.Runtime
 
@@ -19,8 +21,8 @@ class FrayClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(ur
           return super.loadClass(name)
         }
         try {
-          val classBytes = getClassBytes(name)
-          return defineClass(name, classBytes, 0, classBytes.size)
+          val (classBytes, protectionDomain) = getClassBytesAndProtectionDomain(name)
+          return defineClass(name, classBytes, 0, classBytes.size, protectionDomain)
         } catch (exception: Exception) {
           return super.loadClass(name)
         }
@@ -30,13 +32,15 @@ class FrayClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(ur
     }
   }
 
-  private fun getClassBytes(className: String): ByteArray {
+  private fun getClassBytesAndProtectionDomain(
+      className: String
+  ): Pair<ByteArray, ProtectionDomain> {
     val classPath = className.replace('.', '/') + ".class"
-    getResourceAsStream(classPath).use { stream ->
-      if (stream == null) {
-        throw ClassNotFoundException(className)
-      }
-      return stream.readAllBytes()
+    val resource = getResource(classPath) ?: throw ClassNotFoundException(className)
+    val codeSource = CodeSource(resource, null as Array<java.security.cert.Certificate>?)
+    val protectionDomain = ProtectionDomain(codeSource, null)
+    resource.openStream().use { stream ->
+      return Pair(stream.readAllBytes(), protectionDomain)
     }
   }
 }
