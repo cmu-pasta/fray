@@ -44,8 +44,9 @@ class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
       // This is likely a JDK class, so skip transformation
       return classfileBuffer
     }
-    if (instrumentedClassCache.containsKey(className)) {
-      return instrumentedClassCache[className]!!
+    val classIdentifier = (protectionDomain?.codeSource?.location?.path ?: "null:") + className
+    if (instrumentedClassCache.containsKey(classIdentifier)) {
+      return instrumentedClassCache[classIdentifier]!!
     }
     try {
       Runtime.onSkipPrimitive("instrumentation")
@@ -89,7 +90,7 @@ class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
       if (Configs.DEBUG_MODE) {
         Utils.writeClassFile(className, out, true)
       }
-      instrumentedClassCache[className] = out
+      instrumentedClassCache[classIdentifier] = out
       return out
     } catch (e: Throwable) {
       println("Failed to instrument: $className")
