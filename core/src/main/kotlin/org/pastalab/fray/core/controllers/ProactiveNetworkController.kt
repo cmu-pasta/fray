@@ -99,7 +99,7 @@ class ProactiveNetworkController(val runContext: RunContext) : RunFinishedHandle
 
   fun serverSocketChannelAcceptDone(
       serverSocketChannel: ServerSocketChannel,
-      socketChannel: SocketChannel?
+      socketChannel: SocketChannel?,
   ) = verifyNoThrow {
     if (socketChannel != null) {
       nioContextManager.socketChannelAccepted(serverSocketChannel, socketChannel)

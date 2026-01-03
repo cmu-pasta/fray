@@ -31,7 +31,8 @@ dependencies {
   intellijPlatform {
     create(
         project.property("platformType")!! as String,
-        project.property("platformVersion")!! as String)
+        project.property("platformVersion")!! as String,
+    )
 
     // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file
     // for bundled IntelliJ Platform plugins.
@@ -70,7 +71,8 @@ intellijPlatform {
           with(it.lines()) {
             if (!containsAll(listOf(start, end))) {
               throw GradleException(
-                  "Plugin description section not found in README.md:\n$start ... $end")
+                  "Plugin description section not found in README.md:\n$start ... $end"
+              )
             }
             subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
           }
@@ -119,7 +121,8 @@ intellijPlatformTesting {
                   "-Djb.consents.confirmation.enabled=false",
               )
             }
-          })
+          }
+      )
 
       plugins { robotServerPlugin() }
     }

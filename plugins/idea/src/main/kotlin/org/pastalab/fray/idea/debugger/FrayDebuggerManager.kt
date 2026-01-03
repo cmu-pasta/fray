@@ -36,7 +36,12 @@ class FrayDebuggerManager(val debugSession: XDebugSession, val replayMode: Boole
     container.setContent(schedulerPanel)
     val content =
         debugSession.ui?.createContent(
-            FrayDebugPanel.CONTENT_ID, container, "Fray Scheduler", null, null)
+            FrayDebugPanel.CONTENT_ID,
+            container,
+            "Fray Scheduler",
+            null,
+            null,
+        )
     content?.isCloseable = false
 
     content?.let {

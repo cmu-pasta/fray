@@ -43,7 +43,7 @@ class DelegateSynchronizer(val context: RunContext) {
 
   inline fun <T> runInFrayDoneWithOriginBlockAndNoSkip(
       frayBlock: () -> Result<T>,
-      originBlock: () -> T
+      originBlock: () -> T,
   ): T {
     return runInFrayDone(frayBlock, false, "", originBlock)
   }
@@ -55,7 +55,7 @@ class DelegateSynchronizer(val context: RunContext) {
   inline fun <T> runInFrayDoneWithOriginBlock(
       skipSignature: String,
       frayBlock: () -> Result<T>,
-      originBlock: (() -> T)
+      originBlock: (() -> T),
   ): T {
     return runInFrayDone(frayBlock, true, skipSignature, originBlock)
   }
@@ -64,7 +64,7 @@ class DelegateSynchronizer(val context: RunContext) {
       frayBlock: () -> Result<T>,
       skipDone: Boolean,
       skipSignature: String,
-      originBlock: (() -> T)
+      originBlock: (() -> T),
   ): T {
     if (skipDone) {
       onSkipPrimitiveDone(skipSignature)
@@ -93,7 +93,7 @@ class DelegateSynchronizer(val context: RunContext) {
   inline fun <T> runInFrayStartWithOriginBlock(
       skipSignature: String,
       frayBlock: () -> Result<T>,
-      originBlock: () -> T
+      originBlock: () -> T,
   ): T {
     return runInFrayStart(frayBlock, true, skipSignature, originBlock)
   }
@@ -102,7 +102,7 @@ class DelegateSynchronizer(val context: RunContext) {
       frayBlock: () -> Result<T>,
       skipStart: Boolean,
       skipSignature: String,
-      originBlock: () -> T
+      originBlock: () -> T,
   ): T {
     if (checkEntered()) {
       if (skipStart) {

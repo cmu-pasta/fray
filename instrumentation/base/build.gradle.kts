@@ -18,7 +18,8 @@ tasks.withType<JavaExec> {
   jvmArgs(
       "--patch-module",
       "org.pastalab.fray.instrumentation.base=${sourceSets["main"].output
-      .asPath}")
+      .asPath}",
+  )
 }
 
 tasks.compileJava {
@@ -28,8 +29,10 @@ tasks.compileJava {
         listOf(
             "--patch-module",
             "org.pastalab.fray.instrumentation.base=${sourceSets["main"].output
-        .asPath}")
-      })
+        .asPath}",
+        )
+      }
+  )
 }
 
 application { mainClass = "org.pastalab.fray.instrumentation.base.MainKt" }

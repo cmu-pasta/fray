@@ -28,7 +28,7 @@ class MethodExitVisitor(
     val thisType: String,
     val customizer: MethodExitVisitor.(v: MethodExitVisitor, isFinalBlock: Boolean) -> Unit =
         { v, isFinalBlock ->
-        }
+        },
 ) : GeneratorAdapter(ASM9, mv, access, name, descriptor) {
   var methodEnterLabel = Label()
   var methodExitLabel = Label()
@@ -74,7 +74,7 @@ class MethodExitVisitor(
       name: String?,
       descriptor: String?,
       bootstrapMethodHandle: Handle?,
-      vararg bootstrapMethodArguments: Any?
+      vararg bootstrapMethodArguments: Any?,
   ) {
     super.visitInvokeDynamicInsn(name, descriptor, bootstrapMethodHandle, *bootstrapMethodArguments)
     methodExitInsnCount++
@@ -85,7 +85,7 @@ class MethodExitVisitor(
       owner: String?,
       name: String?,
       descriptor: String?,
-      isInterface: Boolean
+      isInterface: Boolean,
   ) {
     super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
     methodExitInsnCount++

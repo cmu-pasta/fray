@@ -10,7 +10,7 @@ class ReplayScheduler(val recording: List<ScheduleRecording>) : Scheduler {
 
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,
-      allThreads: Collection<ThreadContext>
+      allThreads: Collection<ThreadContext>,
   ): ThreadContext {
     if (index >= recording.size) {
       return threads[0]
@@ -18,7 +18,9 @@ class ReplayScheduler(val recording: List<ScheduleRecording>) : Scheduler {
     val rec = recording[index]
     val thread = threads.firstOrNull { it.index == rec.scheduled }
     verifyOrReport(
-        thread != null, "The scheduled thread ${rec.scheduled} is not in the current thread list.")
+        thread != null,
+        "The scheduled thread ${rec.scheduled} is not in the current thread list.",
+    )
     index++
     return thread
   }

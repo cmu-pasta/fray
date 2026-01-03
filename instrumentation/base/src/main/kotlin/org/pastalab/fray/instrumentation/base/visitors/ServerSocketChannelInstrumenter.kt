@@ -16,7 +16,7 @@ class ServerSocketChannelInstrumenter(cv: ClassVisitor) :
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     if (name == "bind" && descriptor.startsWith("(Ljava/net/SocketAddress;I)")) {
       return MethodExitVisitor(
@@ -28,7 +28,8 @@ class ServerSocketChannelInstrumenter(cv: ClassVisitor) :
           loadThis = true,
           loadArgs = false,
           addFinalBlock = false,
-          thisType = className)
+          thisType = className,
+      )
     }
     if (name == "accept") {
       val eMv =
@@ -39,7 +40,8 @@ class ServerSocketChannelInstrumenter(cv: ClassVisitor) :
               name,
               descriptor,
               loadThis = true,
-              loadArgs = false)
+              loadArgs = false,
+          )
       return MethodExitVisitor(
           eMv,
           Runtime::onServerSocketChannelAcceptDone,
@@ -49,14 +51,15 @@ class ServerSocketChannelInstrumenter(cv: ClassVisitor) :
           loadThis = true,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className) { mv, isFinalBlock ->
-            if (isFinalBlock) {
-              visitInsn(ACONST_NULL)
-            } else {
-              dup2()
-              pop()
-            }
-          }
+          thisType = className,
+      ) { mv, isFinalBlock ->
+        if (isFinalBlock) {
+          visitInsn(ACONST_NULL)
+        } else {
+          dup2()
+          pop()
+        }
+      }
     }
     return mv
   }

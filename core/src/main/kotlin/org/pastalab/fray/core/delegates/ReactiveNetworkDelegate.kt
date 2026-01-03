@@ -10,7 +10,7 @@ import org.pastalab.fray.runtime.NetworkDelegate
 
 class ReactiveNetworkDelegate(
     val controller: ReactiveNetworkController,
-    val synchronizer: DelegateSynchronizer
+    val synchronizer: DelegateSynchronizer,
 ) : NetworkDelegate() {
 
   fun reactiveBlockingEnter() =
@@ -33,7 +33,7 @@ class ReactiveNetworkDelegate(
 
   override fun onServerSocketChannelAcceptDone(
       channel: ServerSocketChannel,
-      client: SocketChannel?
+      client: SocketChannel?,
   ) {
     reactiveBlockingEnterDone()
   }

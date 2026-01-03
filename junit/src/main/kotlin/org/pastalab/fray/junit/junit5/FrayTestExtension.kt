@@ -134,8 +134,10 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
   private fun totalRepetition(concurrencyTest: ConcurrencyTest, method: Method): Int {
     // If the user guide the program execution through IDE plugin, the repetition is set to 1
     val repetition =
-        if (System.getProperty("fray.debugger", "false").toBoolean() ||
-            concurrencyTest.replay.isNotEmpty()) {
+        if (
+            System.getProperty("fray.debugger", "false").toBoolean() ||
+                concurrencyTest.replay.isNotEmpty()
+        ) {
           1
         } else {
           concurrencyTest.iterations
@@ -150,7 +152,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
       index: Int,
       displayName: String,
       total: Int,
-      reason: String
+      reason: String,
   ): TestTemplateInvocationContext {
     return object : TestTemplateInvocationContext {
       override fun getDisplayName(invocationIndex: Int): String {
@@ -165,7 +167,8 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
               ): ConditionEvaluationResult {
                 return ConditionEvaluationResult.disabled(reason)
               }
-            })
+            }
+        )
       }
     }
   }

@@ -15,7 +15,7 @@ import org.pastalab.fray.core.utils.Utils.verifyOrReport
 class SURWScheduler(
     val rand: Randomness,
     val executionLengths: MutableMap<Int, Int>,
-    val interestingOperations: MutableSet<Int>
+    val interestingOperations: MutableSet<Int>,
 ) : Scheduler {
   // A mapping between thread id and its weight
   // We should use `ThreadContext.id` instead of `Thread.id` because
@@ -73,7 +73,7 @@ class SURWScheduler(
 
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,
-      allThreads: Collection<ThreadContext>
+      allThreads: Collection<ThreadContext>,
   ): ThreadContext {
     // First we need to update weights if new threads are created.
     checkNewThreads(threads)
@@ -90,8 +90,10 @@ class SURWScheduler(
     val nextThread = filteredThreads[nextThreadIndex]
     val nextThreadOperation = nextThread.pendingOperation
 
-    if (nextThreadOperation is RacingOperation &&
-        interestingOperations.contains(nextThreadOperation.stackTraceHash)) {
+    if (
+        nextThreadOperation is RacingOperation &&
+            interestingOperations.contains(nextThreadOperation.stackTraceHash)
+    ) {
       // See:
       // https://github.com/zhaohuanqdcn/SURW/blob/24e8ed919ce34ebfcd4b2a6a997d78b468eec91f/src/main.zig#L700
       if ((weight[nextThread.index] ?: 0) == 0) {
@@ -134,8 +136,10 @@ class SURWScheduler(
 
   private fun isInteresting(thread: ThreadContext): Boolean {
     for (st in thread.thread.stackTrace.drop(1)) {
-      if (st.className.contains("org.pastalab.fray.core") ||
-          st.className.contains("org.pastalab.fray.runtime")) {
+      if (
+          st.className.contains("org.pastalab.fray.core") ||
+              st.className.contains("org.pastalab.fray.runtime")
+      ) {
         continue
       }
       if (st.className.contains("java.util.concurrent")) {
@@ -183,6 +187,7 @@ class SURWScheduler(
           buildInterestingOperations()
         } else {
           interestingOperations
-        })
+        },
+    )
   }
 }

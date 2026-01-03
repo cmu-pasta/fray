@@ -36,9 +36,11 @@ fun configureTestTask(testTask: Test) {
   testTask.classpath +=
       tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
   testTask.executable(
-      "${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}$javaExe")
+      "${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}$javaExe"
+  )
   testTask.jvmArgs(
-      "-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix")
+      "-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix"
+  )
   testTask.jvmArgs("-javaagent:$instrumentation")
   testTask.jvmArgs("-ea")
   testTask.jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
@@ -77,10 +79,12 @@ tasks.withType<JavaExec> {
   val javaExe = if (getCurrentOperatingSystem().toFamilyName() == "windows") "java.exe" else "java"
   classpath += tasks.named("jar").get().outputs.files + files(configurations.runtimeClasspath)
   executable(
-      "${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}$javaExe")
+      "${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}$javaExe"
+  )
   mainClass = "org.pastalab.fray.core.MainKt"
   jvmArgs(
-      "-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix")
+      "-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix"
+  )
   jvmArgs("-javaagent:$instrumentation")
   jvmArgs("-ea")
   jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")

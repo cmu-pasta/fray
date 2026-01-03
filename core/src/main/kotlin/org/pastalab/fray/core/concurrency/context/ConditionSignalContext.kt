@@ -29,7 +29,7 @@ class ConditionSignalContext(lockContext: LockContext, condition: Condition) :
 
   override fun updatedThreadContextDueToUnblock(
       threadContext: ThreadContext,
-      type: InterruptionType
+      type: InterruptionType,
   ) {
     threadContext.pendingOperation = ConditionWakeBlocked(this, type != InterruptionType.TIMEOUT)
   }
@@ -37,7 +37,7 @@ class ConditionSignalContext(lockContext: LockContext, condition: Condition) :
   override fun updateThreadContextDueToBlock(
       threadContext: ThreadContext,
       blockedUntil: Long,
-      canInterrupt: Boolean
+      canInterrupt: Boolean,
   ) {
     threadContext.pendingOperation = ConditionAwaitBlocked(this, canInterrupt, blockedUntil)
     threadContext.state = ThreadState.Blocked

@@ -8,7 +8,7 @@ open class SkipMethodInstrumenter(
     cv: ClassVisitor,
     val skipMethod: KFunction<*>,
     val skipDoneMethod: KFunction<*>,
-    vararg classNames: String
+    vararg classNames: String,
 ) : ClassVisitorBase(cv, *classNames) {
   override fun visit(
       version: Int,
@@ -16,7 +16,7 @@ open class SkipMethodInstrumenter(
       name: String,
       signature: String?,
       superName: String?,
-      interfaces: Array<out String>?
+      interfaces: Array<out String>?,
   ) {
     super.visit(version, access, name, signature, superName, interfaces)
     shouldInstrument = shouldInstrument or classNames.any { name.startsWith(it) }
@@ -28,7 +28,7 @@ open class SkipMethodInstrumenter(
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     if (name == "<init>" || name == "<clinit>") {
       return mv
@@ -43,7 +43,8 @@ open class SkipMethodInstrumenter(
             descriptor,
             loadThis = false,
             loadArgs = false,
-            preCustomizer = { push(methodSignature) })
+            preCustomizer = { push(methodSignature) },
+        )
     return MethodExitVisitor(
         eMv,
         skipDoneMethod,
@@ -54,6 +55,7 @@ open class SkipMethodInstrumenter(
         loadArgs = false,
         addFinalBlock = true,
         thisType = className,
-        customizer = { mv, isFinalBlock -> push(methodSignature) })
+        customizer = { mv, isFinalBlock -> push(methodSignature) },
+    )
   }
 }

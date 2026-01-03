@@ -32,15 +32,18 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) :
     val operation = scheduled.pendingOperation.javaClass.name
     if (recording.scheduled != scheduledIndex) {
       throw IllegalStateException(
-          "Scheduled index mismatch: expected ${recording.scheduled}, got $scheduledIndex")
+          "Scheduled index mismatch: expected ${recording.scheduled}, got $scheduledIndex"
+      )
     }
     if (recording.enabled != enabled) {
       throw IllegalStateException(
-          "Enabled schedules mismatch: expected ${recording.enabled}, got $enabled")
+          "Enabled schedules mismatch: expected ${recording.enabled}, got $enabled"
+      )
     }
     if (recording.operation != operation) {
       throw IllegalStateException(
-          "Operation mismatch: expected ${recording.operation}, got $operation")
+          "Operation mismatch: expected ${recording.operation}, got $operation"
+      )
     }
     index++
   }

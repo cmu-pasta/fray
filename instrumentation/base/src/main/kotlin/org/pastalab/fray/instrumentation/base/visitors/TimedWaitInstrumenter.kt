@@ -10,8 +10,10 @@ import org.objectweb.asm.commons.GeneratorAdapter
 class TimedWaitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
 
   fun findRuntimeMethod(owner: String, name: String, descriptor: String): KFunction<*>? {
-    if (owner == "java/util/concurrent/locks/LockSupport" &&
-        (name == "parkNanos" || name == "parkUntil")) {
+    if (
+        owner == "java/util/concurrent/locks/LockSupport" &&
+            (name == "parkNanos" || name == "parkUntil")
+    ) {
       return if (name == "parkNanos") {
         if (descriptor == "(J)V") {
           org.pastalab.fray.runtime.Runtime::onThreadParkNanos
@@ -26,9 +28,11 @@ class TimedWaitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
         }
       }
     }
-    if (owner == "java/util/concurrent/locks/Condition" &&
-        name.contains("await") &&
-        descriptor != "()V") {
+    if (
+        owner == "java/util/concurrent/locks/Condition" &&
+            name.contains("await") &&
+            descriptor != "()V"
+    ) {
       return when (name) {
         "await" -> {
           org.pastalab.fray.runtime.Runtime::onConditionAwaitTime
@@ -41,9 +45,11 @@ class TimedWaitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
         }
       }
     }
-    if (owner == "java/util/concurrent/CountDownLatch" &&
-        name == "await" &&
-        descriptor == "(JLjava/util/concurrent/TimeUnit;)Z") {
+    if (
+        owner == "java/util/concurrent/CountDownLatch" &&
+            name == "await" &&
+            descriptor == "(JLjava/util/concurrent/TimeUnit;)Z"
+    ) {
       return org.pastalab.fray.runtime.Runtime::onLatchAwaitTimeout
     }
     return null
@@ -54,7 +60,7 @@ class TimedWaitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     return object :
         GeneratorAdapter(
@@ -62,18 +68,20 @@ class TimedWaitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
             super.visitMethod(access, name, descriptor, signature, exceptions),
             access,
             name,
-            descriptor) {
+            descriptor,
+        ) {
       override fun visitMethodInsn(
           opcode: Int,
           owner: String,
           name: String,
           descriptor: String,
-          isInterface: Boolean
+          isInterface: Boolean,
       ) {
         findRuntimeMethod(owner, name, descriptor)?.let {
           invokeStatic(
               Type.getObjectType(
-                  org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+                  org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")
+              ),
               Utils.kFunctionToASMMethod(it),
           )
         } ?: super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)

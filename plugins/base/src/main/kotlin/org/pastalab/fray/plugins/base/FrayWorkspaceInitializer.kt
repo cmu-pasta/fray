@@ -106,7 +106,8 @@ class FrayWorkspaceInitializer(
     val exitCode = process.waitFor()
     if (exitCode != 0) {
       throw RuntimeException(
-          "Failed to execute java -version for JDK at $frayJDKPath, exit code: $exitCode")
+          "Failed to execute java -version for JDK at $frayJDKPath, exit code: $exitCode"
+      )
     }
     val output = process.errorStream.bufferedReader().readText()
     if (!output.contains("\"25")) {

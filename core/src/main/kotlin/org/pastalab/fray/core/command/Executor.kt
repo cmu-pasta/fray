@@ -21,7 +21,7 @@ data class MethodExecutor(
     val method: String,
     val args: List<String>,
     val classpaths: List<String>,
-    val properties: Map<String, String>
+    val properties: Map<String, String>,
 ) : Executor {
 
   override fun beforeExecution() {
@@ -34,7 +34,9 @@ data class MethodExecutor(
     val originalClassLoader = Thread.currentThread().contextClassLoader
     val classLoader =
         FrayClassLoader(
-            classpaths.map { File(it).toURI().toURL() }.toTypedArray(), originalClassLoader)
+            classpaths.map { File(it).toURI().toURL() }.toTypedArray(),
+            originalClassLoader,
+        )
     Thread.currentThread().contextClassLoader = classLoader
     val clazz = Class.forName(clazz, true, Thread.currentThread().contextClassLoader)
     try {

@@ -22,7 +22,7 @@ import org.pastalab.fray.idea.objects.ThreadExecutionContext
 
 data class ThreadExecutionHistory(
     var threadName: String,
-    val events: MutableList<Pair<Int, String>>
+    val events: MutableList<Pair<Int, String>>,
 )
 
 class ThreadTimelinePanel : JPanel() {
@@ -91,7 +91,8 @@ class ThreadTimelinePanel : JPanel() {
               isDraggingSeparator = false
               setCursor(java.awt.Cursor.getDefaultCursor())
             }
-          })
+          }
+      )
 
       // Add mouse listeners for interaction
       addMouseMotionListener(
@@ -141,7 +142,9 @@ class ThreadTimelinePanel : JPanel() {
                             x,
                             y,
                             0,
-                            false))
+                            false,
+                        )
+                    )
               }
 
               if (abs(e.x - separatorPosition) <= separatorDragTolerance) {
@@ -150,7 +153,8 @@ class ThreadTimelinePanel : JPanel() {
                 setCursor(java.awt.Cursor.getDefaultCursor())
               }
             }
-          })
+          }
+      )
 
       // Enable tooltips
       ToolTipManager.sharedInstance().registerComponent(this)
@@ -176,7 +180,8 @@ class ThreadTimelinePanel : JPanel() {
       val width =
           maxOf(
               JBUI.scale(800),
-              separatorPosition + (maxTimeStep + 1) * eventSpacing + JBUI.scale(100))
+              separatorPosition + (maxTimeStep + 1) * eventSpacing + JBUI.scale(100),
+          )
       return Dimension(width, height)
     }
 
@@ -227,7 +232,7 @@ class ThreadTimelinePanel : JPanel() {
         g2d: Graphics2D,
         threadIndex: Int,
         events: List<Pair<Int, String>>,
-        y: Int
+        y: Int,
     ) {
       // Create a color for this thread (you can use more sophisticated color mapping)
       val threadColor = Colors.getThreadColor(threadIndex)

@@ -39,7 +39,8 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
             project,
             onThreadSelected = { threadInfo -> selected = threadInfo },
             onScheduleButtonPressed = { selectedThread -> scheduleButtonPressed(selectedThread) },
-            replayMode)
+            replayMode,
+        )
 
     // Create the thread timeline panel
     threadTimelinePanel = ThreadTimelinePanel()
@@ -63,8 +64,10 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
                 override fun scheduled(thread: ThreadInfo) {
                   scheduleButtonPressed(thread)
                 }
-              }),
-          replayMode)
+              }
+          ),
+          replayMode,
+      )
 
   private fun createRightPanel(): JPanel {
     // Create a panel to hold timeline and resource panels
@@ -113,14 +116,16 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
   fun schedule(
       threads: List<ThreadExecutionContext>,
       scheduled: ThreadExecutionContext?,
-      onThreadSelected: (ThreadInfo) -> Unit
+      onThreadSelected: (ThreadInfo) -> Unit,
   ) {
     processThreadsForHighlighting(threads)
 
     // We need to update the control panel after highlighting because
     // highlighting changes the opened editors, and we need to switch back.
     controlPanel.updateThreads(
-        threads, threads.firstOrNull { it.threadInfo.threadIndex == selected?.threadIndex })
+        threads,
+        threads.firstOrNull { it.threadInfo.threadIndex == selected?.threadIndex },
+    )
 
     // Update thread resource information
     threadResourcePanel.updateThreadResources(threads)
@@ -143,7 +148,11 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
             if (fileEditor is TextEditor) {
               val editor = fileEditor.editor
               highlightManager.addThreadToLine(
-                  stackTraceElement.lineNumber, threadExecutionContext, editor, document)
+                  stackTraceElement.lineNumber,
+                  threadExecutionContext,
+                  editor,
+                  document,
+              )
               threadInfoUpdaters
                   .getOrPut(editor) {
                     val updater = ThreadInfoUpdater(editor)

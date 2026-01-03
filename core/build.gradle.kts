@@ -46,7 +46,9 @@ tasks.register(
           runner = runner.replace("#JVM_TI_PATH#", "$installDir/native-libs/libjvmti.$soSuffix")
           runner =
               runner.replace(
-                  "#AGENT_PATH#", "$installDir/libs/fray-instrumentation-agent-$currentVersion.jar")
+                  "#AGENT_PATH#",
+                  "$installDir/libs/fray-instrumentation-agent-$currentVersion.jar",
+              )
           runner =
               runner.replace("#CORE_PATH#", "$installDir/libs/fray-core-$currentVersion-all.jar")
         } else {
@@ -58,11 +60,14 @@ tasks.register(
           val jdk = currentProject.project(":instrumentation:jdk")
           runner =
               runner.replace(
-                  "#JAVA_PATH#", "${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java")
+                  "#JAVA_PATH#",
+                  "${jdk.layout.buildDirectory.get().asFile}/java-inst/bin/java",
+              )
           runner =
               runner.replace(
                   "#JVM_TI_PATH#",
-                  "${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.$soSuffix")
+                  "${jvmti.layout.buildDirectory.get().asFile}/native-libs/libjvmti.$soSuffix",
+              )
           runner = runner.replace("#AGENT_PATH#", instrumentation)
           runner = runner.replace("#CORE_PATH#", core)
         }
@@ -70,7 +75,8 @@ tasks.register(
         file.writeText(runner)
         file.setExecutable(true)
       }
-    })
+    },
+)
 
 tasks.register<Copy>("copyDependencies") {
   from(configurations.runtimeClasspath)
@@ -85,7 +91,9 @@ tasks.named<ShadowJar>("shadowJar") {
     attributes(
         mapOf(
             "Main-Class" to "org.pastalab.fray.core.MainKt",
-            "Premain-Class" to "org.pastalab.fray.core.PreMainKt"))
+            "Premain-Class" to "org.pastalab.fray.core.PreMainKt",
+        )
+    )
   }
 }
 

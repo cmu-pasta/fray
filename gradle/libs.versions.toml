@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.2.21"
 kotlinSerializationPlugin = "2.2.0"
-ktfmt = "0.25.0"
+spotless = "8.1.0"
 jreleaser = "1.16.0"
 shadow = "9.0.0-rc2"
 dokka = "2.1.0"
@@ -70,7 +70,7 @@ maven-plugin-annotations = { module = "org.apache.maven.plugin-tools:maven-plugi
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinSerializationPlugin" }
-ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 jreleaser = { id = "org.jreleaser", version.ref = "jreleaser" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }

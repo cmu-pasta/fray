@@ -28,7 +28,7 @@ class WriteLockContext(lock: Lock) : LockContext(lock) {
       lockThread: ThreadContext,
       shouldBlock: Boolean,
       lockBecauseOfWait: Boolean,
-      canInterrupt: Boolean
+      canInterrupt: Boolean,
   ): Boolean {
     if (!canLock(lockThread.thread.id)) {
       if (canInterrupt) {
@@ -50,7 +50,7 @@ class WriteLockContext(lock: Lock) : LockContext(lock) {
   override fun unlock(
       lockThread: ThreadContext,
       unlockBecauseOfWait: Boolean,
-      earlyExit: Boolean
+      earlyExit: Boolean,
   ): Boolean {
     val tid = lockThread.thread.id
     if (lockHolder != tid) {
@@ -112,10 +112,12 @@ class WriteLockContext(lock: Lock) : LockContext(lock) {
   override fun unblockThread(tid: Long, type: InterruptionType): Boolean {
     val lockWaiter = lockWaiters[tid] ?: return false
     val noTimeout = type != InterruptionType.TIMEOUT
-    if ((lockWaiter.canInterrupt && type == InterruptionType.INTERRUPT) ||
-        (type == InterruptionType.RESOURCE_AVAILABLE) ||
-        (type == InterruptionType.TIMEOUT) ||
-        (type == InterruptionType.FORCE)) {
+    if (
+        (lockWaiter.canInterrupt && type == InterruptionType.INTERRUPT) ||
+            (type == InterruptionType.RESOURCE_AVAILABLE) ||
+            (type == InterruptionType.TIMEOUT) ||
+            (type == InterruptionType.FORCE)
+    ) {
       lockWaiter.thread.pendingOperation = ThreadResumeOperation(noTimeout)
       lockWaiter.thread.state = ThreadState.Runnable
       lockWaiters.remove(tid)

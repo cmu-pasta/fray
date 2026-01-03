@@ -35,16 +35,20 @@ class SelectorContext(selector: Selector) : InterruptibleContext {
         }
       }
       if (context is SocketChannelContext) {
-        if (type and SelectionKey.OP_CONNECT != 0 &&
-            context.channelReference.get()?.isOpen == true &&
-            context.channelReference.get()?.remoteAddress != null) {
+        if (
+            type and SelectionKey.OP_CONNECT != 0 &&
+                context.channelReference.get()?.isOpen == true &&
+                context.channelReference.get()?.remoteAddress != null
+        ) {
           return false
         }
         if (type and SelectionKey.OP_READ != 0 && context.pendingBytes != 0L) {
           return false
         }
-        if (type and SelectionKey.OP_WRITE != 0 &&
-            context.channelReference.get()?.isConnected == true) {
+        if (
+            type and SelectionKey.OP_WRITE != 0 &&
+                context.channelReference.get()?.isConnected == true
+        ) {
           return false
         }
       }

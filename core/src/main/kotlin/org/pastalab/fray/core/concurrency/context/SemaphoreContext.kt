@@ -17,7 +17,7 @@ class SemaphoreContext(var totalPermits: Int, semaphore: Semaphore) :
       permits: Int,
       shouldBlock: Boolean,
       canInterrupt: Boolean,
-      thread: ThreadContext
+      thread: ThreadContext,
   ): Boolean {
     if (totalPermits >= permits) {
       totalPermits -= permits

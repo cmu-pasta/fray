@@ -1,10 +1,5 @@
-plugins {
-    java
-}
+plugins { java }
 
-dependencies {
-}
+dependencies {}
 
-tasks.test {
-    useJUnitPlatform()
-}
+tasks.test { useJUnitPlatform() }

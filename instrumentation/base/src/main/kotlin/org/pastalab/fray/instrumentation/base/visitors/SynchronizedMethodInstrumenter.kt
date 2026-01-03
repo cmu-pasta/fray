@@ -15,7 +15,7 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
       name: String,
       signature: String?,
       superName: String?,
-      interfaces: Array<out String>?
+      interfaces: Array<out String>?,
   ) {
     super.visit(version, access, name, signature, superName, interfaces)
     className = name
@@ -38,12 +38,14 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
 
-    if (access and Opcodes.ACC_NATIVE != 0 ||
-        access and Opcodes.ACC_SYNCHRONIZED == 0 ||
-        !shouldInstrument) {
+    if (
+        access and Opcodes.ACC_NATIVE != 0 ||
+            access and Opcodes.ACC_SYNCHRONIZED == 0 ||
+            !shouldInstrument
+    ) {
       return super.visitMethod(access, name, descriptor, signature, exceptions)
     }
     val newAccess = access and Opcodes.ACC_SYNCHRONIZED.inv()
@@ -64,7 +66,8 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
             org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
             org.pastalab.fray.runtime.Runtime::onMonitorEnter.name,
             Utils.kFunctionToJvmMethodDescriptor(org.pastalab.fray.runtime.Runtime::onMonitorEnter),
-            false)
+            false,
+        )
         visitLabel(enterLabel)
         visitInsn(MONITORENTER)
       }
@@ -82,15 +85,18 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
             org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
             org.pastalab.fray.runtime.Runtime::onMonitorExit.name,
             Utils.kFunctionToJvmMethodDescriptor(org.pastalab.fray.runtime.Runtime::onMonitorExit),
-            false)
+            false,
+        )
         visitInsn(MONITOREXIT)
         super.visitMethodInsn(
             INVOKESTATIC,
             org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
             org.pastalab.fray.runtime.Runtime::onMonitorExitDone.name,
             Utils.kFunctionToJvmMethodDescriptor(
-                org.pastalab.fray.runtime.Runtime::onMonitorExitDone),
-            false)
+                org.pastalab.fray.runtime.Runtime::onMonitorExitDone
+            ),
+            false,
+        )
       }
 
       override fun onMethodExit(opcode: Int) {

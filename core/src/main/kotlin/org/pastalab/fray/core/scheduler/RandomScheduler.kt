@@ -11,7 +11,7 @@ class RandomScheduler(val rand: Randomness) : Scheduler {
 
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,
-      allThreads: Collection<ThreadContext>
+      allThreads: Collection<ThreadContext>,
   ): ThreadContext {
 
     if (threads.size == 1) {

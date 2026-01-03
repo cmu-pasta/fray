@@ -23,7 +23,7 @@ class FrayTestRunExtension : InvocationInterceptor {
   override fun interceptTestTemplateMethod(
       invocation: InvocationInterceptor.Invocation<Void>,
       invocationContext: ReflectiveInvocationContext<Method>,
-      extensionContext: ExtensionContext
+      extensionContext: ExtensionContext,
   ) {
     val testMethod = invocationContext.executable
     val clazz = extensionContext.requiredTestClass
@@ -76,7 +76,8 @@ class FrayTestRunExtension : InvocationInterceptor {
                 ),
                 false,
                 false,
-                -1),
+                -1,
+            ),
             testDir.toString(),
             frayTestAnnotation.iterations,
             60,

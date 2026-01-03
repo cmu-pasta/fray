@@ -33,7 +33,7 @@ class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String,
       signature: String?,
       superName: String?,
-      interfaces: Array<out String>?
+      interfaces: Array<out String>?,
   ) {
     className = name
     super.visit(version, access, name, signature, superName, interfaces)
@@ -44,13 +44,15 @@ class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
     val memoryType = memoryTypeFromMethodName(name)
-    if (atomicClasses.contains(className) &&
-        !atomicNonVolatileMethodNames.contains(name) &&
-        access and ACC_PUBLIC != 0) {
+    if (
+        atomicClasses.contains(className) &&
+            !atomicNonVolatileMethodNames.contains(name) &&
+            access and ACC_PUBLIC != 0
+    ) {
       val type = org.pastalab.fray.runtime.MemoryOpType::class.java.name.replace(".", "/")
       val eMv =
           MethodEnterVisitor(
@@ -77,7 +79,8 @@ class AtomicOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           loadThis = false,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className)
+          thisType = className,
+      )
     }
     return mv
   }
