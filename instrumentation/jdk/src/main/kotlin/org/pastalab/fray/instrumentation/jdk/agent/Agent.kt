@@ -10,7 +10,13 @@ fun premain(arguments: String?, instrumentation: Instrumentation) {
   val extraExports = mapOf("jdk.tools.jlink.plugin" to Collections.singleton(fray))
 
   instrumentation.redefineModule(
-      jlinkModule, emptySet(), extraExports, emptyMap(), emptySet(), emptyMap())
+      jlinkModule,
+      emptySet(),
+      extraExports,
+      emptyMap(),
+      emptySet(),
+      emptyMap(),
+  )
 
   val pluginClass = jlinkModule.classLoader.loadClass("jdk.tools.jlink.plugin.Plugin")
   val frayPlugin =
@@ -19,5 +25,11 @@ fun premain(arguments: String?, instrumentation: Instrumentation) {
   val extraProvides = mapOf(pluginClass to listOf(frayPlugin))
 
   instrumentation.redefineModule(
-      fray, emptySet(), emptyMap(), emptyMap(), emptySet(), extraProvides)
+      fray,
+      emptySet(),
+      emptyMap(),
+      emptyMap(),
+      emptySet(),
+      extraProvides,
+  )
 }

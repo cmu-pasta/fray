@@ -20,6 +20,7 @@ gradlePlugin {
           implementationClass = "org.pastalab.fray.gradle.FrayPlugin"
           description = "Fray gradle plugin to test concurrency programs."
           tags = listOf("fray", "testing", "concurrency")
-        })
+        },
+    )
   }
 }

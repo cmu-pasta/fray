@@ -8,5 +8,5 @@ data class Choice(
     val threadId: Int,
     val enabled: Int,
     val enabledIds: List<Int>,
-    val operation: String
+    val operation: String,
 )

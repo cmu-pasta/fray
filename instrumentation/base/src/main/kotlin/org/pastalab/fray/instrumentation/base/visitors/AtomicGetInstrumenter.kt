@@ -13,7 +13,7 @@ class AtomicGetInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String?,
       descriptor: String?,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
     return object : GeneratorAdapter(ASM9, mv, access, name, descriptor) {
@@ -22,22 +22,30 @@ class AtomicGetInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           owner: String,
           name: String,
           descriptor: String,
-          isInterface: Boolean
+          isInterface: Boolean,
       ) {
-        if (AtomicOperationInstrumenter.atomicClasses.contains(owner) &&
-            name == "get" &&
-            descriptor.startsWith("()")) {
+        if (
+            AtomicOperationInstrumenter.atomicClasses.contains(owner) &&
+                name == "get" &&
+                descriptor.startsWith("()")
+        ) {
           dup()
           val type = org.pastalab.fray.runtime.MemoryOpType::class.java.name.replace(".", "/")
           visitFieldInsn(
-              GETSTATIC, type, org.pastalab.fray.runtime.MemoryOpType.MEMORY_READ.name, "L$type;")
+              GETSTATIC,
+              type,
+              org.pastalab.fray.runtime.MemoryOpType.MEMORY_READ.name,
+              "L$type;",
+          )
           visitMethodInsn(
               INVOKESTATIC,
               org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
               org.pastalab.fray.runtime.Runtime::onAtomicOperation.name,
               Utils.kFunctionToJvmMethodDescriptor(
-                  org.pastalab.fray.runtime.Runtime::onAtomicOperation),
-              false)
+                  org.pastalab.fray.runtime.Runtime::onAtomicOperation
+              ),
+              false,
+          )
         }
         super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
       }

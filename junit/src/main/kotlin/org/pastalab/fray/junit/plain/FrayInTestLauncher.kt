@@ -28,7 +28,7 @@ object FrayInTestLauncher {
       iteration: Int,
       timeout: Int,
       isReplay: Boolean,
-      additionalConfigs: (Configuration) -> Unit = { _ -> }
+      additionalConfigs: (Configuration) -> Unit = { _ -> },
   ) {
     val config =
         Configuration(
@@ -38,7 +38,8 @@ object FrayInTestLauncher {
                 ),
                 ignoreUnhandledExceptions = false,
                 interleaveMemoryOps = false,
-                maxScheduledStep = -1),
+                maxScheduledStep = -1,
+            ),
             WORK_DIR.absolutePathString(),
             iteration,
             timeout,
@@ -53,7 +54,8 @@ object FrayInTestLauncher {
             networkDelegateType = NetworkDelegateType.PROACTIVE,
             systemTimeDelegateType = SystemTimeDelegateType.NONE,
             ignoreTimedBlock = true,
-            sleepAsYield = true)
+            sleepAsYield = true,
+        )
     additionalConfigs(config)
     val runner = TestRunner(config)
     runner.run()?.let { throw it }

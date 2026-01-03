@@ -9,4 +9,5 @@ class SkipPrimitiveInstrumenter(cv: ClassVisitor) :
         org.pastalab.fray.runtime.Runtime::onSkipPrimitiveDone,
         "java.lang.ProcessImpl",
         "com.intellij.rt.debugger",
-        "org.gradle.internal")
+        "org.gradle.internal",
+    )

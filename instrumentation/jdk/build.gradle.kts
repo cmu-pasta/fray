@@ -21,8 +21,10 @@ tasks.compileJava {
         listOf(
             "--patch-module",
             "org.pastalab.fray.instrumentation.jdk=${sourceSets["main"].output
-            .asPath}")
-      })
+            .asPath}",
+        )
+      }
+  )
 }
 
 tasks.jar {
@@ -81,7 +83,8 @@ tasks.build {
                     "--module-path=$javaHome/jmods",
                     "--release-info",
                     "add:IMPLEMENTOR=Fray",
-                    "--fray-instrumentation")
+                    "--fray-instrumentation",
+                )
             println(command.joinToString(" "))
             commandLine(command)
           }

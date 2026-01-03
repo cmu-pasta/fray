@@ -12,7 +12,7 @@ class MonitorInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String,
       signature: String?,
       superName: String?,
-      interfaces: Array<out String>?
+      interfaces: Array<out String>?,
   ) {
     className = name
     super.visit(version, access, name, signature, superName, interfaces)
@@ -23,12 +23,14 @@ class MonitorInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String?,
       descriptor: String?,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
-    if (((className.startsWith("jdk/internal/") ||
-        // PipedInputStream is handled separately through [PipedInputStreamInstrumenter].
-        className == "java/io/PipedInputStream") && !className.startsWith("jdk/internal/net")) ||
-        access and Opcodes.ACC_NATIVE != 0) {
+    if (
+        ((className.startsWith("jdk/internal/") ||
+            // PipedInputStream is handled separately through [PipedInputStreamInstrumenter].
+            className == "java/io/PipedInputStream") &&
+            !className.startsWith("jdk/internal/net")) || access and Opcodes.ACC_NATIVE != 0
+    ) {
       return super.visitMethod(access, name, descriptor, signature, exceptions)
     }
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
@@ -42,8 +44,10 @@ class MonitorInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
                 org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
                 org.pastalab.fray.runtime.Runtime::onMonitorEnter.name,
                 Utils.kFunctionToJvmMethodDescriptor(
-                    org.pastalab.fray.runtime.Runtime::onMonitorEnter),
-                false)
+                    org.pastalab.fray.runtime.Runtime::onMonitorEnter
+                ),
+                false,
+            )
             super.visitInsn(opcode)
           } else {
             super.visitInsn(Opcodes.DUP)
@@ -53,16 +57,20 @@ class MonitorInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
                 org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
                 org.pastalab.fray.runtime.Runtime::onMonitorExit.name,
                 Utils.kFunctionToJvmMethodDescriptor(
-                    org.pastalab.fray.runtime.Runtime::onMonitorExit),
-                false)
+                    org.pastalab.fray.runtime.Runtime::onMonitorExit
+                ),
+                false,
+            )
             super.visitInsn(opcode)
             super.visitMethodInsn(
                 Opcodes.INVOKESTATIC,
                 org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
                 org.pastalab.fray.runtime.Runtime::onMonitorExitDone.name,
                 Utils.kFunctionToJvmMethodDescriptor(
-                    org.pastalab.fray.runtime.Runtime::onMonitorExitDone),
-                false)
+                    org.pastalab.fray.runtime.Runtime::onMonitorExitDone
+                ),
+                false,
+            )
           }
         } else {
           super.visitInsn(opcode)

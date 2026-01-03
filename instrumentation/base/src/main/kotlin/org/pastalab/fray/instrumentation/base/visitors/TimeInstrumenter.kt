@@ -13,7 +13,7 @@ class TimeInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String?,
       descriptor: String?,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
 
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
@@ -23,7 +23,7 @@ class TimeInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           owner: String?,
           name: String?,
           descriptor: String?,
-          isInterface: Boolean
+          isInterface: Boolean,
       ) {
         if (owner == "java/lang/System" && name == "nanoTime") {
           invokeStatic(

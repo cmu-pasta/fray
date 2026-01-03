@@ -89,7 +89,7 @@ class NioContextManager {
 
   fun socketChannelAccepted(
       serverSocketChannel: ServerSocketChannel,
-      socketChannel: SocketChannel
+      socketChannel: SocketChannel,
   ) {
     val serverSocketChannelContext = getServerSocketChannelContext(serverSocketChannel)
     val socketChannelContext =

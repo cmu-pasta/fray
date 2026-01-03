@@ -61,7 +61,9 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = ThreadLocalRandomInstrumenter(cv)
     cv =
         SynchronizedMethodInstrumenter(
-            cv, true) // Synchronized Method Instrumenter should be before Monitor Instrumenter
+            cv,
+            true,
+        ) // Synchronized Method Instrumenter should be before Monitor Instrumenter
     cv = MonitorInstrumenter(cv)
     classReader.accept(cv, ClassReader.EXPAND_FRAMES)
     if (shouldSkipChecking) {

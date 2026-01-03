@@ -8,8 +8,10 @@ class ConditionWakeBlocked(val conditionContext: ConditionSignalContext, val noT
     BlockedOperation(
         ResourceInfo(
             System.identityHashCode(conditionContext.conditionReference.get()),
-            ResourceType.CONDITION),
-        BLOCKED_OPERATION_NOT_TIMED) {
+            ResourceType.CONDITION,
+        ),
+        BLOCKED_OPERATION_NOT_TIMED,
+    ) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
     if (conditionContext.lockContext.canLock(tid)) {
       return conditionContext.getSyncObject()

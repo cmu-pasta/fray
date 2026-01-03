@@ -57,7 +57,7 @@ sealed class ExecutionConfig(name: String) : OptionGroup(name) {
   open fun getExecutionInfo(
       ignoreUnhandledExceptions: Boolean,
       interleaveMemoryOps: Boolean,
-      maxScheduledStep: Int
+      maxScheduledStep: Int,
   ): ExecutionInfo {
     return ExecutionInfo(
         MethodExecutor("", "", emptyList(), emptyList(), emptyMap()),
@@ -72,7 +72,7 @@ class EmptyExecutionConfig : ExecutionConfig("empty") {
   override fun getExecutionInfo(
       ignoreUnhandledExceptions: Boolean,
       interleaveMemoryOps: Boolean,
-      maxScheduledStep: Int
+      maxScheduledStep: Int,
   ): ExecutionInfo {
     return ExecutionInfo(
         LambdaExecutor {},
@@ -99,7 +99,7 @@ class CliExecutionConfig : ExecutionConfig("cli") {
   override fun getExecutionInfo(
       ignoreUnhandledExceptions: Boolean,
       interleaveMemoryOps: Boolean,
-      maxScheduledStep: Int
+      maxScheduledStep: Int,
   ): ExecutionInfo {
     val propertyMap = properties.toMap()
     return ExecutionInfo(
@@ -117,7 +117,7 @@ class JsonExecutionConfig : ExecutionConfig("json") {
   override fun getExecutionInfo(
       ignoreUnhandledExceptions: Boolean,
       interleaveMemoryOps: Boolean,
-      maxScheduledStep: Int
+      maxScheduledStep: Int,
   ): ExecutionInfo {
     val module = SerializersModule {
       polymorphic(Executor::class) {
@@ -354,7 +354,8 @@ class MainCommand : CliktCommand() {
             networkDelegateType,
             systemTimeDelegateType,
             ignoreTimedBlock,
-            sleepAsYield)
+            sleepAsYield,
+        )
     if (System.getProperty("fray.antithesisSdk", "false").toBoolean()) {
       configuration.testStatusObservers.add(AntithesisErrorReporter())
     }

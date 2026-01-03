@@ -325,7 +325,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       sem: Semaphore,
       permits: Int,
       timeout: Long,
-      unit: TimeUnit
+      unit: TimeUnit,
   ): Long =
       synchronizer.runInFrayStartWithOriginBlock(
           "Semaphore.acquire",
@@ -490,9 +490,10 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   override fun onThreadParkNanosWithBlocker(blocker: Any?, nanos: Long) =
       onThreadParkTimed(
-          context.timeController.currentTimeMillisRawNoIncrement() + nanos / 1_000_000) {
-            LockSupport.parkNanos(blocker, nanos)
-          }
+          context.timeController.currentTimeMillisRawNoIncrement() + nanos / 1_000_000
+      ) {
+        LockSupport.parkNanos(blocker, nanos)
+      }
 
   override fun onThreadParkUntilWithBlocker(blocker: Any?, deadline: Long) =
       onThreadParkTimed(deadline) { LockSupport.parkUntil(blocker, deadline) }
@@ -587,7 +588,8 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
           {
             context.threadSleepOperation(
-                duration.toMillis() + context.timeController.currentTimeMillisRawNoIncrement())
+                duration.toMillis() + context.timeController.currentTimeMillisRawNoIncrement()
+            )
           },
           { Thread.sleep(duration.toMillis()) },
       )
@@ -596,7 +598,8 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
           {
             context.threadSleepOperation(
-                millis + context.timeController.currentTimeMillisRawNoIncrement())
+                millis + context.timeController.currentTimeMillisRawNoIncrement()
+            )
           },
           { Thread.sleep(millis) },
       )
@@ -605,7 +608,8 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
           {
             context.threadSleepOperation(
-                millis + context.timeController.currentTimeMillisRawNoIncrement())
+                millis + context.timeController.currentTimeMillisRawNoIncrement()
+            )
           },
           { Thread.sleep(millis, nanos) },
       )
@@ -750,7 +754,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
   override fun onStampedLockReadLockTryLockTimeout(
       lock: StampedLock,
       timeout: Long,
-      unit: TimeUnit
+      unit: TimeUnit,
   ): Long =
       synchronizer.runInFrayStartWithOriginBlock(
           "StampedLock",
@@ -775,7 +779,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
   override fun onStampedLockWriteLockTryLockTimeout(
       lock: StampedLock,
       timeout: Long,
-      unit: TimeUnit
+      unit: TimeUnit,
   ): Long =
       synchronizer.runInFrayStartWithOriginBlock(
           "StampedLock",

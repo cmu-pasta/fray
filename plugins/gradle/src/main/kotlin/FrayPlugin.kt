@@ -25,14 +25,18 @@ class FrayPlugin : Plugin<Project> {
       val frayJdk =
           target.dependencies.add(
               "testCompileOnly",
-              "org.pastalab.fray.instrumentation:fray-instrumentation-jdk:$frayVersion")
+              "org.pastalab.fray.instrumentation:fray-instrumentation-jdk:$frayVersion",
+          )
       val frayJvmti =
           target.dependencies.add(
-              "testImplementation", "org.pastalab.fray:fray-jvmti-$os-$arch:$frayVersion")
+              "testImplementation",
+              "org.pastalab.fray:fray-jvmti-$os-$arch:$frayVersion",
+          )
       val frayInstrumentation =
           target.dependencies.add(
               "testImplementation",
-              "org.pastalab.fray.instrumentation:fray-instrumentation-agent:$frayVersion")!!
+              "org.pastalab.fray.instrumentation:fray-instrumentation-agent:$frayVersion",
+          )!!
       val javaPath = Commons.getFrayJavaPath(frayBuildFolder).toString()
       val jvmtiPath = Commons.getFrayJvmtiPath(frayBuildFolder).toString()
       target.dependencies.add("testImplementation", "org.pastalab.fray:fray-core:$frayVersion")
@@ -65,7 +69,8 @@ class FrayPlugin : Plugin<Project> {
         }
         it.jvmArgs("-agentpath:$jvmtiPath")
         it.jvmArgs(
-            "-javaagent:${it.project.configurations.detachedConfiguration(frayInstrumentation).resolve().first()}")
+            "-javaagent:${it.project.configurations.detachedConfiguration(frayInstrumentation).resolve().first()}"
+        )
         it.jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
         it.jvmArgs("--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
         it.jvmArgs("--add-opens", "java.base/java.util=ALL-UNNAMED")

@@ -45,7 +45,8 @@ class ThreadInfoUpdater(val editor: Editor) : EditorMouseMotionListener {
           IdeTooltipManager.initPane(
               context.toString(),
               HintHint().setTextFg(JBColor.BLACK).setTextBg(bgColor).setAwtTooltip(true),
-              null)
+              null,
+          )
       text.isEditable = false
       text.border = null
       val textWrapper = NonOpaquePanel(BorderLayout())

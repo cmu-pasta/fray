@@ -8,7 +8,9 @@ import org.pastalab.fray.runtime.RangerCondition
 
 class RangerWaitOperation(val condition: RangerCondition, val threadContext: ThreadContext) :
     BlockedOperation(
-        ResourceInfo(condition.id, ResourceType.RANGER_CONDITION), BLOCKED_OPERATION_NOT_TIMED) {
+        ResourceInfo(condition.id, ResourceType.RANGER_CONDITION),
+        BLOCKED_OPERATION_NOT_TIMED,
+    ) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
     threadContext.pendingOperation = ThreadResumeOperation(true)
     threadContext.state = ThreadState.Runnable

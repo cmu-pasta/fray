@@ -28,7 +28,7 @@ import org.pastalab.fray.rmi.ThreadState
 
 class SchedulerServer(
     val scheduleResultListener: List<ScheduleResultListener>,
-    val replayMode: Boolean
+    val replayMode: Boolean,
 ) {
 
   private fun CallToolRequest.getIntArg(name: String): Int? {
@@ -69,7 +69,9 @@ class SchedulerServer(
                         resources =
                             ServerCapabilities.Resources(subscribe = true, listChanged = true),
                         tools = ServerCapabilities.Tools(listChanged = true),
-                    )))
+                    )
+            ),
+        )
     server.addTool(
         name = "get_all_threads",
         description = "Get all threads that have been created in the SUT.",
@@ -79,7 +81,9 @@ class SchedulerServer(
             content =
                 listOf(
                     TextContent(
-                        "The program has completed or has not yet started. Please run it again to explore more schedules.")),
+                        "The program has completed or has not yet started. Please run it again to explore more schedules."
+                    )
+                ),
         )
       } else {
         CallToolResult(content = allThreads.map { TextContent(it.toString()) })
@@ -101,8 +105,13 @@ class SchedulerServer(
                                           "type" to JsonPrimitive("number"),
                                           "description" to
                                               JsonPrimitive("The ID of the thread to run."),
-                                      )))),
-                  required = listOf("thread_id")))
+                                      )
+                                  )
+                          )
+                      ),
+                  required = listOf("thread_id"),
+              ),
+          )
         } else {
           Triple("next_step", "Run next scheduled thread.", Tool.Input())
         }
@@ -135,7 +144,8 @@ class SchedulerServer(
                                     "also use JDB to inspect the program state if needed with command `jdb -attach 5005`. Fray controls the concurrency " +
                                     "by instrumenting the Java bytecode of the program and inserting additional locks and concurrency primitives to force " +
                                     "the program to run in sequential order. Thus, if you inspect the stack trace of the program, you may see " +
-                                    "additional frames related to Fray's instrumentation. "),
+                                    "additional frames related to Fray's instrumentation. "
+                            ),
                     ),
                 ),
             description = "The prompt for finding concurrency bugs in MCP mode.",
@@ -144,49 +154,56 @@ class SchedulerServer(
     }
 
     server.addTool(
-        name = commandName, description = commandDescription, inputSchema = commandInput) { request
-          ->
-          if (finished) {
-            return@addTool CallToolResult(
-                content =
-                    listOf(
-                        TextContent(
-                            "The program has completed or has not yet started. Please run it again to explore more schedules.")),
-            )
-          }
-          if (!replayMode) {
-            processInputInExploreMode(request)?.let {
-              return@addTool it
-            }
-          }
-          val scheduledThread = scheduled!!
-          schedule(scheduledThread)
-
-          if (finished) {
-            val msg =
-                if (bugFound != null)
-                    "A bug has been found.\n Exception: $bugFound\n stacktrace: ${bugFound!!.stackTraceToString()}. You may exit now."
-                else
-                    "No bug has been found. You may restart the program execution to explore more schedules."
-            CallToolResult(
-                content =
-                    listOf(
-                        TextContent(
-                            "Thread ${scheduledThread.threadIndex} is successfully scheduled. The program has finished. $msg"),
-                    ))
-          } else {
-            CallToolResult(
-                content =
-                    listOf(
-                        TextContent(
-                            "Thread ${scheduledThread.threadIndex} is successfully schedule. The latest state of the schedule thread is shown below."),
-                    ) +
-                        allThreads
-                            .filter { it.threadIndex == scheduledThread.threadIndex }
-                            .map { TextContent(it.toString()) },
-            )
-          }
+        name = commandName,
+        description = commandDescription,
+        inputSchema = commandInput,
+    ) { request ->
+      if (finished) {
+        return@addTool CallToolResult(
+            content =
+                listOf(
+                    TextContent(
+                        "The program has completed or has not yet started. Please run it again to explore more schedules."
+                    )
+                ),
+        )
+      }
+      if (!replayMode) {
+        processInputInExploreMode(request)?.let {
+          return@addTool it
         }
+      }
+      val scheduledThread = scheduled!!
+      schedule(scheduledThread)
+
+      if (finished) {
+        val msg =
+            if (bugFound != null)
+                "A bug has been found.\n Exception: $bugFound\n stacktrace: ${bugFound!!.stackTraceToString()}. You may exit now."
+            else
+                "No bug has been found. You may restart the program execution to explore more schedules."
+        CallToolResult(
+            content =
+                listOf(
+                    TextContent(
+                        "Thread ${scheduledThread.threadIndex} is successfully scheduled. The program has finished. $msg"
+                    ),
+                )
+        )
+      } else {
+        CallToolResult(
+            content =
+                listOf(
+                    TextContent(
+                        "Thread ${scheduledThread.threadIndex} is successfully schedule. The latest state of the schedule thread is shown below."
+                    ),
+                ) +
+                    allThreads
+                        .filter { it.threadIndex == scheduledThread.threadIndex }
+                        .map { TextContent(it.toString()) },
+        )
+      }
+    }
     return server
   }
 

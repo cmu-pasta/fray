@@ -36,7 +36,7 @@ class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
       className: String,
       classBeingRedefined: Class<*>?,
       protectionDomain: ProtectionDomain?,
-      classfileBuffer: ByteArray
+      classfileBuffer: ByteArray,
   ): ByteArray {
     // Check if the class loader is null (bootstrap class loader)
     // and if the class name starts with known JDK prefixes.
@@ -63,7 +63,9 @@ class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
 
       cv =
           SynchronizedMethodInstrumenter(
-              cv, false) // Synchronized Method Instrumenter should be before Monitor Instrumenter
+              cv,
+              false,
+          ) // Synchronized Method Instrumenter should be before Monitor Instrumenter
       cv = MonitorInstrumenter(cv)
 
       cv = ConditionInstrumenter(cv)

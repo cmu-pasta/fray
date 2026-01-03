@@ -40,7 +40,12 @@ class MultiThreadHighlightManager {
 
     val highlighter =
         editor.markupModel.addRangeHighlighter(
-            start, end, threadHighlightLayer, attributes, HighlighterTargetArea.LINES_IN_RANGE)
+            start,
+            end,
+            threadHighlightLayer,
+            attributes,
+            HighlighterTargetArea.LINES_IN_RANGE,
+        )
 
     lineHighlightersMap.getOrPut(line) { mutableMapOf() }[editor] = highlighter
 
@@ -69,7 +74,8 @@ class MultiThreadHighlightManager {
         color, // background color
         null, // effect color
         null, // effect type
-        Font.PLAIN)
+        Font.PLAIN,
+    )
   }
 
   // Create visual attributes for multi-thread highlighting

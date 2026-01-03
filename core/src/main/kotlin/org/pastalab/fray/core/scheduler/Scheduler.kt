@@ -8,7 +8,7 @@ import org.pastalab.fray.core.randomness.Randomness
 sealed interface Scheduler {
   fun scheduleNextOperation(
       threads: List<ThreadContext>,
-      allThreads: Collection<ThreadContext>
+      allThreads: Collection<ThreadContext>,
   ): ThreadContext
 
   fun nextIteration(randomness: Randomness): Scheduler

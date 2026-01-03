@@ -34,7 +34,7 @@ class SchedulerControlPanel(
     val project: Project,
     val onThreadSelected: (ThreadInfo) -> Unit,
     val onScheduleButtonPressed: (ThreadInfo?) -> Unit,
-    val replayMode: Boolean
+    val replayMode: Boolean,
 ) : JPanel() {
   // UI Components
   val comboBoxModel = DefaultComboBoxModel<ThreadExecutionContext>()
@@ -59,7 +59,7 @@ class SchedulerControlPanel(
               value: Any?,
               index: Int,
               isSelected: Boolean,
-              cellHasFocus: Boolean
+              cellHasFocus: Boolean,
           ): Component {
             val label =
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
@@ -94,7 +94,8 @@ class SchedulerControlPanel(
               }
             }
           }
-        })
+        }
+    )
     val scrollPane = JBScrollPane(myFrameList)
     add(scrollPane, BorderLayout.CENTER)
 
@@ -133,7 +134,7 @@ class SchedulerControlPanel(
   /** Updates the panel with new thread information */
   fun updateThreads(
       threads: List<ThreadExecutionContext>,
-      previouslySelected: ThreadExecutionContext? = null
+      previouslySelected: ThreadExecutionContext? = null,
   ) {
     // Update the combo box model
     comboBoxModel.removeAllElements()

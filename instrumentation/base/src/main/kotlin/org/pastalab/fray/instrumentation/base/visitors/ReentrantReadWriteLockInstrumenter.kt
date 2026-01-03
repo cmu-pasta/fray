@@ -12,7 +12,7 @@ class ReentrantReadWriteLockInstrumenter(cv: ClassVisitor) :
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     if (name == "<init>" && descriptor == "(Z)V") {
       return MethodExitVisitor(
@@ -24,7 +24,8 @@ class ReentrantReadWriteLockInstrumenter(cv: ClassVisitor) :
           loadThis = true,
           loadArgs = false,
           addFinalBlock = false,
-          thisType = className)
+          thisType = className,
+      )
     }
     return mv
   }

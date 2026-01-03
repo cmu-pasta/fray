@@ -8,8 +8,10 @@ class ObjectWaitBlocked(val objectContext: ObjectNotifyContext, blockedUntil: Lo
     BlockedOperation(
         ResourceInfo(
             System.identityHashCode(objectContext.lockContext.lockReference.get()),
-            ResourceType.CONDITION),
-        blockedUntil) {
+            ResourceType.CONDITION,
+        ),
+        blockedUntil,
+    ) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
     if (objectContext.unblockThread(tid, type)) {
       return objectContext.getSyncObject()

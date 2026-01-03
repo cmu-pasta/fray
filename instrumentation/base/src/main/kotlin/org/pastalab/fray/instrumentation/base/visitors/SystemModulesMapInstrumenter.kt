@@ -40,7 +40,7 @@ class SystemModulesMapInstrumenter(cv: ClassVisitor) :
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     if (name == "allSystemModules" || name == "defaultSystemModules") {
       return ReturnNullMV(mv)

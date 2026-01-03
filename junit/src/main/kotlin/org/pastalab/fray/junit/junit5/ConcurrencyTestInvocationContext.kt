@@ -8,7 +8,7 @@ class ConcurrencyTestInvocationContext(
     val index: Int,
     val displayName: String,
     val context: RunContext,
-    val frayJupiterContext: FrayJupiterContext
+    val frayJupiterContext: FrayJupiterContext,
 ) : TestTemplateInvocationContext {
   override fun getDisplayName(invocationIndex: Int): String {
     return "$displayName repetition ${context.config.currentIteration} of ${context.config.iter}"

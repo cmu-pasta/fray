@@ -11,7 +11,7 @@ class TargetExitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String?,
       descriptor: String?,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
     return object : MethodVisitor(ASM9, mv) {
@@ -20,7 +20,7 @@ class TargetExitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           owner: String,
           name: String,
           descriptor: String?,
-          isInterface: Boolean
+          isInterface: Boolean,
       ) {
         if (owner == System::class.java.name.replace(".", "/") && name == "exit") {
           super.visitMethodInsn(
@@ -28,7 +28,8 @@ class TargetExitInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
               org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
               org.pastalab.fray.runtime.Runtime::onExit.name,
               Utils.kFunctionToJvmMethodDescriptor(org.pastalab.fray.runtime.Runtime::onExit),
-              false)
+              false,
+          )
         } else {
           super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
         }

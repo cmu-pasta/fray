@@ -7,6 +7,6 @@ interface DebuggerProvider {
       methodName: String,
       lineNumber: Int,
       variableName: String,
-      field: String?
+      field: String?,
   ): Result<String>
 }

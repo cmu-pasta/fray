@@ -60,9 +60,11 @@ class TestRunner(val config: Configuration) {
         t.start()
         t.join()
       }
-      if (config.isReplay ||
-          ((context.bugFound != null && context.bugFound !is FrayInternalError) &&
-              !config.exploreMode))
+      if (
+          config.isReplay ||
+              ((context.bugFound != null && context.bugFound !is FrayInternalError) &&
+                  !config.exploreMode)
+      )
           break
       config.nextIteration()
     }
@@ -70,7 +72,8 @@ class TestRunner(val config: Configuration) {
     context.shutDown()
     config.frayLogger.info(
         "Run finished. Total iter: ${config.currentIteration}, Elapsed time: ${config.elapsedTime()}ms",
-        true)
+        true,
+    )
     config.executionInfo.executor.afterExecution()
     return context.bugFound
   }

@@ -8,7 +8,9 @@ import org.pastalab.fray.rmi.ThreadState
 
 class ParkBlocked(blockedUntil: Long, val threadContext: ThreadContext) :
     BlockedOperation(
-        ResourceInfo(threadContext.thread.id.toInt(), ResourceType.PARK), blockedUntil) {
+        ResourceInfo(threadContext.thread.id.toInt(), ResourceType.PARK),
+        blockedUntil,
+    ) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
     verifyOrReport(tid == threadContext.thread.id) { "Thread id mismatch" }
     threadContext.pendingOperation = ThreadResumeOperation(type != InterruptionType.TIMEOUT)

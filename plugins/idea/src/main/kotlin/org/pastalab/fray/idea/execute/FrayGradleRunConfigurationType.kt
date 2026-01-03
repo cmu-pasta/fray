@@ -14,7 +14,7 @@ class FrayGradleRunConfigurationType :
       externalSystemId: ProjectSystemId,
       project: Project,
       factory: ConfigurationFactory,
-      name: String
+      name: String,
   ): ExternalSystemRunConfiguration {
     return FrayGradleRunConfiguration(project, factory, name)
   }

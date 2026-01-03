@@ -11,7 +11,7 @@ class MethodHandleNativesInstrumenter(cv: ClassVisitor) :
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     if (name == "linkMethodHandleConstant") {
       val methodSignature = "$className#$name$descriptor"
@@ -24,7 +24,8 @@ class MethodHandleNativesInstrumenter(cv: ClassVisitor) :
               descriptor,
               loadThis = false,
               loadArgs = false,
-              preCustomizer = { it.push(methodSignature) })
+              preCustomizer = { it.push(methodSignature) },
+          )
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onSkipPrimitiveDone,
@@ -34,10 +35,10 @@ class MethodHandleNativesInstrumenter(cv: ClassVisitor) :
           loadThis = false,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className // pass thisType
-          ) { mv, isFinalBlock ->
-            mv.push(methodSignature)
-          }
+          thisType = className, // pass thisType
+      ) { mv, isFinalBlock ->
+        mv.push(methodSignature)
+      }
     }
     return super.instrumentMethod(mv, access, name, descriptor, signature, exceptions)
   }

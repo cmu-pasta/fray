@@ -50,7 +50,8 @@ class RunConfigurationExtension : RunConfigurationExtension() {
       when (configuration) {
         is FrayGradleRunConfiguration -> {
           configuration.settings.taskNames.add(
-              "-P$FRAY_DEBUGGER_PROPERTY_KEY=$FRAY_DEBUGGER_REPLAY")
+              "-P$FRAY_DEBUGGER_PROPERTY_KEY=$FRAY_DEBUGGER_REPLAY"
+          )
         }
         else -> {
           params.vmParametersList.addProperty(FRAY_DEBUGGER_PROPERTY_KEY, FRAY_DEBUGGER_REPLAY)

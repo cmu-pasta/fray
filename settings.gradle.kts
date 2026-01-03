@@ -32,11 +32,3 @@ include("integration-test")
 include("rmi")
 
 include("mcp")
-
-include("plugins:gradle")
-
-include("plugins:idea")
-
-include("plugins:maven")
-
-include("plugins:base")

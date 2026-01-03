@@ -11,7 +11,7 @@ import org.pastalab.fray.rmi.ThreadInfo
 class FrayDebuggerScheduler(
     val schedulerPanel: FrayDebugPanel,
     val debugSession: XDebugSession,
-    val replayMode: Boolean
+    val replayMode: Boolean,
 ) : RemoteScheduler {
 
   override fun scheduleNextOperation(threads: List<ThreadInfo>, selectedThread: ThreadInfo?): Int {
@@ -26,7 +26,8 @@ class FrayDebuggerScheduler(
         {
           selected = threads.indexOf(it)
           cdl.countDown()
-        })
+        },
+    )
     UIUtil.invokeLaterIfNeeded {
       val content = debugSession.ui?.findContent(FrayDebugPanel.CONTENT_ID)
       debugSession.ui?.selectAndFocus(content!!, false, false)
@@ -39,7 +40,9 @@ class FrayDebuggerScheduler(
           selected
         }
     schedulerPanel.threadTimelinePanel.onNewSchedule(
-        threadContexts, threadContexts[nextThreadIndex])
+        threadContexts,
+        threadContexts[nextThreadIndex],
+    )
     return nextThreadIndex
   }
 }

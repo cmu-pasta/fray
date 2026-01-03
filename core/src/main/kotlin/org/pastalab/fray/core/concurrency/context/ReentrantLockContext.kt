@@ -63,7 +63,7 @@ class ReentrantLockContext(lock: Any) : LockContext(lock) {
   override fun unlock(
       lockThread: ThreadContext,
       unlockBecauseOfWait: Boolean,
-      earlyExit: Boolean
+      earlyExit: Boolean,
   ): Boolean {
     val tid = lockThread.thread.id
     if (lockHolder != tid) {
@@ -102,9 +102,11 @@ class ReentrantLockContext(lock: Any) : LockContext(lock) {
 
   override fun unblockThread(tid: Long, type: InterruptionType): Boolean {
     val lockWaiter = lockWaiters[tid] ?: return false
-    if ((lockWaiter.canInterrupt && type == InterruptionType.INTERRUPT) ||
-        (type == InterruptionType.FORCE) ||
-        (type == InterruptionType.TIMEOUT)) {
+    if (
+        (lockWaiter.canInterrupt && type == InterruptionType.INTERRUPT) ||
+            (type == InterruptionType.FORCE) ||
+            (type == InterruptionType.TIMEOUT)
+    ) {
       lockWaiter.thread.pendingOperation = ThreadResumeOperation(type != InterruptionType.TIMEOUT)
       lockWaiter.thread.state = ThreadState.Runnable
       lockWaiters.remove(tid)

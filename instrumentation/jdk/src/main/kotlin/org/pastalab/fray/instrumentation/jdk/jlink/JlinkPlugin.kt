@@ -31,10 +31,14 @@ class JlinkPlugin : Plugin {
     input.transformAndCopy(
         { entry ->
           var resourcePoolEntry = entry
-          if (resourcePoolEntry.type() == ResourcePoolEntry.Type.CLASS_OR_RESOURCE &&
-              resourcePoolEntry.path().endsWith("" + ".class")) {
-            if (resourcePoolEntry.path().startsWith("/java.base") &&
-                resourcePoolEntry.path().endsWith("module-info.class")) {
+          if (
+              resourcePoolEntry.type() == ResourcePoolEntry.Type.CLASS_OR_RESOURCE &&
+                  resourcePoolEntry.path().endsWith("" + ".class")
+          ) {
+            if (
+                resourcePoolEntry.path().startsWith("/java.base") &&
+                    resourcePoolEntry.path().endsWith("module-info.class")
+            ) {
               // We need to add runtime.jar to JDK
               val runtime =
                   ZipFile(
@@ -44,7 +48,9 @@ class JlinkPlugin : Plugin {
                               .protectionDomain
                               .codeSource
                               .location
-                              .toURI()))
+                              .toURI()
+                      )
+                  )
               val packages = HashSet<String>()
               for (re in runtime.entries()) {
                 if (re.name.contains("module-info.class") || !re.name.endsWith(".class")) continue
@@ -53,13 +59,17 @@ class JlinkPlugin : Plugin {
                 }
                 output.add(
                     ResourcePoolEntry.create(
-                        "/java.base/" + re.name, runtime.getInputStream(re).readAllBytes()))
+                        "/java.base/" + re.name,
+                        runtime.getInputStream(re).readAllBytes(),
+                    )
+                )
                 packages.add(re.name.substring(0, re.name.lastIndexOf('/')))
               }
               runtime.close()
               resourcePoolEntry =
                   resourcePoolEntry.copyWithContent(
-                      instrumentModuleInfo(resourcePoolEntry.content(), packages.toList()))
+                      instrumentModuleInfo(resourcePoolEntry.content(), packages.toList())
+                  )
             } else {
               resourcePoolEntry =
                   resourcePoolEntry.copyWithContent(instrumentClass(entry.path(), entry.content()))
@@ -67,7 +77,8 @@ class JlinkPlugin : Plugin {
           }
           resourcePoolEntry
         },
-        output)
+        output,
+    )
     return output.build()
   }
 }

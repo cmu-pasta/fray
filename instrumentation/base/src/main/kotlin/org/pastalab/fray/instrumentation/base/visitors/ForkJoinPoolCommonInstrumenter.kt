@@ -14,14 +14,15 @@ class ForkJoinPoolCommonInstrumenter(cv: ClassVisitor) :
         cv,
         ForkJoinPool::class.java.name,
         ForkJoinTask::class.java.name,
-        CompletableFuture::class.java.name) {
+        CompletableFuture::class.java.name,
+    ) {
   override fun instrumentMethod(
       mv: MethodVisitor,
       access: Int,
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     return object : AdviceAdapter(ASM9, mv, access, name, descriptor) {
       override fun visitFieldInsn(opcode: Int, owner: String, name: String, descriptor: String?) {
@@ -30,7 +31,8 @@ class ForkJoinPoolCommonInstrumenter(cv: ClassVisitor) :
           if (opcode == GETSTATIC && name == "common") {
             invokeStatic(
                 Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
-                Utils.kFunctionToASMMethod(Runtime::onForkJoinPoolCommonPool))
+                Utils.kFunctionToASMMethod(Runtime::onForkJoinPoolCommonPool),
+            )
             return
           }
         }
@@ -38,7 +40,8 @@ class ForkJoinPoolCommonInstrumenter(cv: ClassVisitor) :
           if (opcode == GETSTATIC && name == "ASYNC_POOL") {
             invokeStatic(
                 Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
-                Utils.kFunctionToASMMethod(Runtime::onForkJoinPoolCommonPool))
+                Utils.kFunctionToASMMethod(Runtime::onForkJoinPoolCommonPool),
+            )
             return
           }
         }

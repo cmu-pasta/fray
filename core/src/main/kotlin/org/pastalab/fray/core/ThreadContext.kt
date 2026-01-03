@@ -44,7 +44,12 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext, par
           is ThreadStartOperation -> {
             listOf(
                 StackTraceElement(
-                    "ThreadStartOperation", "ThreadStartOperation", "ThreadStartOperation", 0))
+                    "ThreadStartOperation",
+                    "ThreadStartOperation",
+                    "ThreadStartOperation",
+                    0,
+                )
+            )
           }
           else -> thread.stackTrace.toList().drop(1).filter { !it.isFrayInternals }
         }.toMutableList()
@@ -60,6 +65,7 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext, par
         state,
         stackTraces,
         blockedBy,
-        acquiredResources.map { it.resourceInfo }.toSet())
+        acquiredResources.map { it.resourceInfo }.toSet(),
+    )
   }
 }

@@ -10,7 +10,7 @@ import org.pastalab.fray.instrumentation.base.memory.VolatileManager
 class VolatileFieldsInstrumenter(
     cv: ClassVisitor,
     private val instrumentingJdk: Boolean,
-    private val interleaveAllMemoryOps: Boolean
+    private val interleaveAllMemoryOps: Boolean,
 ) : ClassVisitor(ASM9, cv) {
   var className = ""
   var shouldInstrument = !instrumentingJdk
@@ -21,7 +21,7 @@ class VolatileFieldsInstrumenter(
       name: String,
       signature: String?,
       superName: String?,
-      interfaces: Array<out String>?
+      interfaces: Array<out String>?,
   ) {
     super.visit(version, access, name, signature, superName, interfaces)
     className = name
@@ -33,7 +33,7 @@ class VolatileFieldsInstrumenter(
       name: String,
       descriptor: String?,
       signature: String?,
-      value: Any?
+      value: Any?,
   ): FieldVisitor {
     volatileManager.setVolatile(className, name, access)
     return super.visitField(access, name, descriptor, signature, value)
@@ -48,7 +48,7 @@ class VolatileFieldsInstrumenter(
       name: String?,
       descriptor: String?,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
     if (name == "<init>" || name == "<clinit>" || !shouldInstrument) {
@@ -56,9 +56,11 @@ class VolatileFieldsInstrumenter(
     }
     return object : AdviceAdapter(ASM9, mv, access, name, descriptor) {
       override fun visitFieldInsn(opcode: Int, owner: String, name: String, descriptor: String) {
-        if ((recursiveVisitClass(owner) ||
-            volatileManager.isVolatile(owner, name) ||
-            interleaveAllMemoryOps) && !owner.startsWith("org/pastalab/fray/runtime/")) {
+        if (
+            (recursiveVisitClass(owner) ||
+                volatileManager.isVolatile(owner, name) ||
+                interleaveAllMemoryOps) && !owner.startsWith("org/pastalab/fray/runtime/")
+        ) {
 
           if (opcode == GETFIELD) {
             dup()
@@ -82,7 +84,8 @@ class VolatileFieldsInstrumenter(
                     org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
                     org.pastalab.fray.runtime.Runtime::onFieldRead.name,
                     Utils.kFunctionToJvmMethodDescriptor(
-                        org.pastalab.fray.runtime.Runtime::onFieldRead),
+                        org.pastalab.fray.runtime.Runtime::onFieldRead
+                    ),
                     false,
                 )
             PUTFIELD ->
@@ -91,7 +94,8 @@ class VolatileFieldsInstrumenter(
                     org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
                     org.pastalab.fray.runtime.Runtime::onFieldWrite.name,
                     Utils.kFunctionToJvmMethodDescriptor(
-                        org.pastalab.fray.runtime.Runtime::onFieldWrite),
+                        org.pastalab.fray.runtime.Runtime::onFieldWrite
+                    ),
                     false,
                 )
             PUTSTATIC ->
@@ -100,7 +104,8 @@ class VolatileFieldsInstrumenter(
                     org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
                     org.pastalab.fray.runtime.Runtime::onStaticFieldWrite.name,
                     Utils.kFunctionToJvmMethodDescriptor(
-                        org.pastalab.fray.runtime.Runtime::onStaticFieldWrite),
+                        org.pastalab.fray.runtime.Runtime::onStaticFieldWrite
+                    ),
                     false,
                 )
             GETSTATIC ->
@@ -109,7 +114,8 @@ class VolatileFieldsInstrumenter(
                     org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
                     org.pastalab.fray.runtime.Runtime::onStaticFieldRead.name,
                     Utils.kFunctionToJvmMethodDescriptor(
-                        org.pastalab.fray.runtime.Runtime::onStaticFieldRead),
+                        org.pastalab.fray.runtime.Runtime::onStaticFieldRead
+                    ),
                     false,
                 )
           }

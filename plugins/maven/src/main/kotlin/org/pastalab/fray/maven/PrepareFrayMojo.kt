@@ -24,7 +24,8 @@ import org.pastalab.fray.plugins.base.FrayWorkspaceInitializer
     name = "prepare-fray",
     defaultPhase = LifecyclePhase.INITIALIZE,
     requiresDependencyResolution = ResolutionScope.RUNTIME,
-    threadSafe = true)
+    threadSafe = true,
+)
 class PrepareFrayMojo : AbstractMojo() {
   @Parameter(defaultValue = "\${project}", readonly = true, required = true)
   private val project: MavenProject? = null
@@ -56,7 +57,11 @@ class PrepareFrayMojo : AbstractMojo() {
             .map { it.file }
     val initializer =
         FrayWorkspaceInitializer(
-            Path(project!!.build.directory), jlinkJar, jlinkDependencies.toSet(), getJvmtiJarFile())
+            Path(project!!.build.directory),
+            jlinkJar,
+            jlinkDependencies.toSet(),
+            getJvmtiJarFile(),
+        )
     initializer.createInstrumentedJDK(FrayVersion.version, originalJdkPath)
     initializer.createJVMTiRuntime()
 
@@ -69,9 +74,12 @@ class PrepareFrayMojo : AbstractMojo() {
             " -agentpath:" +
             Commons.getFrayJvmtiPath(Path(project.build.directory)).absolutePathString() +
             " -Dfray.workDir=" +
-            initializer.reportPath)
+            initializer.reportPath,
+    )
     project.properties.setProperty(
-        "jvm", Commons.getFrayJavaPath(Path(project.build.directory)).absolutePathString())
+        "jvm",
+        Commons.getFrayJavaPath(Path(project.build.directory)).absolutePathString(),
+    )
   }
 
   fun getAgentJarFile(): File {

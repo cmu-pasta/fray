@@ -8,15 +8,14 @@ import org.pastalab.fray.junit.junit5.annotations.FrayTest;
 @ExtendWith(FrayTestExtension.class)
 public class ThreadTest {
 
-    @FrayTest(
-            scheduler = RandomScheduler.class
-    )
-    void testThreadSetNameNoDeadlock() throws InterruptedException {
-        Thread t = new Thread(() -> {
-            Thread.currentThread().setName("TestThread");
-        });
-        t.start();
-        t.join();
-    }
-
+  @FrayTest(scheduler = RandomScheduler.class)
+  void testThreadSetNameNoDeadlock() throws InterruptedException {
+    Thread t =
+        new Thread(
+            () -> {
+              Thread.currentThread().setName("TestThread");
+            });
+    t.start();
+    t.join();
+  }
 }
