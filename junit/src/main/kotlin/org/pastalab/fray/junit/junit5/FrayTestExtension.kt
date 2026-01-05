@@ -52,6 +52,10 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
     val displayName = context.displayName
     val testClass = context.requiredTestClass
 
+    if (!enabled) {
+      return Stream.of(alwaysDisabledInvocation(displayName, "Fray is not enabled in this JVM"))
+    }
+
     if (isAnnotated(testMethod, FrayTest::class.java)) {
       return Stream.of(FrayTestInvocationContext())
     }
@@ -63,13 +67,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             )
             .get()
 
-    // If Fray is not enabled in the current JRE, still provide invocations but mark them disabled
     val repetitions = totalRepetition(concurrencyTest, testMethod)
-    if (!enabled) {
-      return Stream.iterate(1, { it + 1 }).limit(repetitions.toLong()).map {
-        alwaysDisabledInvocation(it, displayName, repetitions, "Fray is not enabled in this JVM")
-      }
-    }
 
     // Use the test class and method names for the report directory
     val className = testClass.name
@@ -149,14 +147,12 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
   }
 
   private fun alwaysDisabledInvocation(
-      index: Int,
       displayName: String,
-      total: Int,
       reason: String,
   ): TestTemplateInvocationContext {
     return object : TestTemplateInvocationContext {
       override fun getDisplayName(invocationIndex: Int): String {
-        return "$displayName repetition $index of $total (skipped)"
+        return "$displayName (skipped)"
       }
 
       override fun getAdditionalExtensions(): MutableList<Extension> {
