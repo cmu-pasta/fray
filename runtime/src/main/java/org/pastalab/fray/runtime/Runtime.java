@@ -17,7 +17,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.StampedLock;
 
 // No recursion is allowed in Runtime
@@ -237,10 +236,6 @@ public class Runtime {
 
   public static void onThreadClearInterrupt(Thread t) {
     LOCK_DELEGATE.onThreadClearInterrupt(false, t);
-  }
-
-  public static void onReentrantReadWriteLockInit(ReentrantReadWriteLock lock) {
-    LOCK_DELEGATE.onReentrantReadWriteLockInit(lock);
   }
 
   public static void onSemaphoreInit(Semaphore sem) {

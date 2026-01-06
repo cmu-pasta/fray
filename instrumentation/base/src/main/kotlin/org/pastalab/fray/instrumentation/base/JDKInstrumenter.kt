@@ -2,6 +2,7 @@ package org.pastalab.fray.instrumentation.base
 
 import java.io.File
 import java.io.InputStream
+import java.util.concurrent.locks.ReentrantReadWriteLock
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
@@ -31,7 +32,16 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = VolatileFieldsInstrumenter(cv, instrumentingJdk = true, interleaveAllMemoryOps = false)
     cv = SleepInstrumenter(cv, true)
     cv = VarHandleInstrumenter(cv)
-    cv = ReentrantReadWriteLockInstrumenter(cv)
+    cv =
+        ReentrantReadWriteLockInstrumenter(
+            cv,
+            ReentrantReadWriteLock.ReadLock::class.java.name.replace('.', '/'),
+        )
+    cv =
+        ReentrantReadWriteLockInstrumenter(
+            cv,
+            ReentrantReadWriteLock.WriteLock::class.java.name.replace('.', '/'),
+        )
     cv = LockSupportInstrumenter(cv)
     cv = LockInstrumenter(cv)
     cv = SystemModulesMapInstrumenter(cv)
