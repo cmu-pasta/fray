@@ -18,7 +18,7 @@ import org.pastalab.fray.runtime.Runtime
 
 class MethodExitVisitor(
     mv: MethodVisitor,
-    val method: KFunction<*>,
+    val method: KFunction<*>?,
     access: Int,
     name: String,
     descriptor: String,
@@ -135,12 +135,14 @@ class MethodExitVisitor(
           loadArgs()
         }
         customizer(this, false)
-        invokeStatic(
-            Type.getObjectType(
-                Runtime::class.java.name.replace(".", "/"),
-            ),
-            Utils.kFunctionToASMMethod(method),
-        )
+        if (method != null) {
+          invokeStatic(
+              Type.getObjectType(
+                  Runtime::class.java.name.replace(".", "/"),
+              ),
+              Utils.kFunctionToASMMethod(method),
+          )
+        }
         super.visitInsn(opcode)
         if (addFinalBlock) {
           insertTryCatchBlock()
@@ -173,12 +175,14 @@ class MethodExitVisitor(
           loadArgs()
         }
         customizer(this, true)
-        invokeStatic(
-            Type.getObjectType(
-                Runtime::class.java.name.replace(".", "/"),
-            ),
-            Utils.kFunctionToASMMethod(method),
-        )
+        if (method != null) {
+          invokeStatic(
+              Type.getObjectType(
+                  Runtime::class.java.name.replace(".", "/"),
+              ),
+              Utils.kFunctionToASMMethod(method),
+          )
+        }
         throwException()
       }
     }

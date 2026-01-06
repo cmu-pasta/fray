@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.LockSupport
-import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.StampedLock
 import org.pastalab.fray.core.RunContext
 import org.pastalab.fray.core.concurrency.operations.BLOCKED_OPERATION_NOT_TIMED
@@ -303,9 +302,6 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
           { context.threadClearInterrupt(t) },
           { origin },
       )
-
-  override fun onReentrantReadWriteLockInit(lock: ReentrantReadWriteLock) =
-      synchronizer.runInFrayStartNoSkip { context.reentrantReadWriteLockInit(lock) }
 
   override fun onSemaphoreInit(sem: Semaphore) =
       synchronizer.runInFrayStartNoSkip { context.semaphoreInit(sem) }

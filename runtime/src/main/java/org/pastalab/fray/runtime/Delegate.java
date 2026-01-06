@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.LockSupport;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.StampedLock;
 
 public class Delegate {
@@ -134,8 +133,6 @@ public class Delegate {
   public Thread.State onThreadGetState(Thread t, Thread.State state) {
     return state;
   }
-
-  public void onReentrantReadWriteLockInit(ReentrantReadWriteLock lock) {}
 
   public long onSemaphoreTryAcquirePermitsTimeout(
       Semaphore sem, int permits, long timeout, TimeUnit unit) {

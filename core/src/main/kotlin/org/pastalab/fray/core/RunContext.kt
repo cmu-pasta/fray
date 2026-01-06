@@ -42,6 +42,7 @@ import org.pastalab.fray.core.utils.Utils.mustBeCaught
 import org.pastalab.fray.core.utils.Utils.verifyNoThrow
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.instrumentation.base.memory.VolatileManager
+import org.pastalab.fray.instrumentation.base.visitors.ReentrantReadWriteLockInstrumenter.Companion.RW_LOCK_FIELD_NAME
 import org.pastalab.fray.rmi.ThreadState
 import org.pastalab.fray.runtime.DeadlockException
 import org.pastalab.fray.runtime.LivenessException
@@ -77,15 +78,16 @@ class RunContext(val config: Configuration) {
       ReferencedContextManager<LockContext> {
         when (it) {
           is ReentrantLock -> ReentrantLockContext(it)
-          is ReadLock -> {
-            throw IllegalStateException(
-                "ReadLock should be initialized through ReentrantReadWriteLockInit"
-            )
-          }
+          is ReadLock,
           is WriteLock -> {
-            throw IllegalStateException(
-                "WriteLock should be initialized through ReentrantReadWriteLockInit"
-            )
+            val reentrantReadWriteLock =
+                it.javaClass.getDeclaredField(RW_LOCK_FIELD_NAME).get(it) as ReentrantReadWriteLock
+            val result = reentrantReadWriteLockInitImpl(reentrantReadWriteLock)
+            when (it) {
+              is ReadLock -> result.first
+              is WriteLock -> result.second
+              else -> throw IllegalStateException("Unreachable code")
+            }
           }
           else -> ReentrantLockContext(it)
         }
@@ -689,11 +691,6 @@ class RunContext(val config: Configuration) {
         blockedUntil = BLOCKED_OPERATION_NOT_TIMED,
         shouldRetry = false,
     )
-  }
-
-  fun reentrantReadWriteLockInit(lock: ReentrantReadWriteLock) = verifyNoThrow {
-    reentrantReadWriteLockInitImpl(lock)
-    return@verifyNoThrow
   }
 
   fun reentrantReadWriteLockInitImpl(
