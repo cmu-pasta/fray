@@ -121,6 +121,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             systemTimeDelegateType = concurrencyTest.systemTimeDelegateType,
             ignoreTimedBlock = concurrencyTest.ignoreTimedBlock,
             sleepAsYield = concurrencyTest.sleepAsYield,
+            resetClassLoader = false,
         )
     val frayContext = RunContext(config)
     val frayJupiterContext = FrayJupiterContext()

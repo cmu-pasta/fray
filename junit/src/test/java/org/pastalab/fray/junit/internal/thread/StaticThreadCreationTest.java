@@ -16,7 +16,7 @@ public class StaticThreadCreationTest {
             }
           });
 
-  @FrayTest
+  @FrayTest(resetClassLoaderPerIteration = true)
   public void testStaticThreadCreation() throws InterruptedException {
     t.start();
     t.join();

@@ -11,13 +11,13 @@ class FrayClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(ur
 
   override fun loadClass(name: String): Class<*> {
     try {
-      Runtime.onSkipScheduling("FrayClassLoader.loadClass")
+      Runtime.onSkipPrimitive("FrayClassLoader.loadClass")
       synchronized(getClassLoadingLock(name)) {
         val loaded = findLoadedClass(name)
         if (loaded != null) {
           return loaded
         }
-        if (isFrayRuntimeClass(name)) {
+        if (isFrayRuntimeClass(name) || skipFrayClassLoading(name)) {
           return super.loadClass(name)
         }
         try {
@@ -28,8 +28,15 @@ class FrayClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(ur
         }
       }
     } finally {
-      Runtime.onSkipSchedulingDone("FrayClassLoader.loadClass")
+      Runtime.onSkipPrimitiveDone("FrayClassLoader.loadClass")
     }
+  }
+
+  private fun skipFrayClassLoading(name: String): Boolean {
+    // We do not want to reload Mockito classes everytime or ByteBuddy classes because
+    // they register their own agents and class transformers dynamically, reloading
+    // them would register multiple agents and transformers.
+    return name.startsWith("org.mockito") || name.startsWith("net.bytebuddy")
   }
 
   private fun getClassBytesAndProtectionDomain(

@@ -93,6 +93,7 @@ class FrayTestRunExtension : InvocationInterceptor {
             systemTimeDelegateType = frayTestAnnotation.systemTimeDelegateType,
             ignoreTimedBlock = frayTestAnnotation.ignoreTimedBlock,
             sleepAsYield = frayTestAnnotation.sleepAsYield,
+            resetClassLoader = frayTestAnnotation.resetClassLoaderPerIteration,
         )
     val runner = TestRunner(config)
     runner.run()?.let { throw it }

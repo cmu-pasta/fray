@@ -330,6 +330,14 @@ class MainCommand : CliktCommand() {
   val sleepAsYield by
       option("--sleep-as-yield", help = "Treat Thread.sleep as Thread.yield.")
           .flag("--no-sleep-as-yield", default = false)
+  val resetClassLoader by
+      option(
+              "--reset-class-loader",
+              help =
+                  "Reset the class loader before each iteration. This helps to eliminate " +
+                      "non-determinism introduced by static initializers.",
+          )
+          .flag()
 
   override fun run() {}
 
@@ -355,6 +363,7 @@ class MainCommand : CliktCommand() {
             systemTimeDelegateType,
             ignoreTimedBlock,
             sleepAsYield,
+            resetClassLoader,
         )
     if (System.getProperty("fray.antithesisSdk", "false").toBoolean()) {
       configuration.testStatusObservers.add(AntithesisErrorReporter())
@@ -380,6 +389,7 @@ data class Configuration(
     val systemTimeDelegateType: SystemTimeDelegateType,
     val ignoreTimedBlock: Boolean,
     val sleepAsYield: Boolean,
+    val resetClassLoader: Boolean,
 ) {
   val scheduleObservers = mutableListOf<ScheduleObserver<ThreadContext>>()
   val testStatusObservers = mutableListOf<TestStatusObserver>()
