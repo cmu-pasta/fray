@@ -36,7 +36,7 @@ class TestRunner(val config: Configuration) {
       reportProgress(config.currentIteration, bugsFound)
       if (config.noFray) {
         try {
-          config.executionInfo.executor.execute()
+          config.executionInfo.executor.execute(config.resetClassLoader)
         } catch (e: Throwable) {}
       } else {
         val t =
@@ -48,7 +48,7 @@ class TestRunner(val config: Configuration) {
                 Runtime.NETWORK_DELEGATE = config.networkDelegateType.produce(context, synchronizer)
                 Runtime.LOCK_DELEGATE = RuntimeDelegate(context, synchronizer)
                 Runtime.start()
-                config.executionInfo.executor.execute()
+                config.executionInfo.executor.execute(config.resetClassLoader)
                 Runtime.onMainExit()
               } catch (e: Throwable) {
                 Runtime.onReportError(e)

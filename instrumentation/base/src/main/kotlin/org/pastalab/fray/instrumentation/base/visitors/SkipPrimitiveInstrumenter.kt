@@ -10,4 +10,5 @@ class SkipPrimitiveInstrumenter(cv: ClassVisitor) :
         "java.lang.ProcessImpl",
         "com.intellij.rt.debugger",
         "org.gradle.internal",
+        "org.mockito.Mockito",
     )

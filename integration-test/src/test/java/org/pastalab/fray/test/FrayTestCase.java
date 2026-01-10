@@ -86,7 +86,8 @@ public class FrayTestCase {
             NetworkDelegateType.REACTIVE,
             SystemTimeDelegateType.MOCK,
             true,
-            false);
+            false,
+            true);
     TestRunner runner = new TestRunner(config);
     runner.run();
   }
@@ -124,7 +125,8 @@ public class FrayTestCase {
             NetworkDelegateType.REACTIVE,
             SystemTimeDelegateType.NONE,
             true,
-            false);
+            false,
+            true);
     TestRunner runner = new TestRunner(config);
     runner.run();
   }
@@ -184,7 +186,8 @@ public class FrayTestCase {
                       networkDelegateType,
                       systemTimeDelegateType,
                       ignoredTimedBlock,
-                      false);
+                      false,
+                      true);
               tests.add(populateTest(classInfo.getName(), shouldFail, config));
             });
     return tests;

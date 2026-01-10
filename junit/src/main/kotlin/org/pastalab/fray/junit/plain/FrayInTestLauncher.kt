@@ -55,6 +55,7 @@ object FrayInTestLauncher {
             systemTimeDelegateType = SystemTimeDelegateType.NONE,
             ignoreTimedBlock = true,
             sleepAsYield = true,
+            resetClassLoader = true,
         )
     additionalConfigs(config)
     val runner = TestRunner(config)

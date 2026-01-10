@@ -48,6 +48,7 @@ annotation class FrayTest(
     val systemTimeDelegateType: SystemTimeDelegateType = SystemTimeDelegateType.NONE,
     val sleepAsYield: Boolean = false,
     val ignoreTimedBlock: Boolean = true,
+    val resetClassLoaderPerIteration: Boolean = true,
     val replay: String = "",
 ) {
   companion object {

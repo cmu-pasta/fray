@@ -38,6 +38,7 @@ class RunContextReentrantLockTest {
               systemTimeDelegateType = SystemTimeDelegateType.MOCK,
               ignoreTimedBlock = true,
               sleepAsYield = false,
+              true,
           )
       )
 
