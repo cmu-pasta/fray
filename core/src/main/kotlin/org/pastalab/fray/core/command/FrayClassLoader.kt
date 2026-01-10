@@ -33,7 +33,7 @@ class FrayClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(ur
   }
 
   private fun skipFrayClassLoading(name: String): Boolean {
-    // We do not want to reload Mockito classes everytime or ByteBuddy classes because
+    // We do not want to reload Mockito classes every time or ByteBuddy classes because
     // they register their own agents and class transformers dynamically, reloading
     // them would register multiple agents and transformers.
     return name.startsWith("org.mockito") || name.startsWith("net.bytebuddy")

@@ -337,7 +337,7 @@ class MainCommand : CliktCommand() {
                   "Reset the class loader before each iteration. This helps to eliminate " +
                       "non-determinism introduced by static initializers.",
           )
-          .flag()
+          .flag("--no-reset-class-loader", default = true)
 
   override fun run() {}
 
