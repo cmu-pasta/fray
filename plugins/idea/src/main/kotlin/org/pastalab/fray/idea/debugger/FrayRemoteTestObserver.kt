@@ -1,6 +1,7 @@
 package org.pastalab.fray.idea.debugger
 
 import com.intellij.openapi.project.Project
+import java.nio.file.Path
 import org.pastalab.fray.rmi.TestStatusObserver
 
 class FrayRemoteTestObserver(val project: Project) : TestStatusObserver {
@@ -18,7 +19,7 @@ class FrayRemoteTestObserver(val project: Project) : TestStatusObserver {
     observers.forEach { it.onExecutionDone(bugFound) }
   }
 
-  override fun saveToReportFolder(path: String) {
+  override fun saveToReportFolder(path: Path) {
     observers.forEach { it.saveToReportFolder(path) }
   }
 }

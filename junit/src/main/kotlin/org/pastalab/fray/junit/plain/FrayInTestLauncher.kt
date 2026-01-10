@@ -40,7 +40,7 @@ object FrayInTestLauncher {
                 interleaveMemoryOps = false,
                 maxScheduledStep = -1,
             ),
-            WORK_DIR.absolutePathString(),
+            WORK_DIR,
             iteration,
             timeout,
             scheduler,
@@ -56,6 +56,7 @@ object FrayInTestLauncher {
             ignoreTimedBlock = true,
             sleepAsYield = true,
             resetClassLoader = true,
+            redirectStdout = false,
         )
     additionalConfigs(config)
     val runner = TestRunner(config)

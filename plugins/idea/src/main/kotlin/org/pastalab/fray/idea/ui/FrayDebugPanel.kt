@@ -6,6 +6,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.xdebugger.XDebugSession
 import java.awt.BorderLayout
+import java.nio.file.Path
 import javax.swing.JPanel
 import javax.swing.JSplitPane
 import org.pastalab.fray.idea.getPsiFile
@@ -179,7 +180,7 @@ class FrayDebugPanel(val debugSession: XDebugSession, replayMode: Boolean) :
     mcpServer.onExecutionDone(bugFound)
   }
 
-  override fun saveToReportFolder(path: String) {}
+  override fun saveToReportFolder(path: Path) {}
 
   companion object {
     const val CONTENT_ID = "fray-scheduler"

@@ -1,5 +1,8 @@
 package org.pastalab.fray.core
 
+import java.io.FileOutputStream
+import java.io.PrintStream
+import kotlin.io.path.div
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.delegates.DelegateSynchronizer
 import org.pastalab.fray.core.delegates.RuntimeDelegate
@@ -9,17 +12,18 @@ class TestRunner(val config: Configuration) {
 
   val context = RunContext(config)
   var currentDivision = 1
+  val stdout = System.out
 
   fun reportProgress(iteration: Int, bugsFound: Int) {
     if (config.isReplay) return
     if (iteration % currentDivision == 0) {
-      print("\u001B[2J")
-      print("\u001B[2H")
-      println("Fray Testing:")
-      println("Report is available at: ${config.report}")
-      println("Iterations: $iteration")
+      stdout.print("\u001B[2J")
+      stdout.print("\u001B[2H")
+      stdout.println("Fray Testing:")
+      stdout.println("Report is available at: ${config.report}")
+      stdout.println("Iterations: $iteration")
       if (bugsFound > 0) {
-        println("Bugs Found: $bugsFound")
+        stdout.println("Bugs Found: $bugsFound")
       }
     }
     if (iteration / currentDivision == 10) {
@@ -33,6 +37,12 @@ class TestRunner(val config: Configuration) {
     val bugsFound = 0
 
     while (config.shouldRun()) {
+      if (config.redirectStdout) {
+        val stdout = config.report / "stdout.txt"
+        System.setOut(PrintStream(FileOutputStream(stdout.toFile())))
+        val stderr = config.report / "stderr.txt"
+        System.setErr(PrintStream(FileOutputStream(stderr.toFile())))
+      }
       reportProgress(config.currentIteration, bugsFound)
       if (config.noFray) {
         try {

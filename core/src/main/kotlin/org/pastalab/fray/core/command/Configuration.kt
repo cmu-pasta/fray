@@ -8,16 +8,19 @@ import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
+import com.github.ajalt.clikt.parameters.types.path
 import java.io.File
-import java.nio.file.Paths
+import java.nio.file.Files
+import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
+import kotlin.io.path.div
 import kotlin.io.path.exists
+import kotlin.io.path.writeText
 import kotlin.time.TimeSource
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.modules.SerializersModule
@@ -232,7 +235,10 @@ class Dynamic : ScheduleAlgorithm("dynamic", false) {
 }
 
 class MainCommand : CliktCommand() {
-  val report by option("-o", "--output", help = "Report output directory.").default("/tmp/report")
+  val report by
+      option("-o", "--output", help = "Report output directory.")
+          .path()
+          .default(Files.createTempDirectory("fray-workspace"))
   val timeout by
       option("-t", "--timeout", help = "Testing timeout in seconds.").int().default(60 * 10)
   val iter by option("-i", "--iter", help = "Number of iterations.").int().default(100000)
@@ -338,6 +344,9 @@ class MainCommand : CliktCommand() {
                       "non-determinism introduced by static initializers.",
           )
           .flag("--no-reset-class-loader", default = true)
+  val redirectStdout by
+      option("--redirect-stdout", help = "Redirect stdout and stderr to files in report dir.")
+          .flag()
 
   override fun run() {}
 
@@ -364,6 +373,7 @@ class MainCommand : CliktCommand() {
             ignoreTimedBlock,
             sleepAsYield,
             resetClassLoader,
+            redirectStdout,
         )
     if (System.getProperty("fray.antithesisSdk", "false").toBoolean()) {
       configuration.testStatusObservers.add(AntithesisErrorReporter())
@@ -374,7 +384,7 @@ class MainCommand : CliktCommand() {
 
 data class Configuration(
     val executionInfo: ExecutionInfo,
-    val report: String,
+    val report: Path,
     var iter: Int,
     val timeout: Int,
     var scheduler: Scheduler,
@@ -390,6 +400,7 @@ data class Configuration(
     val ignoreTimedBlock: Boolean,
     val sleepAsYield: Boolean,
     val resetClassLoader: Boolean,
+    val redirectStdout: Boolean,
 ) {
   val scheduleObservers = mutableListOf<ScheduleObserver<ThreadContext>>()
   val testStatusObservers = mutableListOf<TestStatusObserver>()
@@ -398,16 +409,16 @@ data class Configuration(
   val startTime = TimeSource.Monotonic.markNow()
   var randomness = randomnessProvider.getRandomness()
 
-  fun saveToReportFolder(index: Int): String {
+  fun saveToReportFolder(index: Int): Path {
     val path =
         if (exploreMode) {
-          "$report/recording_$index"
+          report / "recording_$index"
         } else {
-          "$report/recording"
+          report / "recording"
         }
-    Paths.get(path).createDirectories()
-    File("$path/schedule.json").writeText(Json.encodeToString(scheduler))
-    File("$path/random.json").writeText(Json.encodeToString(randomness))
+    path.createDirectories()
+    (path / "schedule.json").writeText(Json.encodeToString(scheduler))
+    (path / "random.json").writeText(Json.encodeToString(randomness))
     testStatusObservers.forEach { it.saveToReportFolder(path) }
     return path
   }
@@ -415,7 +426,7 @@ data class Configuration(
   val frayLogger = FrayLogger("$report/fray.log")
 
   init {
-    if (!isReplay || !Paths.get(report).exists()) {
+    if (!isReplay || !report.exists()) {
       prepareReportPath(report)
     }
     if (System.getProperty("fray.recordSchedule", "false").toBoolean()) {
@@ -470,9 +481,8 @@ data class Configuration(
   }
 
   @OptIn(ExperimentalPathApi::class)
-  fun prepareReportPath(reportPath: String) {
-    val path = Paths.get(reportPath)
-    path.deleteRecursively()
-    path.createDirectories()
+  fun prepareReportPath(reportPath: Path) {
+    reportPath.deleteRecursively()
+    reportPath.createDirectories()
   }
 }

@@ -78,7 +78,7 @@ class FrayTestRunExtension : InvocationInterceptor {
                 false,
                 -1,
             ),
-            testDir.toString(),
+            testDir,
             frayTestAnnotation.iterations,
             60,
             scheduler,
@@ -94,6 +94,7 @@ class FrayTestRunExtension : InvocationInterceptor {
             ignoreTimedBlock = frayTestAnnotation.ignoreTimedBlock,
             sleepAsYield = frayTestAnnotation.sleepAsYield,
             resetClassLoader = frayTestAnnotation.resetClassLoaderPerIteration,
+            redirectStdout = false,
         )
     val runner = TestRunner(config)
     runner.run()?.let { throw it }

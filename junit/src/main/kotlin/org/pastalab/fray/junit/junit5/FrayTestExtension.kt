@@ -106,7 +106,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
                 interleaveMemoryOps = false,
                 maxScheduledStep = -1,
             ),
-            testDir.toString(),
+            testDir,
             repetitions,
             60,
             scheduler,
@@ -122,6 +122,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             ignoreTimedBlock = concurrencyTest.ignoreTimedBlock,
             sleepAsYield = concurrencyTest.sleepAsYield,
             resetClassLoader = false,
+            redirectStdout = false,
         )
     val frayContext = RunContext(config)
     val frayJupiterContext = FrayJupiterContext()
