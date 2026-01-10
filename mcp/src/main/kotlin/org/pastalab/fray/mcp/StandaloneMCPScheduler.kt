@@ -1,5 +1,6 @@
 package org.pastalab.fray.mcp
 
+import java.nio.file.Path
 import java.rmi.registry.LocateRegistry
 import java.rmi.registry.Registry
 import java.rmi.server.UnicastRemoteObject
@@ -24,7 +25,7 @@ class StandaloneMCPScheduler : RemoteScheduler {
           server.onExecutionDone(bugFound)
         }
 
-        override fun saveToReportFolder(path: String) {}
+        override fun saveToReportFolder(path: Path) {}
       }
   var cdl = CountDownLatch(1)
   var selectedThreadIndex = 0

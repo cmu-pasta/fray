@@ -1,6 +1,7 @@
 package org.pastalab.fray.core.observers
 
 import java.io.File
+import java.nio.file.Path
 import kotlinx.serialization.json.Json
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.rmi.ScheduleObserver
@@ -52,5 +53,5 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) :
 
   override fun onExecutionDone(bugFound: Throwable?) {}
 
-  override fun saveToReportFolder(path: String) {}
+  override fun saveToReportFolder(path: Path) {}
 }

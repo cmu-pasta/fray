@@ -1,7 +1,8 @@
 package org.pastalab.fray.core.observers
 
-import java.io.File
-import kotlinx.serialization.encodeToString
+import java.nio.file.Path
+import kotlin.io.path.div
+import kotlin.io.path.writeText
 import kotlinx.serialization.json.Json
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.rmi.ScheduleObserver
@@ -30,7 +31,7 @@ class ScheduleRecorder : ScheduleObserver<ThreadContext>, TestStatusObserver {
 
   override fun onExecutionDone(bugFound: Throwable?) {}
 
-  override fun saveToReportFolder(path: String) {
-    File("$path/recording.json").writeText(Json.encodeToString(recordings))
+  override fun saveToReportFolder(path: Path) {
+    (path / "recording.json").writeText(Json.encodeToString(recordings))
   }
 }

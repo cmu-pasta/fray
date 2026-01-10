@@ -72,7 +72,7 @@ public class FrayTestCase {
                 false,
                 false,
                 -1),
-            "/tmp/report2",
+            Path.of("/tmp/report2"),
             1,
             60,
             scheduler,
@@ -87,7 +87,8 @@ public class FrayTestCase {
             SystemTimeDelegateType.MOCK,
             true,
             false,
-            true);
+            true,
+            false);
     TestRunner runner = new TestRunner(config);
     runner.run();
   }
@@ -110,7 +111,7 @@ public class FrayTestCase {
                 false,
                 false,
                 -1),
-            "/tmp/report2",
+            Path.of("/tmp/report2"),
             2,
             60,
             new RandomScheduler(
@@ -126,7 +127,8 @@ public class FrayTestCase {
             SystemTimeDelegateType.NONE,
             true,
             false,
-            true);
+            true,
+            false);
     TestRunner runner = new TestRunner(config);
     runner.run();
   }
@@ -172,7 +174,7 @@ public class FrayTestCase {
                           false,
                           false,
                           -1),
-                      tempDir.toString(),
+                      tempDir,
                       iteration,
                       60 * 10,
                       new RandomScheduler(),
@@ -187,7 +189,8 @@ public class FrayTestCase {
                       systemTimeDelegateType,
                       ignoredTimedBlock,
                       false,
-                      true);
+                      true,
+                      false);
               tests.add(populateTest(classInfo.getName(), shouldFail, config));
             });
     return tests;

@@ -2,6 +2,7 @@ package org.pastalab.fray.core.observers
 
 import com.antithesis.sdk.Assert
 import com.fasterxml.jackson.databind.ObjectMapper
+import java.nio.file.Path
 import org.pastalab.fray.rmi.TestStatusObserver
 
 class AntithesisErrorReporter : TestStatusObserver {
@@ -21,7 +22,7 @@ class AntithesisErrorReporter : TestStatusObserver {
     // No-op for Antithesis error reporter
   }
 
-  override fun saveToReportFolder(path: String) {
+  override fun saveToReportFolder(path: Path) {
     // No-op for Antithesis error reporter
   }
 }

@@ -1,5 +1,6 @@
 package org.pastalab.fray.core
 
+import java.nio.file.Path
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -23,7 +24,7 @@ class RunContextReentrantLockTest {
                   interleaveMemoryOps = false,
                   maxScheduledStep = -1,
               ),
-              "/tmp/fray",
+              Path.of("/tmp/fray"),
               1,
               1000,
               RandomScheduler(),
@@ -39,6 +40,7 @@ class RunContextReentrantLockTest {
               ignoreTimedBlock = true,
               sleepAsYield = false,
               true,
+              false,
           )
       )
 
