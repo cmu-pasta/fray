@@ -43,7 +43,9 @@ class FrayClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(ur
       className: String
   ): Pair<ByteArray, ProtectionDomain> {
     val classPath = className.replace('.', '/') + ".class"
-    val resource = getResource(classPath) ?: throw ClassNotFoundException(className)
+    // We should use findResource instead of getResource here to avoid delegation to parent class
+    // loader
+    val resource = findResource(classPath) ?: throw ClassNotFoundException(className)
     val codeSource = CodeSource(resource, null as Array<java.security.cert.Certificate>?)
     val protectionDomain = ProtectionDomain(codeSource, null)
     resource.openStream().use { stream ->

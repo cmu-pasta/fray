@@ -6,9 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 import io.github.classgraph.ClassGraph;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -162,6 +164,8 @@ public class FrayTestCase {
               } else {
                 return;
               }
+              String classpath = System.getProperty("java.class.path");
+              List<String> classpaths = Arrays.stream(classpath.split(File.pathSeparator)).toList();
               Configuration config =
                   new Configuration(
                       new ExecutionInfo(
@@ -169,7 +173,7 @@ public class FrayTestCase {
                               classInfo.getName(),
                               "main",
                               new ArrayList<>(),
-                              new ArrayList<>(),
+                              classpaths,
                               new HashMap<>()),
                           false,
                           false,
