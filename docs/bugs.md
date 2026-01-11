@@ -23,7 +23,7 @@
 - [#17394 Flaky test in DefaultTaskExecutorTest.shouldSetUncaughtStreamsException](https://issues.apache.org/jira/browse/KAFKA-17394)
 - [#17402 Test failure: DefaultStateUpdaterTest.shouldGetTasksFromRestoredActiveTasks expected: <2> but was: <3>](https://issues.apache.org/jira/browse/KAFKA-17402)
 - [#17929 `awaitProcessableTasks` is not safe in the presence of spurious wakeups.](https://issues.apache.org/jira/browse/KAFKA-17929)
-- [#17946 Flaky test DeafultStateUpdaterTest::shouldResumeStandbyTask due to concurrency issue](https://issues.apache.org/jira/browse/KAFKA-17946)
+- [#17946 Flaky test DefaultStateUpdaterTest::shouldResumeStandbyTask due to concurrency issue](https://issues.apache.org/jira/browse/KAFKA-17946)
 - [#18418 Flaky test in KafkaStreamsTest::shouldThrowOnCleanupWhileShuttingDownStreamClosedWithCloseOptionLeaveGroupFalse](https://issues.apache.org/jira/browse/KAFKA-18418)
 
 
