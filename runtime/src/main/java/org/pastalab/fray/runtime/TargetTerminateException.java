@@ -1,6 +1,6 @@
 package org.pastalab.fray.runtime;
 
-public class TargetTerminateException extends RuntimeException {
+public class TargetTerminateException extends Error {
   public TargetTerminateException() {}
 
   public TargetTerminateException(String message) {

@@ -41,6 +41,7 @@ class RunContextReentrantLockTest {
               sleepAsYield = false,
               true,
               false,
+              false,
           )
       )
 

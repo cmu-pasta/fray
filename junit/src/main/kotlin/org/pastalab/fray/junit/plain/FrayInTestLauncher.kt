@@ -57,6 +57,7 @@ object FrayInTestLauncher {
             sleepAsYield = true,
             resetClassLoader = true,
             redirectStdout = false,
+            abortThreadExecutionAfterMainExit = false,
         )
     additionalConfigs(config)
     val runner = TestRunner(config)

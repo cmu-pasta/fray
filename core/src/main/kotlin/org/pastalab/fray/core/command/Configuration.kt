@@ -347,6 +347,14 @@ class MainCommand : CliktCommand() {
   val redirectStdout by
       option("--redirect-stdout", help = "Redirect stdout and stderr to files in report dir.")
           .flag()
+  val abortThreadExecutionAfterMainExit by
+      option(
+              "--abort-thread-after-main-exit",
+              help =
+                  "Abort all other threads' execution after the main thread exits. This helps to " +
+                      "eliminate non-determinism introduced by background threads.",
+          )
+          .flag("--no-abort-thread-after-main-exit", default = false)
 
   override fun run() {}
 
@@ -374,6 +382,7 @@ class MainCommand : CliktCommand() {
             sleepAsYield,
             resetClassLoader,
             redirectStdout,
+            abortThreadExecutionAfterMainExit,
         )
     if (System.getProperty("fray.antithesisSdk", "false").toBoolean()) {
       configuration.testStatusObservers.add(AntithesisErrorReporter())
@@ -401,6 +410,7 @@ data class Configuration(
     val sleepAsYield: Boolean,
     val resetClassLoader: Boolean,
     val redirectStdout: Boolean,
+    val abortThreadExecutionAfterMainExit: Boolean,
 ) {
   val scheduleObservers = mutableListOf<ScheduleObserver<ThreadContext>>()
   val testStatusObservers = mutableListOf<TestStatusObserver>()
