@@ -270,19 +270,20 @@ class RunContext(val config: Configuration) {
   }
 
   fun threadCreateDone(t: Thread) = verifyNoThrow {
-    if (!config.executionInfo.ignoreUnhandledExceptions) {
-      val originalHandler = t.uncaughtExceptionHandler
-      val handler = UncaughtExceptionHandler { t, e ->
-        if (
-            mainExiting && e is TargetTerminateException && config.abortThreadExecutionAfterMainExit
-        ) {
-          return@UncaughtExceptionHandler
-        }
-        reportError(e)
-        originalHandler?.uncaughtException(t, e)
+    val originalHandler = t.uncaughtExceptionHandler
+    val handler = UncaughtExceptionHandler { t, e ->
+      if (
+          mainExiting && e is TargetTerminateException && config.abortThreadExecutionAfterMainExit
+      ) {
+        // Swallow TargetTerminateException during main-exit abort to avoid JVM/default handling.
+        return@UncaughtExceptionHandler
       }
-      t.setUncaughtExceptionHandler(handler)
+      if (!config.executionInfo.ignoreUnhandledExceptions) {
+        reportError(e)
+      }
+      originalHandler?.uncaughtException(t, e)
     }
+    t.setUncaughtExceptionHandler(handler)
     val parentContext = registeredThreads[Thread.currentThread().id]!!
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this, parentContext.index)
   }
