@@ -330,7 +330,7 @@ class MainCommand : CliktCommand() {
       option(
               "--virtual-time-delta",
               help =
-                  "Amount of virtual time to advance per step (only valid when system time delegate type is MOCK).",
+                  "Amount of virtual time to advance per step (only valid when system time delegate type is MOCK). Must be a positive value.",
           )
           .long()
           .default(100_000L)
