@@ -37,6 +37,7 @@ class RunContextReentrantLockTest {
               dummyRun = false,
               networkDelegateType = NetworkDelegateType.PROACTIVE,
               systemTimeDelegateType = SystemTimeDelegateType.MOCK,
+              100_000L,
               ignoreTimedBlock = true,
               sleepAsYield = false,
               true,

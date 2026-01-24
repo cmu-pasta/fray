@@ -46,6 +46,7 @@ annotation class FrayTest(
     val scheduler: KClass<out Scheduler> = POSScheduler::class,
     val networkDelegateType: NetworkDelegateType = NetworkDelegateType.NONE,
     val systemTimeDelegateType: SystemTimeDelegateType = SystemTimeDelegateType.NONE,
+    val virtualTimeDelta: Long = 100_000L,
     val sleepAsYield: Boolean = false,
     val ignoreTimedBlock: Boolean = true,
     val resetClassLoaderPerIteration: Boolean = true,

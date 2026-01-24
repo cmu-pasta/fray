@@ -53,6 +53,7 @@ object FrayInTestLauncher {
             dummyRun = false,
             networkDelegateType = NetworkDelegateType.PROACTIVE,
             systemTimeDelegateType = SystemTimeDelegateType.NONE,
+            virtualTimeDelta = 100_000L,
             ignoreTimedBlock = true,
             sleepAsYield = true,
             resetClassLoader = true,

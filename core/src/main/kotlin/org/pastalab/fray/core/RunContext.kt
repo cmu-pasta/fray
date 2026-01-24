@@ -121,7 +121,11 @@ class RunContext(val config: Configuration) {
       // Let's do not report liveness exceptions.
       return
     }
-    if (bugFound == null && !config.executionInfo.ignoreUnhandledExceptions) {
+    if (e is DeadlockException && mainExiting && config.abortThreadExecutionAfterMainExit) {
+      // We do not want to report deadlock during main-exit abort because this is expected.
+      return
+    }
+    if (bugFound == null) {
       bugFound = e
       val sw = StringWriter()
       sw.append("Error: ${e}\n")
