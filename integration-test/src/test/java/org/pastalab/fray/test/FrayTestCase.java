@@ -90,6 +90,7 @@ public class FrayTestCase {
             true,
             false,
             true,
+            false,
             false);
     TestRunner runner = new TestRunner(config);
     runner.run();
@@ -130,6 +131,7 @@ public class FrayTestCase {
             true,
             false,
             true,
+            false,
             false);
     TestRunner runner = new TestRunner(config);
     runner.run();
@@ -194,6 +196,7 @@ public class FrayTestCase {
                       ignoredTimedBlock,
                       false,
                       true,
+                      false,
                       false);
               tests.add(populateTest(classInfo.getName(), shouldFail, config));
             });

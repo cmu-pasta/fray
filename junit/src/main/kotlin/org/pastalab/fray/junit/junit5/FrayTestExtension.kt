@@ -123,6 +123,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             sleepAsYield = concurrencyTest.sleepAsYield,
             resetClassLoader = false,
             redirectStdout = false,
+            abortThreadExecutionAfterMainExit = false,
         )
     val frayContext = RunContext(config)
     val frayJupiterContext = FrayJupiterContext()

@@ -64,6 +64,7 @@ class RunContext(val config: Configuration) {
   val reactiveBlockedThreadQueue = ConcurrentLinkedQueue<Long>()
   val timeController = TimeController(config)
   val prioritizedThreads = mutableSetOf<ThreadContext>()
+  var mainExiting = false
   private val semaphoreManager = ReferencedContextManager {
     verifyOrReport(it is Semaphore) { "SemaphoreManager can only manage Semaphore objects" }
     SemaphoreContext(0, it as Semaphore)
@@ -193,6 +194,7 @@ class RunContext(val config: Configuration) {
     ) {
       try {
         context.state = ThreadState.MainExiting
+        mainExiting = true
         scheduleNextOperation(true)
       } catch (e: TargetTerminateException) {
         // If deadlock detected let's try to unblock one thread and continue.
@@ -259,6 +261,7 @@ class RunContext(val config: Configuration) {
     hashCodeMapper.done()
     runFinishedHandlers.forEach { it.done() }
     runFinishedHandlers.clear()
+    mainExiting = false
   }
 
   fun shutDown() {
@@ -269,7 +272,15 @@ class RunContext(val config: Configuration) {
   fun threadCreateDone(t: Thread) = verifyNoThrow {
     val originalHandler = t.uncaughtExceptionHandler
     val handler = UncaughtExceptionHandler { t, e ->
-      onReportError(e)
+      if (
+          mainExiting && e is TargetTerminateException && config.abortThreadExecutionAfterMainExit
+      ) {
+        // Swallow TargetTerminateException during main-exit abort to avoid JVM/default handling.
+        return@UncaughtExceptionHandler
+      }
+      if (!config.executionInfo.ignoreUnhandledExceptions) {
+        reportError(e)
+      }
       originalHandler?.uncaughtException(t, e)
     }
     t.setUncaughtExceptionHandler(handler)
@@ -1190,10 +1201,10 @@ class RunContext(val config: Configuration) {
     verifyOrReport(registeredThreads.none { it.value.state == ThreadState.Running })
 
     if (
-        bugFound != null &&
-            !currentThread.isExiting &&
-            currentThreadId != mainThreadId &&
-            Thread.currentThread() !is HelperThread
+        (!currentThread.isExiting) &&
+            (Thread.currentThread() !is HelperThread) &&
+            (currentThreadId != mainThreadId) &&
+            (bugFound != null || (mainExiting && config.abortThreadExecutionAfterMainExit))
     ) {
       currentThread.state = ThreadState.Running
       // Let's try to break all running threads if a bug is found.
@@ -1222,9 +1233,7 @@ class RunContext(val config: Configuration) {
     // have a good way to understand if all other threads are finished. And in
     // that case, we may waste iterations scheduling empty ForkJoinWorkers.
     // We try to detect that case here and just return to main thread.
-    if (
-        forkJoinPool != null && registeredThreads[mainThreadId]!!.state == ThreadState.MainExiting
-    ) {
+    if (forkJoinPool != null && mainExiting) {
       if (
           registeredThreads.values.none {
             !isManagedPoolThread(it.thread) &&

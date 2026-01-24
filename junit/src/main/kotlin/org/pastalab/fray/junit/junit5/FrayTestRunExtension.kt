@@ -95,6 +95,8 @@ class FrayTestRunExtension : InvocationInterceptor {
             sleepAsYield = frayTestAnnotation.sleepAsYield,
             resetClassLoader = frayTestAnnotation.resetClassLoaderPerIteration,
             redirectStdout = false,
+            abortThreadExecutionAfterMainExit =
+                frayTestAnnotation.abortThreadExecutionAfterMainExit,
         )
     val runner = TestRunner(config)
     runner.run()?.let { throw it }
