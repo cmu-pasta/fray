@@ -119,6 +119,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             dummyRun = false,
             networkDelegateType = concurrencyTest.networkDelegateType,
             systemTimeDelegateType = concurrencyTest.systemTimeDelegateType,
+            virtualTimeDelta = 100_000,
             ignoreTimedBlock = concurrencyTest.ignoreTimedBlock,
             sleepAsYield = concurrencyTest.sleepAsYield,
             resetClassLoader = false,

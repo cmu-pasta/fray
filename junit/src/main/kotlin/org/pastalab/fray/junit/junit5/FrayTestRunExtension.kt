@@ -91,6 +91,7 @@ class FrayTestRunExtension : InvocationInterceptor {
             dummyRun = false,
             networkDelegateType = frayTestAnnotation.networkDelegateType,
             systemTimeDelegateType = frayTestAnnotation.systemTimeDelegateType,
+            virtualTimeDelta = frayTestAnnotation.virtualTimeDelta,
             ignoreTimedBlock = frayTestAnnotation.ignoreTimedBlock,
             sleepAsYield = frayTestAnnotation.sleepAsYield,
             resetClassLoader = frayTestAnnotation.resetClassLoaderPerIteration,

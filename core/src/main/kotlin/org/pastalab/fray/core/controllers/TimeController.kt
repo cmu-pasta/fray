@@ -8,7 +8,12 @@ import org.pastalab.fray.core.utils.Utils.verifyNoThrow
 
 class TimeController(config: Configuration) {
   var nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
-  val isVirtualTimeMode = config.systemTimeDelegateType == SystemTimeDelegateType.MOCK
+  val virtualTimeDelta =
+      if (config.systemTimeDelegateType == SystemTimeDelegateType.MOCK) config.virtualTimeDelta
+      else -1L
+
+  val isVirtualTimeMode
+    get() = virtualTimeDelta > 0
 
   fun done() {
     nanoTime = TimeUnit.SECONDS.toNanos(1577768400)
@@ -16,7 +21,7 @@ class TimeController(config: Configuration) {
 
   private fun getAndIncrementNanoTime(): Long {
     val currentNanoTime = nanoTime
-    nanoTime += 100_000
+    nanoTime += virtualTimeDelta
     return currentNanoTime
   }
 

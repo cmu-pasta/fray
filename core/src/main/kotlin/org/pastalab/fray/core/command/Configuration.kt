@@ -8,6 +8,7 @@ import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
+import com.github.ajalt.clikt.parameters.types.long
 import com.github.ajalt.clikt.parameters.types.path
 import java.io.File
 import java.nio.file.Files
@@ -325,6 +326,14 @@ class MainCommand : CliktCommand() {
               "none" to SystemTimeDelegateType.NONE,
           )
           .default(SystemTimeDelegateType.NONE)
+  val virtualTimeDelta by
+      option(
+              "--virtual-time-delta",
+              help =
+                  "Amount of virtual time to advance per step (only valid when system time delegate type is MOCK).",
+          )
+          .long()
+          .default(100_000L)
   val ignoreTimedBlock by
       option(
               "--ignore-timed-block",
@@ -378,6 +387,7 @@ class MainCommand : CliktCommand() {
             dummyRun,
             networkDelegateType,
             systemTimeDelegateType,
+            virtualTimeDelta,
             ignoreTimedBlock,
             sleepAsYield,
             resetClassLoader,
@@ -406,6 +416,7 @@ data class Configuration(
     val dummyRun: Boolean,
     val networkDelegateType: NetworkDelegateType,
     val systemTimeDelegateType: SystemTimeDelegateType,
+    val virtualTimeDelta: Long,
     val ignoreTimedBlock: Boolean,
     val sleepAsYield: Boolean,
     val resetClassLoader: Boolean,
