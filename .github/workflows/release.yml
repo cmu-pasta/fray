@@ -22,7 +22,7 @@ jobs:
         if: runner.os != 'Linux'
         with:
           distribution: 'corretto'
-          java-version: '25'
+          java-version: '21'
           cache: 'gradle'
       - uses: cachix/install-nix-action@v31
         if: runner.os == 'Linux'
