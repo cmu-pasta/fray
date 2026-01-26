@@ -18,6 +18,12 @@ buildscript {
     // https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/2062
     classpath(libs.kotlinx.serialization.json)
   }
+  configurations.classpath {
+    resolutionStrategy {
+      // Fix https://github.com/jreleaser/jreleaser/issues/1643 :(
+      force("org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r")
+    }
+  }
 }
 
 dokka {
