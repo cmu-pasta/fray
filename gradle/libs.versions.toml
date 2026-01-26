@@ -2,7 +2,7 @@
 kotlin = "2.2.21"
 kotlinSerializationPlugin = "2.2.0"
 spotless = "8.1.0"
-jreleaser = "1.16.0"
+jreleaser = "1.22.0"
 shadow = "9.0.0-rc2"
 dokka = "2.1.0"
 gradlePluginPublish = "1.2.1"
