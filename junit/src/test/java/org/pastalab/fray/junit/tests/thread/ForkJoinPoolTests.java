@@ -20,6 +20,11 @@ public class ForkJoinPoolTests {
             1000, event(test("testForkJoinPoolAllThreadsRegistered"), finishedSuccessfully()))
         .haveExactly(1000, event(test("testCommonPoolTerminationOrder"), finishedSuccessfully()))
         .haveExactly(
+            1,
+            event(
+                test("testForkJoinPoolCommonPoolCreatedAfterForkJoinPoolTermination"),
+                finishedSuccessfully()))
+        .haveExactly(
             1000, event(test("testForkJoinPoolCountDownLatchBlock"), finishedSuccessfully()));
   }
 }

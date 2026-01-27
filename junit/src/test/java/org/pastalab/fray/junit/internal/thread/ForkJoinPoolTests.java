@@ -7,11 +7,39 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pastalab.fray.core.command.SystemTimeDelegateType;
+import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.junit.junit5.FrayTestExtension;
 import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
+import org.pastalab.fray.junit.junit5.annotations.FrayTest;
 
 @ExtendWith(FrayTestExtension.class)
 public class ForkJoinPoolTests {
+
+  @FrayTest(scheduler = RandomScheduler.class)
+  public void testForkJoinPoolCommonPoolCreatedAfterForkJoinPoolTermination() {
+    Thread t2 =
+        new Thread(
+            () -> {
+              ForkJoinPool commonPool = ForkJoinPool.commonPool();
+              commonPool.execute(
+                  () -> {
+                    System.out.println("Common pool task executed");
+                  });
+            });
+    t2.start();
+    ForkJoinPool pool = new ForkJoinPool();
+    pool.execute(
+        () -> {
+          try {
+            Thread.sleep(1000);
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          }
+        });
+    Thread t = new Thread(pool::shutdown);
+    t.start();
+  }
+
   @ConcurrencyTest(ignoreTimedBlock = false, systemTimeDelegateType = SystemTimeDelegateType.MOCK)
   public void testForkJoinPoolAllThreadsRegistered() {
     ForkJoinPool pool = new ForkJoinPool();
