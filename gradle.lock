@@ -909,14 +909,14 @@
       "hash": "sha256-Q8K5sULnBV0fKlgn8QlEkl0idH2XVrMlDAeqtHU4qXE="
     }
   },
-  "com.googlecode.javaewah:JavaEWAH:1.1.12": {
-    "JavaEWAH-1.1.12.jar": {
-      "url": "https://plugins.gradle.org/m2/com/googlecode/javaewah/JavaEWAH/1.1.12/JavaEWAH-1.1.12.jar",
-      "hash": "sha256-sZIEMxrG4gS++vUIpo9S7GtGONnZus3b69Q1+cTVAPI="
+  "com.googlecode.javaewah:JavaEWAH:1.1.13": {
+    "JavaEWAH-1.1.13.jar": {
+      "url": "https://plugins.gradle.org/m2/com/googlecode/javaewah/JavaEWAH/1.1.13/JavaEWAH-1.1.13.jar",
+      "hash": "sha256-TA/aKx0xd1DX6jJONscLK8SDEMCqrme5jfCRXWltcRE="
     },
-    "JavaEWAH-1.1.12.pom": {
-      "url": "https://plugins.gradle.org/m2/com/googlecode/javaewah/JavaEWAH/1.1.12/JavaEWAH-1.1.12.pom",
-      "hash": "sha256-BhhOmwWeCAkRgnE2r17Hj1fuTDvBn2MutWGw34+HiM4="
+    "JavaEWAH-1.1.13.pom": {
+      "url": "https://plugins.gradle.org/m2/com/googlecode/javaewah/JavaEWAH/1.1.13/JavaEWAH-1.1.13.pom",
+      "hash": "sha256-lyWx/pxoENl3dQu4RBXqEILEtIjUqDn5cEu09ej8F/Q="
     }
   },
   "com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.0.0-rc2": {
@@ -2389,20 +2389,20 @@
       "hash": "sha256-00QQSm7mGdplmEA8JdA6qqrw9U6WRv01EkWN9Xyarrg="
     }
   },
-  "org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r": {
-    "org.eclipse.jgit-5.13.0.202109080827-r.jar": {
-      "url": "https://plugins.gradle.org/m2/org/eclipse/jgit/org.eclipse.jgit/5.13.0.202109080827-r/org.eclipse.jgit-5.13.0.202109080827-r.jar",
-      "hash": "sha256-2r+DafDN+M8Xt/faS9qTIMVwu3VMiOC+t7hSgSz1zSU="
+  "org.eclipse.jgit:org.eclipse.jgit:5.13.5.202508271544-r": {
+    "org.eclipse.jgit-5.13.5.202508271544-r.jar": {
+      "url": "https://plugins.gradle.org/m2/org/eclipse/jgit/org.eclipse.jgit/5.13.5.202508271544-r/org.eclipse.jgit-5.13.5.202508271544-r.jar",
+      "hash": "sha256-Yc42OxD4HpfKKVQ2ig9t25nWIIoM8LrmImAb+AL03Wc="
     },
-    "org.eclipse.jgit-5.13.0.202109080827-r.pom": {
-      "url": "https://plugins.gradle.org/m2/org/eclipse/jgit/org.eclipse.jgit/5.13.0.202109080827-r/org.eclipse.jgit-5.13.0.202109080827-r.pom",
-      "hash": "sha256-qEF3Rc+i2V1qlxHpQT/KmE/FZmt2J7rRVAzyfUYq6BM="
+    "org.eclipse.jgit-5.13.5.202508271544-r.pom": {
+      "url": "https://plugins.gradle.org/m2/org/eclipse/jgit/org.eclipse.jgit/5.13.5.202508271544-r/org.eclipse.jgit-5.13.5.202508271544-r.pom",
+      "hash": "sha256-gU1+WzfzmLIEBFo8yibyHLkG+aTSJd81mIZvB/9mGFM="
     }
   },
-  "org.eclipse.jgit:org.eclipse.jgit-parent:5.13.0.202109080827-r": {
-    "org.eclipse.jgit-parent-5.13.0.202109080827-r.pom": {
-      "url": "https://plugins.gradle.org/m2/org/eclipse/jgit/org.eclipse.jgit-parent/5.13.0.202109080827-r/org.eclipse.jgit-parent-5.13.0.202109080827-r.pom",
-      "hash": "sha256-oY/X0MQf2o2PHEoktQAKhmRWFHokdG7mzEcx54ihje4="
+  "org.eclipse.jgit:org.eclipse.jgit-parent:5.13.5.202508271544-r": {
+    "org.eclipse.jgit-parent-5.13.5.202508271544-r.pom": {
+      "url": "https://plugins.gradle.org/m2/org/eclipse/jgit/org.eclipse.jgit-parent/5.13.5.202508271544-r/org.eclipse.jgit-parent-5.13.5.202508271544-r.pom",
+      "hash": "sha256-GNUj6cdVC2R4EbdYjacO2krRr/DioIx3cDa9eTDNzM8="
     }
   },
   "org.eclipse.platform:org.eclipse.osgi:3.23.200": {

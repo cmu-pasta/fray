@@ -118,6 +118,7 @@
             export CC="${pkgs.gcc}/bin/gcc"
             export CXX="${pkgs.gcc}/bin/g++"
             export JDK11="${pkgs.jdk11.home}"
+            export JDK21="${pkgs.jdk21.home}"
             export JDK25="${pkgs.javaPackages.compiler.openjdk25.home}"
             export JRE="${pkgs.javaPackages.compiler.openjdk25.home}"
             export JAVA_HOME="${pkgs.javaPackages.compiler.openjdk25.home}"
