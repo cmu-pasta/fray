@@ -108,7 +108,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             ),
             testDir,
             repetitions,
-            60,
+            600,
             scheduler,
             random,
             fullSchedule = false,
