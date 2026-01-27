@@ -80,7 +80,7 @@ class FrayTestRunExtension : InvocationInterceptor {
             ),
             testDir,
             frayTestAnnotation.iterations,
-            60,
+            600,
             scheduler,
             random,
             fullSchedule = false,

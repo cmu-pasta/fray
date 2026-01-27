@@ -67,6 +67,7 @@ class ClassConstructorInstrumenter(cv: ClassVisitor, val isJDK: Boolean) : Class
             "sun/security/validator/CADistrustPolicy",
             "sun/security/util/UntrustedCertificates",
             "sun/nio/cs/ThreadLocalCoders",
+            "java/util/zip",
             "java/net/IDN",
             "sun/security/ssl/ClientHandshakeContext",
             "java/security/cert/X509CertSelector",
