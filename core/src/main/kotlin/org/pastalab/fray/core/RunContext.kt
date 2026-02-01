@@ -230,6 +230,8 @@ class RunContext(val config: Configuration) {
     bugFound = null
     currentThreadId = t.id
     mainThreadId = t.id
+    // The common pool needs to be created at the beginning of the execution to avoid deadlock
+    forkJoinPool = ForkJoinPool()
     registeredThreads[t.id] = ThreadContext(t, registeredThreads.size, this, -1)
     registeredThreads[t.id]?.state = ThreadState.Runnable
     config.testStatusObservers.forEach { it.onExecutionStart() }
@@ -1311,12 +1313,7 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  fun getForkJoinPoolCommon() = verifyNoThrow {
-    if (forkJoinPool == null) {
-      forkJoinPool = ForkJoinPool()
-    }
-    forkJoinPool!!
-  }
+  fun getForkJoinPoolCommon() = verifyNoThrow { forkJoinPool!! }
 
   fun isManagedPoolThread(t: Thread): Boolean {
     return if (t is ForkJoinWorkerThread) {
