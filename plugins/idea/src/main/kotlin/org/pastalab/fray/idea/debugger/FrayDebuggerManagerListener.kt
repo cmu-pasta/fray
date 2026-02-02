@@ -20,9 +20,9 @@ class FrayDebuggerManagerListener : XDebuggerManagerListener {
           FRAY_DEBUGGER_DISABLED
         }
     if (debuggerMode == FRAY_DEBUGGER_DEBUG) {
-      debuggerManager = FrayDebuggerManager(debugProcess.session, false)
+      debuggerManager = FrayDebuggerManager(debugProcess, false)
     } else if (debuggerMode == FRAY_DEBUGGER_REPLAY) {
-      debuggerManager = FrayDebuggerManager(debugProcess.session, true)
+      debuggerManager = FrayDebuggerManager(debugProcess, true)
     }
     debuggerManager?.let {
       debugProcess.session.addSessionListener(it)
