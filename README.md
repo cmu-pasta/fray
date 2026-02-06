@@ -122,7 +122,7 @@ An extended version of the paper with detailed formalizations and proofs is avai
 
 
 Talks about Fray have been given at the following venues:
-- [SPLASH 2025 by Ao Li](https://youtu.be/zoE2w2hueYQ?t=20390) 
+- [SPLASH 2025 by Ao Li](https://www.youtube.com/watch?v=eFR81WHcRAo) 
 - [DC Systems Meetup by Rohan Padhye](https://www.youtube.com/watch?v=AX6Pqz8gSYY)
 
 # Acknowledgements
