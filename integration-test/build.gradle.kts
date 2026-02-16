@@ -27,19 +27,21 @@ tasks.test {
   executable(
       "${jdk.layout.buildDirectory.get().asFile}${File.separator}java-inst${File.separator}bin${File.separator}$javaExec"
   )
-  jvmArgs("-ea")
-  jvmArgs("-verify")
-  jvmArgs(
-      "-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix"
-  )
-  jvmArgs(
-      "-javaagent:${agent.layout.buildDirectory.get().asFile}${File.separator}libs${File.separator}" +
-          "${agent.base.archivesName.get()}-${agent.version}.jar"
-  )
-  jvmArgs("-Dfray.debug=true")
   dependsOn(":instrumentation:jdk:build")
   dependsOn(":instrumentation:agent:build")
   dependsOn(":jvmti:build")
+  doFirst {
+    jvmArgs("-ea")
+    jvmArgs("-verify")
+    jvmArgs(
+        "-agentpath:${jvmti.layout.buildDirectory.get().asFile}${File.separator}native-libs${File.separator}libjvmti.$soSuffix"
+    )
+    jvmArgs(
+        "-javaagent:${agent.layout.buildDirectory.get().asFile}${File.separator}libs${File.separator}" +
+            "${agent.base.archivesName.get()}-${agent.version}.jar"
+    )
+    jvmArgs("-Dfray.debug=true")
+  }
 }
 
 if (getCurrentOperatingSystem().toFamilyName() != "windows") {
