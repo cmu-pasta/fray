@@ -48,47 +48,49 @@ class FrayPlugin : Plugin<Project> {
         it.frayVersion.set(frayVersion)
         extension.jdkPath?.let(it.originalJdkPath::set)
       }
-      frayTest.configure {
-        it.executable(javaPath)
+      frayTest.configure { frayTestTask ->
+        frayTestTask.executable(javaPath)
         // Use the same classes and classpath as the built-in 'test' task (Gradle 9 requires this)
         val baseTest = target.tasks.named("test", Test::class.java).get()
-        it.testClassesDirs = baseTest.testClassesDirs
-        it.classpath = baseTest.classpath
+        frayTestTask.testClassesDirs = baseTest.testClassesDirs
+        frayTestTask.classpath = baseTest.classpath
         val testFramework = baseTest.testFramework.options
         when (testFramework) {
           is JUnitPlatformOptions ->
-              it.useJUnitPlatform { options ->
+              frayTestTask.useJUnitPlatform { options ->
                 options.includeTags(*testFramework.includeTags.toTypedArray())
                 options.excludeTags(*testFramework.excludeTags.toTypedArray())
                 options.includeEngines(*testFramework.includeEngines.toTypedArray())
                 options.excludeEngines(*testFramework.excludeEngines.toTypedArray())
               }
-          is JUnitOptions -> it.useJUnit()
-          is TestNGOptions -> it.useTestNG()
+          is JUnitOptions -> frayTestTask.useJUnit()
+          is TestNGOptions -> frayTestTask.useTestNG()
           else -> throw IllegalArgumentException("Unsupported test framework $testFramework")
         }
-        it.jvmArgs("-agentpath:$jvmtiPath")
-        it.jvmArgs(
-            "-javaagent:${it.project.configurations.detachedConfiguration(frayInstrumentation).resolve().first()}"
-        )
-        it.jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
-        it.jvmArgs("--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
-        it.jvmArgs("--add-opens", "java.base/java.util=ALL-UNNAMED")
-        it.jvmArgs("--add-opens", "java.base/java.io=ALL-UNNAMED")
-        it.jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
-        it.jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
+        frayTestTask.doFirst {
+          frayTestTask.jvmArgs("-agentpath:$jvmtiPath")
+          frayTestTask.jvmArgs(
+              "-javaagent:${frayTestTask.project.configurations.detachedConfiguration(frayInstrumentation).resolve().first()}"
+          )
+          frayTestTask.jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
+          frayTestTask.jvmArgs("--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
+          frayTestTask.jvmArgs("--add-opens", "java.base/java.util=ALL-UNNAMED")
+          frayTestTask.jvmArgs("--add-opens", "java.base/java.io=ALL-UNNAMED")
+          frayTestTask.jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
+          frayTestTask.jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
 
-        // Organize test results by test class and method
-        it.systemProperty("fray.organize.by.test", "true")
+          // Organize test results by test class and method
+          frayTestTask.systemProperty("fray.organize.by.test", "true")
 
-        // Set base directory for fray tests
-        it.jvmArgs("-Dfray.workDir=${Commons.getFrayReportDir(frayBuildFolder)}")
-        if (target.hasProperty("fray.debugger")) {
-          it.jvmArgs("-Dfray.debugger=${target.property("fray.debugger")}")
+          // Set base directory for fray tests
+          frayTestTask.jvmArgs("-Dfray.workDir=${Commons.getFrayReportDir(frayBuildFolder)}")
+          if (target.hasProperty("fray.debugger")) {
+            frayTestTask.jvmArgs("-Dfray.debugger=${target.property("fray.debugger")}")
+          }
         }
-        it.dependsOn(jlink)
+        frayTestTask.dependsOn(jlink)
         for (taskDependency in baseTest.dependsOn) {
-          it.dependsOn(taskDependency)
+          frayTestTask.dependsOn(taskDependency)
         }
       }
     }
