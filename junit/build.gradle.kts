@@ -23,7 +23,6 @@ dependencies {
 
 fun configureTestTask(testTask: Test) {
   testTask.useJUnitPlatform { includeEngines("junit-jupiter") }
-  testTask.dependsOn(":instrumentation:jdk:build")
   val instrumentationTask =
       evaluationDependsOn(":instrumentation:agent").tasks.named("shadowJar").get()
   val jdk = project(":instrumentation:jdk")

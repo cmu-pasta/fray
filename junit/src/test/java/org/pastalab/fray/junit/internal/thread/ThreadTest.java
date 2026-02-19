@@ -18,4 +18,21 @@ public class ThreadTest {
     t.start();
     t.join();
   }
+
+  @FrayTest
+  void testThreadStartTwice() throws InterruptedException {
+    Thread t =
+        new Thread(
+            () -> {
+              // No-op
+            });
+    t.start();
+    t.join();
+    // Starting a thread twice should throw an exception, but should not cause a deadlock.
+    try {
+      t.start();
+    } catch (IllegalThreadStateException e) {
+      // Expected exception, do nothing.
+    }
+  }
 }

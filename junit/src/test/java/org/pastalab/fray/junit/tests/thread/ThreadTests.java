@@ -17,6 +17,7 @@ public class ThreadTests {
         .execute()
         .allEvents()
         .assertThatEvents()
+        .haveExactly(1, event(test("testThreadStartTwice"), finishedSuccessfully()))
         .haveExactly(1, event(test("testThreadSetNameNoDeadlock"), finishedSuccessfully()));
   }
 }
