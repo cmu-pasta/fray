@@ -296,6 +296,12 @@ class RunContext(val config: Configuration) {
 
   fun threadStart(t: Thread) = verifyNoThrow {
     if (registeredThreads.containsKey(t.id)) {
+      val context = registeredThreads[t.id]!!
+      if (context.state != ThreadState.Created) {
+        // The thread is already started and calling start again will cause
+        // IllegalThreadStateException.
+        return@verifyNoThrow
+      }
       syncManager.createWait(t, 1)
     }
   }
