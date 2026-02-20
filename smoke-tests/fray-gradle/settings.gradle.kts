@@ -6,3 +6,5 @@ pluginManagement {
 }
 
 rootProject.name = "fray-gradle"
+
+include("junit4")
