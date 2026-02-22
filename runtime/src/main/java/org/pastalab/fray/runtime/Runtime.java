@@ -504,10 +504,6 @@ public class Runtime {
     LOCK_DELEGATE.onStampedLockSkip();
   }
 
-  public static void onRangerCondition(RangerCondition condition) {
-    LOCK_DELEGATE.onRangerCondition(condition);
-  }
-
   public static void onSelectorOpen() {
     NETWORK_DELEGATE.onSelectorOpen();
   }

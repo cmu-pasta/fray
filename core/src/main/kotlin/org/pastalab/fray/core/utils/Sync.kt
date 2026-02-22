@@ -1,50 +1,45 @@
 package org.pastalab.fray.core.utils
 
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.LockSupport
+
 // Simple sync structure to block a thread and wait
 // for signals.
 class Sync(val goal: Int) : Any() {
-  private var count = 0
-  //  private val signaler = mutableListOf<String>()
-  private var isBlocked = false
+  private val count = AtomicInteger(0)
+  @Volatile private var blockedThread: Thread? = null
+  @Volatile private var isBlockedFlag = false
 
-  @Synchronized fun isBlocked() = isBlocked
+  fun isBlocked() = isBlockedFlag
 
-  @Synchronized
   fun blockCheck() {
-    Utils.verifyOrReport(count != goal)
+    Utils.verifyOrReport(count.get() != goal)
     block()
   }
 
-  @Synchronized
   fun block() {
-    if (count == goal) {
-      count = 0
+    if (count.get() >= goal) {
+      count.set(0)
       return
     }
-    isBlocked = true
-    // We don't need synchronized here because
-    // it is already inside a synchronized method
-    while (count < goal) {
-      try {
-        (this as Object).wait()
-      } catch (e: InterruptedException) {
-        // We should not let Thread.interrupt
-        // to unblock this operation.
-      }
+    isBlockedFlag = true
+    blockedThread = Thread.currentThread()
+    while (count.get() < goal) {
+      LockSupport.park()
     }
-    isBlocked = false
-    // At this point no concurrency.
-    count = 0
-    //    signaler.clear()
+    blockedThread = null
+    isBlockedFlag = false
+    count.set(0)
   }
 
-  @Synchronized
   fun unblock() {
-    count += 1
-    //    signaler.add(Thread.currentThread().name)
-    Utils.verifyOrReport(count <= goal)
-    if (count == goal) {
-      (this as Object).notify()
+    val newCount = count.incrementAndGet()
+    Utils.verifyOrReport(newCount <= goal)
+    if (newCount >= goal) {
+      val t = blockedThread
+      if (t != null) {
+        LockSupport.unpark(t)
+      }
     }
   }
 }

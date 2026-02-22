@@ -15,7 +15,6 @@ import org.pastalab.fray.core.RunContext
 import org.pastalab.fray.core.concurrency.operations.BLOCKED_OPERATION_NOT_TIMED
 import org.pastalab.fray.runtime.Delegate
 import org.pastalab.fray.runtime.MemoryOpType
-import org.pastalab.fray.runtime.RangerCondition
 
 class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchronizer) :
     Delegate() {
@@ -796,9 +795,6 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
             return@runInFrayStartWithOriginBlock timeout
           },
       )
-
-  override fun onRangerCondition(condition: RangerCondition) =
-      synchronizer.runInFrayStartNoSkip { context.rangerCondition(condition) }
 
   override fun onNanoTime(): Long =
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
