@@ -102,6 +102,7 @@ configure(
                   ":plugins:gradle",
                   ":plugins:idea",
                   ":integration-test",
+                  ":benchmark",
               )
     },
 ) {
