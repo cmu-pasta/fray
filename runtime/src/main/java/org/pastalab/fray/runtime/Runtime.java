@@ -24,6 +24,15 @@ public class Runtime {
   public static Delegate LOCK_DELEGATE = new Delegate();
   public static NetworkDelegate NETWORK_DELEGATE = new NetworkDelegate();
 
+  private static Boolean DEBUG_MODE = null;
+
+  public static boolean getDebugMode() {
+    if (DEBUG_MODE == null) {
+      DEBUG_MODE = Boolean.parseBoolean(System.getProperty("fray.debug", "false"));
+    }
+    return DEBUG_MODE;
+  }
+
   public static void resetAllDelegate() {
     LOCK_DELEGATE = new Delegate();
     NETWORK_DELEGATE = new NetworkDelegate();
@@ -502,10 +511,6 @@ public class Runtime {
 
   public static void onStampedLockSkip() {
     LOCK_DELEGATE.onStampedLockSkip();
-  }
-
-  public static void onRangerCondition(RangerCondition condition) {
-    LOCK_DELEGATE.onRangerCondition(condition);
   }
 
   public static void onSelectorOpen() {

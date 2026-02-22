@@ -48,6 +48,7 @@ fun configureTestTask(testTask: Test) {
     testTask.jvmArgs("--add-opens", "java.base/java.io=ALL-UNNAMED")
     testTask.jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
     testTask.jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
+    testTask.jvmArgs("-Dfray.debug=true")
   }
 }
 

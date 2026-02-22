@@ -77,7 +77,7 @@ class ProactiveNetworkDelegate(
             controller.socketChannelClose(channel)
           }
           else -> {
-            verifyOrReport(false) {
+            verifyOrReport({ false }) {
               "Unknown channel type: ${channel::class.java.name}. Expected ServerSocketChannel or SocketChannel."
             }
             Result.success(Unit)

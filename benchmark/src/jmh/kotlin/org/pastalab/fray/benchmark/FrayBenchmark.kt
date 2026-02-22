@@ -44,6 +44,7 @@ open class FrayBenchmark {
       "MonitorContention",
       "CountDownLatchBarrier",
       "ThreadCreation",
+      "VolatileContention",
   )
   var workload: String = "LockContention"
 

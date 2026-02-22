@@ -55,7 +55,7 @@ class SURWScheduler(
         .forEach {
           createdThreads.add(it.index)
           val operation = it.pendingOperation
-          verifyOrReport(operation is ThreadStartOperation)
+          verifyOrReport { operation is ThreadStartOperation }
           val parentId = (operation as ThreadStartOperation).parentId
           if (parentId == -1) return@forEach
           childThreads.getOrPut(parentId) { mutableSetOf() }.add(it.index)
