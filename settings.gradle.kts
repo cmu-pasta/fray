@@ -29,6 +29,8 @@ include("instrumentation:jdk")
 
 include("integration-test")
 
+include("benchmark")
+
 include("rmi")
 
 include("mcp")

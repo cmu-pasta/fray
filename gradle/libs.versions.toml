@@ -20,6 +20,8 @@ junitJupiter = "5.11.3"
 junitPlatform = "1.11.3"
 junit4 = "4.13.2"
 randomizedTesting = "2.8.2"
+jmh = "1.37"
+jmhPlugin = "0.7.3"
 asm = "9.9"
 classgraph = "4.8.177"
 ktor = "3.3.2"
@@ -66,6 +68,8 @@ maven-file-management = { module = "org.apache.maven.shared:file-management", ve
 maven-surefire-api = { module = "org.apache.maven.surefire:surefire-api", version.ref = "mavenSurefire" }
 maven-core = { module = "org.apache.maven:maven-core", version.ref = "mavenCore" }
 maven-plugin-annotations = { module = "org.apache.maven.plugin-tools:maven-plugin-annotations", version.ref = "mavenPluginAnnotations" }
+jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
+jmh-generator-annprocess = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -80,3 +84,4 @@ intellij-platform = { id = "org.jetbrains.intellij.platform", version.ref = "int
 jetbrains-changelog = { id = "org.jetbrains.changelog", version.ref = "jetbrainsChangelog" }
 maven-plugin-development = { id = "org.gradlex.maven-plugin-development", version.ref = "mavenPluginDevelopment" }
 cmake = { id = "io.github.tomtzook.gradle-cmake", version.ref = "cmake" }
+jmh = { id = "me.champeau.jmh", version.ref = "jmhPlugin" }
