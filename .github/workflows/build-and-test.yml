@@ -28,11 +28,11 @@ jobs:
             25
           cache: 'gradle'
       - name: Build fray and run tests
-        run: ./gradlew build
+        run: ./gradlew build --no-daemon
       - name: publish fray to maven local
-        run: ./gradlew publishToMavenLocal
+        run: ./gradlew publishToMavenLocal --no-daemon
       - name: run gradle smoke tests
-        run: cd ./smoke-tests/fray-gradle && ./gradlew build --stacktrace
+        run: cd ./smoke-tests/fray-gradle && ./gradlew build --stacktrace --no-daemon
       - name: run maven smoke tests
         run: cd ./smoke-tests/fray-maven && ./mvnw -X verify
       - name: Publish Test Report
