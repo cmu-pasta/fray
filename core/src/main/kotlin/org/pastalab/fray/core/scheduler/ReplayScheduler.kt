@@ -18,11 +18,11 @@ class ReplayScheduler(val recording: List<ScheduleRecording>) : Scheduler {
     val rec = recording[index]
     val thread = threads.firstOrNull { it.index == rec.scheduled }
     verifyOrReport(
-        thread != null,
+        { thread != null },
         "The scheduled thread ${rec.scheduled} is not in the current thread list.",
     )
     index++
-    return thread
+    return thread!!
   }
 
   override fun nextIteration(randomness: Randomness): Scheduler {

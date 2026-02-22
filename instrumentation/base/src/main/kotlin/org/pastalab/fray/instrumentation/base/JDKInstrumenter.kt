@@ -12,13 +12,13 @@ import org.objectweb.asm.commons.ModuleTargetAttribute
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.ModuleExportNode
 import org.objectweb.asm.util.CheckClassAdapter
-import org.pastalab.fray.instrumentation.base.Configs.DEBUG_MODE
 import org.pastalab.fray.instrumentation.base.Utils.writeClassFile
 import org.pastalab.fray.instrumentation.base.visitors.*
+import org.pastalab.fray.runtime.Runtime
 
 fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
   val byteArray = inputStream.readBytes()
-  if (DEBUG_MODE) {
+  if (Runtime.getDebugMode()) {
     writeClassFile(path, byteArray, false)
   }
   val shouldSkipChecking =
@@ -82,7 +82,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
       cn.accept(CheckClassAdapter(classWriter))
     }
     val out = classWriter.toByteArray()
-    if (DEBUG_MODE) {
+    if (Runtime.getDebugMode()) {
       writeClassFile(path, out, true)
     }
     return out
@@ -105,7 +105,7 @@ fun instrumentModuleInfo(inputStream: InputStream, packages: List<String>): Byte
   val cw = ClassWriter(0)
   cn.accept(cw)
   val out = cw.toByteArray()
-  if (DEBUG_MODE) {
+  if (Runtime.getDebugMode()) {
     writeClassFile("java.base.module-info.class", out, true)
   }
   return out

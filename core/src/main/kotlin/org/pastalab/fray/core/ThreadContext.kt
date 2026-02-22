@@ -1,10 +1,10 @@
 package org.pastalab.fray.core
 
+import java.util.concurrent.locks.LockSupport
 import org.pastalab.fray.core.concurrency.context.Acquirable
 import org.pastalab.fray.core.concurrency.operations.BlockedOperation
 import org.pastalab.fray.core.concurrency.operations.Operation
 import org.pastalab.fray.core.concurrency.operations.ThreadStartOperation
-import org.pastalab.fray.core.utils.Sync
 import org.pastalab.fray.core.utils.isFrayInternals
 import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
@@ -18,17 +18,30 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext, par
   val acquiredResources = mutableSetOf<Acquirable>()
 
   var pendingOperation: Operation = ThreadStartOperation(parentId)
-  val sync = Sync(1)
+  @Volatile var blocked = false
+  @Volatile private var signaled = false
 
   fun block() {
-    sync.block()
+    if (signaled) {
+      signaled = false
+      return
+    }
+    blocked = true
+    while (!signaled) {
+      LockSupport.park()
+    }
+    blocked = false
+    signaled = false
   }
 
   fun schedulable() = state == ThreadState.Runnable || state == ThreadState.Running
 
   fun unblock() {
-    sync.unblock()
+    signaled = true
+    LockSupport.unpark(thread)
   }
+
+  fun isBlocked() = blocked
 
   fun checkInterrupt() {
     if (interruptSignaled) {

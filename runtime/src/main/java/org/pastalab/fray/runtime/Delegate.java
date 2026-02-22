@@ -301,8 +301,6 @@ public class Delegate {
 
   public void onStampedLockSkip() {}
 
-  public void onRangerCondition(RangerCondition condition) {}
-
   public long onNanoTime() {
     return System.nanoTime();
   }

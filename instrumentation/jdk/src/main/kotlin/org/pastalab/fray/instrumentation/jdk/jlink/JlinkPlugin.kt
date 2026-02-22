@@ -8,10 +8,10 @@ import jdk.tools.jlink.plugin.Plugin
 import jdk.tools.jlink.plugin.ResourcePool
 import jdk.tools.jlink.plugin.ResourcePoolBuilder
 import jdk.tools.jlink.plugin.ResourcePoolEntry
-import org.pastalab.fray.instrumentation.base.Configs.DEBUG_MODE
 import org.pastalab.fray.instrumentation.base.Utils.writeClassFile
 import org.pastalab.fray.instrumentation.base.instrumentClass
 import org.pastalab.fray.instrumentation.base.instrumentModuleInfo
+import org.pastalab.fray.runtime.Runtime
 
 class JlinkPlugin : Plugin {
   override fun getName(): String {
@@ -54,7 +54,7 @@ class JlinkPlugin : Plugin {
               val packages = HashSet<String>()
               for (re in runtime.entries()) {
                 if (re.name.contains("module-info.class") || !re.name.endsWith(".class")) continue
-                if (DEBUG_MODE) {
+                if (Runtime.getDebugMode()) {
                   writeClassFile(re.name, runtime.getInputStream(re).readAllBytes(), false)
                 }
                 output.add(
