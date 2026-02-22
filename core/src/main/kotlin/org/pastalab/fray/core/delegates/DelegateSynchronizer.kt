@@ -16,6 +16,10 @@ class DelegateSynchronizer(val context: RunContext) {
   val skipSchedulingStackTrace: ThreadLocal<MutableList<String>> =
       ThreadLocal.withInitial { mutableListOf() }
 
+  companion object {
+    val debugSkipTraces: Boolean = System.getProperty("fray.debugSkipTraces", "false").toBoolean()
+  }
+
   fun checkEntered(): Boolean {
     if (entered.get()) {
       return true
@@ -137,11 +141,15 @@ class DelegateSynchronizer(val context: RunContext) {
       return
     }
     onSkipRecursion.set(true)
-    skipPrimitiveStackTrace.get().add(signature)
+    if (debugSkipTraces) {
+      skipPrimitiveStackTrace.get().add(signature)
+    }
     skipPrimitiveEntered.set(1 + skipPrimitiveEntered.get())
 
     if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
-      skipPrimitiveStackTrace.get().removeLast()
+      if (debugSkipTraces) {
+        skipPrimitiveStackTrace.get().removeLast()
+      }
       skipPrimitiveEntered.set(skipPrimitiveEntered.get() - 1)
     }
     onSkipRecursion.set(false)
@@ -156,9 +164,11 @@ class DelegateSynchronizer(val context: RunContext) {
       if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
         return false
       }
-      Utils.verifyOrReport(!skipPrimitiveStackTrace.get().isEmpty())
-      val last = skipPrimitiveStackTrace.get().removeLast()
-      Utils.verifyOrReport(last == signature)
+      if (debugSkipTraces) {
+        Utils.verifyOrReport(!skipPrimitiveStackTrace.get().isEmpty())
+        val last = skipPrimitiveStackTrace.get().removeLast()
+        Utils.verifyOrReport(last == signature)
+      }
       skipPrimitiveEntered.set(skipPrimitiveEntered.get() - 1)
       return true
     } finally {
@@ -168,16 +178,20 @@ class DelegateSynchronizer(val context: RunContext) {
 
   fun onSkipScheduling(signature: String) = runInFrayStartNoSkip {
     skipSchedulingEntered.set(1 + skipSchedulingEntered.get())
-    skipSchedulingStackTrace.get().add(signature)
+    if (debugSkipTraces) {
+      skipSchedulingStackTrace.get().add(signature)
+    }
     val threadContext = context.registeredThreads[Thread.currentThread().id]!!
     context.prioritizedThreads.add(threadContext)
     return@runInFrayStartNoSkip Result.success(Unit)
   }
 
   fun onSkipSchedulingDone(signature: String) = runInFrayDoneNoSkip {
-    Utils.verifyOrReport(!skipSchedulingStackTrace.get().isEmpty())
-    val last = skipSchedulingStackTrace.get().removeLast()
-    Utils.verifyOrReport(last == signature)
+    if (debugSkipTraces) {
+      Utils.verifyOrReport(!skipSchedulingStackTrace.get().isEmpty())
+      val last = skipSchedulingStackTrace.get().removeLast()
+      Utils.verifyOrReport(last == signature)
+    }
     skipSchedulingEntered.set(skipSchedulingEntered.get() - 1)
     if (skipSchedulingEntered.get() == 0) {
       val threadContext = context.registeredThreads[Thread.currentThread().id]!!
