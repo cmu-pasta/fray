@@ -12,7 +12,7 @@ class ParkBlocked(blockedUntil: Long, val threadContext: ThreadContext) :
         blockedUntil,
     ) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
-    verifyOrReport(tid == threadContext.thread.id) { "Thread id mismatch" }
+    verifyOrReport({ tid == threadContext.thread.id }) { "Thread id mismatch" }
     threadContext.pendingOperation = ThreadResumeOperation(type != InterruptionType.TIMEOUT)
     threadContext.state = ThreadState.Runnable
     return null

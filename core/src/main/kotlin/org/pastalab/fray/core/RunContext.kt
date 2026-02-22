@@ -65,12 +65,12 @@ class RunContext(val config: Configuration) {
   val prioritizedThreads = mutableSetOf<ThreadContext>()
   var mainExiting = false
   private val semaphoreManager = ReferencedContextManager {
-    verifyOrReport(it is Semaphore) { "SemaphoreManager can only manage Semaphore objects" }
+    verifyOrReport({ it is Semaphore }) { "SemaphoreManager can only manage Semaphore objects" }
     SemaphoreContext(0, it as Semaphore)
   }
   private val volatileManager = VolatileManager(true)
   val latchManager = ReferencedContextManager {
-    verifyOrReport(it is CountDownLatch) { "CDL Manager only accepts CountDownLatch objects" }
+    verifyOrReport({ it is CountDownLatch }) { "CDL Manager only accepts CountDownLatch objects" }
     CountDownLatchContext(it as CountDownLatch, syncManager)
   }
   val nioContextManager = NioContextManager()
@@ -95,14 +95,14 @@ class RunContext(val config: Configuration) {
   private val signalManager =
       ReferencedContextManager<SignalContext> {
         val lockContext = lockManager.getContext(it)
-        verifyOrReport(it !is Condition)
+        verifyOrReport { it !is Condition }
         val obj = ObjectNotifyContext(lockContext, it)
         lockContext.signalContexts.add(obj)
         obj
       }
   private val stampedLockManager =
       ReferencedContextManager<StampedLockContext> {
-        verifyOrReport(it is StampedLock) {
+        verifyOrReport({ it is StampedLock }) {
           "StampedLockManager can only manage StampedLock objects"
         }
         StampedLockContext(it as StampedLock)
@@ -246,7 +246,7 @@ class RunContext(val config: Configuration) {
   }
 
   fun done() {
-    verifyOrReport(syncManager.synchronizationPoints.isEmpty())
+    verifyOrReport { syncManager.synchronizationPoints.isEmpty() }
     lockManager.done()
     signalManager.done()
     stampedLockManager.done()
@@ -473,14 +473,14 @@ class RunContext(val config: Configuration) {
 
     checkDeadlock {
       signalContext.unblockThread(t, InterruptionType.FORCE)
-      verifyOrReport(
+      val locked =
           lockContext.lock(
               context,
               shouldBlock = false,
               lockBecauseOfWait = true,
               canInterrupt = false,
           )
-      )
+      verifyOrReport { locked }
       syncManager.removeWait(signalContext.getSyncObject())
       context.pendingOperation = ThreadResumeOperation(true)
       context.state = ThreadState.Running
@@ -540,16 +540,16 @@ class RunContext(val config: Configuration) {
       }
     }
     // If a thread is enabled, the lock must be available.
-    verifyOrReport(
+    val locked =
         signalContext.lockContext.lock(
             context,
             shouldBlock = false,
             lockBecauseOfWait = true,
             canInterrupt = false,
         )
-    )
+    verifyOrReport { locked }
     val pendingOperation = context.pendingOperation
-    verifyOrReport(pendingOperation is ThreadResumeOperation)
+    verifyOrReport { pendingOperation is ThreadResumeOperation }
     if (canInterrupt) {
       context.checkInterrupt()
     }
@@ -683,7 +683,7 @@ class RunContext(val config: Configuration) {
         context.checkInterrupt()
       }
       val pendingOperation = context.pendingOperation
-      verifyOrReport(pendingOperation is ThreadResumeOperation)
+      verifyOrReport { pendingOperation is ThreadResumeOperation }
       if (
           !(pendingOperation as ThreadResumeOperation).noTimeout &&
               blockedUntil != BLOCKED_OPERATION_NOT_TIMED
@@ -749,7 +749,7 @@ class RunContext(val config: Configuration) {
     if (unlockBecauseOfWait) {
       waitingThreads -= 1
     }
-    verifyOrReport(waitingThreads >= 0)
+    verifyOrReport { waitingThreads >= 0 }
     if (waitingThreads > 0) {
       if (sendNotifyAll) {
         lockContext.signalContexts.forEach { it.sendSignalToObject() }
@@ -757,7 +757,7 @@ class RunContext(val config: Configuration) {
       syncManager.createWait(lockContext, waitingThreads)
     } else {
       val id = System.identityHashCode(lockContext)
-      verifyOrReport(!syncManager.synchronizationPoints.contains(id))
+      verifyOrReport { !syncManager.synchronizationPoints.contains(id) }
     }
   }
 
@@ -1007,8 +1007,8 @@ class RunContext(val config: Configuration) {
       context.block()
     }
     val pendingOperation = context.pendingOperation
-    verifyOrReport(pendingOperation is ThreadResumeOperation)
-    return@mustBeCaught pendingOperation.noTimeout
+    verifyOrReport { pendingOperation is ThreadResumeOperation }
+    return@mustBeCaught (pendingOperation as ThreadResumeOperation).noTimeout
   }
 
   fun latchCountDown(latch: CountDownLatch) = verifyNoThrow {
@@ -1080,7 +1080,7 @@ class RunContext(val config: Configuration) {
     while (iterator.hasNext()) {
       val thread = iterator.next()
       val context = registeredThreads[thread]!!
-      verifyOrReport(context.state == ThreadState.Blocked)
+      verifyOrReport { context.state == ThreadState.Blocked }
       context.pendingOperation = ThreadResumeOperation(true)
       context.state = ThreadState.Runnable
       reactiveBlockedThreadQueue.remove(thread)
@@ -1179,13 +1179,13 @@ class RunContext(val config: Configuration) {
     // Our current design makes sure that reschedule is only called
     // by scheduled thread.
     val currentThread = registeredThreads[currentThreadId]!!
-    verifyOrReport(
-        Thread.currentThread() is HelperThread ||
-            currentThreadId == Thread.currentThread().id ||
-            currentThread.state == ThreadState.Runnable ||
-            currentThread.state == ThreadState.Completed,
-    )
-    verifyOrReport(registeredThreads.none { it.value.state == ThreadState.Running })
+    verifyOrReport {
+      Thread.currentThread() is HelperThread ||
+          currentThreadId == Thread.currentThread().id ||
+          currentThread.state == ThreadState.Runnable ||
+          currentThread.state == ThreadState.Completed
+    }
+    verifyOrReport { registeredThreads.none { it.value.state == ThreadState.Running } }
 
     if (
         (!currentThread.isExiting) &&

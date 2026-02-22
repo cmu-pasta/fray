@@ -34,7 +34,7 @@ class CountDownLatchContext(latch: CountDownLatch, val syncManager: Synchronizat
       latchWaiters[Thread.currentThread().id] = LockWaiter(canInterrupt, thread)
       return true
     }
-    verifyOrReport(count == 0L)
+    verifyOrReport { count == 0L }
     return false
   }
 
@@ -81,10 +81,10 @@ class CountDownLatchContext(latch: CountDownLatch, val syncManager: Synchronizat
       return false
     }
     val pendingOperation = lockWaiter.thread.pendingOperation
-    verifyOrReport(pendingOperation is CountDownLatchAwaitBlocking)
+    verifyOrReport { pendingOperation is CountDownLatchAwaitBlocking }
     lockWaiter.thread.pendingOperation = ThreadResumeOperation(type != InterruptionType.TIMEOUT)
     lockWaiter.thread.state = ThreadState.Runnable
     latchWaiters.remove(tid)
-    return !pendingOperation.isTimed
+    return !(pendingOperation as CountDownLatchAwaitBlocking).isTimed
   }
 }

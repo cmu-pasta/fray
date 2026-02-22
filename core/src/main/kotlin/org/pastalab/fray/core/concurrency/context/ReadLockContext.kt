@@ -17,7 +17,7 @@ class ReadLockContext(lock: Lock) : LockContext(lock) {
   override val signalContexts = mutableSetOf<SignalContext>()
 
   override fun addWakingThread(t: ThreadContext) {
-    verifyOrReport(false) { "Read lock does not have waking threads" }
+    verifyOrReport({ false }) { "Read lock does not have waking threads" }
   }
 
   override fun canLock(tid: Long): Boolean {
@@ -32,7 +32,7 @@ class ReadLockContext(lock: Lock) : LockContext(lock) {
       lockBecauseOfWait: Boolean,
       canInterrupt: Boolean,
   ): Boolean {
-    verifyOrReport(!lockBecauseOfWait) { "Read lock does not have condition objects" }
+    verifyOrReport({ !lockBecauseOfWait }) { "Read lock does not have condition objects" }
     val tid = lockThread.thread.id
     if (!writeLockContext.canLockInternal(tid)) {
       if (canInterrupt) {
@@ -58,7 +58,7 @@ class ReadLockContext(lock: Lock) : LockContext(lock) {
     if (!lockHolders.contains(tid)) {
       return false
     }
-    verifyOrReport(!unlockBecauseOfWait) // Read lock does not have `Condition`
+    verifyOrReport { !unlockBecauseOfWait } // Read lock does not have `Condition`
     lockTimes[tid] = lockTimes[tid]!! - 1
     if (lockTimes[tid] == 0) {
       lockTimes.remove(tid)

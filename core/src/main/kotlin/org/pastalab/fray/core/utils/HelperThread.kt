@@ -28,7 +28,7 @@ class HelperThread : Thread("fray-helper-thread") {
 
   fun submit(runnable: Runnable) {
     synchronized(this) {
-      Utils.verifyOrReport(currentRunnable == null, "Helper thread is already running a job")
+      Utils.verifyOrReport({ currentRunnable == null }, "Helper thread is already running a job")
       currentRunnable = runnable
       (this as Object).notify()
     }

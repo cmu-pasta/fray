@@ -4,7 +4,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.writeBytes
-import org.pastalab.fray.instrumentation.base.Configs.DEBUG_MODE
+import org.pastalab.fray.runtime.Runtime
 
 object Utils {
   val ORIGIN_CLASS_LOCATION: Path
@@ -66,7 +66,7 @@ object Utils {
     ORIGIN_CLASS_LOCATION.createDirectories()
     INSTRUMENTED_CLASS_LOCATION = location.resolve("instrumented")
     INSTRUMENTED_CLASS_LOCATION.createDirectories()
-    if (DEBUG_MODE) {
+    if (Runtime.getDebugMode()) {
       println("Debug mode enabled, classes will be written to: $location")
     }
   }

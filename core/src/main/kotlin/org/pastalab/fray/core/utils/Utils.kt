@@ -1,8 +1,6 @@
 package org.pastalab.fray.core.utils
 
 import java.io.File
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 import kotlin.math.ceil
 import kotlin.math.ln
 import kotlinx.serialization.json.Json
@@ -20,22 +18,17 @@ object Utils {
     return ceil(ln(1 - rand) / ln(1 - p)).toInt()
   }
 
-  @OptIn(ExperimentalContracts::class)
-  fun verifyOrReport(condition: Boolean) {
-    contract { returns() implies condition }
-    verifyOrReport(condition, "Internal error")
+  fun verifyOrReport(condition: () -> Boolean) {
+    verifyOrReport(condition) { "Internal error" }
   }
 
-  @OptIn(ExperimentalContracts::class)
-  fun verifyOrReport(condition: Boolean, message: String) {
-    contract { returns() implies condition }
+  fun verifyOrReport(condition: () -> Boolean, message: String) {
     verifyOrReport(condition) { message }
   }
 
-  @OptIn(ExperimentalContracts::class)
-  fun verifyOrReport(condition: Boolean, message: () -> String) {
-    contract { returns() implies condition }
-    if (!condition) {
+  fun verifyOrReport(condition: () -> Boolean, message: () -> String) {
+    if (!Runtime.getDebugMode()) return
+    if (!condition()) {
       val e = FrayInternalError(message())
       Runtime.onReportError(e)
     }
@@ -43,7 +36,7 @@ object Utils {
 
   internal fun <T> verifyNoThrow(block: () -> T): Result<T> {
     val result = mustBeCaught { block() }
-    verifyOrReport(result.isSuccess || result.exceptionOrNull() is TargetTerminateException) {
+    verifyOrReport({ result.isSuccess || result.exceptionOrNull() is TargetTerminateException }) {
       val exception = result.exceptionOrNull()!!
       "Expected no exception, but got: $exception, stack trace: ${exception.stackTrace.joinToString("\n")}"
     }
@@ -54,7 +47,9 @@ object Utils {
     val result = runCatching { block() }
     if (result.isFailure) {
       val exception = result.exceptionOrNull()
-      verifyOrReport(exception is InterruptedException || exception is TargetTerminateException) {
+      verifyOrReport({
+        exception is InterruptedException || exception is TargetTerminateException
+      }) {
         "Expected InterruptedException or TargetTerminateException, but got: $exception, stack trace: ${exception?.stackTraceToString()}"
       }
     }

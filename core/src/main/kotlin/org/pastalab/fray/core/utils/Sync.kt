@@ -13,7 +13,7 @@ class Sync(val goal: Int) : Any() {
   fun isBlocked() = isBlockedFlag
 
   fun blockCheck() {
-    Utils.verifyOrReport(count.get() != goal)
+    Utils.verifyOrReport { count.get() != goal }
     block()
   }
 
@@ -34,7 +34,7 @@ class Sync(val goal: Int) : Any() {
 
   fun unblock() {
     val newCount = count.incrementAndGet()
-    Utils.verifyOrReport(newCount <= goal)
+    Utils.verifyOrReport { newCount <= goal }
     if (newCount >= goal) {
       val t = blockedThread
       if (t != null) {

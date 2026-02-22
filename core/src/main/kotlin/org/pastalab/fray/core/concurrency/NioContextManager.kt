@@ -15,11 +15,11 @@ import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
 class NioContextManager {
   private val selectorContextManager = ReferencedContextManager {
-    verifyOrReport(it is Selector) { "Selector expected" }
-    SelectorContext(it)
+    verifyOrReport({ it is Selector }) { "Selector expected" }
+    SelectorContext(it as Selector)
   }
   private val serverSocketChannelContextManager = ReferencedContextManager {
-    verifyOrReport(it is ServerSocketChannel) { "ServerSocketChannel expected" }
+    verifyOrReport({ it is ServerSocketChannel }) { "ServerSocketChannel expected" }
     val serverSocketChannel = it as ServerSocketChannel
     val socketAddress = serverSocketChannel.localAddress
     val context = ServerSocketChannelContext(it)
@@ -30,7 +30,7 @@ class NioContextManager {
     context
   }
   private val socketChannelContextManager = ReferencedContextManager {
-    verifyOrReport(it is SocketChannel) { "SocketChannel expected" }
+    verifyOrReport({ it is SocketChannel }) { "SocketChannel expected" }
     val socketChannel = it as SocketChannel
     val context = SocketChannelContext(socketChannel)
     context
@@ -113,7 +113,7 @@ class NioContextManager {
     val port = (channel.localAddress as? InetSocketAddress?)?.port ?: return
     context.remotePort = (channel.remoteAddress as? InetSocketAddress)?.port ?: SERVER_PORT_UNDEF
     context.localPort = port
-    verifyOrReport(!portToConnectedSockets.containsKey(port)) {
+    verifyOrReport({ !portToConnectedSockets.containsKey(port) }) {
       "Socket channel is already connected to port $port"
     }
     portToConnectedSockets[port] = context
@@ -122,13 +122,13 @@ class NioContextManager {
   fun serverSocketChannelBind(channel: ServerSocketChannel) {
     val context = serverSocketChannelContextManager.getContext(channel)
     val newPort = (channel.localAddress as? InetSocketAddress?)?.port ?: -1
-    verifyOrReport(context.port != SERVER_PORT_UNDEF) {
+    verifyOrReport({ context.port != SERVER_PORT_UNDEF }) {
       "Server socket channel is already bound to port ${context.port}"
     }
     if (newPort == context.port) {
       return
     }
-    verifyOrReport(!portToServerSocketChannelContext.containsKey(newPort)) {
+    verifyOrReport({ !portToServerSocketChannelContext.containsKey(newPort) }) {
       "Port $newPort is already bound to another server socket channel"
     }
     context.port = newPort

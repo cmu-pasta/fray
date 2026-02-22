@@ -3,6 +3,7 @@ package org.pastalab.fray.core.delegates
 import org.pastalab.fray.core.RunContext
 import org.pastalab.fray.core.utils.HelperThread
 import org.pastalab.fray.core.utils.Utils
+import org.pastalab.fray.runtime.Runtime
 
 class DelegateSynchronizer(val context: RunContext) {
   val entered: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
@@ -15,10 +16,6 @@ class DelegateSynchronizer(val context: RunContext) {
   val skipSchedulingEntered: ThreadLocal<Int> = ThreadLocal.withInitial { 0 }
   val skipSchedulingStackTrace: ThreadLocal<MutableList<String>> =
       ThreadLocal.withInitial { mutableListOf() }
-
-  companion object {
-    val debugSkipTraces: Boolean = System.getProperty("fray.debugSkipTraces", "false").toBoolean()
-  }
 
   fun checkEntered(): Boolean {
     if (entered.get()) {
@@ -141,13 +138,13 @@ class DelegateSynchronizer(val context: RunContext) {
       return
     }
     onSkipRecursion.set(true)
-    if (debugSkipTraces) {
+    if (Runtime.getDebugMode()) {
       skipPrimitiveStackTrace.get().add(signature)
     }
     skipPrimitiveEntered.set(1 + skipPrimitiveEntered.get())
 
     if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
-      if (debugSkipTraces) {
+      if (Runtime.getDebugMode()) {
         skipPrimitiveStackTrace.get().removeLast()
       }
       skipPrimitiveEntered.set(skipPrimitiveEntered.get() - 1)
@@ -164,10 +161,10 @@ class DelegateSynchronizer(val context: RunContext) {
       if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
         return false
       }
-      if (debugSkipTraces) {
-        Utils.verifyOrReport(!skipPrimitiveStackTrace.get().isEmpty())
+      if (Runtime.getDebugMode()) {
+        Utils.verifyOrReport { !skipPrimitiveStackTrace.get().isEmpty() }
         val last = skipPrimitiveStackTrace.get().removeLast()
-        Utils.verifyOrReport(last == signature)
+        Utils.verifyOrReport { last == signature }
       }
       skipPrimitiveEntered.set(skipPrimitiveEntered.get() - 1)
       return true
@@ -178,7 +175,7 @@ class DelegateSynchronizer(val context: RunContext) {
 
   fun onSkipScheduling(signature: String) = runInFrayStartNoSkip {
     skipSchedulingEntered.set(1 + skipSchedulingEntered.get())
-    if (debugSkipTraces) {
+    if (Runtime.getDebugMode()) {
       skipSchedulingStackTrace.get().add(signature)
     }
     val threadContext = context.registeredThreads[Thread.currentThread().id]!!
@@ -187,10 +184,10 @@ class DelegateSynchronizer(val context: RunContext) {
   }
 
   fun onSkipSchedulingDone(signature: String) = runInFrayDoneNoSkip {
-    if (debugSkipTraces) {
-      Utils.verifyOrReport(!skipSchedulingStackTrace.get().isEmpty())
+    if (Runtime.getDebugMode()) {
+      Utils.verifyOrReport { !skipSchedulingStackTrace.get().isEmpty() }
       val last = skipSchedulingStackTrace.get().removeLast()
-      Utils.verifyOrReport(last == signature)
+      Utils.verifyOrReport { last == signature }
     }
     skipSchedulingEntered.set(skipSchedulingEntered.get() - 1)
     if (skipSchedulingEntered.get() == 0) {

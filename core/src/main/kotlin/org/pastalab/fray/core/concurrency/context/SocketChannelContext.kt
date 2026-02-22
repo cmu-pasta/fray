@@ -39,7 +39,7 @@ open class SocketChannelContext(socketChannel: SocketChannel?) : SelectableChann
 
   fun readDone(bytesRead: Long) {
     if (pendingBytes == -1L) return
-    verifyOrReport(pendingBytes >= bytesRead) {
+    verifyOrReport({ pendingBytes >= bytesRead }) {
       "Pending bytes $pendingBytes is less than bytes read $bytesRead"
     }
     pendingBytes -= bytesRead

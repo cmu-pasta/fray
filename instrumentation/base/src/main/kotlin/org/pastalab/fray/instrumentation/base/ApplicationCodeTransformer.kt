@@ -50,7 +50,7 @@ class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
     }
     try {
       Runtime.onSkipPrimitive("instrumentation")
-      if (Configs.DEBUG_MODE) {
+      if (Runtime.getDebugMode()) {
         Utils.writeClassFile(className, classfileBuffer, false)
       }
       val classReader = ClassReader(classfileBuffer)
@@ -89,7 +89,7 @@ class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
         cn.accept(classWriter)
       }
       val out = classWriter.toByteArray()
-      if (Configs.DEBUG_MODE) {
+      if (Runtime.getDebugMode()) {
         Utils.writeClassFile(className, out, true)
       }
       instrumentedClassCache[classIdentifier] = out
