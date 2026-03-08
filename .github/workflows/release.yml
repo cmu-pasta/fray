@@ -57,18 +57,18 @@ jobs:
         run: mkdir -p ./build/jreleaser
       - name: Create stage deploy (MacOs)
         if: runner.os == 'macOS' 
-        run: ./gradlew :jvmti:publish -Pversion=$VERSION
+        run: ./gradlew :jvmti:publish -Pversion=$VERSION --no-daemon
       - name: Create stage deploy (Windows)
         if: runner.os == 'Windows' 
         shell: bash
-        run: ./gradlew :jvmti:publish -Pversion=$VERSION
+        run: ./gradlew :jvmti:publish -Pversion=$VERSION --no-daemon
       - name: Create stage deploy (Linux)
         if: runner.os == 'Linux'
-        run: ./gradlew publish -Pversion=$VERSION
+        run: ./gradlew publish -Pversion=$VERSION --no-daemon
       - name: Publish to Maven Central
         continue-on-error: true
         shell: bash
-        run: ./gradlew jreleaserFullRelease -Pversion=$VERSION
+        run: ./gradlew jreleaserFullRelease -Pversion=$VERSION --no-daemon
         env:
           JRELEASER_MAVENCENTRAL_USERNAME: ${{secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
           JRELEASER_MAVENCENTRAL_PASSWORD: ${{secrets.JRELEASER_MAVENCENTRAL_PASSWORD}}
@@ -78,13 +78,13 @@ jobs:
           JRELEASER_GPG_SECRET_KEY: ${{secrets.JRELEASER_GPG_SECRET_KEY}}
       - name: Publish to Gradle Plugins Portal
         if: runner.os == 'Linux'
-        run: ./gradlew publishPlugins -Pversion=$VERSION
+        run: ./gradlew publishPlugins -Pversion=$VERSION --no-daemon
         env:
           GRADLE_PUBLISH_KEY: ${{secrets.GRADLE_PUBLISH_KEY}}
           GRADLE_PUBLISH_SECRET: ${{secrets.GRADLE_PUBLISH_SECRET}}
       - name: Publish to Intellij Marketplace
         if: runner.os == 'Linux'
-        run: ./gradlew publishPlugin -Pversion=$VERSION
+        run: ./gradlew publishPlugin -Pversion=$VERSION --no-daemon
         env:
           ORG_GRADLE_PROJECT_intellijPlatformPublishingToken: ${{secrets.ORG_GRADLE_PROJECT_intellijPlatformPublishingToken}}
       - name: Update versions in the project
