@@ -1,7 +1,7 @@
 package org.pastalab.fray.idea
 
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.psi.PsiFile
@@ -17,13 +17,13 @@ fun StackTraceElement.getPsiFile(project: Project): PsiFile? {
 fun getPsiFileFromClass(className: String, project: Project): PsiFile? {
   return ApplicationManager.getApplication()
       .executeOnPooledThread<PsiFile?> {
-        runReadAction {
+        ReadAction.compute<PsiFile?, RuntimeException> {
           val psiClass =
               ClassUtil.findPsiClassByJVMName(PsiManager.getInstance(project), className)
-                  ?: return@runReadAction null
+                  ?: return@compute null
           val fileIndex = ProjectRootManager.getInstance(project).fileIndex
           val psiFile = psiClass.containingFile
-          if (!fileIndex.isInSourceContent(psiFile.virtualFile)) return@runReadAction null
+          if (!fileIndex.isInSourceContent(psiFile.virtualFile)) return@compute null
           psiFile
         }
       }
