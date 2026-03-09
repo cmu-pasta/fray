@@ -1,6 +1,7 @@
 package org.pastalab.fray.junit.junit5.annotations
 
 import kotlin.reflect.KClass
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.TestTemplate
 import org.pastalab.fray.core.command.NetworkDelegateType
 import org.pastalab.fray.core.command.SystemTimeDelegateType
@@ -13,6 +14,7 @@ import org.pastalab.fray.core.scheduler.Scheduler
 @Retention(
     AnnotationRetention.RUNTIME,
 )
+@Tag("FrayTest")
 @TestTemplate
 annotation class ConcurrencyTest(
     val iterations: Int = 1000,
@@ -40,6 +42,7 @@ annotation class ConcurrencyTest(
 @Retention(
     AnnotationRetention.RUNTIME,
 )
+@Tag("FrayTest")
 @TestTemplate
 annotation class FrayTest(
     val iterations: Int = 1000,

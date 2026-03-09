@@ -65,8 +65,8 @@ class FrayWorkspaceInitializer(
   fun createJVMTiRuntime() {
     if (!jvmtiPath.exists()) {
       jvmtiPath.toFile().mkdirs()
-      unzipFile(jvmtiJar.absolutePath, jvmtiPath)
     }
+    unzipFile(jvmtiJar.absolutePath, jvmtiPath)
   }
 
   private fun isRunningOnNixOS(): Boolean {
