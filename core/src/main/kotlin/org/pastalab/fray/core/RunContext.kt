@@ -439,7 +439,7 @@ class RunContext(val config: Configuration) {
     try {
       scheduleNextOperation(true)
     } finally {
-      context.pendingOperation = ThreadResumeOperation(true)
+      context.pendingOperation = ObjectWaitResumeWithoutBlockingOperation()
     }
 
     // First we need to check if current thread is interrupted.
@@ -451,6 +451,7 @@ class RunContext(val config: Configuration) {
     if (!lockContext.isLockHolder(t)) {
       // If current thread is not lock holder, we should just continue because
       // JVM will throw IllegalMonitorStateException.
+      context.pendingOperation = ObjectWaitResumeWithoutBlockingOperation()
       return
     }
 
@@ -482,7 +483,7 @@ class RunContext(val config: Configuration) {
           )
       verifyOrReport { locked }
       syncManager.removeWait(signalContext.getSyncObject())
-      context.pendingOperation = ThreadResumeOperation(true)
+      context.pendingOperation = ObjectWaitResumeWithoutBlockingOperation()
       context.state = ThreadState.Running
     }
 
@@ -539,6 +540,14 @@ class RunContext(val config: Configuration) {
         // We want to also catch interrupt exception here.
       }
     }
+
+    // wait/await is not executed because of IllegalMonitorStateException. We just return to the
+    // user code and let JVM throw the exception.
+    if (context.pendingOperation is ObjectWaitResumeWithoutBlockingOperation) {
+      context.pendingOperation = ThreadResumeOperation(true)
+      return true
+    }
+
     // If a thread is enabled, the lock must be available.
     val locked =
         signalContext.lockContext.lock(
