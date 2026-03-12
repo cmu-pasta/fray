@@ -164,7 +164,9 @@ class DelegateSynchronizer(val context: RunContext) {
       if (Runtime.getDebugMode()) {
         Utils.verifyOrReport(
             { !skipPrimitiveStackTrace.get().isEmpty() },
-            "Skip primitive stack trace should not be empty when exiting skip primitive, current skipPrimitiveEntered: ${skipPrimitiveEntered.get()}",
+            {
+              "Skip primitive stack trace should not be empty when exiting skip primitive, current skipPrimitiveEntered: ${skipPrimitiveEntered.get()}"
+            },
         )
         val last = skipPrimitiveStackTrace.get().removeLast()
         Utils.verifyOrReport { last == signature }
@@ -190,7 +192,9 @@ class DelegateSynchronizer(val context: RunContext) {
     if (Runtime.getDebugMode()) {
       Utils.verifyOrReport(
           { !skipSchedulingStackTrace.get().isEmpty() },
-          "Skip scheduling stack trace should not be empty when exiting skip scheduling, current skipSchedulingEntered: ${skipSchedulingEntered.get()}",
+          {
+            "Skip scheduling stack trace should not be empty when exiting skip scheduling, current skipSchedulingEntered: ${skipSchedulingEntered.get()}"
+          },
       )
       val last = skipSchedulingStackTrace.get().removeLast()
       Utils.verifyOrReport { last == signature }
