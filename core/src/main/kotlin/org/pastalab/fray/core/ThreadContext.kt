@@ -5,6 +5,7 @@ import org.pastalab.fray.core.concurrency.context.Acquirable
 import org.pastalab.fray.core.concurrency.operations.BlockedOperation
 import org.pastalab.fray.core.concurrency.operations.Operation
 import org.pastalab.fray.core.concurrency.operations.ThreadStartOperation
+import org.pastalab.fray.core.utils.Sync
 import org.pastalab.fray.core.utils.isFrayInternals
 import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.rmi.ThreadState
@@ -18,30 +19,19 @@ class ThreadContext(val thread: Thread, val index: Int, context: RunContext, par
   val acquiredResources = mutableSetOf<Acquirable>()
 
   var pendingOperation: Operation = ThreadStartOperation(parentId)
-  @Volatile var blocked = false
-  @Volatile private var signaled = false
+  val sync = Sync(1)
 
   fun block() {
-    if (signaled) {
-      signaled = false
-      return
-    }
-    blocked = true
-    while (!signaled) {
-      LockSupport.park()
-    }
-    blocked = false
-    signaled = false
+    sync.block()
   }
 
   fun schedulable() = state == ThreadState.Runnable || state == ThreadState.Running
 
   fun unblock() {
-    signaled = true
-    LockSupport.unpark(thread)
+    sync.unblock()
   }
 
-  fun isBlocked() = blocked
+  fun isBlocked() = sync.isBlocked()
 
   fun checkInterrupt() {
     if (interruptSignaled) {
