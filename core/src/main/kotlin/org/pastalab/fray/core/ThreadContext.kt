@@ -1,6 +1,5 @@
 package org.pastalab.fray.core
 
-import java.util.concurrent.locks.LockSupport
 import org.pastalab.fray.core.concurrency.context.Acquirable
 import org.pastalab.fray.core.concurrency.operations.BlockedOperation
 import org.pastalab.fray.core.concurrency.operations.Operation
