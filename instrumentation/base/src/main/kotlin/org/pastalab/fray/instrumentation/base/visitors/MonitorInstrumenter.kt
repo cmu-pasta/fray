@@ -26,10 +26,8 @@ class MonitorInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       exceptions: Array<out String>?,
   ): MethodVisitor {
     if (
-        ((className.startsWith("jdk/internal/") ||
-            // PipedInputStream is handled separately through [PipedInputStreamInstrumenter].
-            className == "java/io/PipedInputStream") &&
-            !className.startsWith("jdk/internal/net")) || access and Opcodes.ACC_NATIVE != 0
+        (className.startsWith("jdk/internal/") && !className.startsWith("jdk/internal/net")) ||
+            access and Opcodes.ACC_NATIVE != 0
     ) {
       return super.visitMethod(access, name, descriptor, signature, exceptions)
     }
