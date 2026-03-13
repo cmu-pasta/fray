@@ -43,7 +43,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     if (synchronizer.entered.get()) {
       return
     }
-    if (!context.registeredThreads.contains(Thread.currentThread().id)) {
+    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
       return
     }
     if (isSystemThread(t)) {
