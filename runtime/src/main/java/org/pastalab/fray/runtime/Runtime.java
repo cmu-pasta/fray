@@ -24,11 +24,13 @@ public class Runtime {
   public static Delegate LOCK_DELEGATE = new Delegate();
   public static NetworkDelegate NETWORK_DELEGATE = new NetworkDelegate();
 
-  private static Boolean DEBUG_MODE = null;
+  private static boolean DEBUG_MODE_INITIALIZED = false;
+  private static boolean DEBUG_MODE = false;
 
   public static boolean getDebugMode() {
-    if (DEBUG_MODE == null) {
+    if (!DEBUG_MODE_INITIALIZED) {
       DEBUG_MODE = Boolean.parseBoolean(System.getProperty("fray.debug", "false"));
+      DEBUG_MODE_INITIALIZED = true;
     }
     return DEBUG_MODE;
   }

@@ -70,9 +70,21 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     synchronizer.onSkipSchedulingDone("Thread.start")
   }
 
-  override fun onThreadRun() = synchronizer.runInFrayStartNoSkip { context.threadRun() }
+  override fun onThreadRun() {
+    onThreadSkip(Thread.currentThread()) {
+      synchronizer.enabled.set(true)
+      context.threadRun()
+    }
+  }
 
-  override fun onThreadEnd() = synchronizer.runInFrayStartNoSkip { context.threadCompleted() }
+  // The enabled flag is cleared before THREAD_END event.
+  // So we need to reset the flag.
+  override fun onThreadEnd() {
+    onThreadSkip(Thread.currentThread()) {
+      synchronizer.enabled.set(true)
+      context.threadCompleted()
+    }
+  }
 
   override fun onThreadGetState(t: Thread, state: Thread.State): Thread.State =
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
@@ -450,6 +462,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     // Therefor we cannot call `synchronizer.checkEntered` here.
     synchronizer.entered.set(true)
     try {
+      synchronizer.enabled.set(true)
       context.start()
     } finally {
       synchronizer.entered.set(false)
