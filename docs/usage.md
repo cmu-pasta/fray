@@ -104,7 +104,7 @@ You can run the test from the command line using the following command:
 ./gradlew frayTest
 ```
 
-Fray will launch all tests annotated with `@ConcurrencyTest` and run them multiple times.
+Fray will launch all tests annotated with `@FrayTest` and run them multiple times.
 
 ### Run test from IDE
 
