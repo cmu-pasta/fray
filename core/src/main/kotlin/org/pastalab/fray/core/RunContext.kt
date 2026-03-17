@@ -3,8 +3,8 @@ package org.pastalab.fray.core
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.Thread.UncaughtExceptionHandler
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.ForkJoinWorkerThread
@@ -53,7 +53,7 @@ import org.pastalab.fray.runtime.TargetTerminateException
 
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 class RunContext(val config: Configuration) {
-  val registeredThreads = ConcurrentSkipListMap<Long, ThreadContext>()
+  val registeredThreads = ConcurrentHashMap<Long, ThreadContext>()
   var currentThreadId: Long = -1
   var mainThreadId: Long = -1
   var bugFound: Throwable? = null
@@ -63,7 +63,7 @@ class RunContext(val config: Configuration) {
   val reactiveResumedThreadQueue = ConcurrentLinkedQueue<Long>()
   val reactiveBlockedThreadQueue = ConcurrentLinkedQueue<Long>()
   val timeController = TimeController(config)
-  val prioritizedThreads = mutableSetOf<ThreadContext>()
+  val prioritizedThreads = mutableSetOf<Long>()
   var mainExiting = false
   private val semaphoreManager = ReferencedContextManager {
     verifyOrReport({ it is Semaphore }) { "SemaphoreManager can only manage Semaphore objects" }
@@ -927,14 +927,9 @@ class RunContext(val config: Configuration) {
   ) = mustBeCaught {
     if (!config.executionInfo.interleaveMemoryOps && !volatileManager.isVolatile(owner, name))
         return@mustBeCaught
-    val objIds = mutableListOf<Int>()
-    if (obj != null) {
-      objIds.add(System.identityHashCode(obj))
-    } else {
-      objIds.add(owner.hashCode())
-    }
-    objIds.add(name.hashCode())
-    memoryOperation(objIds.toIntArray().contentHashCode(), type)
+    val objHash = if (obj != null) System.identityHashCode(obj) else owner.hashCode()
+    val combinedHash = 31 * (31 + objHash) + name.hashCode()
+    memoryOperation(combinedHash, type)
   }
 
   fun atomicOperation(obj: Any, type: org.pastalab.fray.runtime.MemoryOpType) = mustBeCaught {
@@ -956,9 +951,9 @@ class RunContext(val config: Configuration) {
       }
 
   fun memoryOperation(obj: Int, type: org.pastalab.fray.runtime.MemoryOpType) {
-    val t = Thread.currentThread().id
-    registeredThreads[t]?.pendingOperation = MemoryOperation(obj, type)
-    registeredThreads[t]?.state = ThreadState.Runnable
+    val threadContext = registeredThreads[Thread.currentThread().id] ?: return
+    threadContext.pendingOperation = MemoryOperation(obj, type)
+    threadContext.state = ThreadState.Runnable
     scheduleNextOperation(true)
   }
 
@@ -1139,7 +1134,8 @@ class RunContext(val config: Configuration) {
     enabledOperationBuffer.clear()
 
     if (prioritizedThreads.isNotEmpty()) {
-      for (thread in prioritizedThreads) {
+      for (threadId in prioritizedThreads) {
+        val thread = registeredThreads[threadId]!!
         if (thread.schedulable()) {
           enabledOperationBuffer.add(thread)
           return enabledOperationBuffer

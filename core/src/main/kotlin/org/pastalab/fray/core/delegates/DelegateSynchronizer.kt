@@ -7,6 +7,7 @@ import org.pastalab.fray.runtime.Runtime
 
 class DelegateSynchronizer(val context: RunContext) {
   val entered: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
+  val enabled: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
 
   val skipPrimitiveEntered: ThreadLocal<Int> = ThreadLocal.withInitial { 0 }
   val skipPrimitiveStackTrace: ThreadLocal<MutableList<String>> =
@@ -26,12 +27,13 @@ class DelegateSynchronizer(val context: RunContext) {
       entered.set(false)
       return true
     }
-    if (Thread.currentThread() is HelperThread) {
+    val currentThread = Thread.currentThread()
+    if (currentThread is HelperThread) {
       entered.set(false)
       return true
     }
-    // We do not process threads created outside of application.
-    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
+
+    if (!enabled.get()) {
       entered.set(false)
       return true
     }
@@ -138,16 +140,12 @@ class DelegateSynchronizer(val context: RunContext) {
       return
     }
     onSkipRecursion.set(true)
-    if (Runtime.getDebugMode()) {
-      skipPrimitiveStackTrace.get().add(signature)
-    }
-    skipPrimitiveEntered.set(1 + skipPrimitiveEntered.get())
-
-    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
+    val count = skipPrimitiveEntered.get()
+    if (enabled.get()) {
       if (Runtime.getDebugMode()) {
-        skipPrimitiveStackTrace.get().removeLast()
+        skipPrimitiveStackTrace.get().add(signature)
       }
-      skipPrimitiveEntered.set(skipPrimitiveEntered.get() - 1)
+      skipPrimitiveEntered.set(count + 1)
     }
     onSkipRecursion.set(false)
   }
@@ -158,20 +156,21 @@ class DelegateSynchronizer(val context: RunContext) {
     }
     onSkipRecursion.set(true)
     try {
-      if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
+      if (!enabled.get()) {
         return false
       }
+      val count = skipPrimitiveEntered.get()
       if (Runtime.getDebugMode()) {
         Utils.verifyOrReport(
             { !skipPrimitiveStackTrace.get().isEmpty() },
             {
-              "Skip primitive stack trace should not be empty when exiting skip primitive, current skipPrimitiveEntered: ${skipPrimitiveEntered.get()}"
+              "Skip primitive stack trace should not be empty when exiting skip primitive, current skipPrimitiveEntered: $count"
             },
         )
         val last = skipPrimitiveStackTrace.get().removeLast()
         Utils.verifyOrReport { last == signature }
       }
-      skipPrimitiveEntered.set(skipPrimitiveEntered.get() - 1)
+      skipPrimitiveEntered.set(count - 1)
       return true
     } finally {
       onSkipRecursion.set(false)
@@ -183,8 +182,8 @@ class DelegateSynchronizer(val context: RunContext) {
     if (Runtime.getDebugMode()) {
       skipSchedulingStackTrace.get().add(signature)
     }
-    val threadContext = context.registeredThreads[Thread.currentThread().id]!!
-    context.prioritizedThreads.add(threadContext)
+    val threadId = Thread.currentThread().id
+    context.prioritizedThreads.add(threadId)
     return@runInFrayStartNoSkip Result.success(Unit)
   }
 
@@ -201,8 +200,8 @@ class DelegateSynchronizer(val context: RunContext) {
     }
     skipSchedulingEntered.set(skipSchedulingEntered.get() - 1)
     if (skipSchedulingEntered.get() == 0) {
-      val threadContext = context.registeredThreads[Thread.currentThread().id]!!
-      context.prioritizedThreads.remove(threadContext)
+      val threadId = Thread.currentThread().id
+      context.prioritizedThreads.remove(threadId)
     }
     return@runInFrayDoneNoSkip Result.success(Unit)
   }

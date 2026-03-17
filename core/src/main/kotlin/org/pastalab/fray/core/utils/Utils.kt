@@ -18,15 +18,15 @@ object Utils {
     return ceil(ln(1 - rand) / ln(1 - p)).toInt()
   }
 
-  fun verifyOrReport(condition: () -> Boolean) {
+  inline fun verifyOrReport(condition: () -> Boolean) {
     verifyOrReport(condition) { "Internal error" }
   }
 
-  fun verifyOrReport(condition: () -> Boolean, message: String) {
+  inline fun verifyOrReport(condition: () -> Boolean, message: String) {
     verifyOrReport(condition) { message }
   }
 
-  fun verifyOrReport(condition: () -> Boolean, message: () -> String) {
+  inline fun verifyOrReport(condition: () -> Boolean, message: () -> String) {
     if (!Runtime.getDebugMode()) return
     if (!condition()) {
       val e = FrayInternalError(message())
