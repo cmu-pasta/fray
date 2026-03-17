@@ -39,6 +39,9 @@ public class SimpleTest {
 
 ```
 
+**Note:** The Fray debugger IDE plugin currently only supports tests annotated with `@ConcurrencyTest`. If you
+want to use the debugger, follow the instructions in `docs/IDE.md` and use `@ConcurrencyTest` instead of
+`@FrayTest` for now.
 
 ## Other Testing Frameworks
 
