@@ -21,16 +21,16 @@ to be easy to use and can be integrated into existing testing frameworks.
 
 ## JUnit 5
 
-If you are using JUnit 5, you can use the `@ConcurrencyTest` annotation to mark a test as a concurrency test. You
+If you are using JUnit 5, you can use the `@FrayTest` annotation to mark a test as a concurrency test. You
 also need to add the `@ExtendWith(FrayTestExtension.class)` annotation to the test class.
 
 ```java
 import org.pastalab.fray.junit.junit5.FrayTestExtension;
-import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
+import org.pastalab.fray.junit.junit5.annotations.FrayTest;
 
 @ExtendWith(FrayTestExtension.class)
 public class SimpleTest {
-    @ConcurrencyTest
+    @FrayTest
     public void concurrencyTest() {
         ... // some multithreaded code
         assert(...);
@@ -39,6 +39,9 @@ public class SimpleTest {
 
 ```
 
+**Note:** The Fray debugger IDE plugin currently only supports tests annotated with `@ConcurrencyTest`. If you
+want to use the debugger, follow the instructions in `docs/IDE.md` and use `@ConcurrencyTest` instead of
+`@FrayTest` for now.
 
 ## Other Testing Frameworks
 
