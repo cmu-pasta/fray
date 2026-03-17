@@ -73,7 +73,7 @@ Here is an example of a test code that tests the `BankAccount` class with Fray:
 ...
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pastalab.fray.junit.junit5.FrayTestExtension;
-import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
+import org.pastalab.fray.junit.junit5.annotations.FrayTest;
 
 @ExtendWith(FrayTestExtension.class)
 public class BankAccountTest {
@@ -81,7 +81,7 @@ public class BankAccountTest {
         ...
     }
 
-    @ConcurrencyTest(
+    @FrayTest(
             iterations = 1000
     )
     public void runTestUsingFray() throws InterruptedException {
@@ -91,8 +91,8 @@ public class BankAccountTest {
 ```
 
 - First you need to add the `@ExtendWith(FrayTestExtension.class)` annotation to the test class so that Fray can run the test.
-- Then you need to add the `@ConcurrencyTest` annotation to the test method. The `iterations` parameter specifies how many times the test method should be executed.
-    - You may also specify scheduling algorithms and other parameters in the `@ConcurrencyTest` annotation. For more information, see the [ConcurrencyTest.kt](https://github.com/cmu-pasta/fray/blob/main/junit/src/main/kotlin/org/pastalab/fray/junit/junit5/annotations/ConcurrencyTest.kt#L18)
+- Then you need to add the `@FrayTest` annotation to the test method. The `iterations` parameter specifies how many times the test method should be executed.
+    - You may also specify scheduling algorithms and other parameters in the `@FrayTest` annotation. For more information, see the [FrayTest.kt](https://github.com/cmu-pasta/fray/blob/main/junit/src/main/kotlin/org/pastalab/fray/junit/junit5/annotations/ConcurrencyTest.kt#L18)
 
 ## Run the Test
 

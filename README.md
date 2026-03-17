@@ -26,11 +26,11 @@ also need to add the `@ExtendWith(FrayTestExtension.class)` annotation to the te
 
 ```java
 import org.pastalab.fray.junit.junit5.FrayTestExtension;
-import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
+import org.pastalab.fray.junit.junit5.annotations.FrayTest;
 
 @ExtendWith(FrayTestExtension.class)
 public class SimpleTest {
-    @ConcurrencyTest
+    @FrayTest
     public void concurrencyTest() {
         ... // some multithreaded code
         assert(...);
