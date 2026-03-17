@@ -21,7 +21,7 @@ to be easy to use and can be integrated into existing testing frameworks.
 
 ## JUnit 5
 
-If you are using JUnit 5, you can use the `@ConcurrencyTest` annotation to mark a test as a concurrency test. You
+If you are using JUnit 5, you can use the `@FrayTest` annotation to mark a test as a concurrency test. You
 also need to add the `@ExtendWith(FrayTestExtension.class)` annotation to the test class.
 
 ```java
