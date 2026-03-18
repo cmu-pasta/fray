@@ -17,13 +17,13 @@ fun StackTraceElement.getPsiFile(project: Project): PsiFile? {
 fun getPsiFileFromClass(className: String, project: Project): PsiFile? {
   return ApplicationManager.getApplication()
       .executeOnPooledThread<PsiFile?> {
-        ReadAction.compute<PsiFile?, RuntimeException> {
+        ReadAction.computeBlocking<PsiFile?, RuntimeException> {
           val psiClass =
               ClassUtil.findPsiClassByJVMName(PsiManager.getInstance(project), className)
-                  ?: return@compute null
+                  ?: return@computeBlocking null
           val fileIndex = ProjectRootManager.getInstance(project).fileIndex
           val psiFile = psiClass.containingFile
-          if (!fileIndex.isInSourceContent(psiFile.virtualFile)) return@compute null
+          if (!fileIndex.isInSourceContent(psiFile.virtualFile)) return@computeBlocking null
           psiFile
         }
       }
