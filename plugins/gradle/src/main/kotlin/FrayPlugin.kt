@@ -3,6 +3,7 @@ package org.pastalab.fray.gradle
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.junit.JUnitOptions
 import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions
@@ -13,10 +14,8 @@ import org.pastalab.fray.plugins.base.Commons
 
 class FrayPlugin : Plugin<Project> {
   override fun apply(target: Project) {
-
     val extension = target.extensions.create("fray", FrayExtension::class.java)
     val jlink = target.tasks.register("jlink", PrepareWorkspaceTask::class.java)
-    val frayTest = target.tasks.register("frayTest", Test::class.java)
 
     target.afterEvaluate {
       val frayVersion = extension.version
@@ -28,22 +27,22 @@ class FrayPlugin : Plugin<Project> {
       val frayJvmtiNotation = "org.pastalab.fray:fray-jvmti-$os-$arch:$frayVersion"
       val frayInstrumentationNotation =
           "org.pastalab.fray.instrumentation:fray-instrumentation-agent:$frayVersion"
-      target.dependencies.add("testCompileOnly", frayJdkNotation)
-      target.dependencies.add("testImplementation", frayJvmtiNotation)
-      target.dependencies.add("testImplementation", frayInstrumentationNotation)
-      val frayJdkClasspath = detachedConfiguration(target, frayJdkNotation, transitive = true)
-      val frayJdkJar = detachedConfiguration(target, frayJdkNotation, transitive = false)
-      val frayJvmtiArchive = detachedConfiguration(target, frayJvmtiNotation, transitive = false)
+      val targetProject = extension.target?.let { target.project(it) } ?: target
+      val baseTest = targetProject.tasks.named(extension.testTask, Test::class.java).get()
+
+      addFrayDependencies(targetProject, baseTest.name, frayJdkNotation, frayJvmtiNotation, frayInstrumentationNotation, frayVersion)
+
+      val frayJdkClasspath = detachedConfiguration(targetProject, frayJdkNotation, transitive = true)
+      val frayJdkJar = detachedConfiguration(targetProject, frayJdkNotation, transitive = false)
+      val frayJvmtiArchive =
+          detachedConfiguration(targetProject, frayJvmtiNotation, transitive = false)
       val frayInstrumentationJar =
-          detachedConfiguration(target, frayInstrumentationNotation, transitive = false)
+          detachedConfiguration(targetProject, frayInstrumentationNotation, transitive = false)
       val javaPath = Commons.getFrayJavaPath(frayBuildFolder).toString()
       val jvmtiPath = Commons.getFrayJvmtiPath(frayBuildFolder).toString()
       val frayWorkDir = Commons.getFrayReportDir(frayBuildFolder).toString()
       val frayDebugger = target.findProperty("fray.debugger")?.toString()
       val frayInstrumentationPath = frayInstrumentationJar.singleFile.absolutePath
-      target.dependencies.add("testImplementation", "org.pastalab.fray:fray-core:$frayVersion")
-      target.dependencies.add("testImplementation", "org.pastalab.fray:fray-junit:$frayVersion")
-      target.dependencies.add("testImplementation", "org.pastalab.fray:fray-runtime:$frayVersion")
       jlink.configure {
         it.frayJdkClasspath.from(frayJdkClasspath)
         it.frayJdkJar.from(frayJdkJar)
@@ -54,43 +53,120 @@ class FrayPlugin : Plugin<Project> {
         it.frayJvmtiDir.set(target.rootProject.layout.buildDirectory.dir("fray/fray-jvmti"))
         extension.jdkPath?.let(it.originalJdkPath::set)
       }
-      frayTest.configure { frayTestTask ->
-        frayTestTask.executable(javaPath)
-        frayTestTask.javaLauncher.unset()
-        // Use the same classes and classpath as the built-in 'test' task (Gradle 9 requires this)
-        val baseTest = target.tasks.named("test", Test::class.java).get()
+      if (baseTest.name == "test") {
+        val frayTest = target.tasks.register("frayTest", Test::class.java)
+        configureFrayTask(
+            frayTest,
+            baseTest,
+            javaPath,
+            jvmtiPath,
+            frayInstrumentationPath,
+            frayWorkDir,
+            frayDebugger,
+            jlink,
+            copyInputs = true,
+        )
+      } else {
+        configureFrayTask(
+            targetProject.tasks.named(baseTest.name, Test::class.java),
+            baseTest,
+            javaPath,
+            jvmtiPath,
+            frayInstrumentationPath,
+            frayWorkDir,
+            frayDebugger,
+            jlink,
+            copyInputs = false,
+        )
+      }
+    }
+  }
+
+  private fun addFrayDependencies(
+      project: Project,
+      testTaskName: String,
+      frayJdkNotation: String,
+      frayJvmtiNotation: String,
+      frayInstrumentationNotation: String,
+      frayVersion: String,
+  ) {
+    addDependencyIfPresent(project, "testCompileOnly", frayJdkNotation)
+    addDependencyIfPresent(project, "testImplementation", frayJvmtiNotation)
+    addDependencyIfPresent(project, "testImplementation", frayInstrumentationNotation)
+    addDependencyIfPresent(project, "testImplementation", "org.pastalab.fray:fray-core:$frayVersion")
+    addDependencyIfPresent(project, "testImplementation", "org.pastalab.fray:fray-junit:$frayVersion")
+    addDependencyIfPresent(project, "testImplementation", "org.pastalab.fray:fray-runtime:$frayVersion")
+
+    if (testTaskName == "test") {
+      return
+    }
+
+    val configPrefix = testTaskName.replaceFirstChar { it.lowercase() }
+    addDependencyIfPresent(project, "${configPrefix}CompileOnly", frayJdkNotation)
+    addDependencyIfPresent(project, "${configPrefix}Implementation", frayJvmtiNotation)
+    addDependencyIfPresent(project, "${configPrefix}Implementation", frayInstrumentationNotation)
+    addDependencyIfPresent(
+        project, "${configPrefix}Implementation", "org.pastalab.fray:fray-core:$frayVersion")
+    addDependencyIfPresent(
+        project, "${configPrefix}Implementation", "org.pastalab.fray:fray-junit:$frayVersion")
+    addDependencyIfPresent(
+        project, "${configPrefix}Implementation", "org.pastalab.fray:fray-runtime:$frayVersion")
+  }
+
+  private fun addDependencyIfPresent(project: Project, configurationName: String, notation: String) {
+    if (project.configurations.findByName(configurationName) != null) {
+      project.dependencies.add(configurationName, notation)
+    }
+  }
+
+  private fun configureFrayTask(
+      testTaskProvider: TaskProvider<Test>,
+      baseTest: Test,
+      javaPath: String,
+      jvmtiPath: String,
+      frayInstrumentationPath: String,
+      frayWorkDir: String,
+      frayDebugger: String?,
+      jlink: TaskProvider<PrepareWorkspaceTask>,
+      copyInputs: Boolean,
+  ) {
+    testTaskProvider.configure { frayTestTask ->
+      frayTestTask.executable(javaPath)
+      frayTestTask.javaLauncher.unset()
+      if (copyInputs) {
+        // Reuse the selected source task's classes and classpath when creating a dedicated frayTest task.
         frayTestTask.testClassesDirs = baseTest.testClassesDirs
         frayTestTask.classpath = baseTest.classpath
-        val testFramework = baseTest.testFramework.options
-        when (testFramework) {
-          is JUnitPlatformOptions ->
-              frayTestTask.useJUnitPlatform { options ->
-                options.includeTags("FrayTest")
-                options.excludeTags(*testFramework.excludeTags.toTypedArray())
-                options.includeEngines(*testFramework.includeEngines.toTypedArray())
-                options.excludeEngines(*testFramework.excludeEngines.toTypedArray())
-              }
-          is JUnitOptions -> frayTestTask.useJUnit()
-          is TestNGOptions -> frayTestTask.useTestNG()
-          else -> throw IllegalArgumentException("Unsupported test framework $testFramework")
-        }
-        frayTestTask.doFirst {
-          frayTestTask.jvmArgs("-agentpath:$jvmtiPath")
-          frayTestTask.jvmArgs("-javaagent:$frayInstrumentationPath")
-        }
-        frayTestTask.jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
-        frayTestTask.jvmArgs("--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
-        frayTestTask.jvmArgs("--add-opens", "java.base/java.util=ALL-UNNAMED")
-        frayTestTask.jvmArgs("--add-opens", "java.base/java.io=ALL-UNNAMED")
-        frayTestTask.jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
-        frayTestTask.jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
-        frayTestTask.systemProperty("fray.organize.by.test", "true")
-        frayTestTask.jvmArgs("-Dfray.workDir=$frayWorkDir")
-        frayDebugger?.let { frayTestTask.jvmArgs("-Dfray.debugger=$it") }
-        frayTestTask.dependsOn(jlink)
-        for (taskDependency in baseTest.dependsOn) {
-          frayTestTask.dependsOn(taskDependency)
-        }
+      }
+      val testFramework = baseTest.testFramework.options
+      when (testFramework) {
+        is JUnitPlatformOptions ->
+            frayTestTask.useJUnitPlatform { options ->
+              options.includeTags("FrayTest")
+              options.excludeTags(*testFramework.excludeTags.toTypedArray())
+              options.includeEngines(*testFramework.includeEngines.toTypedArray())
+              options.excludeEngines(*testFramework.excludeEngines.toTypedArray())
+            }
+        is JUnitOptions -> frayTestTask.useJUnit()
+        is TestNGOptions -> frayTestTask.useTestNG()
+        else -> throw IllegalArgumentException("Unsupported test framework $testFramework")
+      }
+      frayTestTask.doFirst {
+        frayTestTask.jvmArgs("-agentpath:$jvmtiPath")
+        frayTestTask.jvmArgs("-javaagent:$frayInstrumentationPath")
+      }
+      frayTestTask.jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
+      frayTestTask.jvmArgs("--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
+      frayTestTask.jvmArgs("--add-opens", "java.base/java.util=ALL-UNNAMED")
+      frayTestTask.jvmArgs("--add-opens", "java.base/java.io=ALL-UNNAMED")
+      frayTestTask.jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
+      frayTestTask.jvmArgs("--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED")
+      frayTestTask.systemProperty("fray.organize.by.test", "true")
+      frayTestTask.jvmArgs("-Dfray.workDir=$frayWorkDir")
+      frayDebugger?.let { frayTestTask.jvmArgs("-Dfray.debugger=$it") }
+      frayTestTask.dependsOn(jlink)
+      for (taskDependency in baseTest.dependsOn) {
+        frayTestTask.dependsOn(taskDependency)
       }
     }
   }
