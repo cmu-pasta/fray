@@ -17,7 +17,7 @@ class FrayPlugin : Plugin<Project> {
     val extension = target.extensions.create("fray", FrayExtension::class.java)
     val jlink = target.tasks.register("jlink", PrepareWorkspaceTask::class.java)
 
-    target.gradle.projectsEvaluated {
+    target.afterEvaluate {
       val frayVersion = extension.version
       val os = DefaultNativePlatform.getCurrentOperatingSystem().toFamilyName()
       val arch = DefaultNativePlatform.getCurrentArchitecture().name.replace("-", "")
@@ -30,9 +30,17 @@ class FrayPlugin : Plugin<Project> {
       val targetProject = extension.target?.let { target.project(it) } ?: target
       val baseTest = targetProject.tasks.named(extension.testTask, Test::class.java).get()
 
-      addFrayDependencies(targetProject, baseTest.name, frayJdkNotation, frayJvmtiNotation, frayInstrumentationNotation, frayVersion)
+      addFrayDependencies(
+          targetProject,
+          baseTest.name,
+          frayJdkNotation,
+          frayJvmtiNotation,
+          frayInstrumentationNotation,
+          frayVersion,
+      )
 
-      val frayJdkClasspath = detachedConfiguration(targetProject, frayJdkNotation, transitive = true)
+      val frayJdkClasspath =
+          detachedConfiguration(targetProject, frayJdkNotation, transitive = true)
       val frayJdkJar = detachedConfiguration(targetProject, frayJdkNotation, transitive = false)
       val frayJvmtiArchive =
           detachedConfiguration(targetProject, frayJvmtiNotation, transitive = false)
@@ -93,9 +101,21 @@ class FrayPlugin : Plugin<Project> {
     addDependencyIfPresent(project, "testCompileOnly", frayJdkNotation)
     addDependencyIfPresent(project, "testImplementation", frayJvmtiNotation)
     addDependencyIfPresent(project, "testImplementation", frayInstrumentationNotation)
-    addDependencyIfPresent(project, "testImplementation", "org.pastalab.fray:fray-core:$frayVersion")
-    addDependencyIfPresent(project, "testImplementation", "org.pastalab.fray:fray-junit:$frayVersion")
-    addDependencyIfPresent(project, "testImplementation", "org.pastalab.fray:fray-runtime:$frayVersion")
+    addDependencyIfPresent(
+        project,
+        "testImplementation",
+        "org.pastalab.fray:fray-core:$frayVersion",
+    )
+    addDependencyIfPresent(
+        project,
+        "testImplementation",
+        "org.pastalab.fray:fray-junit:$frayVersion",
+    )
+    addDependencyIfPresent(
+        project,
+        "testImplementation",
+        "org.pastalab.fray:fray-runtime:$frayVersion",
+    )
 
     if (testTaskName == "test") {
       return
@@ -106,14 +126,27 @@ class FrayPlugin : Plugin<Project> {
     addDependencyIfPresent(project, "${configPrefix}Implementation", frayJvmtiNotation)
     addDependencyIfPresent(project, "${configPrefix}Implementation", frayInstrumentationNotation)
     addDependencyIfPresent(
-        project, "${configPrefix}Implementation", "org.pastalab.fray:fray-core:$frayVersion")
+        project,
+        "${configPrefix}Implementation",
+        "org.pastalab.fray:fray-core:$frayVersion",
+    )
     addDependencyIfPresent(
-        project, "${configPrefix}Implementation", "org.pastalab.fray:fray-junit:$frayVersion")
+        project,
+        "${configPrefix}Implementation",
+        "org.pastalab.fray:fray-junit:$frayVersion",
+    )
     addDependencyIfPresent(
-        project, "${configPrefix}Implementation", "org.pastalab.fray:fray-runtime:$frayVersion")
+        project,
+        "${configPrefix}Implementation",
+        "org.pastalab.fray:fray-runtime:$frayVersion",
+    )
   }
 
-  private fun addDependencyIfPresent(project: Project, configurationName: String, notation: String) {
+  private fun addDependencyIfPresent(
+      project: Project,
+      configurationName: String,
+      notation: String,
+  ) {
     if (project.configurations.findByName(configurationName) != null) {
       project.dependencies.add(configurationName, notation)
     } else {
@@ -141,7 +174,8 @@ class FrayPlugin : Plugin<Project> {
       frayTestTask.executable(javaPath)
       frayTestTask.javaLauncher.unset()
       if (copyInputs) {
-        // Reuse the selected source task's classes and classpath when creating a dedicated frayTest task.
+        // Reuse the selected source task's classes and classpath when creating a dedicated frayTest
+        // task.
         frayTestTask.testClassesDirs = baseTest.testClassesDirs
         frayTestTask.classpath = baseTest.classpath
       }
