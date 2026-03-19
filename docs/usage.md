@@ -106,6 +106,19 @@ You can run the test from the command line using the following command:
 
 Fray will launch all JUnit Platform tests tagged `FrayTest` (for example, via `@FrayTest` or `@ConcurrencyTest`) and run them multiple times.
 
+If you want Fray to reuse a different Gradle `Test` task instead of the default local `test` task, configure the plugin extension:
+
+```kotlin
+fray {
+    target = ":integration-test"
+    testTask = "integrationTest"
+}
+```
+
+`target` is optional and defaults to the current project. `testTask` defaults to `test`.
+
+The generated `frayTest` task is only created when `testTask = "test"`, and in that case the original `test` task is left unchanged. If you point Fray at another task such as `integrationTest`, Fray configures that task directly and does not create a separate `frayTest` task.
+
 ### Run test from IDE
 
 If you are using an IDE, you can run the test as you would run any other JUnit test. 
