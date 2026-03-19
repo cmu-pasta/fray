@@ -17,7 +17,7 @@ class FrayPlugin : Plugin<Project> {
     val extension = target.extensions.create("fray", FrayExtension::class.java)
     val jlink = target.tasks.register("jlink", PrepareWorkspaceTask::class.java)
 
-    target.afterEvaluate {
+    target.gradle.projectsEvaluated {
       val frayVersion = extension.version
       val os = DefaultNativePlatform.getCurrentOperatingSystem().toFamilyName()
       val arch = DefaultNativePlatform.getCurrentArchitecture().name.replace("-", "")
@@ -116,6 +116,13 @@ class FrayPlugin : Plugin<Project> {
   private fun addDependencyIfPresent(project: Project, configurationName: String, notation: String) {
     if (project.configurations.findByName(configurationName) != null) {
       project.dependencies.add(configurationName, notation)
+    } else {
+      project.logger.warn(
+          "Fray: expected configuration '{}' not found; dependency '{}' was not added. " +
+              "This may indicate a misconfigured test task or source set.",
+          configurationName,
+          notation,
+      )
     }
   }
 
