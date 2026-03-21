@@ -121,7 +121,9 @@ The generated `frayTest` task is only created when `testTask = "test"`, and in t
 
 ### Run test from IDE
 
-If you are using an IDE, you can run the test as you would run any other JUnit test. 
+If you are using an IDE, you can run the test as you would run any other JUnit test. Note that if you are using Intellij IDEA,
+you need to use Gradle test launcher instead of the JUnit test launcher to run the tests. 
+`Settings → Build, Execution, Deployment → Build Tools → Gradle → Run Tests Using → Gradle`. 
 
 ## Reproduce a Failure
 

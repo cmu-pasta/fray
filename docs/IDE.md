@@ -36,7 +36,7 @@ Click `Select alternative JRE` and navigate to the instrumented JDK: `${project_
 You will also need to add the following VM options:
 
 ```
--javaagent:$MODULE_DIR$/target/dependency/fray-instrumentation-agent-0.6.8.jar
+-javaagent:$MODULE_DIR$/target/dependency/fray-instrumentation-agent-{FRAY_VERSION}.jar
 -agentpath:$MODULE_DIR$/target/fray/fray-jvmti/libjvmti.so
 ```
 
