@@ -5,7 +5,6 @@ import com.intellij.execution.process.ProcessListener
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebugSessionListener
-import com.intellij.xdebugger.impl.XDebugSessionImpl
 import java.rmi.registry.LocateRegistry
 import java.rmi.registry.Registry
 import java.rmi.server.UnicastRemoteObject
@@ -33,21 +32,19 @@ class FrayDebuggerManager(val debugProcess: XDebugProcess, val replayMode: Boole
 
   override fun startNotified(event: ProcessEvent) {
     val session = debugProcess.session
-    if (session is XDebugSessionImpl) {
-      session.runWhenUiReady {
-        val container = SimpleToolWindowPanel(false, true)
-        container.setContent(schedulerPanel)
-        val content =
-            it.createContent(
-                FrayDebugPanel.CONTENT_ID,
-                container,
-                "Fray Scheduler",
-                null,
-                null,
-            )
-        content.isCloseable = false
-        it.addContent(content)
-      }
+    session.runWhenUiReady {
+      val container = SimpleToolWindowPanel(false, true)
+      container.setContent(schedulerPanel)
+      val content =
+          it.createContent(
+              FrayDebugPanel.CONTENT_ID,
+              container,
+              "Fray Scheduler",
+              null,
+              null,
+          )
+      content.isCloseable = false
+      it.addContent(content)
     }
   }
 

@@ -2,7 +2,6 @@ package org.pastalab.fray.idea.debugger
 
 import com.intellij.util.ui.UIUtil
 import com.intellij.xdebugger.XDebugSession
-import com.intellij.xdebugger.impl.XDebugSessionImpl
 import java.util.concurrent.CountDownLatch
 import org.pastalab.fray.idea.objects.ThreadExecutionContext
 import org.pastalab.fray.idea.ui.FrayDebugPanel
@@ -31,11 +30,9 @@ class FrayDebuggerScheduler(
     )
     UIUtil.invokeLaterIfNeeded {
       val session = debugSession
-      if (session is XDebugSessionImpl) {
-        session.runWhenUiReady {
-          val content = it.findContent(FrayDebugPanel.CONTENT_ID)
-          it.selectAndFocus(content!!, false, false)
-        }
+      session.runWhenUiReady {
+        val content = it.findContent(FrayDebugPanel.CONTENT_ID)
+        it.selectAndFocus(content!!, false, false)
       }
     }
     cdl.await()

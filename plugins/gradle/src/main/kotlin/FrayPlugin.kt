@@ -21,6 +21,8 @@ class FrayPlugin : Plugin<Project> {
       val frayVersion = extension.version
       val os = DefaultNativePlatform.getCurrentOperatingSystem().toFamilyName()
       val arch = DefaultNativePlatform.getCurrentArchitecture().name.replace("-", "")
+      val isSupportedOsArch = supportedOsArchitectures.contains("$os-$arch")
+
       val frayBuildFolder = target.rootProject.layout.buildDirectory.get().asFile.toPath()
       val frayJdkNotation =
           "org.pastalab.fray.instrumentation:fray-instrumentation-jdk:$frayVersion"
@@ -28,8 +30,13 @@ class FrayPlugin : Plugin<Project> {
       val frayInstrumentationNotation =
           "org.pastalab.fray.instrumentation:fray-instrumentation-agent:$frayVersion"
       val targetProject = extension.target?.let { target.project(it) } ?: target
-      val baseTest = targetProject.tasks.named(extension.testTask, Test::class.java).get()
-
+      val baseTest = targetProject.tasks.named(extension.testTask, Test::class.java)
+      val testTask =
+          if (baseTest.name == "test") {
+            target.tasks.register("frayTest", Test::class.java)
+          } else {
+            baseTest
+          }
       addFrayDependencies(
           targetProject,
           baseTest.name,
@@ -37,7 +44,12 @@ class FrayPlugin : Plugin<Project> {
           frayJvmtiNotation,
           frayInstrumentationNotation,
           frayVersion,
+          isSupportedOsArch,
       )
+
+      if (!isSupportedOsArch) {
+        return@afterEvaluate
+      }
 
       val frayJdkClasspath =
           detachedConfiguration(targetProject, frayJdkNotation, transitive = true)
@@ -61,32 +73,17 @@ class FrayPlugin : Plugin<Project> {
         it.frayJvmtiDir.set(target.rootProject.layout.buildDirectory.dir("fray/fray-jvmti"))
         extension.jdkPath?.let(it.originalJdkPath::set)
       }
-      if (baseTest.name == "test") {
-        val frayTest = target.tasks.register("frayTest", Test::class.java)
-        configureFrayTask(
-            frayTest,
-            baseTest,
-            javaPath,
-            jvmtiPath,
-            frayInstrumentationPath,
-            frayWorkDir,
-            frayDebugger,
-            jlink,
-            copyInputs = true,
-        )
-      } else {
-        configureFrayTask(
-            targetProject.tasks.named(baseTest.name, Test::class.java),
-            baseTest,
-            javaPath,
-            jvmtiPath,
-            frayInstrumentationPath,
-            frayWorkDir,
-            frayDebugger,
-            jlink,
-            copyInputs = false,
-        )
-      }
+      configureFrayTask(
+          testTask,
+          baseTest.get(),
+          javaPath,
+          jvmtiPath,
+          frayInstrumentationPath,
+          frayWorkDir,
+          frayDebugger,
+          jlink,
+          copyInputs = true,
+      )
     }
   }
 
@@ -97,9 +94,16 @@ class FrayPlugin : Plugin<Project> {
       frayJvmtiNotation: String,
       frayInstrumentationNotation: String,
       frayVersion: String,
+      isSupportedOsArch: Boolean,
   ) {
     addDependencyIfPresent(project, "testCompileOnly", frayJdkNotation)
-    addDependencyIfPresent(project, "testImplementation", frayJvmtiNotation)
+    if (isSupportedOsArch) {
+      addDependencyIfPresent(project, "testImplementation", frayJvmtiNotation)
+    } else {
+      project.logger.warn(
+          "You are building on an unsupported OS/architecture combination; Fray JVMTI agent will not be added as a dependency."
+      )
+    }
     addDependencyIfPresent(project, "testImplementation", frayInstrumentationNotation)
     addDependencyIfPresent(
         project,
@@ -123,7 +127,9 @@ class FrayPlugin : Plugin<Project> {
 
     val configPrefix = testTaskName.replaceFirstChar { it.lowercase() }
     addDependencyIfPresent(project, "${configPrefix}CompileOnly", frayJdkNotation)
-    addDependencyIfPresent(project, "${configPrefix}Implementation", frayJvmtiNotation)
+    if (isSupportedOsArch) {
+      addDependencyIfPresent(project, "${configPrefix}Implementation", frayJvmtiNotation)
+    }
     addDependencyIfPresent(project, "${configPrefix}Implementation", frayInstrumentationNotation)
     addDependencyIfPresent(
         project,
@@ -220,5 +226,9 @@ class FrayPlugin : Plugin<Project> {
     return target.configurations.detachedConfiguration(target.dependencies.create(notation)).apply {
       isTransitive = transitive
     }
+  }
+
+  companion object {
+    val supportedOsArchitectures = listOf("linux-x8664", "windows-x8664", "macos-aarch64")
   }
 }
