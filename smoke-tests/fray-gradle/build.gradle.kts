@@ -34,3 +34,11 @@ tasks.build {
 tasks.test {
     useJUnitPlatform()
 }
+
+tasks.named<Test>("frayTest") {
+  jvmArgs("-Xmx32G")
+  jvmArgs("-Dfray.debug=true")
+  testLogging {
+    showStandardStreams = true
+  }
+}

@@ -16,8 +16,17 @@ class FrayPlugin : Plugin<Project> {
   override fun apply(target: Project) {
     val extension = target.extensions.create("fray", FrayExtension::class.java)
     val jlink = target.tasks.register("jlink", PrepareWorkspaceTask::class.java)
+    val frayTest = target.tasks.register("frayTest", Test::class.java)
 
     target.afterEvaluate {
+      val targetProject = extension.target?.let { target.project(it) } ?: target
+      val baseTest = targetProject.tasks.named(extension.testTask, Test::class.java)
+      val testTask =
+          if (baseTest.name == "test") {
+            frayTest
+          } else {
+            baseTest
+          }
       val frayVersion = extension.version
       val os = DefaultNativePlatform.getCurrentOperatingSystem().toFamilyName()
       val arch = DefaultNativePlatform.getCurrentArchitecture().name.replace("-", "")
@@ -29,14 +38,6 @@ class FrayPlugin : Plugin<Project> {
       val frayJvmtiNotation = "org.pastalab.fray:fray-jvmti-$os-$arch:$frayVersion"
       val frayInstrumentationNotation =
           "org.pastalab.fray.instrumentation:fray-instrumentation-agent:$frayVersion"
-      val targetProject = extension.target?.let { target.project(it) } ?: target
-      val baseTest = targetProject.tasks.named(extension.testTask, Test::class.java)
-      val testTask =
-          if (baseTest.name == "test") {
-            target.tasks.register("frayTest", Test::class.java)
-          } else {
-            baseTest
-          }
       addFrayDependencies(
           targetProject,
           baseTest.name,
