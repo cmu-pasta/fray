@@ -14,6 +14,12 @@ class TestRunner(val config: Configuration) {
   var currentDivision = 1
   val stdout = System.out
 
+  private fun iterationsPerSecond(iteration: Int): Double {
+    val elapsedMillis = config.elapsedTime()
+    if (elapsedMillis <= 0) return 0.0
+    return iteration * 1000.0 / elapsedMillis
+  }
+
   fun reportProgress(iteration: Int, bugsFound: Int) {
     if (config.isReplay) return
     if (iteration % currentDivision == 0) {
@@ -22,6 +28,7 @@ class TestRunner(val config: Configuration) {
       stdout.println("Fray Testing:")
       stdout.println("Report is available at: ${config.report}")
       stdout.println("Iterations: $iteration")
+      stdout.println("Iterations/sec: %.2f".format(iterationsPerSecond(iteration)))
       if (bugsFound > 0) {
         stdout.println("Bugs Found: $bugsFound")
       }
@@ -81,7 +88,9 @@ class TestRunner(val config: Configuration) {
 
     context.shutDown()
     config.frayLogger.info(
-        "Run finished. Total iter: ${config.currentIteration}, Elapsed time: ${config.elapsedTime()}ms",
+        "Run finished. Total iter: ${config.currentIteration}, " +
+            "Elapsed time: ${config.elapsedTime()}ms, " +
+            "Iterations/sec: %.2f".format(iterationsPerSecond(config.currentIteration)),
         true,
     )
     config.executionInfo.executor.afterExecution()
