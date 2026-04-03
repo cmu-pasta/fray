@@ -29,6 +29,7 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
               name.startsWith("sun/nio/ch/") ||
               name.startsWith("sun/net/httpserver/") ||
               name.startsWith("java/io/PipedInputStream") ||
+              name.startsWith("java/io/BufferedOutputStream") ||
               name.startsWith("sun/security/")
     }
   }
