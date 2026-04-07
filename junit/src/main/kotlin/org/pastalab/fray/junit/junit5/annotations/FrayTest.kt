@@ -54,6 +54,7 @@ annotation class FrayTest(
     val ignoreTimedBlock: Boolean = true,
     val resetClassLoaderPerIteration: Boolean = true,
     val abortThreadExecutionAfterMainExit: Boolean = false,
+    val ignoreUncaughtExceptions: Boolean = false,
     val replay: String = "",
 ) {
   companion object {

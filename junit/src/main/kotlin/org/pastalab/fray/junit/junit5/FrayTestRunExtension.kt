@@ -74,7 +74,7 @@ class FrayTestRunExtension : InvocationInterceptor {
                     getSystemClassPaths(),
                     emptyMap(),
                 ),
-                false,
+                frayTestAnnotation.ignoreUncaughtExceptions,
                 false,
                 -1,
             ),
