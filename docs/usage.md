@@ -119,6 +119,19 @@ fray {
 
 The generated `frayTest` task is only created when `testTask = "test"`, and in that case the original `test` task is left unchanged. If you point Fray at another task such as `integrationTest`, Fray configures that task directly and does not create a separate `frayTest` task.
 
+You can also further customize the generated `frayTest` task:
+
+```kotlin
+tasks.withType<FrayTestTask>()
+    .configureEach {
+  jvmArgs("-Xmx32G")
+  jvmArgs("-Dfray.debug=true")
+  testLogging {
+    showStandardStreams = true
+  }
+}
+```
+
 ### Run test from IDE
 
 If you are using an IDE, you can run the test as you would run any other JUnit test. Note that if you are using Intellij IDEA,
