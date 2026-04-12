@@ -51,7 +51,12 @@ data class MethodExecutor(
     val clazz = Class.forName(clazz, true, Thread.currentThread().contextClassLoader)
     try {
       if (args.isEmpty() && method != "main") {
-        val m = clazz.getDeclaredMethod(method)
+        val m =
+            try {
+              clazz.getDeclaredMethod(method)
+            } catch (e: NoSuchMethodException) {
+              clazz.getMethod(method)
+            }
         m.isAccessible = true
         if (m.modifiers and java.lang.reflect.Modifier.STATIC == 0) {
           val constructor = clazz.getDeclaredConstructor()

@@ -22,6 +22,7 @@ class SynchronizedMethodInstrumenter(cv: ClassVisitor, private val instrumenting
     if (instrumentingJdk) {
       shouldInstrument =
           name.startsWith("java/util/Observable") ||
+              name.startsWith("java/lang/management") ||
               name.startsWith("java/util/TimeZone") ||
               name.startsWith("java/lang/Thread") ||
               name.startsWith("java/util/Vector") ||
