@@ -10,7 +10,7 @@ import static org.junit.platform.testkit.engine.EventConditions.test;
 
 public class AtomicTests {
     @Test
-    public void testFileChannelNoCrash() {
+    public void testUpdateAndGetWithLambdaAccessingPrimitives() {
       EngineTestKit.engine("junit-jupiter")
           .selectors(selectClass(org.pastalab.fray.junit.internal.atomic.AtomicTests.class))
           .execute()
