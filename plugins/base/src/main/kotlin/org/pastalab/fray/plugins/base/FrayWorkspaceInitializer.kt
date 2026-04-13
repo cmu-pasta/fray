@@ -75,15 +75,16 @@ class FrayWorkspaceInitializer(
 
   private fun downloadJDK(): String {
     val osName = System.getProperty("os.name").lowercase()
-    if (osName.contains("linux") && isRunningOnNixOS()) {
-      val nixJdkHome = System.getenv("JDK25_HOME")
-      println("Running on NixOS, using system JDK: $nixJdkHome")
-      if (nixJdkHome != null) {
-        return nixJdkHome
-      } else {
-        throw RuntimeException("Running on NixOS but JDK25_HOME is not set.")
+    val jdkHome = System.getenv("JDK25_HOME")?.takeIf { it.isNotBlank() }
+    if (jdkHome != null) {
+      val jdkHomeDir = File(jdkHome)
+      if (!jdkHomeDir.exists() || !jdkHomeDir.isDirectory) {
+        throw RuntimeException("JDK25_HOME is set to an invalid JDK directory: $jdkHome")
       }
+      println("JDK25_HOME is set: $jdkHome, using the user-provided JDK.")
+      return jdkHome
     }
+
     val downloadUrl = getDownloadUrl(osName)
     val fileName = (workDir / downloadUrl.substringAfterLast("/")).absolutePathString()
     val jdkFolder = (workDir / getJDKFolderName(osName)).toFile()
