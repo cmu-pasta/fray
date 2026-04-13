@@ -9,6 +9,7 @@ import org.gradle.api.tasks.testing.junit.JUnitOptions
 import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions
 import org.gradle.api.tasks.testing.testng.TestNGOptions
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+import org.pastalab.fray.gradle.tasks.FrayTestTask
 import org.pastalab.fray.gradle.tasks.PrepareWorkspaceTask
 import org.pastalab.fray.plugins.base.Commons
 
@@ -16,14 +17,13 @@ class FrayPlugin : Plugin<Project> {
   override fun apply(target: Project) {
     val extension = target.extensions.create("fray", FrayExtension::class.java)
     val jlink = target.tasks.register("jlink", PrepareWorkspaceTask::class.java)
-    val frayTest = target.tasks.register("frayTest", Test::class.java)
 
     target.afterEvaluate {
       val targetProject = extension.target?.let { target.project(it) } ?: target
       val baseTest = targetProject.tasks.named(extension.testTask, Test::class.java)
       val testTask =
           if (baseTest.name == "test") {
-            frayTest
+            target.tasks.register("frayTest", FrayTestTask::class.java)
           } else {
             baseTest
           }
@@ -167,7 +167,7 @@ class FrayPlugin : Plugin<Project> {
   }
 
   private fun configureFrayTask(
-      testTaskProvider: TaskProvider<Test>,
+      testTaskProvider: TaskProvider<out Test>,
       baseTest: Test,
       javaPath: String,
       jvmtiPath: String,
