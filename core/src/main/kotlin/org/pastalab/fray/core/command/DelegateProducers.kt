@@ -30,8 +30,3 @@ enum class NetworkDelegateType {
       synchronizer: DelegateSynchronizer,
   ): NetworkDelegate
 }
-
-enum class SystemTimeDelegateType {
-  MOCK,
-  NONE,
-}

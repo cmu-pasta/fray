@@ -28,6 +28,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.core.controllers.TimeControllerInterface
 import org.pastalab.fray.core.debugger.DebuggerRegistry
 import org.pastalab.fray.core.logger.FrayLogger
 import org.pastalab.fray.core.observers.AntithesisErrorReporter
@@ -402,26 +403,26 @@ class MainCommand : CliktCommand() {
 }
 
 data class Configuration(
-    val executionInfo: ExecutionInfo,
-    val report: Path,
-    var iter: Int,
-    val timeout: Int,
-    var scheduler: Scheduler,
-    val randomnessProvider: RandomnessProvider,
-    val fullSchedule: Boolean,
-    val exploreMode: Boolean,
-    var noExitWhenBugFound: Boolean,
-    val isReplay: Boolean,
-    val noFray: Boolean,
-    val dummyRun: Boolean,
-    val networkDelegateType: NetworkDelegateType,
-    val systemTimeDelegateType: SystemTimeDelegateType,
-    val virtualTimeDelta: Long,
-    val ignoreTimedBlock: Boolean,
-    val sleepAsYield: Boolean,
-    val resetClassLoader: Boolean,
-    val redirectStdout: Boolean,
-    val abortThreadExecutionAfterMainExit: Boolean,
+  val executionInfo: ExecutionInfo,
+  val report: Path,
+  var iter: Int,
+  val timeout: Int,
+  var scheduler: Scheduler,
+  val randomnessProvider: RandomnessProvider,
+  val fullSchedule: Boolean,
+  val exploreMode: Boolean,
+  var noExitWhenBugFound: Boolean,
+  val isReplay: Boolean,
+  val noFray: Boolean,
+  val dummyRun: Boolean,
+  val networkDelegateType: NetworkDelegateType,
+  val systemTimeDelegateType: Class<TimeControllerInterface>,
+  val virtualTimeDelta: Long,
+  val ignoreTimedBlock: Boolean,
+  val sleepAsYield: Boolean,
+  val resetClassLoader: Boolean,
+  val redirectStdout: Boolean,
+  val abortThreadExecutionAfterMainExit: Boolean,
 ) {
   val scheduleObservers = mutableListOf<ScheduleObserver<ThreadContext>>()
   val testStatusObservers = mutableListOf<TestStatusObserver>()

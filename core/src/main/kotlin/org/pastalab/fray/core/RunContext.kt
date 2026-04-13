@@ -35,7 +35,8 @@ import org.pastalab.fray.core.concurrency.context.WriteLockContext
 import org.pastalab.fray.core.concurrency.operations.*
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.core.controllers.RunFinishedHandler
-import org.pastalab.fray.core.controllers.TimeController
+import org.pastalab.fray.core.controllers.SystemTimeController
+import org.pastalab.fray.core.controllers.TimeControllerInterface
 import org.pastalab.fray.core.scheduler.FrayIdeaPluginScheduler
 import org.pastalab.fray.core.utils.HelperThread
 import org.pastalab.fray.core.utils.SynchronizationManager
@@ -62,7 +63,7 @@ class RunContext(val config: Configuration) {
   var forkJoinPool: ForkJoinPool? = null
   val reactiveResumedThreadQueue = ConcurrentLinkedQueue<Long>()
   val reactiveBlockedThreadQueue = ConcurrentLinkedQueue<Long>()
-  val timeController = TimeController(config)
+  val timeController: TimeControllerInterface = SystemTimeController()
   val prioritizedThreads = mutableSetOf<Long>()
   var mainExiting = false
   private val semaphoreManager = ReferencedContextManager {
@@ -1105,7 +1106,7 @@ class RunContext(val config: Configuration) {
     ) {
       return 0
     }
-    val currentTime = timeController.currentTimeMillisRaw()
+    val currentTime = timeController.currentTimeMillis()
     registeredThreads.values.forEach {
       val op = it.pendingOperation
       if (op is BlockedOperation && op.blockedUntil != BLOCKED_OPERATION_NOT_TIMED) {
@@ -1159,19 +1160,13 @@ class RunContext(val config: Configuration) {
       if (!reactiveBlockedThreadQueue.isEmpty()) {
         synchronized(reactiveResumedThreadQueue) {
           if (reactiveResumedThreadQueue.isEmpty()) {
-            if (timeController.isVirtualTimeMode && blockingTime > 0) {
-              timeController.nanoTime += TimeUnit.MILLISECONDS.toNanos(blockingTime)
-            } else {
-              (reactiveResumedThreadQueue as Object).wait(blockingTime)
+            if (blockingTime > 0) {
+              timeController.fastForwardBlockingTime(blockingTime)
             }
           }
         }
       } else if (blockingTime > 0) {
-        if (timeController.isVirtualTimeMode) {
-          timeController.nanoTime += TimeUnit.MILLISECONDS.toNanos(blockingTime)
-        } else {
-          Thread.sleep(blockingTime)
-        }
+        timeController.fastForwardBlockingTime(blockingTime)
       }
     }
     unblockTimedBlocking()
