@@ -2,7 +2,7 @@ import org.pastalab.fray.gradle.tasks.FrayTestTask
 
 plugins {
     id("java")
-    id("org.pastalab.fray.gradle") version "0.8.5-SNAPSHOT"
+    id("org.pastalab.fray.gradle") version "0.8.6-SNAPSHOT"
 }
 
 java {
