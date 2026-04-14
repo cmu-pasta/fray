@@ -63,7 +63,7 @@ class RunContext(val config: Configuration) {
   var forkJoinPool: ForkJoinPool? = null
   val reactiveResumedThreadQueue = ConcurrentLinkedQueue<Long>()
   val reactiveBlockedThreadQueue = ConcurrentLinkedQueue<Long>()
-  val timeController: TimeControllerInterface = SystemTimeController()
+  val timeController: TimeControllerInterface = config.systemTimeDelegateType.getDeclaredConstructor(RunContext::class.java).newInstance() as TimeControllerInterface
   val prioritizedThreads = mutableSetOf<Long>()
   var mainExiting = false
   private val semaphoreManager = ReferencedContextManager {

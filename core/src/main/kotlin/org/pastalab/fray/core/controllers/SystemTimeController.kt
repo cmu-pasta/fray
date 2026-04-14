@@ -1,8 +1,9 @@
 package org.pastalab.fray.core.controllers
 
+import org.pastalab.fray.core.RunContext
 import java.time.Instant
 
-class SystemTimeController: TimeControllerInterface {
+class SystemTimeController(context: RunContext): TimeControllerInterface(context) {
 
   override fun currentTimeMillis(): Long {
     return System.currentTimeMillis()
@@ -16,7 +17,7 @@ class SystemTimeController: TimeControllerInterface {
     return System.nanoTime()
   }
 
-  override fun advanceTime() {
+  override fun addDeadline(deadline: Long) {
   }
 
   override fun fastForwardBlockingTime(time: Long) {
