@@ -1,9 +1,9 @@
 package org.pastalab.fray.core
 
 import java.nio.file.Path
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.test.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.pastalab.fray.core.command.Configuration
@@ -11,43 +11,32 @@ import org.pastalab.fray.core.command.ExecutionInfo
 import org.pastalab.fray.core.command.LambdaExecutor
 import org.pastalab.fray.core.command.NetworkDelegateType
 import org.pastalab.fray.core.command.SystemTimeDelegateType
+import org.pastalab.fray.core.concurrency.context.ConditionSignalContext
 import org.pastalab.fray.core.concurrency.context.ObjectNotifyContext
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
-import org.pastalab.fray.core.concurrency.operations.ObjectWakeBlocked
-import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
 import org.pastalab.fray.core.randomness.ControlledRandomProvider
 import org.pastalab.fray.core.scheduler.RandomScheduler
 import org.pastalab.fray.rmi.ThreadState
 
 /**
  * Regression for the `ClassCastException: ObjectWakeBlocked cannot be cast to
- * ThreadResumeOperation` thrown from [RunContext.objectWaitDoneImpl].
+ * ThreadResumeOperation` thrown from [RunContext.objectWaitDoneImpl] (issue #424).
  *
- * Background: When a thread T is waiting on a JVM monitor and is unblocked (e.g. via notify), the
- * scheduler sets `T.pendingOperation = ObjectWakeBlocked` and `T.state = Runnable`. When the
- * scheduler later picks T to run, it sets `T.state = Running` and then [RunContext.runThread]
- * rewrites the pending operation to [ThreadResumeOperation] and calls notifyAll on the wait object
- * so T's `Object.wait()` actually returns. T then re-enters Fray via `onObjectWaitDone` →
- * [RunContext.objectWaitDoneImpl], which loops until `state == Running` and then unconditionally
- * casts the pending operation to [ThreadResumeOperation].
+ * Fray assumes its internal scheduler state is mutated sequentially: by the time a waiter's loop in
+ * [RunContext.objectWaitDoneImpl] exits with `state == Running`, the scheduler thread's
+ * [RunContext.runThread] must have already rewritten `pendingOperation` from `*WakeBlocked` to
+ * [org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation]. When something races with
+ * Fray's scheduler (a JVMTI agent, a bytecode transformer, or a misbehaving test harness running on
+ * a thread Fray does not schedule), the waiter can observe `state == Running` while
+ * `pendingOperation` is still `*WakeBlocked`, and the subsequent cast produced a bare
+ * `ClassCastException` with no diagnostic context. That CCE misled investigators into treating the
+ * symptom as a Fray bug rather than the host-environment race it actually surfaces.
  *
- * That cast is unsound. The JVM permits spurious wakeups of `Object.wait()` (per the
- * `java.lang.Object#wait` Javadoc), and the Fray scheduler exploits this — `objectWaitImpl`
- * randomly synthesises spurious unblocks. If T's blocking `wait()` returns spuriously after the
- * scheduler has flipped `state = Running` but before [runThread] has rewritten the pending
- * operation (or just on a memory-visibility race in that window), T observes `state == Running`
- * while `pendingOperation` is still [ObjectWakeBlocked], and the cast blows up with a
- * ClassCastException.
- *
- * This race was observed against a Kafka workload (`KafkaAdminClient.close` → `Thread.join` →
- * `Object.wait`) under heavy notify churn, which intermittently crashed Fray internally with this
- * CCE.
- *
- * The fix in [RunContext.objectWaitDoneImpl] mirrors what [runThread] would have done: convert any
- * leftover [ObjectWakeBlocked] / [ConditionWakeBlocked] into a [ThreadResumeOperation] before the
- * cast. This test reproduces the exact conditions the race produces — `state = Running`,
- * `pendingOperation = ObjectWakeBlocked` — by setting the fields directly, then asserts that
- * `objectWaitDoneImpl` returns successfully without throwing.
+ * This test simulates that invariant violation by directly setting `state = Running` after the
+ * scheduler has moved the thread to `*WakeBlocked` / `Runnable` but before `runThread` would
+ * ordinarily convert the pending op. The assertion is that [RunContext.objectWaitDoneImpl] now
+ * throws [FrayInternalError] with a message naming the observed pending-op type and pointing at the
+ * likely causes, instead of the cryptic `ClassCastException` users previously saw.
  */
 class RunContextObjectWaitDoneTest {
   val context =
@@ -87,77 +76,74 @@ class RunContextObjectWaitDoneTest {
   }
 
   /**
-   * The exact race the bug observes: the thread sees `state == Running` while its
-   * `pendingOperation` is still [ObjectWakeBlocked] from a prior unblock. Pre-fix this triggered a
-   * ClassCastException at the cast on the last line of [RunContext.objectWaitDoneImpl]; post-fix
-   * the function converts to [ThreadResumeOperation] and returns its `noTimeout`.
+   * Invariant violation with `pendingOperation = ObjectWakeBlocked` while `state = Running`. Must
+   * produce a diagnostic [FrayInternalError] that names the observed op type, not a bare
+   * `ClassCastException`.
    */
   @Test
-  fun objectWaitDoneSurvivesObjectWakeBlocked() {
+  fun objectWaitDoneReportsInvariantViolationOnObjectWakeBlocked() {
     val tid = Thread.currentThread().id
     val threadContext = context.registeredThreads[tid]!!
 
     val waitObject = Object()
     val signalContext = context.signalContextFor(waitObject) as ObjectNotifyContext
-    val lockContext = signalContext.lockContext
-
-    // Establish the same lock-manager bookkeeping that a real wait would set up: this thread
-    // holds the wait object's monitor lock at the Fray level, since `objectWaitDoneImpl` will
-    // attempt to re-acquire it via `lockBecauseOfWait = true` after the loop exits and we want
-    // that re-acquire path (and in particular the `wakingThreads` interaction) to stay reachable.
     signalContext.addWaitingThread(threadContext, /* blockedUntil= */ -1L, /* canInterrupt= */ true)
-    // Simulate the unblock that put the thread into the WakeBlocked / Runnable transitional
-    // state: the ObjectNotifyContext flips the pending operation to ObjectWakeBlocked and
-    // promotes the thread back to Runnable when canLock is true.
     signalContext.unblockThread(tid, InterruptionType.RESOURCE_AVAILABLE)
-    assertTrue(
-        threadContext.pendingOperation is ObjectWakeBlocked,
-        "test setup precondition: expected pending op to be ObjectWakeBlocked, got ${threadContext.pendingOperation}",
-    )
 
-    // Simulate the race: scheduler flipped state = Running, but `runThread` has not yet
-    // converted ObjectWakeBlocked -> ThreadResumeOperation.
+    // Simulate an out-of-sequence mutation: scheduler state flipped to Running without the
+    // corresponding `runThread` conversion having run.
     threadContext.state = ThreadState.Running
 
-    // Pre-fix this throws ClassCastException: ObjectWakeBlocked cannot be cast to
-    // ThreadResumeOperation.
-    val noTimeout = context.objectWaitDoneImpl(waitObject, /* canInterrupt= */ true)
-
-    // RESOURCE_AVAILABLE => noTimeout == true (per
-    // ObjectNotifyContext.updatedThreadContextDueToUnblock)
-    assertTrue(noTimeout, "RESOURCE_AVAILABLE unblock should report noTimeout=true")
-    val finalOp = threadContext.pendingOperation
-    assertNotNull(finalOp)
+    val err =
+        assertFailsWith<FrayInternalError> {
+          context.objectWaitDoneImpl(waitObject, /* canInterrupt= */ true)
+        }
     assertTrue(
-        finalOp is ThreadResumeOperation,
-        "expected pending op to be promoted to ThreadResumeOperation, got $finalOp",
+        err.message!!.contains("ObjectWakeBlocked"),
+        "diagnostic should name the observed pending-op type, got: ${err.message}",
     )
-    // Sanity: lock should now be held by this thread (objectWaitDoneImpl re-acquires via
-    // lockBecauseOfWait = true).
     assertTrue(
-        lockContext.isLockHolder(tid),
-        "expected this thread to hold the lock after objectWaitDone",
+        err.message!!.contains("#424"),
+        "diagnostic should point at the tracking issue, got: ${err.message}",
     )
   }
 
   /**
-   * Companion case: when the unblock came from a TIMEOUT, `noTimeout` propagates as `false`. This
-   * confirms the converted `ThreadResumeOperation` carries through the timeout flag from the
-   * original [ObjectWakeBlocked].
+   * [java.util.concurrent.locks.Condition] analogue of the same invariant violation. Setup goes
+   * through the production `lockNewCondition` entry point — the same path a user calling
+   * `lock.newCondition()` takes — so the `ConditionSignalContext` / `LockContext` bookkeeping is
+   * realistic. Before the diagnostic was added, this path produced `ClassCastException:
+   * ConditionWakeBlocked cannot be cast to ThreadResumeOperation`.
    */
   @Test
-  fun objectWaitDoneSurvivesObjectWakeBlockedFromTimeout() {
+  fun conditionAwaitDoneReportsInvariantViolationOnConditionWakeBlocked() {
     val tid = Thread.currentThread().id
     val threadContext = context.registeredThreads[tid]!!
 
-    val waitObject = Object()
-    val signalContext = context.signalContextFor(waitObject) as ObjectNotifyContext
+    val lock = ReentrantLock()
+    val condition = lock.newCondition()
+    context.lockNewCondition(condition, lock)
+
+    val signalContext = context.signalContextFor(condition) as ConditionSignalContext
+    val lockContext = signalContext.lockContext
+
+    lockContext.lock(threadContext, false, false, false)
     signalContext.addWaitingThread(threadContext, /* blockedUntil= */ -1L, /* canInterrupt= */ true)
-    signalContext.unblockThread(tid, InterruptionType.TIMEOUT)
+    lockContext.unlock(
+        threadContext,
+        /* unlockBecauseOfWait= */ true,
+        /* earlyExit= */ false,
+    )
+    signalContext.unblockThread(tid, InterruptionType.RESOURCE_AVAILABLE)
     threadContext.state = ThreadState.Running
 
-    val noTimeout = context.objectWaitDoneImpl(waitObject, /* canInterrupt= */ true)
-    assertFalse(noTimeout, "TIMEOUT unblock should report noTimeout=false")
-    assertTrue(threadContext.pendingOperation is ThreadResumeOperation)
+    val err =
+        assertFailsWith<FrayInternalError> {
+          context.objectWaitDoneImpl(condition, /* canInterrupt= */ true)
+        }
+    assertTrue(
+        err.message!!.contains("ConditionWakeBlocked"),
+        "diagnostic should name the observed pending-op type, got: ${err.message}",
+    )
   }
 }

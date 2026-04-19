@@ -567,18 +567,28 @@ class RunContext(val config: Configuration) {
             canInterrupt = false,
         )
     verifyOrReport { locked }
-    // The user thread's wait/await may return (and the loop above may exit with state == Running)
-    // before the scheduler thread that promoted us to Running has finished running [runThread] —
-    // where [promoteWakeBlockedToResume] would have performed this conversion. Per the JVM spec,
-    // Object.wait may also return spuriously, which can cause us to observe the state flip before
-    // the pendingOperation has been rewritten. Both cases leave us holding a *WakeBlocked here;
-    // perform the same conversion so the cast below succeeds.
-    val pendingOperation = promoteWakeBlockedToResume(context)
-    verifyOrReport { pendingOperation is ThreadResumeOperation }
+    // Fray's internal scheduler logic is assumed to execute sequentially: by the time a waiter
+    // exits the loop above with `state == Running`, the scheduler thread's [runThread] must have
+    // already rewritten `pendingOperation` from `*WakeBlocked` to [ThreadResumeOperation]. If we
+    // observe `state == Running` while `pendingOperation` is still `*WakeBlocked`, another thread
+    // raced with Fray's scheduler and mutated state out of sequence — typically the host
+    // environment (a JVMTI agent, a bytecode transformer, or a test harness) running on a thread
+    // Fray does not schedule. Surface that as a diagnostic rather than a bare ClassCastException,
+    // which previously misled investigators (see issue #424).
+    val pendingOperation = context.pendingOperation
+    if (pendingOperation !is ThreadResumeOperation) {
+      throw FrayInternalError(
+          "objectWaitDoneImpl observed state=Running but pendingOperation is " +
+              "${pendingOperation::class.simpleName} on thread ${context.thread.id}. Fray's " +
+              "scheduler state must be mutated sequentially; reaching this point indicates " +
+              "another thread (user code, a JVMTI agent, a bytecode transformer, or a test " +
+              "harness) raced with Fray's internal logic. See issue #424."
+      )
+    }
     if (canInterrupt) {
       context.checkInterrupt()
     }
-    return (pendingOperation as ThreadResumeOperation).noTimeout
+    return pendingOperation.noTimeout
   }
 
   fun threadInterrupt(t: Thread) = verifyNoThrow {
@@ -1295,33 +1305,18 @@ class RunContext(val config: Configuration) {
   fun runThread(currentThread: ThreadContext, nextThread: ThreadContext) {
     when (val pendingOperation = nextThread.pendingOperation) {
       is ConditionWakeBlocked -> {
-        promoteWakeBlockedToResume(nextThread)
+        nextThread.pendingOperation = ThreadResumeOperation(pendingOperation.noTimeout)
         pendingOperation.conditionContext.sendSignalToObject()
         return
       }
       is ObjectWakeBlocked -> {
-        promoteWakeBlockedToResume(nextThread)
+        nextThread.pendingOperation = ThreadResumeOperation(pendingOperation.noTimeout)
         pendingOperation.objectContext.sendSignalToObject()
         return
       }
     }
     if (currentThread != nextThread || Thread.currentThread() is HelperThread) {
       nextThread.unblock()
-    }
-  }
-
-  // Rewrites a wake-blocked pending op (ObjectWakeBlocked / ConditionWakeBlocked) into a
-  // ThreadResumeOperation, preserving `noTimeout`. This conversion is required in two places:
-  // when the scheduler actually runs the thread ([runThread]) and when the user thread observes
-  // `state == Running` before [runThread] has rewritten the op ([objectWaitDoneImpl]). Other ops
-  // pass through unchanged.
-  private fun promoteWakeBlockedToResume(context: ThreadContext): Operation {
-    return when (val op = context.pendingOperation) {
-      is ObjectWakeBlocked ->
-          ThreadResumeOperation(op.noTimeout).also { context.pendingOperation = it }
-      is ConditionWakeBlocked ->
-          ThreadResumeOperation(op.noTimeout).also { context.pendingOperation = it }
-      else -> op
     }
   }
 
