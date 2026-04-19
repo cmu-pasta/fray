@@ -93,7 +93,7 @@ class RunContext(val config: Configuration) {
           else -> ReentrantLockContext(it)
         }
       }
-  internal val signalManager =
+  private val signalManager =
       ReferencedContextManager<SignalContext> {
         val lockContext = lockManager.getContext(it)
         verifyOrReport { it !is Condition }
@@ -101,6 +101,10 @@ class RunContext(val config: Configuration) {
         lockContext.signalContexts.add(obj)
         obj
       }
+
+  // Narrow test-only accessor; production code inside this class uses [signalManager] directly.
+  internal fun signalContextFor(obj: Any): SignalContext = signalManager.getContext(obj)
+
   private val stampedLockManager =
       ReferencedContextManager<StampedLockContext> {
         verifyOrReport({ it is StampedLock }) {
@@ -565,24 +569,11 @@ class RunContext(val config: Configuration) {
     verifyOrReport { locked }
     // The user thread's wait/await may return (and the loop above may exit with state == Running)
     // before the scheduler thread that promoted us to Running has finished running [runThread] —
-    // see the conversion of ObjectWakeBlocked / ConditionWakeBlocked there. Per the JVM spec,
+    // where [promoteWakeBlockedToResume] would have performed this conversion. Per the JVM spec,
     // Object.wait may also return spuriously, which can cause us to observe the state flip before
-    // the pendingOperation has been rewritten. Both cases leave us holding an *WakeBlocked here;
-    // perform the same conversion that [runThread] would have done so the cast below succeeds.
-    val pendingOperation =
-        when (val op = context.pendingOperation) {
-          is ObjectWakeBlocked -> {
-            val resumed = ThreadResumeOperation(op.noTimeout)
-            context.pendingOperation = resumed
-            resumed
-          }
-          is ConditionWakeBlocked -> {
-            val resumed = ThreadResumeOperation(op.noTimeout)
-            context.pendingOperation = resumed
-            resumed
-          }
-          else -> op
-        }
+    // the pendingOperation has been rewritten. Both cases leave us holding a *WakeBlocked here;
+    // perform the same conversion so the cast below succeeds.
+    val pendingOperation = promoteWakeBlockedToResume(context)
     verifyOrReport { pendingOperation is ThreadResumeOperation }
     if (canInterrupt) {
       context.checkInterrupt()
@@ -1304,18 +1295,33 @@ class RunContext(val config: Configuration) {
   fun runThread(currentThread: ThreadContext, nextThread: ThreadContext) {
     when (val pendingOperation = nextThread.pendingOperation) {
       is ConditionWakeBlocked -> {
-        nextThread.pendingOperation = ThreadResumeOperation(pendingOperation.noTimeout)
+        promoteWakeBlockedToResume(nextThread)
         pendingOperation.conditionContext.sendSignalToObject()
         return
       }
       is ObjectWakeBlocked -> {
-        nextThread.pendingOperation = ThreadResumeOperation(pendingOperation.noTimeout)
+        promoteWakeBlockedToResume(nextThread)
         pendingOperation.objectContext.sendSignalToObject()
         return
       }
     }
     if (currentThread != nextThread || Thread.currentThread() is HelperThread) {
       nextThread.unblock()
+    }
+  }
+
+  // Rewrites a wake-blocked pending op (ObjectWakeBlocked / ConditionWakeBlocked) into a
+  // ThreadResumeOperation, preserving `noTimeout`. This conversion is required in two places:
+  // when the scheduler actually runs the thread ([runThread]) and when the user thread observes
+  // `state == Running` before [runThread] has rewritten the op ([objectWaitDoneImpl]). Other ops
+  // pass through unchanged.
+  private fun promoteWakeBlockedToResume(context: ThreadContext): Operation {
+    return when (val op = context.pendingOperation) {
+      is ObjectWakeBlocked ->
+          ThreadResumeOperation(op.noTimeout).also { context.pendingOperation = it }
+      is ConditionWakeBlocked ->
+          ThreadResumeOperation(op.noTimeout).also { context.pendingOperation = it }
+      else -> op
     }
   }
 

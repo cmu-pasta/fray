@@ -39,10 +39,9 @@ import org.pastalab.fray.rmi.ThreadState
  * while `pendingOperation` is still [ObjectWakeBlocked], and the cast blows up with a
  * ClassCastException.
  *
- * This was reported in the Tapestry/Crochet stripe-lock memo
- * (`feedback_crochet_fray_stripe_lock_deadlock.md`): the Kafka workload (`KafkaAdminClient.close` →
- * `Thread.join` → `Object.wait`) intermittently crashes Fray internally with this CCE under heavy
- * notify churn.
+ * This race was observed against a Kafka workload (`KafkaAdminClient.close` → `Thread.join` →
+ * `Object.wait`) under heavy notify churn, which intermittently crashed Fray internally with this
+ * CCE.
  *
  * The fix in [RunContext.objectWaitDoneImpl] mirrors what [runThread] would have done: convert any
  * leftover [ObjectWakeBlocked] / [ConditionWakeBlocked] into a [ThreadResumeOperation] before the
@@ -99,7 +98,7 @@ class RunContextObjectWaitDoneTest {
     val threadContext = context.registeredThreads[tid]!!
 
     val waitObject = Object()
-    val signalContext = context.signalManager.getContext(waitObject) as ObjectNotifyContext
+    val signalContext = context.signalContextFor(waitObject) as ObjectNotifyContext
     val lockContext = signalContext.lockContext
 
     // Establish the same lock-manager bookkeeping that a real wait would set up: this thread
@@ -152,7 +151,7 @@ class RunContextObjectWaitDoneTest {
     val threadContext = context.registeredThreads[tid]!!
 
     val waitObject = Object()
-    val signalContext = context.signalManager.getContext(waitObject) as ObjectNotifyContext
+    val signalContext = context.signalContextFor(waitObject) as ObjectNotifyContext
     signalContext.addWaitingThread(threadContext, /* blockedUntil= */ -1L, /* canInterrupt= */ true)
     signalContext.unblockThread(tid, InterruptionType.TIMEOUT)
     threadContext.state = ThreadState.Running
