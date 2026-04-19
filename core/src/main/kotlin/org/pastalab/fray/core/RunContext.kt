@@ -93,7 +93,7 @@ class RunContext(val config: Configuration) {
           else -> ReentrantLockContext(it)
         }
       }
-  private val signalManager =
+  internal val signalManager =
       ReferencedContextManager<SignalContext> {
         val lockContext = lockManager.getContext(it)
         verifyOrReport { it !is Condition }
@@ -563,7 +563,26 @@ class RunContext(val config: Configuration) {
             canInterrupt = false,
         )
     verifyOrReport { locked }
-    val pendingOperation = context.pendingOperation
+    // The user thread's wait/await may return (and the loop above may exit with state == Running)
+    // before the scheduler thread that promoted us to Running has finished running [runThread] —
+    // see the conversion of ObjectWakeBlocked / ConditionWakeBlocked there. Per the JVM spec,
+    // Object.wait may also return spuriously, which can cause us to observe the state flip before
+    // the pendingOperation has been rewritten. Both cases leave us holding an *WakeBlocked here;
+    // perform the same conversion that [runThread] would have done so the cast below succeeds.
+    val pendingOperation =
+        when (val op = context.pendingOperation) {
+          is ObjectWakeBlocked -> {
+            val resumed = ThreadResumeOperation(op.noTimeout)
+            context.pendingOperation = resumed
+            resumed
+          }
+          is ConditionWakeBlocked -> {
+            val resumed = ThreadResumeOperation(op.noTimeout)
+            context.pendingOperation = resumed
+            resumed
+          }
+          else -> op
+        }
     verifyOrReport { pendingOperation is ThreadResumeOperation }
     if (canInterrupt) {
       context.checkInterrupt()
