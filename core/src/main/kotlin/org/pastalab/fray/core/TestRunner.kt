@@ -10,7 +10,6 @@ import org.pastalab.fray.runtime.Runtime
 
 class TestRunner(val config: Configuration) {
 
-  val context = RunContext(config)
   var currentDivision = 1
   val stdout = System.out
 
@@ -20,7 +19,7 @@ class TestRunner(val config: Configuration) {
     return iteration * 1000.0 / elapsedMillis
   }
 
-  fun reportProgress(iteration: Int, bugsFound: Int) {
+  fun reportProgress(iteration: Int) {
     if (config.isReplay) return
     if (iteration % currentDivision == 0) {
       stdout.print("\u001B[2J")
@@ -29,9 +28,6 @@ class TestRunner(val config: Configuration) {
       stdout.println("Report is available at: ${config.report}")
       stdout.println("Iterations: $iteration")
       stdout.println("Iterations/sec: %.2f".format(iterationsPerSecond(iteration)))
-      if (bugsFound > 0) {
-        stdout.println("Bugs Found: $bugsFound")
-      }
     }
     if (iteration / currentDivision == 10) {
       currentDivision *= 10
@@ -41,7 +37,7 @@ class TestRunner(val config: Configuration) {
   fun run(): Throwable? {
     config.executionInfo.executor.beforeExecution()
     config.frayLogger.info("Fray started.")
-    val bugsFound = 0
+    var runResult: Throwable? = null
 
     while (config.shouldRun()) {
       if (config.redirectStdout) {
@@ -50,7 +46,7 @@ class TestRunner(val config: Configuration) {
         val stderr = config.report / "stderr.txt"
         System.setErr(PrintStream(FileOutputStream(stderr.toFile())))
       }
-      reportProgress(config.currentIteration, bugsFound)
+      reportProgress(config.currentIteration)
       if (config.noFray) {
         try {
           config.executionInfo.executor.execute(config.resetClassLoader)
@@ -58,6 +54,7 @@ class TestRunner(val config: Configuration) {
       } else {
         val t =
             Thread({
+              val context = RunContext(config)
               val out = System.out
               val err = System.err
               try {
@@ -73,20 +70,22 @@ class TestRunner(val config: Configuration) {
               }
               System.setOut(out)
               System.setErr(err)
+              if (runResult == null) {
+                runResult = context.bugFound
+              }
+              context.shutDown()
             })
         t.start()
         t.join()
       }
       if (
           config.isReplay ||
-              ((context.bugFound != null && context.bugFound !is FrayInternalError) &&
-                  !config.exploreMode)
+              ((runResult != null && runResult !is FrayInternalError) && !config.exploreMode)
       )
           break
       config.nextIteration()
     }
 
-    context.shutDown()
     config.frayLogger.info(
         "Run finished. Total iter: ${config.currentIteration}, " +
             "Elapsed time: ${config.elapsedTime()}ms, " +
@@ -94,6 +93,6 @@ class TestRunner(val config: Configuration) {
         true,
     )
     config.executionInfo.executor.afterExecution()
-    return context.bugFound
+    return runResult
   }
 }
