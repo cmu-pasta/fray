@@ -2,7 +2,7 @@ import org.pastalab.fray.gradle.tasks.FrayTestTask
 
 plugins {
     id("java")
-    id("org.pastalab.fray.gradle") version "0.8.6-SNAPSHOT"
+    id("org.pastalab.fray.gradle") version "0.8.5"
 }
 
 java {
@@ -35,7 +35,4 @@ tasks.withType<FrayTestTask>()
     .configureEach {
   jvmArgs("-Xmx32G")
   jvmArgs("-Dfray.debug=true")
-  testLogging {
-    showStandardStreams = true
-  }
 }
