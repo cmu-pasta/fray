@@ -9,6 +9,10 @@ import org.pastalab.fray.runtime.Runtime
 
 class FrayClassLoader(urls: Array<URL>, parent: ClassLoader) : URLClassLoader(urls, parent) {
 
+  init {
+    setDefaultAssertionStatus(true)
+  }
+
   override fun loadClass(name: String): Class<*> {
     try {
       Runtime.onSkipPrimitive("FrayClassLoader.loadClass")
