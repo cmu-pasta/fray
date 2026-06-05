@@ -92,7 +92,9 @@ public class FrayTestCase {
             false,
             true,
             false,
-            false);
+            false,
+            true,
+            true);
     TestRunner runner = new TestRunner(config);
     runner.run();
   }
@@ -134,7 +136,9 @@ public class FrayTestCase {
             false,
             true,
             false,
-            false);
+            false,
+            true,
+            true);
     TestRunner runner = new TestRunner(config);
     runner.run();
   }
@@ -200,7 +204,9 @@ public class FrayTestCase {
                       false,
                       true,
                       false,
-                      false);
+                      false,
+                      true,
+                      true);
               tests.add(populateTest(classInfo.getName(), shouldFail, config));
             });
     return tests;

@@ -7,6 +7,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pastalab.fray.core.command.SystemTimeDelegateType;
+import org.pastalab.fray.core.observers.TimelineCoverageType;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
 import org.pastalab.fray.junit.junit5.FrayTestExtension;
 import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;

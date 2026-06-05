@@ -85,6 +85,8 @@ open class FrayBenchmark {
             false,
             false,
             false,
+            resolveRacingOperationStackTraceHash = false,
+            timelineCoverageType = null,
         )
     TestRunner(config).run()
   }

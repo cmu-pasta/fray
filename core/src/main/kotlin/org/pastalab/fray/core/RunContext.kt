@@ -955,7 +955,10 @@ class RunContext(val config: Configuration) {
         memoryOperation((31 * objId) + offset.toInt(), type)
       }
 
-  fun memoryOperation(obj: Int, type: org.pastalab.fray.runtime.MemoryOpType) {
+  fun memoryOperation(
+      obj: Int,
+      type: org.pastalab.fray.runtime.MemoryOpType,
+  ) {
     val threadContext = registeredThreads[Thread.currentThread().id] ?: return
     threadContext.pendingOperation = MemoryOperation(obj, type)
     threadContext.state = ThreadState.Runnable

@@ -23,6 +23,7 @@ import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.randomness.ControlledRandomProvider
 import org.pastalab.fray.core.randomness.RecordedRandomProvider
 import org.pastalab.fray.core.scheduler.ReplayScheduler
+import org.pastalab.fray.core.scheduler.SURWScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
 import org.pastalab.fray.junit.Common.getPath
 import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest
@@ -98,6 +99,17 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
           val scheduler = concurrencyTest.scheduler.java.getConstructor().newInstance()
           Pair(scheduler, ControlledRandomProvider())
         }
+    val timelineCoverageType =
+        if (
+            concurrencyTest.collectTimelineCoverage ==
+                org.pastalab.fray.core.observers.TimelineCoverageType.NONE
+        )
+            null
+        else concurrencyTest.collectTimelineCoverage
+    val resolveStackTraceHash =
+        scheduler is SURWScheduler ||
+            timelineCoverageType ==
+                org.pastalab.fray.core.observers.TimelineCoverageType.THREAD_ORDERING
     val config =
         Configuration(
             ExecutionInfo(
@@ -125,6 +137,8 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             resetClassLoader = false,
             redirectStdout = false,
             abortThreadExecutionAfterMainExit = false,
+            resolveRacingOperationStackTraceHash = resolveStackTraceHash,
+            timelineCoverageType = timelineCoverageType,
         )
     val frayContext = RunContext(config)
     val frayJupiterContext = FrayJupiterContext()

@@ -28,13 +28,18 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.core.concurrency.operations.RacingOperation
 import org.pastalab.fray.core.debugger.DebuggerRegistry
 import org.pastalab.fray.core.logger.FrayLogger
 import org.pastalab.fray.core.observers.AntithesisErrorReporter
+import org.pastalab.fray.core.observers.ThreadOrderingCoverage
+import org.pastalab.fray.core.observers.ResourceOrderingCoverage
 import org.pastalab.fray.core.observers.ScheduleRecorder
 import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.observers.ScheduleVerifier
 import org.pastalab.fray.core.observers.ThreadPausingTimeLogger
+import org.pastalab.fray.core.observers.TimelineCoverage
+import org.pastalab.fray.core.observers.TimelineCoverageType
 import org.pastalab.fray.core.randomness.AntithesisSdkRandomProvider
 import org.pastalab.fray.core.randomness.ControlledRandomProvider
 import org.pastalab.fray.core.randomness.Randomness
@@ -219,7 +224,6 @@ class PCT : ScheduleAlgorithm("pct", false) {
 
 class SURW : ScheduleAlgorithm("surw", false) {
   override fun getScheduler(randomness: Randomness): Scheduler {
-    System.setProperty("fray.resolveRacingOperationStackTraceHash", "true")
     return SURWScheduler(randomness, mutableMapOf(), mutableSetOf())
   }
 }
@@ -364,6 +368,22 @@ class MainCommand : CliktCommand() {
                       "eliminate non-determinism introduced by background threads.",
           )
           .flag("--no-abort-thread-after-main-exit", default = false)
+  private val timelineCoverageOption by
+      option(
+              "--timeline-coverage",
+              help =
+                  "Timeline coverage type to collect during testing. " +
+                      "Options: thread-ordering, resource-ordering, none.",
+          )
+          .choice("thread-ordering", "resource-ordering", "none")
+          .default("resource-ordering")
+  val timelineCoverageType: TimelineCoverageType?
+    get() =
+        when (timelineCoverageOption) {
+          "thread-ordering" -> TimelineCoverageType.THREAD_ORDERING
+          "resource-ordering" -> TimelineCoverageType.RESOURCE_ORDERING
+          else -> null
+        }
 
   override fun run() {}
 
@@ -371,6 +391,8 @@ class MainCommand : CliktCommand() {
     val executionInfo =
         runConfig.getExecutionInfo(ignoreUnhandledExceptions, interleaveMemoryOps, maxScheduledStep)
     val randomnessProvider = randomnessProvider.getRandomnessProvider()
+    val resolveStackTraceHash =
+        scheduler is SURW || timelineCoverageType == TimelineCoverageType.THREAD_ORDERING
     val configuration =
         Configuration(
             executionInfo,
@@ -393,6 +415,8 @@ class MainCommand : CliktCommand() {
             resetClassLoader,
             redirectStdout,
             abortThreadExecutionAfterMainExit,
+            resolveRacingOperationStackTraceHash = resolveStackTraceHash,
+            timelineCoverageType = timelineCoverageType,
         )
     if (System.getProperty("fray.antithesisSdk", "false").toBoolean()) {
       configuration.testStatusObservers.add(AntithesisErrorReporter())
@@ -422,9 +446,18 @@ data class Configuration(
     val resetClassLoader: Boolean,
     val redirectStdout: Boolean,
     val abortThreadExecutionAfterMainExit: Boolean,
+    val resolveRacingOperationStackTraceHash: Boolean,
+    val timelineCoverageType: TimelineCoverageType?,
 ) {
   val scheduleObservers = mutableListOf<ScheduleObserver<ThreadContext>>()
   val testStatusObservers = mutableListOf<TestStatusObserver>()
+  val timelineCoverage: TimelineCoverage? =
+      when (timelineCoverageType) {
+        TimelineCoverageType.THREAD_ORDERING -> ThreadOrderingCoverage()
+        TimelineCoverageType.RESOURCE_ORDERING -> ResourceOrderingCoverage()
+        TimelineCoverageType.NONE -> null
+        null -> null
+      }
   var nextSavedIndex = 0
   var currentIteration = 0
   val startTime = TimeSource.Monotonic.markNow()
@@ -449,6 +482,11 @@ data class Configuration(
   init {
     if (!isReplay || !report.exists()) {
       prepareReportPath(report)
+    }
+    RacingOperation.resolveRacingOperationStackTraceHash = resolveRacingOperationStackTraceHash
+    if (timelineCoverage != null) {
+      scheduleObservers.add(timelineCoverage)
+      testStatusObservers.add(timelineCoverage)
     }
     if (System.getProperty("fray.recordSchedule", "false").toBoolean()) {
       val scheduleRecorder = ScheduleRecorder()

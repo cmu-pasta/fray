@@ -53,7 +53,9 @@ public class SimpleJunit4Tests {
         true,
         true,
         false,
-        false
+        false,
+        true,
+        true
         );
     TestRunner runner = new TestRunner(config);
     runner.run();
