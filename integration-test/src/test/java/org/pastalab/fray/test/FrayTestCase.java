@@ -26,6 +26,7 @@ import org.pastalab.fray.core.command.LambdaExecutor;
 import org.pastalab.fray.core.command.MethodExecutor;
 import org.pastalab.fray.core.command.NetworkDelegateType;
 import org.pastalab.fray.core.command.SystemTimeDelegateType;
+import org.pastalab.fray.core.observers.TimelineCoverageType;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.randomness.ControlledRandomProvider;
 import org.pastalab.fray.core.randomness.RecordedRandomProvider;
@@ -94,7 +95,7 @@ public class FrayTestCase {
             false,
             false,
             true,
-            true);
+            TimelineCoverageType.RESOURCE_ORDERING);
     TestRunner runner = new TestRunner(config);
     runner.run();
   }
@@ -138,7 +139,7 @@ public class FrayTestCase {
             false,
             false,
             true,
-            true);
+            TimelineCoverageType.RESOURCE_ORDERING);
     TestRunner runner = new TestRunner(config);
     runner.run();
   }
@@ -206,7 +207,7 @@ public class FrayTestCase {
                       false,
                       false,
                       true,
-                      true);
+                      TimelineCoverageType.RESOURCE_ORDERING);
               tests.add(populateTest(classInfo.getName(), shouldFail, config));
             });
     return tests;

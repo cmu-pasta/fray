@@ -32,11 +32,11 @@ import org.pastalab.fray.core.concurrency.operations.RacingOperation
 import org.pastalab.fray.core.debugger.DebuggerRegistry
 import org.pastalab.fray.core.logger.FrayLogger
 import org.pastalab.fray.core.observers.AntithesisErrorReporter
-import org.pastalab.fray.core.observers.ThreadOrderingCoverage
 import org.pastalab.fray.core.observers.ResourceOrderingCoverage
 import org.pastalab.fray.core.observers.ScheduleRecorder
 import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.observers.ScheduleVerifier
+import org.pastalab.fray.core.observers.ThreadOrderingCoverage
 import org.pastalab.fray.core.observers.ThreadPausingTimeLogger
 import org.pastalab.fray.core.observers.TimelineCoverage
 import org.pastalab.fray.core.observers.TimelineCoverageType
