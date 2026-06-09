@@ -197,6 +197,54 @@ Once the schedule is recorded, configure your test to use the `ReplayScheduler`:
 )
 ```
 
+## Timeline Coverage
+
+Fray can collect **timeline coverage** metrics during testing to measure how many distinct thread interleavings have been explored. This helps the scheduler prioritize unexplored interleavings and provides feedback on testing progress.
+
+You can configure the coverage type via the annotation:
+
+```java
+@ConcurrencyTest(
+    collectTimelineCoverage = TimelineCoverageType.RESOURCE_ORDERING  // default
+)
+```
+
+Or via the command line:
+
+```shell
+--timeline-coverage resource-ordering   # default
+--timeline-coverage thread-ordering
+--timeline-coverage none
+```
+
+### Resource Ordering
+
+Resource ordering coverage tracks **which threads access each shared resource and in what order**. For each resource (e.g., a lock, an atomic variable, a shared field), it records the directed transitions between threads. For example, "resource X is accessed by thread 1 first, followed by thread 2."
+
+At the end of each iteration, it computes a fingerprint of the observed transition patterns across all resources that were accessed by at least 2 threads. Two executions produce the same fingerprint if and only if they exhibit the same set of thread-to-thread handoff patterns on shared resources.
+
+This is the default because it is **lightweight** — it only records the resource identity and thread index per racing operation, with no stack trace resolution needed. The overhead is a few hash map lookups per shared memory access.
+
+### Thread Ordering
+
+Thread ordering coverage tracks **which racing operations each thread performs and their pairwise relationships within that thread**. Each operation is identified by its type, class, and source location (via a stack trace hash). For each thread, it records all pairs of racing operations that the thread has executed. 
+
+At the end of each iteration, it combines the per-thread event sets and pair sets into a single fingerprint. Two executions produce the same fingerprint if and only if every thread performed the same set of racing operations at the same code locations, with the same pairwise occurrence relationships.
+
+This mode is **more expensive** because it requires resolving a stack trace hash for every racing operation. This involves stack walking and filtering Fray-internal frames on each shared memory access. Use this mode when you need finer-grained coverage that distinguishes executions where the same resources are accessed in the same inter-thread order but from different code paths.
+
+### None
+
+Disabling timeline coverage (`TimelineCoverageType.NONE`) removes all coverage tracking overhead. Use this when you only care about finding bugs and do not need coverage-guided scheduling feedback — for example, during replay or when using a fixed schedule.
+
+### Performance Summary
+
+| Mode                | Overhead                                    | When to use                                       |
+|---------------------|---------------------------------------------|---------------------------------------------------|
+| `RESOURCE_ORDERING` | Low — hash map lookups per racing operation | Default; good balance of feedback and performance |
+| `THREAD_ORDERING`   | Higher — stack walking per racing operation | When you need code-location-aware coverage        |
+| `NONE`              | Zero                                        | Replay, debugging, or maximum throughput          |
+
 ## NixOS
 
 Fray downloads Corretto JDK 25 and runs `ConcurrencyTest` with it by default. However, NixOS cannot run dynamically 

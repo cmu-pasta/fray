@@ -43,6 +43,8 @@ class RunContextReentrantLockTest {
               true,
               false,
               false,
+              resolveRacingOperationStackTraceHash = false,
+              timelineCoverageType = null,
           )
       )
 

@@ -28,6 +28,9 @@ class TestRunner(val config: Configuration) {
       stdout.println("Report is available at: ${config.report}")
       stdout.println("Iterations: $iteration")
       stdout.println("Iterations/sec: %.2f".format(iterationsPerSecond(iteration)))
+      if (config.timelineCoverage != null) {
+        stdout.println("Covered timelines: ${config.timelineCoverage.getCoverage()}")
+      }
     }
     if (iteration / currentDivision == 10) {
       currentDivision *= 10
@@ -86,10 +89,17 @@ class TestRunner(val config: Configuration) {
       config.nextIteration()
     }
 
+    val coverageInfo =
+        if (config.timelineCoverage != null) {
+          ", Covered timelines: ${config.timelineCoverage.getCoverage()}"
+        } else {
+          ""
+        }
     config.frayLogger.info(
         "Run finished. Total iter: ${config.currentIteration}, " +
             "Elapsed time: ${config.elapsedTime()}ms, " +
-            "Iterations/sec: %.2f".format(iterationsPerSecond(config.currentIteration)),
+            "Iterations/sec: %.2f".format(iterationsPerSecond(config.currentIteration)) +
+            coverageInfo,
         true,
     )
     config.executionInfo.executor.afterExecution()

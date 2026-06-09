@@ -8,6 +8,7 @@ import org.pastalab.fray.core.command.MethodExecutor;
 import org.pastalab.fray.core.command.NetworkDelegateType;
 import org.pastalab.fray.core.command.SystemTimeDelegateType;
 import org.pastalab.fray.core.randomness.ControlledRandomProvider;
+import org.pastalab.fray.core.observers.TimelineCoverageType;
 import org.pastalab.fray.core.scheduler.PCTScheduler;
 import org.pastalab.fray.junit.Common;
 import java.io.File;
@@ -53,7 +54,9 @@ public class SimpleJunit4Tests {
         true,
         true,
         false,
-        false
+        false,
+        true,
+        TimelineCoverageType.RESOURCE_ORDERING
         );
     TestRunner runner = new TestRunner(config);
     runner.run();

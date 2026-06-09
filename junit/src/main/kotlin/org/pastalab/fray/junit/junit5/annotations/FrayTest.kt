@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.TestTemplate
 import org.pastalab.fray.core.command.NetworkDelegateType
 import org.pastalab.fray.core.command.SystemTimeDelegateType
+import org.pastalab.fray.core.observers.TimelineCoverageType
 import org.pastalab.fray.core.scheduler.POSScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
 
@@ -23,6 +24,7 @@ annotation class ConcurrencyTest(
     val systemTimeDelegateType: SystemTimeDelegateType = SystemTimeDelegateType.NONE,
     val sleepAsYield: Boolean = false,
     val ignoreTimedBlock: Boolean = true,
+    val collectTimelineCoverage: TimelineCoverageType = TimelineCoverageType.RESOURCE_ORDERING,
     val replay: String = "",
 ) {
   companion object {
@@ -55,6 +57,7 @@ annotation class FrayTest(
     val resetClassLoaderPerIteration: Boolean = true,
     val abortThreadExecutionAfterMainExit: Boolean = false,
     val ignoreUncaughtExceptions: Boolean = false,
+    val collectTimelineCoverage: TimelineCoverageType = TimelineCoverageType.RESOURCE_ORDERING,
     val replay: String = "",
 ) {
   companion object {

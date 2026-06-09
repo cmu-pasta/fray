@@ -16,6 +16,7 @@ import org.pastalab.fray.core.randomness.ControlledRandomProvider
 import org.pastalab.fray.core.randomness.RandomnessProvider
 import org.pastalab.fray.core.randomness.RecordedRandomProvider
 import org.pastalab.fray.core.scheduler.POSScheduler
+import org.pastalab.fray.core.scheduler.SURWScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
 import org.pastalab.fray.junit.Common.WORK_DIR
 
@@ -28,8 +29,18 @@ object FrayInTestLauncher {
       iteration: Int,
       timeout: Int,
       isReplay: Boolean,
+      collectTimelineCoverage: org.pastalab.fray.core.observers.TimelineCoverageType =
+          org.pastalab.fray.core.observers.TimelineCoverageType.RESOURCE_ORDERING,
       additionalConfigs: (Configuration) -> Unit = { _ -> },
   ) {
+    val timelineCoverageType =
+        if (collectTimelineCoverage == org.pastalab.fray.core.observers.TimelineCoverageType.NONE)
+            null
+        else collectTimelineCoverage
+    val resolveStackTraceHash =
+        scheduler is SURWScheduler ||
+            timelineCoverageType ==
+                org.pastalab.fray.core.observers.TimelineCoverageType.THREAD_ORDERING
     val config =
         Configuration(
             ExecutionInfo(
@@ -59,6 +70,8 @@ object FrayInTestLauncher {
             resetClassLoader = true,
             redirectStdout = false,
             abortThreadExecutionAfterMainExit = false,
+            resolveRacingOperationStackTraceHash = resolveStackTraceHash,
+            timelineCoverageType = timelineCoverageType,
         )
     additionalConfigs(config)
     val runner = TestRunner(config)

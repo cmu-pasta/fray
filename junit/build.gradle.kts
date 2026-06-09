@@ -61,6 +61,7 @@ tasks.register<Test>("debugTests") {
   val baseTest = tasks.named("test", Test::class.java).get()
   testClassesDirs = baseTest.testClassesDirs
   classpath = baseTest.classpath
+  testLogging.showStandardStreams = true
   configureTestTask(this)
 }
 
