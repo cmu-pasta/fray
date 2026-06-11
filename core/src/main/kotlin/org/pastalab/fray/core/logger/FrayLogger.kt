@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter
 
 class FrayLogger(location: String) {
   val logFile = File(location)
+  val stdout = System.out
 
   @Synchronized
   fun log(level: String, message: String, printToStdIO: Boolean) {
@@ -14,7 +15,7 @@ class FrayLogger(location: String) {
     val logMessage = "$currentDateTime [$level]: $message\n"
     logFile.appendText(logMessage)
     if (printToStdIO) {
-      println(logMessage)
+      stdout.println(logMessage)
     }
   }
 

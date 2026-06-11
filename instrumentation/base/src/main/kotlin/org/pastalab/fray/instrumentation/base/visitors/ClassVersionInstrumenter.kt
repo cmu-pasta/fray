@@ -13,7 +13,7 @@ class ClassVersionInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String?,
       signature: String?,
       superName: String?,
-      interfaces: Array<out String>?
+      interfaces: Array<out String>?,
   ) {
     classVersion = version and 0xFF
     val patchedVersion =

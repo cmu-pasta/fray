@@ -13,7 +13,7 @@ import org.pastalab.fray.runtime.NetworkDelegate
 
 class ProactiveNetworkDelegate(
     val controller: ProactiveNetworkController,
-    val synchronizer: DelegateSynchronizer
+    val synchronizer: DelegateSynchronizer,
 ) : NetworkDelegate() {
 
   override fun onSelectorOpen() =
@@ -47,7 +47,7 @@ class ProactiveNetworkDelegate(
 
   override fun onServerSocketChannelAcceptDone(
       channel: ServerSocketChannel,
-      client: SocketChannel?
+      client: SocketChannel?,
   ) =
       synchronizer.runInFrayDone("ServerSocketChannel.accept") {
         controller.serverSocketChannelAcceptDone(channel, client)
@@ -77,7 +77,7 @@ class ProactiveNetworkDelegate(
             controller.socketChannelClose(channel)
           }
           else -> {
-            verifyOrReport(false) {
+            verifyOrReport({ false }) {
               "Unknown channel type: ${channel::class.java.name}. Expected ServerSocketChannel or SocketChannel."
             }
             Result.success(Unit)

@@ -1,5 +1,6 @@
 package org.pastalab.fray.core
 
+import java.nio.file.Path
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -23,7 +24,7 @@ class RunContextReentrantLockTest {
                   interleaveMemoryOps = false,
                   maxScheduledStep = -1,
               ),
-              "/tmp/fray",
+              Path.of("/tmp/fray"),
               1,
               1000,
               RandomScheduler(),
@@ -36,8 +37,16 @@ class RunContextReentrantLockTest {
               dummyRun = false,
               networkDelegateType = NetworkDelegateType.PROACTIVE,
               systemTimeDelegateType = SystemTimeDelegateType.MOCK,
+              100_000L,
               ignoreTimedBlock = true,
-              sleepAsYield = false))
+              sleepAsYield = false,
+              true,
+              false,
+              false,
+              resolveRacingOperationStackTraceHash = false,
+              timelineCoverageType = null,
+          )
+      )
 
   @BeforeEach
   fun setUp() {

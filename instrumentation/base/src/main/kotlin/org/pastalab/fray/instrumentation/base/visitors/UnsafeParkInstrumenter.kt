@@ -20,7 +20,7 @@ class UnsafeParkInstrumenter(cv: ClassVisitor) :
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     return object : GeneratorAdapter(ASM9, mv, access, name, descriptor) {
       override fun visitMethodInsn(
@@ -28,13 +28,14 @@ class UnsafeParkInstrumenter(cv: ClassVisitor) :
           owner: String,
           name: String,
           descriptor: String,
-          isInterface: Boolean
+          isInterface: Boolean,
       ) {
         if (owner == "jdk/internal/misc/Unsafe") {
           if (name == "park") {
             invokeStatic(
                 Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
-                Utils.kFunctionToASMMethod(Runtime::onUnsafeThreadParkTimed))
+                Utils.kFunctionToASMMethod(Runtime::onUnsafeThreadParkTimed),
+            )
             // Pop the Unsafe instance
             pop()
             return
@@ -42,12 +43,14 @@ class UnsafeParkInstrumenter(cv: ClassVisitor) :
             dup()
             invokeStatic(
                 Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
-                Utils.kFunctionToASMMethod(Runtime::onThreadUnpark))
+                Utils.kFunctionToASMMethod(Runtime::onThreadUnpark),
+            )
             dupX1()
             super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
             invokeStatic(
                 Type.getObjectType(Runtime::class.java.name.replace(".", "/")),
-                Utils.kFunctionToASMMethod(Runtime::onThreadUnparkDone))
+                Utils.kFunctionToASMMethod(Runtime::onThreadUnparkDone),
+            )
             return
           }
         }

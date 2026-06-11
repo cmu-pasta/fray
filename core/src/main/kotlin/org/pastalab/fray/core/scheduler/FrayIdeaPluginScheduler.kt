@@ -13,7 +13,7 @@ class FrayIdeaPluginScheduler(val scheduler: Scheduler?) : Scheduler {
 
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,
-      allThreads: Collection<ThreadContext>
+      allThreads: Collection<ThreadContext>,
   ): ThreadContext {
     val thread = scheduler?.scheduleNextOperation(threads, allThreads)
     return if (thread == null || thread.index != previousScheduleDecision?.index) {
@@ -22,7 +22,9 @@ class FrayIdeaPluginScheduler(val scheduler: Scheduler?) : Scheduler {
             allThreads
                 .toList()[
                     remoteScheduler.scheduleNextOperation(
-                        allThreads.map { it.toThreadInfo() }, thread?.toThreadInfo())]
+                        allThreads.map { it.toThreadInfo() },
+                        thread?.toThreadInfo(),
+                    )]
           } else {
             threads.first()
           }

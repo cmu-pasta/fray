@@ -38,7 +38,7 @@ data class ThreadInfo(
     val state: ThreadState,
     val stackTraces: List<StackTraceElement>,
     val waitingFor: ResourceInfo?,
-    val acquired: Set<ResourceInfo>
+    val acquired: Set<ResourceInfo>,
 ) : Serializable {
   override fun toString(): String {
     return "Thread index: ${threadIndex}\n" +

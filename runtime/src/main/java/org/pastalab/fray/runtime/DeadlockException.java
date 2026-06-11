@@ -1,4 +1,3 @@
 package org.pastalab.fray.runtime;
 
-public class DeadlockException extends TargetTerminateException {
-}
+public class DeadlockException extends TargetTerminateException {}

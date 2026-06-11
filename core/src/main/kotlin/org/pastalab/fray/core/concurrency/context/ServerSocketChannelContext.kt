@@ -73,7 +73,7 @@ class ServerSocketChannelContext(channel: ServerSocketChannel) : SelectableChann
       unblockWaitingThreads()
     } else {
       for (selectorContext in registeredSelectors) {
-        verifyOrReport(selectorContext.selectableChannelsToEventType[this] != null)
+        verifyOrReport { selectorContext.selectableChannelsToEventType[this] != null }
         // Server does not register the socket channel for OP_CONNECT, so we skip.
         if (selectorContext.selectableChannelsToEventType[this]!! and SelectionKey.OP_ACCEPT == 0)
             continue

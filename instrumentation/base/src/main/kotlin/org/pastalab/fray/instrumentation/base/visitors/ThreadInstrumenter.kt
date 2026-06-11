@@ -14,10 +14,12 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
-    if (name == "<init>" &&
-        descriptor == "(Ljava/lang/ThreadGroup;Ljava/lang/String;ILjava/lang/Runnable;J)V") {
+    if (
+        name == "<init>" &&
+            descriptor == "(Ljava/lang/ThreadGroup;Ljava/lang/String;ILjava/lang/Runnable;J)V"
+    ) {
       return MethodExitVisitor(
           mv,
           org.pastalab.fray.runtime.Runtime::onThreadCreateDone,
@@ -27,7 +29,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           loadThis = true,
           loadArgs = false,
           addFinalBlock = false,
-          thisType = className)
+          thisType = className,
+      )
     }
     if (name == "start") {
       val eMv =
@@ -40,7 +43,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
               loadThis = true,
               loadArgs = false,
               addFinalBlock = true,
-              thisType = className)
+              thisType = className,
+          )
       return MethodEnterVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onThreadStart,
@@ -48,7 +52,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           name,
           descriptor,
           loadThis = true,
-          loadArgs = false)
+          loadArgs = false,
+      )
     }
     if (name == "yield") {
       return MethodEnterVisitor(
@@ -58,7 +63,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           name,
           descriptor,
           loadThis = false,
-          loadArgs = false)
+          loadArgs = false,
+      )
     }
     if (name == "getAndClearInterrupt") {
       return MethodExitVisitor(
@@ -70,7 +76,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           loadThis = true,
           loadArgs = false,
           addFinalBlock = false,
-          thisType = className)
+          thisType = className,
+      )
     }
     if (name == "isInterrupted") {
       return MethodExitVisitor(
@@ -82,7 +89,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           loadThis = true,
           loadArgs = false,
           addFinalBlock = false,
-          thisType = className)
+          thisType = className,
+      )
     }
     if (name == "clearInterrupt") {
       return MethodExitVisitor(
@@ -94,7 +102,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           loadThis = true,
           loadArgs = false,
           addFinalBlock = false,
-          thisType = className)
+          thisType = className,
+      )
     }
     if (name == "setInterrupt") {
       val eMv =
@@ -105,7 +114,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
               name,
               descriptor,
               loadThis = true,
-              loadArgs = false)
+              loadArgs = false,
+          )
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onThreadInterruptDone,
@@ -115,7 +125,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           loadThis = true,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className)
+          thisType = className,
+      )
     }
     if (name == "getState") {
       return MethodExitVisitor(
@@ -127,7 +138,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
           loadThis = true,
           loadArgs = false,
           addFinalBlock = false,
-          thisType = className)
+          thisType = className,
+      )
     }
 
     if (name == "interrupt") {
@@ -139,7 +151,8 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
               name,
               descriptor,
               loadThis = true,
-              loadArgs = false)
+              loadArgs = false,
+          )
 
       return object : GeneratorAdapter(ASM9, eMv, access, name, descriptor) {
 
@@ -148,16 +161,18 @@ class ThreadInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Thread::class.
             owner: String,
             name: String,
             descriptor: String,
-            isInterface: Boolean
+            isInterface: Boolean,
         ) {
           super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
           if (name == "interrupt0") {
             loadThis()
             invokeStatic(
                 Type.getObjectType(
-                    org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+                    org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")
+                ),
                 Utils.kFunctionToASMMethod(
-                    org.pastalab.fray.runtime.Runtime::onThreadInterruptDone),
+                    org.pastalab.fray.runtime.Runtime::onThreadInterruptDone
+                ),
             )
           }
         }

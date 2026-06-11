@@ -10,9 +10,11 @@ object Common {
   fun getTestDir(className: String? = null, methodName: String? = null): Path {
     val baseDir = WORK_DIR
 
-    if (System.getProperty("fray.organize.by.test", "false").toBoolean() &&
-        className != null &&
-        methodName != null) {
+    if (
+        System.getProperty("fray.organize.by.test", "false").toBoolean() &&
+            className != null &&
+            methodName != null
+    ) {
       return baseDir.resolve(className).resolve(methodName)
     }
 

@@ -2,6 +2,7 @@ package org.pastalab.fray.instrumentation.base
 
 import java.io.File
 import java.io.InputStream
+import java.util.concurrent.locks.ReentrantReadWriteLock
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
@@ -11,13 +12,13 @@ import org.objectweb.asm.commons.ModuleTargetAttribute
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.ModuleExportNode
 import org.objectweb.asm.util.CheckClassAdapter
-import org.pastalab.fray.instrumentation.base.Configs.DEBUG_MODE
 import org.pastalab.fray.instrumentation.base.Utils.writeClassFile
 import org.pastalab.fray.instrumentation.base.visitors.*
+import org.pastalab.fray.runtime.Runtime
 
 fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
   val byteArray = inputStream.readBytes()
-  if (DEBUG_MODE) {
+  if (Runtime.getDebugMode()) {
     writeClassFile(path, byteArray, false)
   }
   val shouldSkipChecking =
@@ -31,7 +32,16 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = VolatileFieldsInstrumenter(cv, instrumentingJdk = true, interleaveAllMemoryOps = false)
     cv = SleepInstrumenter(cv, true)
     cv = VarHandleInstrumenter(cv)
-    cv = ReentrantReadWriteLockInstrumenter(cv)
+    cv =
+        ReentrantReadWriteLockInstrumenter(
+            cv,
+            ReentrantReadWriteLock.ReadLock::class.java.name.replace('.', '/'),
+        )
+    cv =
+        ReentrantReadWriteLockInstrumenter(
+            cv,
+            ReentrantReadWriteLock.WriteLock::class.java.name.replace('.', '/'),
+        )
     cv = LockSupportInstrumenter(cv)
     cv = LockInstrumenter(cv)
     cv = SystemModulesMapInstrumenter(cv)
@@ -61,7 +71,9 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = ThreadLocalRandomInstrumenter(cv)
     cv =
         SynchronizedMethodInstrumenter(
-            cv, true) // Synchronized Method Instrumenter should be before Monitor Instrumenter
+            cv,
+            true,
+        ) // Synchronized Method Instrumenter should be before Monitor Instrumenter
     cv = MonitorInstrumenter(cv)
     classReader.accept(cv, ClassReader.EXPAND_FRAMES)
     if (shouldSkipChecking) {
@@ -70,7 +82,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
       cn.accept(CheckClassAdapter(classWriter))
     }
     val out = classWriter.toByteArray()
-    if (DEBUG_MODE) {
+    if (Runtime.getDebugMode()) {
       writeClassFile(path, out, true)
     }
     return out
@@ -93,7 +105,7 @@ fun instrumentModuleInfo(inputStream: InputStream, packages: List<String>): Byte
   val cw = ClassWriter(0)
   cn.accept(cw)
   val out = cw.toByteArray()
-  if (DEBUG_MODE) {
+  if (Runtime.getDebugMode()) {
     writeClassFile("java.base.module-info.class", out, true)
   }
   return out

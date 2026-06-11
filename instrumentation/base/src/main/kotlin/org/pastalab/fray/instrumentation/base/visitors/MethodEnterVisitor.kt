@@ -14,7 +14,7 @@ class MethodEnterVisitor(
     val loadThis: Boolean,
     val loadArgs: Boolean,
     val preCustomizer: MethodEnterVisitor.(v: MethodEnterVisitor) -> Unit = {},
-    val postCustomizer: MethodEnterVisitor.(v: MethodEnterVisitor) -> Unit = {}
+    val postCustomizer: MethodEnterVisitor.(v: MethodEnterVisitor) -> Unit = {},
 ) : AdviceAdapter(ASM9, mv, access, name, descriptor) {
   override fun onMethodEnter() {
     super.onMethodEnter()

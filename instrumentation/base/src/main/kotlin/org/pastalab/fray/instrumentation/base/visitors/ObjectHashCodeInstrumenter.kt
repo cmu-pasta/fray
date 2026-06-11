@@ -16,7 +16,7 @@ class ObjectHashCodeInstrumenter(cv: ClassVisitor, val instrumentJdk: Boolean) :
       name: String,
       signature: String?,
       superName: String?,
-      interfaces: Array<out String>?
+      interfaces: Array<out String>?,
   ) {
     if (instrumentJdk && !(name == "java/util/Arrays" || name.startsWith("java/util/concurrent"))) {
       shouldInstrument = false
@@ -29,7 +29,7 @@ class ObjectHashCodeInstrumenter(cv: ClassVisitor, val instrumentJdk: Boolean) :
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
     if (!shouldInstrument) {
@@ -41,12 +41,13 @@ class ObjectHashCodeInstrumenter(cv: ClassVisitor, val instrumentJdk: Boolean) :
           owner: String,
           name: String,
           descriptor: String,
-          isInterface: Boolean
+          isInterface: Boolean,
       ) {
         if (name == "hashCode" && owner == "java/lang/Object") {
           invokeStatic(
               Type.getObjectType(
-                  org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+                  org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")
+              ),
               Utils.kFunctionToASMMethod(org.pastalab.fray.runtime.Runtime::onObjectHashCode),
           )
         } else {

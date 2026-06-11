@@ -14,37 +14,44 @@ class ArrayOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String?,
       descriptor: String?,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
     return object : GeneratorAdapter(ASM9, mv, access, name, descriptor) {
       override fun visitInsn(opcode: Int) {
-        if (opcode == AALOAD ||
-            opcode == BALOAD ||
-            opcode == CALOAD ||
-            opcode == DALOAD ||
-            opcode == FALOAD ||
-            opcode == IALOAD ||
-            opcode == LALOAD ||
-            opcode == SALOAD) {
+        if (
+            opcode == AALOAD ||
+                opcode == BALOAD ||
+                opcode == CALOAD ||
+                opcode == DALOAD ||
+                opcode == FALOAD ||
+                opcode == IALOAD ||
+                opcode == LALOAD ||
+                opcode == SALOAD
+        ) {
           dup2()
           invokeStatic(
               Type.getObjectType(
-                  org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+                  org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")
+              ),
               Method(
                   org.pastalab.fray.runtime.Runtime::onArrayLoad.name,
                   Utils.kFunctionToJvmMethodDescriptor(
-                      org.pastalab.fray.runtime.Runtime::onArrayLoad)),
+                      org.pastalab.fray.runtime.Runtime::onArrayLoad
+                  ),
+              ),
           )
         }
-        if (opcode == AASTORE ||
-            opcode == BASTORE ||
-            opcode == CASTORE ||
-            opcode == DASTORE ||
-            opcode == FASTORE ||
-            opcode == IASTORE ||
-            opcode == LASTORE ||
-            opcode == SASTORE) {
+        if (
+            opcode == AASTORE ||
+                opcode == BASTORE ||
+                opcode == CASTORE ||
+                opcode == DASTORE ||
+                opcode == FASTORE ||
+                opcode == IASTORE ||
+                opcode == LASTORE ||
+                opcode == SASTORE
+        ) {
           if (opcode == LASTORE || opcode == DASTORE) {
             dup2X2() // value, arrayref, index, value,
             pop2() // value, arrayref, index
@@ -55,7 +62,8 @@ class ArrayOperationInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           dup2() // value, arrayref, index, arrayref, index
           invokeStatic(
               Type.getObjectType(
-                  org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")),
+                  org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/")
+              ),
               Utils.kFunctionToASMMethod(org.pastalab.fray.runtime.Runtime::onArrayStore),
           )
           /*

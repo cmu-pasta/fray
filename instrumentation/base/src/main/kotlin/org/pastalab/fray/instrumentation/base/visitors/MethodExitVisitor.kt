@@ -18,7 +18,7 @@ import org.pastalab.fray.runtime.Runtime
 
 class MethodExitVisitor(
     mv: MethodVisitor,
-    val method: KFunction<*>,
+    val method: KFunction<*>?,
     access: Int,
     name: String,
     descriptor: String,
@@ -28,7 +28,7 @@ class MethodExitVisitor(
     val thisType: String,
     val customizer: MethodExitVisitor.(v: MethodExitVisitor, isFinalBlock: Boolean) -> Unit =
         { v, isFinalBlock ->
-        }
+        },
 ) : GeneratorAdapter(ASM9, mv, access, name, descriptor) {
   var methodEnterLabel = Label()
   var methodExitLabel = Label()
@@ -74,7 +74,7 @@ class MethodExitVisitor(
       name: String?,
       descriptor: String?,
       bootstrapMethodHandle: Handle?,
-      vararg bootstrapMethodArguments: Any?
+      vararg bootstrapMethodArguments: Any?,
   ) {
     super.visitInvokeDynamicInsn(name, descriptor, bootstrapMethodHandle, *bootstrapMethodArguments)
     methodExitInsnCount++
@@ -85,7 +85,7 @@ class MethodExitVisitor(
       owner: String?,
       name: String?,
       descriptor: String?,
-      isInterface: Boolean
+      isInterface: Boolean,
   ) {
     super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
     methodExitInsnCount++
@@ -135,12 +135,14 @@ class MethodExitVisitor(
           loadArgs()
         }
         customizer(this, false)
-        invokeStatic(
-            Type.getObjectType(
-                Runtime::class.java.name.replace(".", "/"),
-            ),
-            Utils.kFunctionToASMMethod(method),
-        )
+        if (method != null) {
+          invokeStatic(
+              Type.getObjectType(
+                  Runtime::class.java.name.replace(".", "/"),
+              ),
+              Utils.kFunctionToASMMethod(method),
+          )
+        }
         super.visitInsn(opcode)
         if (addFinalBlock) {
           insertTryCatchBlock()
@@ -173,12 +175,14 @@ class MethodExitVisitor(
           loadArgs()
         }
         customizer(this, true)
-        invokeStatic(
-            Type.getObjectType(
-                Runtime::class.java.name.replace(".", "/"),
-            ),
-            Utils.kFunctionToASMMethod(method),
-        )
+        if (method != null) {
+          invokeStatic(
+              Type.getObjectType(
+                  Runtime::class.java.name.replace(".", "/"),
+              ),
+              Utils.kFunctionToASMMethod(method),
+          )
+        }
         throwException()
       }
     }

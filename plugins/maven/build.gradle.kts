@@ -18,8 +18,6 @@ dependencies {
   implementation(project(":instrumentation:jdk"))
   implementation(project(":plugins:base", configuration = "shadow"))
   implementation(project(":instrumentation:agent", configuration = "shadow"))
-  implementation(libs.fray.jvmti.linux)
-  implementation(libs.fray.jvmti.macos)
 }
 
 tasks.test { useJUnitPlatform() }

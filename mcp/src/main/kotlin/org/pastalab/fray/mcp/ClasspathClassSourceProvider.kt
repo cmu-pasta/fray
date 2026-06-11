@@ -26,7 +26,7 @@ import org.objectweb.asm.Opcodes
  */
 class ClasspathClassSourceProvider(
     private val classLoader: ClassLoader = Thread.currentThread().contextClassLoader,
-    workspaceRoots: List<Path> = listOf(Paths.get("").toAbsolutePath())
+    workspaceRoots: List<Path> = listOf(Paths.get("").toAbsolutePath()),
 ) : ClassSourceProvider {
 
   private val sourceCache = ConcurrentHashMap<String, String?>()
@@ -70,7 +70,7 @@ class ClasspathClassSourceProvider(
   private fun resolveFromDirectory(
       resource: URL,
       packagePath: Path?,
-      sourceFileCandidates: List<String>
+      sourceFileCandidates: List<String>,
   ): String? {
     val classPath =
         try {
@@ -93,7 +93,7 @@ class ClasspathClassSourceProvider(
   private fun findSourceFileFromClasspathRoot(
       classesRoot: Path,
       packagePath: Path?,
-      sourceFileCandidates: List<String>
+      sourceFileCandidates: List<String>,
   ): Path? {
     var current: Path? = classesRoot
     var depth = 0
@@ -132,7 +132,7 @@ class ClasspathClassSourceProvider(
   private fun resolveFromJar(
       resource: URL,
       packageResourcePath: String,
-      sourceFileCandidates: List<String>
+      sourceFileCandidates: List<String>,
   ): String? {
     val jarPath = jarPath(resource)?.normalize() ?: return null
     val sourceJar = sourceJarCache.computeIfAbsent(jarPath) { locateSourceJar(it) } ?: return null
@@ -237,7 +237,7 @@ class ClasspathClassSourceProvider(
   private fun findInSrcFolder(
       srcDir: Path,
       packagePath: Path?,
-      sourceFileCandidates: List<String>
+      sourceFileCandidates: List<String>,
   ): Path? {
     if (!Files.isDirectory(srcDir)) return null
     for (child in listDirectories(srcDir)) {
@@ -256,7 +256,7 @@ class ClasspathClassSourceProvider(
   private fun locateInDirectory(
       base: Path,
       packagePath: Path?,
-      sourceFileCandidates: List<String>
+      sourceFileCandidates: List<String>,
   ): Path? {
     val packageRoot = packagePath?.let { base.resolve(it) } ?: base
     for (candidate in sourceFileCandidates) {

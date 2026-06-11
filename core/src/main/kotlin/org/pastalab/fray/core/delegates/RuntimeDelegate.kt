@@ -10,13 +10,11 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.LockSupport
-import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.StampedLock
 import org.pastalab.fray.core.RunContext
 import org.pastalab.fray.core.concurrency.operations.BLOCKED_OPERATION_NOT_TIMED
 import org.pastalab.fray.runtime.Delegate
 import org.pastalab.fray.runtime.MemoryOpType
-import org.pastalab.fray.runtime.RangerCondition
 
 class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchronizer) :
     Delegate() {
@@ -38,14 +36,14 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   fun isSystemThread(thread: Thread): Boolean {
     val systemGroup = thread.threadGroup
-    return "InnocuousThreadGroup" == systemGroup?.name
+    return "InnocuousThreadGroup" == systemGroup?.name || thread.name == "JNA Cleaner"
   }
 
   private fun onThreadSkip(t: Thread, runnable: () -> Unit) {
     if (synchronizer.entered.get()) {
       return
     }
-    if (!context.registeredThreads.contains(Thread.currentThread().id)) {
+    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
       return
     }
     if (isSystemThread(t)) {
@@ -72,9 +70,21 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     synchronizer.onSkipSchedulingDone("Thread.start")
   }
 
-  override fun onThreadRun() = synchronizer.runInFrayStartNoSkip { context.threadRun() }
+  override fun onThreadRun() {
+    onThreadSkip(Thread.currentThread()) {
+      synchronizer.enabled.set(true)
+      context.threadRun()
+    }
+  }
 
-  override fun onThreadEnd() = synchronizer.runInFrayStartNoSkip { context.threadCompleted() }
+  // The enabled flag is cleared before THREAD_END event.
+  // So we need to reset the flag.
+  override fun onThreadEnd() {
+    onThreadSkip(Thread.currentThread()) {
+      synchronizer.enabled.set(true)
+      context.threadCompleted()
+    }
+  }
 
   override fun onThreadGetState(t: Thread, state: Thread.State): Thread.State =
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
@@ -304,9 +314,6 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
           { origin },
       )
 
-  override fun onReentrantReadWriteLockInit(lock: ReentrantReadWriteLock) =
-      synchronizer.runInFrayStartNoSkip { context.reentrantReadWriteLockInit(lock) }
-
   override fun onSemaphoreInit(sem: Semaphore) =
       synchronizer.runInFrayStartNoSkip { context.semaphoreInit(sem) }
 
@@ -325,7 +332,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       sem: Semaphore,
       permits: Int,
       timeout: Long,
-      unit: TimeUnit
+      unit: TimeUnit,
   ): Long =
       synchronizer.runInFrayStartWithOriginBlock(
           "Semaphore.acquire",
@@ -455,6 +462,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
     // Therefor we cannot call `synchronizer.checkEntered` here.
     synchronizer.entered.set(true)
     try {
+      synchronizer.enabled.set(true)
       context.start()
     } finally {
       synchronizer.entered.set(false)
@@ -490,9 +498,10 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
 
   override fun onThreadParkNanosWithBlocker(blocker: Any?, nanos: Long) =
       onThreadParkTimed(
-          context.timeController.currentTimeMillisRawNoIncrement() + nanos / 1_000_000) {
-            LockSupport.parkNanos(blocker, nanos)
-          }
+          context.timeController.currentTimeMillisRawNoIncrement() + nanos / 1_000_000
+      ) {
+        LockSupport.parkNanos(blocker, nanos)
+      }
 
   override fun onThreadParkUntilWithBlocker(blocker: Any?, deadline: Long) =
       onThreadParkTimed(deadline) { LockSupport.parkUntil(blocker, deadline) }
@@ -587,7 +596,8 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
           {
             context.threadSleepOperation(
-                duration.toMillis() + context.timeController.currentTimeMillisRawNoIncrement())
+                duration.toMillis() + context.timeController.currentTimeMillisRawNoIncrement()
+            )
           },
           { Thread.sleep(duration.toMillis()) },
       )
@@ -596,7 +606,8 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
           {
             context.threadSleepOperation(
-                millis + context.timeController.currentTimeMillisRawNoIncrement())
+                millis + context.timeController.currentTimeMillisRawNoIncrement()
+            )
           },
           { Thread.sleep(millis) },
       )
@@ -605,7 +616,8 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(
           {
             context.threadSleepOperation(
-                millis + context.timeController.currentTimeMillisRawNoIncrement())
+                millis + context.timeController.currentTimeMillisRawNoIncrement()
+            )
           },
           { Thread.sleep(millis, nanos) },
       )
@@ -750,7 +762,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
   override fun onStampedLockReadLockTryLockTimeout(
       lock: StampedLock,
       timeout: Long,
-      unit: TimeUnit
+      unit: TimeUnit,
   ): Long =
       synchronizer.runInFrayStartWithOriginBlock(
           "StampedLock",
@@ -775,7 +787,7 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
   override fun onStampedLockWriteLockTryLockTimeout(
       lock: StampedLock,
       timeout: Long,
-      unit: TimeUnit
+      unit: TimeUnit,
   ): Long =
       synchronizer.runInFrayStartWithOriginBlock(
           "StampedLock",
@@ -796,9 +808,6 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
             return@runInFrayStartWithOriginBlock timeout
           },
       )
-
-  override fun onRangerCondition(condition: RangerCondition) =
-      synchronizer.runInFrayStartNoSkip { context.rangerCondition(condition) }
 
   override fun onNanoTime(): Long =
       synchronizer.runInFrayDoneWithOriginBlockAndNoSkip(

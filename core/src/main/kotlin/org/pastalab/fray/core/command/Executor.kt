@@ -2,12 +2,13 @@ package org.pastalab.fray.core.command
 
 import java.io.File
 import java.lang.reflect.InvocationTargetException
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 sealed interface Executor {
-  fun execute()
+  fun execute(resetClassloader: Boolean)
 
   fun beforeExecution()
 
@@ -21,7 +22,7 @@ data class MethodExecutor(
     val method: String,
     val args: List<String>,
     val classpaths: List<String>,
-    val properties: Map<String, String>
+    val properties: Map<String, String>,
 ) : Executor {
 
   override fun beforeExecution() {
@@ -30,16 +31,32 @@ data class MethodExecutor(
     }
   }
 
-  override fun execute() {
+  @Contextual
+  var classLoader =
+      FrayClassLoader(
+          classpaths.map { File(it).toURI().toURL() }.toTypedArray(),
+          Thread.currentThread().contextClassLoader,
+      )
+
+  override fun execute(resetClassloader: Boolean) {
     val originalClassLoader = Thread.currentThread().contextClassLoader
-    val classLoader =
-        FrayClassLoader(
-            classpaths.map { File(it).toURI().toURL() }.toTypedArray(), originalClassLoader)
+    if (resetClassloader) {
+      classLoader =
+          FrayClassLoader(
+              classpaths.map { File(it).toURI().toURL() }.toTypedArray(),
+              Thread.currentThread().contextClassLoader,
+          )
+    }
     Thread.currentThread().contextClassLoader = classLoader
     val clazz = Class.forName(clazz, true, Thread.currentThread().contextClassLoader)
     try {
       if (args.isEmpty() && method != "main") {
-        val m = clazz.getDeclaredMethod(method)
+        val m =
+            try {
+              clazz.getDeclaredMethod(method)
+            } catch (e: NoSuchMethodException) {
+              clazz.getMethod(method)
+            }
         m.isAccessible = true
         if (m.modifiers and java.lang.reflect.Modifier.STATIC == 0) {
           val constructor = clazz.getDeclaredConstructor()
@@ -68,7 +85,7 @@ class LambdaExecutor(val lambda: () -> Unit) : Executor {
 
   override fun beforeExecution() {}
 
-  override fun execute() {
+  override fun execute(resetClassloader: Boolean) {
     lambda()
   }
 

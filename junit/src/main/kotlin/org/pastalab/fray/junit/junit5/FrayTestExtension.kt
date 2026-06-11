@@ -23,6 +23,7 @@ import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.randomness.ControlledRandomProvider
 import org.pastalab.fray.core.randomness.RecordedRandomProvider
 import org.pastalab.fray.core.scheduler.ReplayScheduler
+import org.pastalab.fray.core.scheduler.SURWScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
 import org.pastalab.fray.junit.Common.getPath
 import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest
@@ -52,6 +53,10 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
     val displayName = context.displayName
     val testClass = context.requiredTestClass
 
+    if (!enabled) {
+      return Stream.of(alwaysDisabledInvocation(displayName, "Fray is not enabled in this JVM"))
+    }
+
     if (isAnnotated(testMethod, FrayTest::class.java)) {
       return Stream.of(FrayTestInvocationContext())
     }
@@ -63,13 +68,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             )
             .get()
 
-    // If Fray is not enabled in the current JRE, still provide invocations but mark them disabled
     val repetitions = totalRepetition(concurrencyTest, testMethod)
-    if (!enabled) {
-      return Stream.iterate(1, { it + 1 }).limit(repetitions.toLong()).map {
-        alwaysDisabledInvocation(it, displayName, repetitions, "Fray is not enabled in this JVM")
-      }
-    }
 
     // Use the test class and method names for the report directory
     val className = testClass.name
@@ -100,6 +99,17 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
           val scheduler = concurrencyTest.scheduler.java.getConstructor().newInstance()
           Pair(scheduler, ControlledRandomProvider())
         }
+    val timelineCoverageType =
+        if (
+            concurrencyTest.collectTimelineCoverage ==
+                org.pastalab.fray.core.observers.TimelineCoverageType.NONE
+        )
+            null
+        else concurrencyTest.collectTimelineCoverage
+    val resolveStackTraceHash =
+        scheduler is SURWScheduler ||
+            timelineCoverageType ==
+                org.pastalab.fray.core.observers.TimelineCoverageType.THREAD_ORDERING
     val config =
         Configuration(
             ExecutionInfo(
@@ -108,9 +118,9 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
                 interleaveMemoryOps = false,
                 maxScheduledStep = -1,
             ),
-            testDir.toString(),
+            testDir,
             repetitions,
-            60,
+            600,
             scheduler,
             random,
             fullSchedule = false,
@@ -121,8 +131,14 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
             dummyRun = false,
             networkDelegateType = concurrencyTest.networkDelegateType,
             systemTimeDelegateType = concurrencyTest.systemTimeDelegateType,
+            virtualTimeDelta = 100_000,
             ignoreTimedBlock = concurrencyTest.ignoreTimedBlock,
             sleepAsYield = concurrencyTest.sleepAsYield,
+            resetClassLoader = false,
+            redirectStdout = false,
+            abortThreadExecutionAfterMainExit = false,
+            resolveRacingOperationStackTraceHash = resolveStackTraceHash,
+            timelineCoverageType = timelineCoverageType,
         )
     val frayContext = RunContext(config)
     val frayJupiterContext = FrayJupiterContext()
@@ -134,8 +150,10 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
   private fun totalRepetition(concurrencyTest: ConcurrencyTest, method: Method): Int {
     // If the user guide the program execution through IDE plugin, the repetition is set to 1
     val repetition =
-        if (System.getProperty("fray.debugger", "false").toBoolean() ||
-            concurrencyTest.replay.isNotEmpty()) {
+        if (
+            System.getProperty("fray.debugger", "false").toBoolean() ||
+                concurrencyTest.replay.isNotEmpty()
+        ) {
           1
         } else {
           concurrencyTest.iterations
@@ -147,14 +165,12 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
   }
 
   private fun alwaysDisabledInvocation(
-      index: Int,
       displayName: String,
-      total: Int,
-      reason: String
+      reason: String,
   ): TestTemplateInvocationContext {
     return object : TestTemplateInvocationContext {
       override fun getDisplayName(invocationIndex: Int): String {
-        return "$displayName repetition $index of $total (skipped)"
+        return "$displayName (skipped)"
       }
 
       override fun getAdditionalExtensions(): MutableList<Extension> {
@@ -165,7 +181,8 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
               ): ConditionEvaluationResult {
                 return ConditionEvaluationResult.disabled(reason)
               }
-            })
+            }
+        )
       }
     }
   }

@@ -7,7 +7,8 @@ import org.pastalab.fray.rmi.ResourceType
 class ReactiveBlockingBlocked(val threadContext: ThreadContext) :
     BlockedOperation(
         ResourceInfo(System.identityHashCode(threadContext), ResourceType.NETWORK),
-        BLOCKED_OPERATION_NOT_TIMED) {
+        BLOCKED_OPERATION_NOT_TIMED,
+    ) {
   override fun unblockThread(tid: Long, type: InterruptionType): Any? {
     return null
   }

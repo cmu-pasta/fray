@@ -10,7 +10,7 @@ import kotlinx.serialization.json.Json
 class ControlledRandom(
     val integers: MutableList<Int> = mutableListOf(),
     val doubles: MutableList<Double> = mutableListOf(),
-    @Transient private val random: Random = Random()
+    @Transient private val random: Random = Random(),
 ) : Randomness {
 
   @Transient private var integerIndex = 0

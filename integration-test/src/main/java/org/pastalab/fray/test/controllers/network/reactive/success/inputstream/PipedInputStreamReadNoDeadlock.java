@@ -6,12 +6,12 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
 public class PipedInputStreamReadNoDeadlock {
-    public static void main(String[] args) throws Exception {
-        try (PipedInputStream pipedInput = new PipedInputStream()) {
-            PipedOutputStream output = new PipedOutputStream(pipedInput);
-            output.write("Hello\n".getBytes());
-            BufferedReader reader = new BufferedReader(new InputStreamReader(pipedInput));
-            reader.readLine();
-        }
+  public static void main(String[] args) throws Exception {
+    try (PipedInputStream pipedInput = new PipedInputStream()) {
+      PipedOutputStream output = new PipedOutputStream(pipedInput);
+      output.write("Hello\n".getBytes());
+      BufferedReader reader = new BufferedReader(new InputStreamReader(pipedInput));
+      reader.readLine();
     }
+  }
 }

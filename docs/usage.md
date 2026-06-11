@@ -9,7 +9,7 @@ Add the following plugin to your `build.gradle` file:
 
 ```kotlin
 plugins {
-    id("org.pastalab.fray.gradle") version "0.6.11"
+    id("org.pastalab.fray.gradle") version "0.8.5"
 }
 ```
 
@@ -73,7 +73,7 @@ Here is an example of a test code that tests the `BankAccount` class with Fray:
 ...
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pastalab.fray.junit.junit5.FrayTestExtension;
-import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
+import org.pastalab.fray.junit.junit5.annotations.FrayTest;
 
 @ExtendWith(FrayTestExtension.class)
 public class BankAccountTest {
@@ -81,7 +81,7 @@ public class BankAccountTest {
         ...
     }
 
-    @ConcurrencyTest(
+    @FrayTest(
             iterations = 1000
     )
     public void runTestUsingFray() throws InterruptedException {
@@ -91,8 +91,8 @@ public class BankAccountTest {
 ```
 
 - First you need to add the `@ExtendWith(FrayTestExtension.class)` annotation to the test class so that Fray can run the test.
-- Then you need to add the `@ConcurrencyTest` annotation to the test method. The `iterations` parameter specifies how many times the test method should be executed.
-    - You may also specify scheduling algorithms and other parameters in the `@ConcurrencyTest` annotation. For more information, see the [ConcurrencyTest.kt](https://github.com/cmu-pasta/fray/blob/main/junit/src/main/kotlin/org/pastalab/fray/junit/junit5/annotations/ConcurrencyTest.kt#L18)
+- Then you need to add the `@FrayTest` annotation to the test method. The `iterations` parameter specifies how many times the test method should be executed.
+    - You may also specify scheduling algorithms and other parameters in the `@FrayTest` annotation. For more information, see the [FrayTest.kt](https://github.com/cmu-pasta/fray/blob/main/junit/src/main/kotlin/org/pastalab/fray/junit/junit5/annotations/FrayTest.kt)
 
 ## Run the Test
 
@@ -104,11 +104,39 @@ You can run the test from the command line using the following command:
 ./gradlew frayTest
 ```
 
-Fray will launch all tests annotated with `@ConcurrencyTest` and run them multiple times.
+Fray will launch all JUnit Platform tests tagged `FrayTest` (for example, via `@FrayTest` or `@ConcurrencyTest`) and run them multiple times.
+
+If you want Fray to reuse a different Gradle `Test` task instead of the default local `test` task, configure the plugin extension:
+
+```kotlin
+fray {
+    target = ":integration-test"
+    testTask = "integrationTest"
+}
+```
+
+`target` is optional and defaults to the current project. `testTask` defaults to `test`.
+
+The generated `frayTest` task is only created when `testTask = "test"`, and in that case the original `test` task is left unchanged. If you point Fray at another task such as `integrationTest`, Fray configures that task directly and does not create a separate `frayTest` task.
+
+You can also further customize the generated `frayTest` task:
+
+```kotlin
+tasks.withType<FrayTestTask>()
+    .configureEach {
+  jvmArgs("-Xmx32G")
+  jvmArgs("-Dfray.debug=true")
+  testLogging {
+    showStandardStreams = true
+  }
+}
+```
 
 ### Run test from IDE
 
-If you are using an IDE, you can run the test as you would run any other JUnit test. 
+If you are using an IDE, you can run the test as you would run any other JUnit test. Note that if you are using Intellij IDEA,
+you need to use Gradle test launcher instead of the JUnit test launcher to run the tests. 
+`Settings → Build, Execution, Deployment → Build Tools → Gradle → Run Tests Using → Gradle`. 
 
 ## Reproduce a Failure
 
@@ -169,6 +197,54 @@ Once the schedule is recorded, configure your test to use the `ReplayScheduler`:
 )
 ```
 
+## Timeline Coverage
+
+Fray can collect **timeline coverage** metrics during testing to measure how many distinct thread interleavings have been explored. This helps the scheduler prioritize unexplored interleavings and provides feedback on testing progress.
+
+You can configure the coverage type via the annotation:
+
+```java
+@ConcurrencyTest(
+    collectTimelineCoverage = TimelineCoverageType.RESOURCE_ORDERING  // default
+)
+```
+
+Or via the command line:
+
+```shell
+--timeline-coverage resource-ordering   # default
+--timeline-coverage thread-ordering
+--timeline-coverage none
+```
+
+### Resource Ordering
+
+Resource ordering coverage tracks **which threads access each shared resource and in what order**. For each resource (e.g., a lock, an atomic variable, a shared field), it records the directed transitions between threads. For example, "resource X is accessed by thread 1 first, followed by thread 2."
+
+At the end of each iteration, it computes a fingerprint of the observed transition patterns across all resources that were accessed by at least 2 threads. Two executions produce the same fingerprint if and only if they exhibit the same set of thread-to-thread handoff patterns on shared resources.
+
+This is the default because it is **lightweight** — it only records the resource identity and thread index per racing operation, with no stack trace resolution needed. The overhead is a few hash map lookups per shared memory access.
+
+### Thread Ordering
+
+Thread ordering coverage tracks **which racing operations each thread performs and their pairwise relationships within that thread**. Each operation is identified by its type, class, and source location (via a stack trace hash). For each thread, it records all pairs of racing operations that the thread has executed. 
+
+At the end of each iteration, it combines the per-thread event sets and pair sets into a single fingerprint. Two executions produce the same fingerprint if and only if every thread performed the same set of racing operations at the same code locations, with the same pairwise occurrence relationships.
+
+This mode is **more expensive** because it requires resolving a stack trace hash for every racing operation. This involves stack walking and filtering Fray-internal frames on each shared memory access. Use this mode when you need finer-grained coverage that distinguishes executions where the same resources are accessed in the same inter-thread order but from different code paths.
+
+### None
+
+Disabling timeline coverage (`TimelineCoverageType.NONE`) removes all coverage tracking overhead. Use this when you only care about finding bugs and do not need coverage-guided scheduling feedback — for example, during replay or when using a fixed schedule.
+
+### Performance Summary
+
+| Mode                | Overhead                                    | When to use                                       |
+|---------------------|---------------------------------------------|---------------------------------------------------|
+| `RESOURCE_ORDERING` | Low — hash map lookups per racing operation | Default; good balance of feedback and performance |
+| `THREAD_ORDERING`   | Higher — stack walking per racing operation | When you need code-location-aware coverage        |
+| `NONE`              | Zero                                        | Replay, debugging, or maximum throughput          |
+
 ## NixOS
 
 Fray downloads Corretto JDK 25 and runs `ConcurrencyTest` with it by default. However, NixOS cannot run dynamically 
@@ -192,7 +268,7 @@ Fray also provides a Java agent that lets you run Fray with existing Java applic
 To use the agent, you can start from Fray's prebuilt Docker image.
 
 ```dockerfile
-FROM ghcr.io/cmu-pasta/fray:0.6.11 as fray
+FROM ghcr.io/cmu-pasta/fray:0.8.5 as fray
 
 COPY --from=fray /nix /nix
 COPY --from=fray /opt/fray /opt/fray
@@ -207,7 +283,7 @@ After you have the image, run your application with the Fray agent:
     - `FRAY_ARGS` are the same arguments you would pass to the Fray launcher, separated by colons (:).
     - For example, to use the `pos` scheduler and enable memory interleaving:
       ```
-      -javaagent:/opt/fray/libs/fray-core-0.6.11-SNAPSHOT-all.jar=-m:--scheduler:pos
+      -javaagent:/opt/fray/libs/fray-core-0.8.5-SNAPSHOT-all.jar=-m:--scheduler:pos
       ```
   - `-agentpath:/opt/fray/native-libs/libjvmti.so`
 

@@ -11,7 +11,7 @@ class ObjectInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Object::class.
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     if (name == "wait" && descriptor == "(J)V") {
       val eMv =
@@ -33,7 +33,8 @@ class ObjectInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Object::class.
           loadThis = true,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className)
+          thisType = className,
+      )
     }
     return mv
   }

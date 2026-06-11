@@ -15,6 +15,7 @@ import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.randomness.ControlledRandomProvider
 import org.pastalab.fray.core.randomness.RecordedRandomProvider
 import org.pastalab.fray.core.scheduler.ReplayScheduler
+import org.pastalab.fray.core.scheduler.SURWScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
 import org.pastalab.fray.junit.Common.getPath
 import org.pastalab.fray.junit.junit5.annotations.FrayTest
@@ -23,7 +24,7 @@ class FrayTestRunExtension : InvocationInterceptor {
   override fun interceptTestTemplateMethod(
       invocation: InvocationInterceptor.Invocation<Void>,
       invocationContext: ReflectiveInvocationContext<Method>,
-      extensionContext: ExtensionContext
+      extensionContext: ExtensionContext,
   ) {
     val testMethod = invocationContext.executable
     val clazz = extensionContext.requiredTestClass
@@ -64,6 +65,17 @@ class FrayTestRunExtension : InvocationInterceptor {
           Pair(scheduler, ControlledRandomProvider())
         }
 
+    val timelineCoverageType =
+        if (
+            frayTestAnnotation.collectTimelineCoverage ==
+                org.pastalab.fray.core.observers.TimelineCoverageType.NONE
+        )
+            null
+        else frayTestAnnotation.collectTimelineCoverage
+    val resolveStackTraceHash =
+        scheduler is SURWScheduler ||
+            timelineCoverageType ==
+                org.pastalab.fray.core.observers.TimelineCoverageType.THREAD_ORDERING
     val config =
         Configuration(
             ExecutionInfo(
@@ -74,12 +86,13 @@ class FrayTestRunExtension : InvocationInterceptor {
                     getSystemClassPaths(),
                     emptyMap(),
                 ),
+                frayTestAnnotation.ignoreUncaughtExceptions,
                 false,
-                false,
-                -1),
-            testDir.toString(),
+                -1,
+            ),
+            testDir,
             frayTestAnnotation.iterations,
-            60,
+            600,
             scheduler,
             random,
             fullSchedule = false,
@@ -90,8 +103,15 @@ class FrayTestRunExtension : InvocationInterceptor {
             dummyRun = false,
             networkDelegateType = frayTestAnnotation.networkDelegateType,
             systemTimeDelegateType = frayTestAnnotation.systemTimeDelegateType,
+            virtualTimeDelta = frayTestAnnotation.virtualTimeDelta,
             ignoreTimedBlock = frayTestAnnotation.ignoreTimedBlock,
             sleepAsYield = frayTestAnnotation.sleepAsYield,
+            resetClassLoader = frayTestAnnotation.resetClassLoaderPerIteration,
+            redirectStdout = false,
+            abortThreadExecutionAfterMainExit =
+                frayTestAnnotation.abortThreadExecutionAfterMainExit,
+            resolveRacingOperationStackTraceHash = resolveStackTraceHash,
+            timelineCoverageType = timelineCoverageType,
         )
     val runner = TestRunner(config)
     runner.run()?.let { throw it }

@@ -106,8 +106,11 @@ class ThreadResourcePanel : JPanel() {
         constraints.insets = JBUI.insets(2, 0) // Reset insets
         resourcesPanel.add(
             createResourceItem(
-                IconLoader.getIcon("/icons/locked.svg", this::class.java), lock.toString()),
-            constraints)
+                IconLoader.getIcon("/icons/locked.svg", this::class.java),
+                lock.toString(),
+            ),
+            constraints,
+        )
         constraints.gridy++
       }
     }
@@ -121,8 +124,11 @@ class ThreadResourcePanel : JPanel() {
       constraints.insets = JBUI.insets(2, 0) // Reset insets
       resourcesPanel.add(
           createResourceItem(
-              AllIcons.Debugger.ThreadFrozen, threadInfo.threadInfo.waitingFor.toString()),
-          constraints)
+              AllIcons.Debugger.ThreadFrozen,
+              threadInfo.threadInfo.waitingFor.toString(),
+          ),
+          constraints,
+      )
       constraints.gridy++
     }
 

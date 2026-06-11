@@ -13,7 +13,7 @@ class ThreadLocalRandomInstrumenter(cv: ClassVisitor) :
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     if (name == "getProbe") {
       return MethodExitVisitor(
@@ -25,7 +25,8 @@ class ThreadLocalRandomInstrumenter(cv: ClassVisitor) :
           loadThis = false,
           loadArgs = false,
           addFinalBlock = false,
-          thisType = className)
+          thisType = className,
+      )
     }
     return mv
   }

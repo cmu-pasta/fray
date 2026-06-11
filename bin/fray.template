@@ -95,15 +95,7 @@ done
 
 # Remaining arguments (after --) go to MainKt
 MAINKT_ARGS=("$@")
-
-# Set up class path
-if [[ -n "$CLASS_PATH" ]]; then
-  FULL_CLASS_PATH="${CORE_PATH}:${CLASS_PATH}"
-else
-  FULL_CLASS_PATH="${CORE_PATH}"
-fi
-
-RESOLVED_CLASS_PATH=$(resolve_classpaths "$FULL_CLASS_PATH")
+RESOLVED_CLASS_PATH=$(resolve_classpaths "$CORE_PATH")
 
 # Build command
 COMMAND=("$JAVA_PATH")
@@ -132,6 +124,12 @@ fi
 # Add MainKt arguments (passed via --)
 if [[ ${#MAINKT_ARGS[@]} -gt 0 ]]; then
   COMMAND+=("${MAINKT_ARGS[@]}")
+fi
+
+# Set up class path
+if [[ -n "$CLASS_PATH" ]]; then
+  APPLICATION_CLASS_PATH=$(resolve_classpaths "$CLASS_PATH")
+  COMMAND+=("--classpath" "$APPLICATION_CLASS_PATH")
 fi
 
 # Execute command

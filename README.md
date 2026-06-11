@@ -21,16 +21,16 @@ to be easy to use and can be integrated into existing testing frameworks.
 
 ## JUnit 5
 
-If you are using JUnit 5, you can use the `@ConcurrencyTest` annotation to mark a test as a concurrency test. You
+If you are using JUnit 5, you can use the `@FrayTest` annotation to mark a test as a concurrency test. You
 also need to add the `@ExtendWith(FrayTestExtension.class)` annotation to the test class.
 
 ```java
 import org.pastalab.fray.junit.junit5.FrayTestExtension;
-import org.pastalab.fray.junit.junit5.annotations.ConcurrencyTest;
+import org.pastalab.fray.junit.junit5.annotations.FrayTest;
 
 @ExtendWith(FrayTestExtension.class)
 public class SimpleTest {
-    @ConcurrencyTest
+    @FrayTest
     public void concurrencyTest() {
         ... // some multithreaded code
         assert(...);
@@ -39,6 +39,9 @@ public class SimpleTest {
 
 ```
 
+**Note:** The Fray debugger IDE plugin currently only supports tests annotated with `@ConcurrencyTest`. If you
+want to use the debugger, follow the instructions in `docs/IDE.md` and use `@ConcurrencyTest` instead of
+`@FrayTest` for now.
 
 ## Other Testing Frameworks
 
@@ -61,7 +64,7 @@ To use Fray with Gradle, add the following plugin to your `build.gradle` file:
 
 ```kotlin
 plugins {
-    id("org.pastalab.fray.gradle") version "0.6.11"
+    id("org.pastalab.fray.gradle") version "0.8.5"
 }
 ```
 
@@ -73,7 +76,7 @@ plugins {
 <plugin>
     <groupId>org.pastalab.fray.maven</groupId>
     <artifactId>fray-plugins-maven</artifactId>
-    <version>0.6.11</version>
+    <version>0.8.5</version>
     <executions>
         <execution>
             <id>prepare-fray</id>
@@ -91,7 +94,7 @@ plugins {
 <dependency>
     <groupId>org.pastalab.fray</groupId>
     <artifactId>fray-junit</artifactId>
-    <version>0.6.11</version>
+    <version>0.8.5</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -122,7 +125,7 @@ An extended version of the paper with detailed formalizations and proofs is avai
 
 
 Talks about Fray have been given at the following venues:
-- [SPLASH 2025 by Ao Li](https://youtu.be/zoE2w2hueYQ?t=20390) 
+- [SPLASH 2025 by Ao Li](https://www.youtube.com/watch?v=eFR81WHcRAo) 
 - [DC Systems Meetup by Rohan Padhye](https://www.youtube.com/watch?v=AX6Pqz8gSYY)
 
 # Acknowledgements

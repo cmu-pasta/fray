@@ -8,29 +8,38 @@ import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
+import com.github.ajalt.clikt.parameters.types.long
+import com.github.ajalt.clikt.parameters.types.path
 import java.io.File
-import java.nio.file.Paths
+import java.nio.file.Files
+import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
+import kotlin.io.path.div
 import kotlin.io.path.exists
+import kotlin.io.path.writeText
 import kotlin.time.TimeSource
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.core.concurrency.operations.RacingOperation
 import org.pastalab.fray.core.debugger.DebuggerRegistry
 import org.pastalab.fray.core.logger.FrayLogger
 import org.pastalab.fray.core.observers.AntithesisErrorReporter
+import org.pastalab.fray.core.observers.ResourceOrderingCoverage
 import org.pastalab.fray.core.observers.ScheduleRecorder
 import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.observers.ScheduleVerifier
+import org.pastalab.fray.core.observers.ThreadOrderingCoverage
 import org.pastalab.fray.core.observers.ThreadPausingTimeLogger
+import org.pastalab.fray.core.observers.TimelineCoverage
+import org.pastalab.fray.core.observers.TimelineCoverageType
 import org.pastalab.fray.core.randomness.AntithesisSdkRandomProvider
 import org.pastalab.fray.core.randomness.ControlledRandomProvider
 import org.pastalab.fray.core.randomness.Randomness
@@ -57,7 +66,7 @@ sealed class ExecutionConfig(name: String) : OptionGroup(name) {
   open fun getExecutionInfo(
       ignoreUnhandledExceptions: Boolean,
       interleaveMemoryOps: Boolean,
-      maxScheduledStep: Int
+      maxScheduledStep: Int,
   ): ExecutionInfo {
     return ExecutionInfo(
         MethodExecutor("", "", emptyList(), emptyList(), emptyMap()),
@@ -72,7 +81,7 @@ class EmptyExecutionConfig : ExecutionConfig("empty") {
   override fun getExecutionInfo(
       ignoreUnhandledExceptions: Boolean,
       interleaveMemoryOps: Boolean,
-      maxScheduledStep: Int
+      maxScheduledStep: Int,
   ): ExecutionInfo {
     return ExecutionInfo(
         LambdaExecutor {},
@@ -99,7 +108,7 @@ class CliExecutionConfig : ExecutionConfig("cli") {
   override fun getExecutionInfo(
       ignoreUnhandledExceptions: Boolean,
       interleaveMemoryOps: Boolean,
-      maxScheduledStep: Int
+      maxScheduledStep: Int,
   ): ExecutionInfo {
     val propertyMap = properties.toMap()
     return ExecutionInfo(
@@ -117,7 +126,7 @@ class JsonExecutionConfig : ExecutionConfig("json") {
   override fun getExecutionInfo(
       ignoreUnhandledExceptions: Boolean,
       interleaveMemoryOps: Boolean,
-      maxScheduledStep: Int
+      maxScheduledStep: Int,
   ): ExecutionInfo {
     val module = SerializersModule {
       polymorphic(Executor::class) {
@@ -215,7 +224,6 @@ class PCT : ScheduleAlgorithm("pct", false) {
 
 class SURW : ScheduleAlgorithm("surw", false) {
   override fun getScheduler(randomness: Randomness): Scheduler {
-    System.setProperty("fray.resolveRacingOperationStackTraceHash", "true")
     return SURWScheduler(randomness, mutableMapOf(), mutableSetOf())
   }
 }
@@ -232,7 +240,10 @@ class Dynamic : ScheduleAlgorithm("dynamic", false) {
 }
 
 class MainCommand : CliktCommand() {
-  val report by option("-o", "--output", help = "Report output directory.").default("/tmp/report")
+  val report by
+      option("-o", "--output", help = "Report output directory.")
+          .path()
+          .default(Files.createTempDirectory("fray-workspace"))
   val timeout by
       option("-t", "--timeout", help = "Testing timeout in seconds.").int().default(60 * 10)
   val iter by option("-i", "--iter", help = "Number of iterations.").int().default(100000)
@@ -319,6 +330,14 @@ class MainCommand : CliktCommand() {
               "none" to SystemTimeDelegateType.NONE,
           )
           .default(SystemTimeDelegateType.NONE)
+  val virtualTimeDelta by
+      option(
+              "--virtual-time-delta",
+              help =
+                  "Amount of virtual time to advance per step (only valid when system time delegate type is MOCK). Must be a positive value.",
+          )
+          .long()
+          .default(100_000L)
   val ignoreTimedBlock by
       option(
               "--ignore-timed-block",
@@ -330,6 +349,41 @@ class MainCommand : CliktCommand() {
   val sleepAsYield by
       option("--sleep-as-yield", help = "Treat Thread.sleep as Thread.yield.")
           .flag("--no-sleep-as-yield", default = false)
+  val resetClassLoader by
+      option(
+              "--reset-class-loader",
+              help =
+                  "Reset the class loader before each iteration. This helps to eliminate " +
+                      "non-determinism introduced by static initializers.",
+          )
+          .flag("--no-reset-class-loader", default = true)
+  val redirectStdout by
+      option("--redirect-stdout", help = "Redirect stdout and stderr to files in report dir.")
+          .flag()
+  val abortThreadExecutionAfterMainExit by
+      option(
+              "--abort-thread-after-main-exit",
+              help =
+                  "Abort all other threads' execution after the main thread exits. This helps to " +
+                      "eliminate non-determinism introduced by background threads.",
+          )
+          .flag("--no-abort-thread-after-main-exit", default = false)
+  private val timelineCoverageOption by
+      option(
+              "--timeline-coverage",
+              help =
+                  "Timeline coverage type to collect during testing. " +
+                      "Options: thread-ordering, resource-ordering, none.",
+          )
+          .choice("thread-ordering", "resource-ordering", "none")
+          .default("resource-ordering")
+  val timelineCoverageType: TimelineCoverageType?
+    get() =
+        when (timelineCoverageOption) {
+          "thread-ordering" -> TimelineCoverageType.THREAD_ORDERING
+          "resource-ordering" -> TimelineCoverageType.RESOURCE_ORDERING
+          else -> null
+        }
 
   override fun run() {}
 
@@ -337,6 +391,8 @@ class MainCommand : CliktCommand() {
     val executionInfo =
         runConfig.getExecutionInfo(ignoreUnhandledExceptions, interleaveMemoryOps, maxScheduledStep)
     val randomnessProvider = randomnessProvider.getRandomnessProvider()
+    val resolveStackTraceHash =
+        scheduler is SURW || timelineCoverageType == TimelineCoverageType.THREAD_ORDERING
     val configuration =
         Configuration(
             executionInfo,
@@ -353,8 +409,15 @@ class MainCommand : CliktCommand() {
             dummyRun,
             networkDelegateType,
             systemTimeDelegateType,
+            virtualTimeDelta,
             ignoreTimedBlock,
-            sleepAsYield)
+            sleepAsYield,
+            resetClassLoader,
+            redirectStdout,
+            abortThreadExecutionAfterMainExit,
+            resolveRacingOperationStackTraceHash = resolveStackTraceHash,
+            timelineCoverageType = timelineCoverageType,
+        )
     if (System.getProperty("fray.antithesisSdk", "false").toBoolean()) {
       configuration.testStatusObservers.add(AntithesisErrorReporter())
     }
@@ -364,7 +427,7 @@ class MainCommand : CliktCommand() {
 
 data class Configuration(
     val executionInfo: ExecutionInfo,
-    val report: String,
+    val report: Path,
     var iter: Int,
     val timeout: Int,
     var scheduler: Scheduler,
@@ -377,26 +440,39 @@ data class Configuration(
     val dummyRun: Boolean,
     val networkDelegateType: NetworkDelegateType,
     val systemTimeDelegateType: SystemTimeDelegateType,
+    val virtualTimeDelta: Long,
     val ignoreTimedBlock: Boolean,
     val sleepAsYield: Boolean,
+    val resetClassLoader: Boolean,
+    val redirectStdout: Boolean,
+    val abortThreadExecutionAfterMainExit: Boolean,
+    val resolveRacingOperationStackTraceHash: Boolean,
+    val timelineCoverageType: TimelineCoverageType?,
 ) {
   val scheduleObservers = mutableListOf<ScheduleObserver<ThreadContext>>()
   val testStatusObservers = mutableListOf<TestStatusObserver>()
+  val timelineCoverage: TimelineCoverage? =
+      when (timelineCoverageType) {
+        TimelineCoverageType.THREAD_ORDERING -> ThreadOrderingCoverage()
+        TimelineCoverageType.RESOURCE_ORDERING -> ResourceOrderingCoverage()
+        TimelineCoverageType.NONE -> null
+        null -> null
+      }
   var nextSavedIndex = 0
   var currentIteration = 0
   val startTime = TimeSource.Monotonic.markNow()
   var randomness = randomnessProvider.getRandomness()
 
-  fun saveToReportFolder(index: Int): String {
+  fun saveToReportFolder(index: Int): Path {
     val path =
         if (exploreMode) {
-          "$report/recording_$index"
+          report / "recording_$index"
         } else {
-          "$report/recording"
+          report / "recording"
         }
-    Paths.get(path).createDirectories()
-    File("$path/schedule.json").writeText(Json.encodeToString(scheduler))
-    File("$path/random.json").writeText(Json.encodeToString(randomness))
+    path.createDirectories()
+    (path / "schedule.json").writeText(Json.encodeToString(scheduler))
+    (path / "random.json").writeText(Json.encodeToString(randomness))
     testStatusObservers.forEach { it.saveToReportFolder(path) }
     return path
   }
@@ -404,8 +480,13 @@ data class Configuration(
   val frayLogger = FrayLogger("$report/fray.log")
 
   init {
-    if (!isReplay || !Paths.get(report).exists()) {
+    if (!isReplay || !report.exists()) {
       prepareReportPath(report)
+    }
+    RacingOperation.resolveRacingOperationStackTraceHash = resolveRacingOperationStackTraceHash
+    if (timelineCoverage != null) {
+      scheduleObservers.add(timelineCoverage)
+      testStatusObservers.add(timelineCoverage)
     }
     if (System.getProperty("fray.recordSchedule", "false").toBoolean()) {
       val scheduleRecorder = ScheduleRecorder()
@@ -459,9 +540,8 @@ data class Configuration(
   }
 
   @OptIn(ExperimentalPathApi::class)
-  fun prepareReportPath(reportPath: String) {
-    val path = Paths.get(reportPath)
-    path.deleteRecursively()
-    path.createDirectories()
+  fun prepareReportPath(reportPath: Path) {
+    reportPath.deleteRecursively()
+    reportPath.createDirectories()
   }
 }

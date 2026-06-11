@@ -36,7 +36,7 @@ class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
       className: String,
       classBeingRedefined: Class<*>?,
       protectionDomain: ProtectionDomain?,
-      classfileBuffer: ByteArray
+      classfileBuffer: ByteArray,
   ): ByteArray {
     // Check if the class loader is null (bootstrap class loader)
     // and if the class name starts with known JDK prefixes.
@@ -44,12 +44,13 @@ class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
       // This is likely a JDK class, so skip transformation
       return classfileBuffer
     }
-    if (instrumentedClassCache.containsKey(className)) {
-      return instrumentedClassCache[className]!!
+    val classIdentifier = (protectionDomain?.codeSource?.location?.path ?: "null:") + className
+    if (instrumentedClassCache.containsKey(classIdentifier)) {
+      return instrumentedClassCache[classIdentifier]!!
     }
     try {
       Runtime.onSkipPrimitive("instrumentation")
-      if (Configs.DEBUG_MODE) {
+      if (Runtime.getDebugMode()) {
         Utils.writeClassFile(className, classfileBuffer, false)
       }
       val classReader = ClassReader(classfileBuffer)
@@ -62,7 +63,9 @@ class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
 
       cv =
           SynchronizedMethodInstrumenter(
-              cv, false) // Synchronized Method Instrumenter should be before Monitor Instrumenter
+              cv,
+              false,
+          ) // Synchronized Method Instrumenter should be before Monitor Instrumenter
       cv = MonitorInstrumenter(cv)
 
       cv = ConditionInstrumenter(cv)
@@ -86,10 +89,10 @@ class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
         cn.accept(classWriter)
       }
       val out = classWriter.toByteArray()
-      if (Configs.DEBUG_MODE) {
+      if (Runtime.getDebugMode()) {
         Utils.writeClassFile(className, out, true)
       }
-      instrumentedClassCache[className] = out
+      instrumentedClassCache[classIdentifier] = out
       return out
     } catch (e: Throwable) {
       println("Failed to instrument: $className")

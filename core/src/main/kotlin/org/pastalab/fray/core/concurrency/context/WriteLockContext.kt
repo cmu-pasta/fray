@@ -4,7 +4,6 @@ import java.util.concurrent.locks.Lock
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
-import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.rmi.ThreadState
 
 class WriteLockContext(lock: Lock) : LockContext(lock) {
@@ -29,7 +28,7 @@ class WriteLockContext(lock: Lock) : LockContext(lock) {
       lockThread: ThreadContext,
       shouldBlock: Boolean,
       lockBecauseOfWait: Boolean,
-      canInterrupt: Boolean
+      canInterrupt: Boolean,
   ): Boolean {
     if (!canLock(lockThread.thread.id)) {
       if (canInterrupt) {
@@ -51,10 +50,12 @@ class WriteLockContext(lock: Lock) : LockContext(lock) {
   override fun unlock(
       lockThread: ThreadContext,
       unlockBecauseOfWait: Boolean,
-      earlyExit: Boolean
+      earlyExit: Boolean,
   ): Boolean {
     val tid = lockThread.thread.id
-    verifyOrReport(lockHolder == tid) { "Thread $tid is not the lock holder" }
+    if (lockHolder != tid) {
+      return false
+    }
     if (!unlockBecauseOfWait) {
       lockTimes[tid] = lockTimes[tid]!! - 1
     }
@@ -111,10 +112,12 @@ class WriteLockContext(lock: Lock) : LockContext(lock) {
   override fun unblockThread(tid: Long, type: InterruptionType): Boolean {
     val lockWaiter = lockWaiters[tid] ?: return false
     val noTimeout = type != InterruptionType.TIMEOUT
-    if ((lockWaiter.canInterrupt && type == InterruptionType.INTERRUPT) ||
-        (type == InterruptionType.RESOURCE_AVAILABLE) ||
-        (type == InterruptionType.TIMEOUT) ||
-        (type == InterruptionType.FORCE)) {
+    if (
+        (lockWaiter.canInterrupt && type == InterruptionType.INTERRUPT) ||
+            (type == InterruptionType.RESOURCE_AVAILABLE) ||
+            (type == InterruptionType.TIMEOUT) ||
+            (type == InterruptionType.FORCE)
+    ) {
       lockWaiter.thread.pendingOperation = ThreadResumeOperation(noTimeout)
       lockWaiter.thread.state = ThreadState.Runnable
       lockWaiters.remove(tid)

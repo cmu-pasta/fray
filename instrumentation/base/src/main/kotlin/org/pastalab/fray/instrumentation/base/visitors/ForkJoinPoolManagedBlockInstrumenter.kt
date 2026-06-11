@@ -29,10 +29,12 @@ class ForkJoinPoolManagedBlockInstrumenter(cv: ClassVisitor) :
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
-    if (name == "managedBlock" &&
-        descriptor == $$"(Ljava/util/concurrent/ForkJoinPool$ManagedBlocker;)V") {
+    if (
+        name == "managedBlock" &&
+            descriptor == $$"(Ljava/util/concurrent/ForkJoinPool$ManagedBlocker;)V"
+    ) {
       mv.visitCode()
       mv.visitVarInsn(ALOAD, 0)
       mv.visitMethodInsn(
@@ -40,7 +42,8 @@ class ForkJoinPoolManagedBlockInstrumenter(cv: ClassVisitor) :
           "java/util/concurrent/ForkJoinPool",
           "unmanagedBlock",
           $$"(Ljava/util/concurrent/ForkJoinPool$ManagedBlocker;)V",
-          false)
+          false,
+      )
       mv.visitInsn(RETURN)
       mv.visitEnd()
       return MethodNode()

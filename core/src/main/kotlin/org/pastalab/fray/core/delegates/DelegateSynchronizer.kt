@@ -3,9 +3,11 @@ package org.pastalab.fray.core.delegates
 import org.pastalab.fray.core.RunContext
 import org.pastalab.fray.core.utils.HelperThread
 import org.pastalab.fray.core.utils.Utils
+import org.pastalab.fray.runtime.Runtime
 
 class DelegateSynchronizer(val context: RunContext) {
   val entered: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
+  val enabled: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
 
   val skipPrimitiveEntered: ThreadLocal<Int> = ThreadLocal.withInitial { 0 }
   val skipPrimitiveStackTrace: ThreadLocal<MutableList<String>> =
@@ -25,12 +27,13 @@ class DelegateSynchronizer(val context: RunContext) {
       entered.set(false)
       return true
     }
-    if (Thread.currentThread() is HelperThread) {
+    val currentThread = Thread.currentThread()
+    if (currentThread is HelperThread) {
       entered.set(false)
       return true
     }
-    // We do not process threads created outside of application.
-    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
+
+    if (!enabled.get()) {
       entered.set(false)
       return true
     }
@@ -43,7 +46,7 @@ class DelegateSynchronizer(val context: RunContext) {
 
   inline fun <T> runInFrayDoneWithOriginBlockAndNoSkip(
       frayBlock: () -> Result<T>,
-      originBlock: () -> T
+      originBlock: () -> T,
   ): T {
     return runInFrayDone(frayBlock, false, "", originBlock)
   }
@@ -55,7 +58,7 @@ class DelegateSynchronizer(val context: RunContext) {
   inline fun <T> runInFrayDoneWithOriginBlock(
       skipSignature: String,
       frayBlock: () -> Result<T>,
-      originBlock: (() -> T)
+      originBlock: (() -> T),
   ): T {
     return runInFrayDone(frayBlock, true, skipSignature, originBlock)
   }
@@ -64,7 +67,7 @@ class DelegateSynchronizer(val context: RunContext) {
       frayBlock: () -> Result<T>,
       skipDone: Boolean,
       skipSignature: String,
-      originBlock: (() -> T)
+      originBlock: (() -> T),
   ): T {
     if (skipDone) {
       onSkipPrimitiveDone(skipSignature)
@@ -93,7 +96,7 @@ class DelegateSynchronizer(val context: RunContext) {
   inline fun <T> runInFrayStartWithOriginBlock(
       skipSignature: String,
       frayBlock: () -> Result<T>,
-      originBlock: () -> T
+      originBlock: () -> T,
   ): T {
     return runInFrayStart(frayBlock, true, skipSignature, originBlock)
   }
@@ -102,7 +105,7 @@ class DelegateSynchronizer(val context: RunContext) {
       frayBlock: () -> Result<T>,
       skipStart: Boolean,
       skipSignature: String,
-      originBlock: () -> T
+      originBlock: () -> T,
   ): T {
     if (checkEntered()) {
       if (skipStart) {
@@ -137,12 +140,12 @@ class DelegateSynchronizer(val context: RunContext) {
       return
     }
     onSkipRecursion.set(true)
-    skipPrimitiveStackTrace.get().add(signature)
-    skipPrimitiveEntered.set(1 + skipPrimitiveEntered.get())
-
-    if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
-      skipPrimitiveStackTrace.get().removeLast()
-      skipPrimitiveEntered.set(skipPrimitiveEntered.get() - 1)
+    val count = skipPrimitiveEntered.get()
+    if (enabled.get()) {
+      if (Runtime.getDebugMode()) {
+        skipPrimitiveStackTrace.get().add(signature)
+      }
+      skipPrimitiveEntered.set(count + 1)
     }
     onSkipRecursion.set(false)
   }
@@ -153,13 +156,21 @@ class DelegateSynchronizer(val context: RunContext) {
     }
     onSkipRecursion.set(true)
     try {
-      if (!context.registeredThreads.containsKey(Thread.currentThread().id)) {
+      if (!enabled.get()) {
         return false
       }
-      Utils.verifyOrReport(!skipPrimitiveStackTrace.get().isEmpty())
-      val last = skipPrimitiveStackTrace.get().removeLast()
-      Utils.verifyOrReport(last == signature)
-      skipPrimitiveEntered.set(skipPrimitiveEntered.get() - 1)
+      val count = skipPrimitiveEntered.get()
+      if (Runtime.getDebugMode()) {
+        Utils.verifyOrReport(
+            { !skipPrimitiveStackTrace.get().isEmpty() },
+            {
+              "Skip primitive stack trace should not be empty when exiting skip primitive, current skipPrimitiveEntered: $count"
+            },
+        )
+        val last = skipPrimitiveStackTrace.get().removeLast()
+        Utils.verifyOrReport { last == signature }
+      }
+      skipPrimitiveEntered.set(count - 1)
       return true
     } finally {
       onSkipRecursion.set(false)
@@ -168,20 +179,29 @@ class DelegateSynchronizer(val context: RunContext) {
 
   fun onSkipScheduling(signature: String) = runInFrayStartNoSkip {
     skipSchedulingEntered.set(1 + skipSchedulingEntered.get())
-    skipSchedulingStackTrace.get().add(signature)
-    val threadContext = context.registeredThreads[Thread.currentThread().id]!!
-    context.prioritizedThreads.add(threadContext)
+    if (Runtime.getDebugMode()) {
+      skipSchedulingStackTrace.get().add(signature)
+    }
+    val threadId = Thread.currentThread().id
+    context.prioritizedThreads.add(threadId)
     return@runInFrayStartNoSkip Result.success(Unit)
   }
 
   fun onSkipSchedulingDone(signature: String) = runInFrayDoneNoSkip {
-    Utils.verifyOrReport(!skipSchedulingStackTrace.get().isEmpty())
-    val last = skipSchedulingStackTrace.get().removeLast()
-    Utils.verifyOrReport(last == signature)
+    if (Runtime.getDebugMode()) {
+      Utils.verifyOrReport(
+          { !skipSchedulingStackTrace.get().isEmpty() },
+          {
+            "Skip scheduling stack trace should not be empty when exiting skip scheduling, current skipSchedulingEntered: ${skipSchedulingEntered.get()}"
+          },
+      )
+      val last = skipSchedulingStackTrace.get().removeLast()
+      Utils.verifyOrReport { last == signature }
+    }
     skipSchedulingEntered.set(skipSchedulingEntered.get() - 1)
     if (skipSchedulingEntered.get() == 0) {
-      val threadContext = context.registeredThreads[Thread.currentThread().id]!!
-      context.prioritizedThreads.remove(threadContext)
+      val threadId = Thread.currentThread().id
+      context.prioritizedThreads.remove(threadId)
     }
     return@runInFrayDoneNoSkip Result.success(Unit)
   }

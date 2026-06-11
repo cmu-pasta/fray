@@ -12,7 +12,7 @@ class LockSupportInstrumenter(cv: ClassVisitor) :
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     if (name == "park") {
       val eMv =
@@ -23,7 +23,8 @@ class LockSupportInstrumenter(cv: ClassVisitor) :
               name,
               descriptor,
               loadThis = false,
-              loadArgs = false)
+              loadArgs = false,
+          )
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onThreadParkDone,
@@ -33,7 +34,8 @@ class LockSupportInstrumenter(cv: ClassVisitor) :
           loadThis = false,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className)
+          thisType = className,
+      )
     }
     if (name.startsWith("unpark")) {
       val eMv =
@@ -44,7 +46,8 @@ class LockSupportInstrumenter(cv: ClassVisitor) :
               name,
               descriptor,
               loadThis = false,
-              loadArgs = true)
+              loadArgs = true,
+          )
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onThreadUnparkDone,
@@ -54,7 +57,8 @@ class LockSupportInstrumenter(cv: ClassVisitor) :
           loadThis = false,
           loadArgs = true,
           addFinalBlock = true,
-          thisType = className)
+          thisType = className,
+      )
     }
     return mv
   }

@@ -8,23 +8,22 @@ plugins {
 
 cmake {
   targets {
-    register("native_release", Action {
-      cmakeLists.set(file("src/CMakeLists.txt"))
-      cmakeArgs.add("-DCMAKE_BUILD_TYPE=Release")
-    })
+    register(
+        "native_release",
+        Action {
+          cmakeLists.set(file("src/CMakeLists.txt"))
+          cmakeArgs.add("-DCMAKE_BUILD_TYPE=Release")
+        },
+    )
   }
 }
 
-tasks.register<Jar>(
-    "sourcesJar"
-) {
+tasks.register<Jar>("sourcesJar") {
   archiveClassifier.set("sources")
   from("src/cpp")
 }
 
-tasks.named("clean") {
-  dependsOn("cmakeClean")
-}
+tasks.named("clean") { dependsOn("cmakeClean") }
 
 tasks.register<Copy>("collectNativeLibs") {
   dependsOn("cmakeBuild")
@@ -36,12 +35,9 @@ tasks.register<Copy>("collectNativeLibs") {
       },
   )
   into("${layout.buildDirectory.get().asFile}/native-libs")
-  eachFile {
-    path = path.substringAfterLast("/")
-  }
+  eachFile { path = path.substringAfterLast("/") }
   includeEmptyDirs = false
 }
-
 
 tasks.named<Jar>("jar") {
   dependsOn("collectNativeLibs")

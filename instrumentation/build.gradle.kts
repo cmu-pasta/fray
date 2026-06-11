@@ -1,7 +1,3 @@
-plugins {
-  java
-}
+plugins { java }
 
-subprojects {
-  group = "org.pastalab.fray.instrumentation"
-}
+subprojects { group = "org.pastalab.fray.instrumentation" }

@@ -17,7 +17,7 @@ class ToStringInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String,
       signature: String?,
       superName: String?,
-      interfaces: Array<out String?>?
+      interfaces: Array<out String?>?,
   ) {
     className = name
     super.visit(version, access, name, signature, superName, interfaces)
@@ -28,7 +28,7 @@ class ToStringInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
     return if (name == "toString" && descriptor == "()Ljava/lang/String;") {
@@ -41,7 +41,8 @@ class ToStringInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
               descriptor,
               loadThis = false,
               loadArgs = false,
-              preCustomizer = { it.push("toString") })
+              preCustomizer = { it.push("toString") },
+          )
       MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onSkipPrimitiveDone,
@@ -52,7 +53,8 @@ class ToStringInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           loadArgs = false,
           addFinalBlock = true,
           thisType = className,
-          customizer = { mv, isFinalBlock -> push("toString") })
+          customizer = { mv, isFinalBlock -> push("toString") },
+      )
     } else {
       mv
     }

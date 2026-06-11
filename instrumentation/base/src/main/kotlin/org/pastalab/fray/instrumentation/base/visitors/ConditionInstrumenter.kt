@@ -6,7 +6,8 @@ import org.objectweb.asm.MethodVisitor
 class ConditionInstrumenter(cv: ClassVisitor) :
     ClassVisitorBase(
         cv,
-        java.util.concurrent.locks.AbstractQueuedSynchronizer.ConditionObject::class.java.name) {
+        java.util.concurrent.locks.AbstractQueuedSynchronizer.ConditionObject::class.java.name,
+    ) {
 
   override fun instrumentMethod(
       mv: MethodVisitor,
@@ -14,22 +15,31 @@ class ConditionInstrumenter(cv: ClassVisitor) :
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     if ((name == "await" || name == "awaitUninterruptibly") && descriptor == "()V") {
       val method =
           if (name == "await") {
             Pair(
                 org.pastalab.fray.runtime.Runtime::onConditionAwait,
-                org.pastalab.fray.runtime.Runtime::onConditionAwaitDone)
+                org.pastalab.fray.runtime.Runtime::onConditionAwaitDone,
+            )
           } else {
             Pair(
                 org.pastalab.fray.runtime.Runtime::onConditionAwaitUninterruptibly,
-                org.pastalab.fray.runtime.Runtime::onConditionAwaitUninterruptiblyDone)
+                org.pastalab.fray.runtime.Runtime::onConditionAwaitUninterruptiblyDone,
+            )
           }
       val eMv =
           MethodEnterVisitor(
-              mv, method.first, access, name, descriptor, loadThis = true, loadArgs = false)
+              mv,
+              method.first,
+              access,
+              name,
+              descriptor,
+              loadThis = true,
+              loadArgs = false,
+          )
       return MethodExitVisitor(
           eMv,
           method.second,
@@ -39,7 +49,8 @@ class ConditionInstrumenter(cv: ClassVisitor) :
           loadThis = true,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className)
+          thisType = className,
+      )
     }
     if (name == "signal") {
       val eMv =
@@ -50,7 +61,8 @@ class ConditionInstrumenter(cv: ClassVisitor) :
               name,
               descriptor,
               loadThis = true,
-              loadArgs = false)
+              loadArgs = false,
+          )
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onConditionSignalDone,
@@ -60,7 +72,8 @@ class ConditionInstrumenter(cv: ClassVisitor) :
           loadThis = true,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className)
+          thisType = className,
+      )
     }
     if (name == "signalAll") {
       val eMv =
@@ -71,7 +84,8 @@ class ConditionInstrumenter(cv: ClassVisitor) :
               name,
               descriptor,
               loadThis = true,
-              loadArgs = false)
+              loadArgs = false,
+          )
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onConditionSignalDone,
@@ -81,7 +95,8 @@ class ConditionInstrumenter(cv: ClassVisitor) :
           loadThis = true,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className)
+          thisType = className,
+      )
     }
     return mv
   }

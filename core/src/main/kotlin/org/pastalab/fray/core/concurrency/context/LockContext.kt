@@ -21,13 +21,13 @@ abstract class LockContext(lock: Any) :
       lockThread: ThreadContext,
       shouldBlock: Boolean,
       lockBecauseOfWait: Boolean,
-      canInterrupt: Boolean
+      canInterrupt: Boolean,
   ): Boolean
 
   abstract fun unlock(
       lockThread: ThreadContext,
       unlockBecauseOfWait: Boolean,
-      earlyExit: Boolean
+      earlyExit: Boolean,
   ): Boolean
 
   abstract fun hasQueuedThreads(): Boolean

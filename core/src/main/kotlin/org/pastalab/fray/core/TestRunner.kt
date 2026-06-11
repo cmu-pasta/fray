@@ -1,5 +1,8 @@
 package org.pastalab.fray.core
 
+import java.io.FileOutputStream
+import java.io.PrintStream
+import kotlin.io.path.div
 import org.pastalab.fray.core.command.Configuration
 import org.pastalab.fray.core.delegates.DelegateSynchronizer
 import org.pastalab.fray.core.delegates.RuntimeDelegate
@@ -7,19 +10,26 @@ import org.pastalab.fray.runtime.Runtime
 
 class TestRunner(val config: Configuration) {
 
-  val context = RunContext(config)
   var currentDivision = 1
+  val stdout = System.out
 
-  fun reportProgress(iteration: Int, bugsFound: Int) {
+  private fun iterationsPerSecond(iteration: Int): Double {
+    val elapsedMillis = config.elapsedTime()
+    if (elapsedMillis <= 0) return 0.0
+    return iteration * 1000.0 / elapsedMillis
+  }
+
+  fun reportProgress(iteration: Int) {
     if (config.isReplay) return
     if (iteration % currentDivision == 0) {
-      print("\u001B[2J")
-      print("\u001B[2H")
-      println("Fray Testing:")
-      println("Report is available at: ${config.report}")
-      println("Iterations: $iteration")
-      if (bugsFound > 0) {
-        println("Bugs Found: $bugsFound")
+      stdout.print("\u001B[2J")
+      stdout.print("\u001B[2H")
+      stdout.println("Fray Testing:")
+      stdout.println("Report is available at: ${config.report}")
+      stdout.println("Iterations: $iteration")
+      stdout.println("Iterations/sec: %.2f".format(iterationsPerSecond(iteration)))
+      if (config.timelineCoverage != null) {
+        stdout.println("Covered timelines: ${config.timelineCoverage.getCoverage()}")
       }
     }
     if (iteration / currentDivision == 10) {
@@ -30,37 +40,69 @@ class TestRunner(val config: Configuration) {
   fun run(): Throwable? {
     config.executionInfo.executor.beforeExecution()
     config.frayLogger.info("Fray started.")
-    val bugsFound = 0
+    var runResult: Throwable? = null
+
     while (config.shouldRun()) {
-      reportProgress(config.currentIteration, bugsFound)
+      if (config.redirectStdout) {
+        val stdout = config.report / "stdout.txt"
+        System.setOut(PrintStream(FileOutputStream(stdout.toFile())))
+        val stderr = config.report / "stderr.txt"
+        System.setErr(PrintStream(FileOutputStream(stderr.toFile())))
+      }
+      reportProgress(config.currentIteration)
       if (config.noFray) {
         try {
-          config.executionInfo.executor.execute()
+          config.executionInfo.executor.execute(config.resetClassLoader)
         } catch (e: Throwable) {}
       } else {
-        try {
-          val synchronizer = DelegateSynchronizer(context)
-          Runtime.NETWORK_DELEGATE = config.networkDelegateType.produce(context, synchronizer)
-          Runtime.LOCK_DELEGATE = RuntimeDelegate(context, synchronizer)
-          Runtime.start()
-          config.executionInfo.executor.execute()
-          Runtime.onMainExit()
-        } catch (e: Throwable) {
-          Runtime.onReportError(e)
-          Runtime.onMainExit()
-        }
+        val t =
+            Thread({
+              val context = RunContext(config)
+              val out = System.out
+              val err = System.err
+              try {
+                val synchronizer = DelegateSynchronizer(context)
+                Runtime.NETWORK_DELEGATE = config.networkDelegateType.produce(context, synchronizer)
+                Runtime.LOCK_DELEGATE = RuntimeDelegate(context, synchronizer)
+                Runtime.start()
+                config.executionInfo.executor.execute(config.resetClassLoader)
+                Runtime.onMainExit()
+              } catch (e: Throwable) {
+                Runtime.onReportError(e)
+                Runtime.onMainExit()
+              }
+              System.setOut(out)
+              System.setErr(err)
+              if (runResult == null) {
+                runResult = context.bugFound
+              }
+              context.shutDown()
+            })
+        t.start()
+        t.join()
       }
-      if (config.isReplay ||
-          ((context.bugFound != null && context.bugFound !is FrayInternalError) &&
-              !config.exploreMode))
+      if (
+          config.isReplay ||
+              ((runResult != null && runResult !is FrayInternalError) && !config.exploreMode)
+      )
           break
       config.nextIteration()
     }
-    context.shutDown()
+
+    val coverageInfo =
+        if (config.timelineCoverage != null) {
+          ", Covered timelines: ${config.timelineCoverage.getCoverage()}"
+        } else {
+          ""
+        }
     config.frayLogger.info(
-        "Run finished. Total iter: ${config.currentIteration}, Elapsed time: ${config.elapsedTime()}ms",
-        true)
+        "Run finished. Total iter: ${config.currentIteration}, " +
+            "Elapsed time: ${config.elapsedTime()}ms, " +
+            "Iterations/sec: %.2f".format(iterationsPerSecond(config.currentIteration)) +
+            coverageInfo,
+        true,
+    )
     config.executionInfo.executor.afterExecution()
-    return context.bugFound
+    return runResult
   }
 }

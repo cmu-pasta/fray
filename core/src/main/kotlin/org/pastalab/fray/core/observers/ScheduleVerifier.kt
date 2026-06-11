@@ -1,6 +1,7 @@
 package org.pastalab.fray.core.observers
 
 import java.io.File
+import java.nio.file.Path
 import kotlinx.serialization.json.Json
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.rmi.ScheduleObserver
@@ -32,15 +33,18 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) :
     val operation = scheduled.pendingOperation.javaClass.name
     if (recording.scheduled != scheduledIndex) {
       throw IllegalStateException(
-          "Scheduled index mismatch: expected ${recording.scheduled}, got $scheduledIndex")
+          "Scheduled index mismatch: expected ${recording.scheduled}, got $scheduledIndex"
+      )
     }
     if (recording.enabled != enabled) {
       throw IllegalStateException(
-          "Enabled schedules mismatch: expected ${recording.enabled}, got $enabled")
+          "Enabled schedules mismatch: expected ${recording.enabled}, got $enabled"
+      )
     }
     if (recording.operation != operation) {
       throw IllegalStateException(
-          "Operation mismatch: expected ${recording.operation}, got $operation")
+          "Operation mismatch: expected ${recording.operation}, got $operation"
+      )
     }
     index++
   }
@@ -49,5 +53,5 @@ class ScheduleVerifier(val schedules: List<ScheduleRecording>) :
 
   override fun onExecutionDone(bugFound: Throwable?) {}
 
-  override fun saveToReportFolder(path: String) {}
+  override fun saveToReportFolder(path: Path) {}
 }

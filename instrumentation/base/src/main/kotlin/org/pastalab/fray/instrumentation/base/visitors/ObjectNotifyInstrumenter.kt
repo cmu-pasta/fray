@@ -15,7 +15,7 @@ class ObjectNotifyInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String,
       signature: String?,
       superName: String?,
-      interfaces: Array<out String>?
+      interfaces: Array<out String>?,
   ) {
     className = name
     super.visit(version, access, name, signature, superName, interfaces)
@@ -26,7 +26,7 @@ class ObjectNotifyInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String?,
       descriptor: String?,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     // TODO(aoli): we should make it more generic.
     if (className.startsWith("jdk/internal/") || access and Opcodes.ACC_NATIVE != 0) {
@@ -40,7 +40,7 @@ class ObjectNotifyInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           owner: String?,
           callee: String?,
           descriptor: String?,
-          isInterface: Boolean
+          isInterface: Boolean,
       ) {
         if (callee == "notify" && descriptor == "()V") {
           super.visitInsn(DUP)
@@ -49,8 +49,10 @@ class ObjectNotifyInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
               org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
               org.pastalab.fray.runtime.Runtime::onObjectNotify.name,
               Utils.kFunctionToJvmMethodDescriptor(
-                  org.pastalab.fray.runtime.Runtime::onObjectNotify),
-              false)
+                  org.pastalab.fray.runtime.Runtime::onObjectNotify
+              ),
+              false,
+          )
           super.visitMethodInsn(opcode, owner, callee, descriptor, isInterface)
         } else if (callee == "notifyAll" && descriptor == "()V") {
           super.visitInsn(DUP)
@@ -59,8 +61,10 @@ class ObjectNotifyInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
               org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
               org.pastalab.fray.runtime.Runtime::onObjectNotifyAll.name,
               Utils.kFunctionToJvmMethodDescriptor(
-                  org.pastalab.fray.runtime.Runtime::onObjectNotifyAll),
-              false)
+                  org.pastalab.fray.runtime.Runtime::onObjectNotifyAll
+              ),
+              false,
+          )
           super.visitMethodInsn(opcode, owner, callee, descriptor, isInterface)
         } else {
           super.visitMethodInsn(opcode, owner, callee, descriptor, isInterface)

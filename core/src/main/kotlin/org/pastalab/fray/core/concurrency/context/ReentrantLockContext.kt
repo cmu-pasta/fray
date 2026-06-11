@@ -3,7 +3,6 @@ package org.pastalab.fray.core.concurrency.context
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.core.concurrency.operations.ThreadResumeOperation
-import org.pastalab.fray.core.utils.Utils.verifyOrReport
 import org.pastalab.fray.rmi.ThreadState
 
 class ReentrantLockContext(lock: Any) : LockContext(lock) {
@@ -64,11 +63,10 @@ class ReentrantLockContext(lock: Any) : LockContext(lock) {
   override fun unlock(
       lockThread: ThreadContext,
       unlockBecauseOfWait: Boolean,
-      earlyExit: Boolean
+      earlyExit: Boolean,
   ): Boolean {
     val tid = lockThread.thread.id
-    verifyOrReport(lockHolder == tid || earlyExit)
-    if (lockHolder != tid && earlyExit) {
+    if (lockHolder != tid) {
       return false
     }
     if (!unlockBecauseOfWait) {
@@ -104,9 +102,11 @@ class ReentrantLockContext(lock: Any) : LockContext(lock) {
 
   override fun unblockThread(tid: Long, type: InterruptionType): Boolean {
     val lockWaiter = lockWaiters[tid] ?: return false
-    if ((lockWaiter.canInterrupt && type == InterruptionType.INTERRUPT) ||
-        (type == InterruptionType.FORCE) ||
-        (type == InterruptionType.TIMEOUT)) {
+    if (
+        (lockWaiter.canInterrupt && type == InterruptionType.INTERRUPT) ||
+            (type == InterruptionType.FORCE) ||
+            (type == InterruptionType.TIMEOUT)
+    ) {
       lockWaiter.thread.pendingOperation = ThreadResumeOperation(type != InterruptionType.TIMEOUT)
       lockWaiter.thread.state = ThreadState.Runnable
       lockWaiters.remove(tid)

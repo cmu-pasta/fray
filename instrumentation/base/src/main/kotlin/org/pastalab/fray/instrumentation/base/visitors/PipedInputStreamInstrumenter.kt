@@ -13,7 +13,7 @@ class PipedInputStreamInstrumenter(cv: ClassVisitor) :
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     if (name == "read" || name == "receive") {
       val eMv =
@@ -24,7 +24,8 @@ class PipedInputStreamInstrumenter(cv: ClassVisitor) :
               name,
               descriptor,
               loadThis = true,
-              loadArgs = false)
+              loadArgs = false,
+          )
       return MethodExitVisitor(
           eMv,
           Runtime::onPipedInputStreamReadDone,
@@ -34,7 +35,8 @@ class PipedInputStreamInstrumenter(cv: ClassVisitor) :
           loadThis = true,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className)
+          thisType = className,
+      )
     } else {
       return mv
     }

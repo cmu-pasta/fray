@@ -15,7 +15,7 @@ class ObjectNotifyContext(lockContext: LockContext, obj: Any) : SignalContext(lo
 
   override fun updatedThreadContextDueToUnblock(
       threadContext: ThreadContext,
-      type: InterruptionType
+      type: InterruptionType,
   ) {
     threadContext.pendingOperation = ObjectWakeBlocked(this, type != InterruptionType.TIMEOUT)
   }
@@ -23,7 +23,7 @@ class ObjectNotifyContext(lockContext: LockContext, obj: Any) : SignalContext(lo
   override fun updateThreadContextDueToBlock(
       threadContext: ThreadContext,
       blockedUntil: Long,
-      canInterrupt: Boolean
+      canInterrupt: Boolean,
   ) {
     threadContext.pendingOperation = ObjectWaitBlocked(this, blockedUntil)
     threadContext.state = ThreadState.Blocked

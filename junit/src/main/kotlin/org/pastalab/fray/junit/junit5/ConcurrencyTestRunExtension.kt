@@ -13,13 +13,13 @@ import org.pastalab.fray.runtime.Runtime
 class ConcurrencyTestRunExtension(
     val index: Int,
     val frayContext: RunContext,
-    val frayJupiterContext: FrayJupiterContext
+    val frayJupiterContext: FrayJupiterContext,
 ) : AfterEachCallback, TestWatcher, ExecutionCondition, InvocationInterceptor, AfterAllCallback {
 
   override fun <T : Any?> interceptTestClassConstructor(
       invocation: InvocationInterceptor.Invocation<T>,
       invocationContext: ReflectiveInvocationContext<Constructor<T>>,
-      extensionContext: ExtensionContext
+      extensionContext: ExtensionContext,
   ): T {
     // The test class constructor is called even if the test is `disabled()`
     // So we need to skip the constructor interception if the test is disabled.
@@ -28,7 +28,8 @@ class ConcurrencyTestRunExtension(
     if (frayContext.config.currentIteration != 1) {
       frayContext.config.scheduler =
           frayContext.config.scheduler.nextIteration(
-              frayContext.config.randomnessProvider.getRandomness())
+              frayContext.config.randomnessProvider.getRandomness()
+          )
       frayContext.config.randomness = frayContext.config.randomnessProvider.getRandomness()
     }
     val synchronizer = DelegateSynchronizer(frayContext)
@@ -44,7 +45,7 @@ class ConcurrencyTestRunExtension(
   override fun interceptTestTemplateMethod(
       invocation: InvocationInterceptor.Invocation<Void?>?,
       invocationContext: ReflectiveInvocationContext<Method?>?,
-      extensionContext: ExtensionContext?
+      extensionContext: ExtensionContext?,
   ) {
     Runtime.onSkipPrimitiveDone("JUnit internal")
     invocation?.proceed()
@@ -74,7 +75,8 @@ class ConcurrencyTestRunExtension(
       frayContext.reportError(cause)
       println(
           "Bug found in iteration test ${testName}, you may find detailed report and replay files " +
-              "in ${frayContext.config.report}")
+              "in ${frayContext.config.report}"
+      )
     }
   }
 

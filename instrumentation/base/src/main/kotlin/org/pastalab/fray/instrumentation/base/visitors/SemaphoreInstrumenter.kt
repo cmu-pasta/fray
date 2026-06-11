@@ -11,7 +11,7 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     if (name == "<init>") {
       return MethodExitVisitor(
@@ -23,7 +23,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           loadThis = true,
           loadArgs = false,
           addFinalBlock = false,
-          thisType = className)
+          thisType = className,
+      )
     }
     if ((name == "acquire" || name == "acquireUninterruptibly" || name == "tryAcquire")) {
       val method =
@@ -52,16 +53,23 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           }
       val eMv =
           MethodEnterVisitor(
-              mv, method, access, name, descriptor, loadThis = true, loadArgs = true) {
-                if (name == "tryAcquire") {
-                  // We need to override the timeout value for controlled concurrency.
-                  if (descriptor.startsWith("(IJ")) {
-                    storeArg(1)
-                  } else if (descriptor.startsWith("(J")) {
-                    storeArg(0)
-                  }
-                }
+              mv,
+              method,
+              access,
+              name,
+              descriptor,
+              loadThis = true,
+              loadArgs = true,
+          ) {
+            if (name == "tryAcquire") {
+              // We need to override the timeout value for controlled concurrency.
+              if (descriptor.startsWith("(IJ")) {
+                storeArg(1)
+              } else if (descriptor.startsWith("(J")) {
+                storeArg(0)
               }
+            }
+          }
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onSemaphoreAcquireDone,
@@ -71,7 +79,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           loadThis = false,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className)
+          thisType = className,
+      )
     }
     if (name == "release" && descriptor == "()V") {
       val eMv =
@@ -82,7 +91,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
               name,
               descriptor,
               loadThis = true,
-              loadArgs = true)
+              loadArgs = true,
+          )
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onSemaphoreReleaseDone,
@@ -92,7 +102,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           loadThis = false,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className)
+          thisType = className,
+      )
     }
     if (name == "release" && descriptor == "(I)V") {
       val eMv =
@@ -103,7 +114,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
               name,
               descriptor,
               loadThis = true,
-              loadArgs = true)
+              loadArgs = true,
+          )
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onSemaphoreReleaseDone,
@@ -113,7 +125,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           loadThis = false,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className)
+          thisType = className,
+      )
     }
     if (name == "drainPermits") {
       val eMv =
@@ -124,7 +137,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
               name,
               descriptor,
               loadThis = true,
-              loadArgs = false)
+              loadArgs = false,
+          )
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onSemaphoreDrainPermitsDone,
@@ -134,7 +148,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           loadThis = false,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className)
+          thisType = className,
+      )
     }
     if (name == "reducePermits") {
       val eMv =
@@ -145,7 +160,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
               name,
               descriptor,
               loadThis = true,
-              loadArgs = true)
+              loadArgs = true,
+          )
       return MethodExitVisitor(
           eMv,
           org.pastalab.fray.runtime.Runtime::onSemaphoreReducePermitsDone,
@@ -155,7 +171,8 @@ class SemaphoreInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Semaphore::
           loadThis = false,
           loadArgs = false,
           addFinalBlock = true,
-          thisType = className)
+          thisType = className,
+      )
     }
     return mv
   }

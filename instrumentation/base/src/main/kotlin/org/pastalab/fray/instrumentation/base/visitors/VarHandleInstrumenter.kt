@@ -14,7 +14,7 @@ class VarHandleMethodVisitor(
     descriptor: String,
     val signatureMatcher: (String, String) -> Boolean,
     val callbackFunction: KFunction<*>,
-    val instrumenter: (VarHandleMethodVisitor, String, Int, MutableList<Int>) -> Unit
+    val instrumenter: (VarHandleMethodVisitor, String, Int, MutableList<Int>) -> Unit,
 ) : AdviceAdapter(ASM9, mv, access, name, descriptor) {
 
   override fun visitMethodInsn(
@@ -22,7 +22,7 @@ class VarHandleMethodVisitor(
       owner: String,
       name: String,
       descriptor: String,
-      isInterface: Boolean
+      isInterface: Boolean,
   ) {
     if (signatureMatcher(owner, name)) {
       // For var handle operations, we only need the object reference and its offset (which is
@@ -45,7 +45,8 @@ class VarHandleMethodVisitor(
           org.pastalab.fray.runtime.Runtime::class.java.name.replace(".", "/"),
           callbackFunction.name,
           Utils.kFunctionToJvmMethodDescriptor(callbackFunction),
-          false)
+          false,
+      )
       for (local in poppedValues.reversed()) {
         loadLocal(local)
       }
@@ -76,7 +77,8 @@ class VarHandleInstrumenter(cv: ClassVisitor) :
               "FieldInstanceReadOnly",
               "FieldStaticReadWrite",
               "FieldStaticReadOnly",
-              "Array")
+              "Array",
+          )
       val instrumentedClasses = mutableListOf<String>()
       for (varHandleName in varHandleNames) {
         for (subClassName in subClassNames) {
@@ -93,7 +95,7 @@ class VarHandleInstrumenter(cv: ClassVisitor) :
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     if (name == "compareAndSet") {
       return VarHandleMethodVisitor(

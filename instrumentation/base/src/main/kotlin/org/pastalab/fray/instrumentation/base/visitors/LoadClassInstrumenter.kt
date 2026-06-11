@@ -14,7 +14,7 @@ class LoadClassInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String,
       signature: String?,
       superName: String?,
-      interfaces: Array<out String?>?
+      interfaces: Array<out String?>?,
   ) {
     className = name
     super.visit(version, access, name, signature, superName, interfaces)
@@ -25,12 +25,14 @@ class LoadClassInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String?>?
+      exceptions: Array<out String?>?,
   ): MethodVisitor? {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
-    if (name == "loadClass" &&
-        (descriptor == "(Ljava/lang/String;)Ljava/lang/Class;" ||
-            descriptor == "(Ljava/lang/String;Z)Ljava/lang/Class;")) {
+    if (
+        name == "loadClass" &&
+            (descriptor == "(Ljava/lang/String;)Ljava/lang/Class;" ||
+                descriptor == "(Ljava/lang/String;Z)Ljava/lang/Class;")
+    ) {
       val methodSignature = "$className#$name$descriptor"
       val eMv =
           MethodEnterVisitor(
@@ -41,7 +43,8 @@ class LoadClassInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
               descriptor,
               loadThis = false,
               loadArgs = false,
-              preCustomizer = { push(methodSignature) })
+              preCustomizer = { push(methodSignature) },
+          )
       return MethodExitVisitor(
           eMv,
           Runtime::onSkipSchedulingDone,
@@ -52,7 +55,8 @@ class LoadClassInstrumenter(cv: ClassVisitor) : ClassVisitor(ASM9, cv) {
           loadArgs = false,
           addFinalBlock = true,
           thisType = className,
-          customizer = { mv, isFinalBlock -> push(methodSignature) })
+          customizer = { mv, isFinalBlock -> push(methodSignature) },
+      )
     }
     return mv
   }

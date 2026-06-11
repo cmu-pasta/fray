@@ -5,4 +5,6 @@ import org.pastalab.fray.plugins.base.FrayVersion
 open class FrayExtension {
   var version = FrayVersion.version
   var jdkPath: String? = null
+  var target: String? = null
+  var testTask: String = "test"
 }

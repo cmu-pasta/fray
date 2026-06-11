@@ -8,7 +8,7 @@ import org.pastalab.fray.core.randomness.Randomness
 class FifoScheduler : Scheduler {
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,
-      allThreads: Collection<ThreadContext>
+      allThreads: Collection<ThreadContext>,
   ): ThreadContext {
     return threads.first()
   }

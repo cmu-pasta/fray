@@ -17,7 +17,7 @@ class ReadLockContext(lock: Lock) : LockContext(lock) {
   override val signalContexts = mutableSetOf<SignalContext>()
 
   override fun addWakingThread(t: ThreadContext) {
-    verifyOrReport(false) { "Read lock does not have waking threads" }
+    verifyOrReport({ false }) { "Read lock does not have waking threads" }
   }
 
   override fun canLock(tid: Long): Boolean {
@@ -30,9 +30,9 @@ class ReadLockContext(lock: Lock) : LockContext(lock) {
       lockThread: ThreadContext,
       shouldBlock: Boolean,
       lockBecauseOfWait: Boolean,
-      canInterrupt: Boolean
+      canInterrupt: Boolean,
   ): Boolean {
-    verifyOrReport(!lockBecauseOfWait) { "Read lock does not have condition objects" }
+    verifyOrReport({ !lockBecauseOfWait }) { "Read lock does not have condition objects" }
     val tid = lockThread.thread.id
     if (!writeLockContext.canLockInternal(tid)) {
       if (canInterrupt) {
@@ -52,11 +52,13 @@ class ReadLockContext(lock: Lock) : LockContext(lock) {
   override fun unlock(
       lockThread: ThreadContext,
       unlockBecauseOfWait: Boolean,
-      earlyExit: Boolean
+      earlyExit: Boolean,
   ): Boolean {
     val tid = lockThread.thread.id
-    verifyOrReport(lockHolders.contains(tid))
-    verifyOrReport(!unlockBecauseOfWait) // Read lock does not have `Condition`
+    if (!lockHolders.contains(tid)) {
+      return false
+    }
+    verifyOrReport { !unlockBecauseOfWait } // Read lock does not have `Condition`
     lockTimes[tid] = lockTimes[tid]!! - 1
     if (lockTimes[tid] == 0) {
       lockTimes.remove(tid)
@@ -112,10 +114,12 @@ class ReadLockContext(lock: Lock) : LockContext(lock) {
   override fun unblockThread(tid: Long, type: InterruptionType): Boolean {
     val lockWaiter = lockWaiters[tid] ?: return false
     val noTimeout = type != InterruptionType.TIMEOUT
-    if ((lockWaiter.canInterrupt && type == InterruptionType.INTERRUPT) ||
-        (type == InterruptionType.FORCE) ||
-        (type == InterruptionType.RESOURCE_AVAILABLE) ||
-        (type == InterruptionType.TIMEOUT)) {
+    if (
+        (lockWaiter.canInterrupt && type == InterruptionType.INTERRUPT) ||
+            (type == InterruptionType.FORCE) ||
+            (type == InterruptionType.RESOURCE_AVAILABLE) ||
+            (type == InterruptionType.TIMEOUT)
+    ) {
       lockWaiter.thread.pendingOperation = ThreadResumeOperation(noTimeout)
       lockWaiter.thread.state = ThreadState.Runnable
       lockWaiters.remove(tid)

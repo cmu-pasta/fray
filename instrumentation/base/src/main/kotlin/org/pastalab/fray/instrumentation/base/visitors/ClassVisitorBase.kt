@@ -19,7 +19,7 @@ open class ClassVisitorBase(cv: ClassVisitor, vararg classNames: String) : Class
       name: String,
       signature: String?,
       superName: String?,
-      interfaces: Array<out String>?
+      interfaces: Array<out String>?,
   ) {
     if (classNames.any { name == it }) {
       shouldInstrument = true
@@ -33,7 +33,7 @@ open class ClassVisitorBase(cv: ClassVisitor, vararg classNames: String) : Class
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
     return if (shouldInstrument)
@@ -47,7 +47,7 @@ open class ClassVisitorBase(cv: ClassVisitor, vararg classNames: String) : Class
       name: String,
       descriptor: String,
       signature: String?,
-      exceptions: Array<out String>?
+      exceptions: Array<out String>?,
   ): MethodVisitor {
     return mv
   }
