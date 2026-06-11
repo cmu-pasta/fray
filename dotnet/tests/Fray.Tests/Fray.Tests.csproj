@@ -22,6 +22,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Fray\Fray.csproj" />
+    <ProjectReference Include="..\..\src\Fray.Rewriter\Fray.Rewriter.csproj" />
+    <ProjectReference Include="..\Fray.TargetCode\Fray.TargetCode.csproj" />
   </ItemGroup>
 
 </Project>

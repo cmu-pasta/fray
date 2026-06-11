@@ -39,7 +39,10 @@ dotnet/
     Core/Observers/       schedule recording, replay verification
     Core/Randomness/      recordable randomness for deterministic replay
     Primitives/           FrayThread, FrayMonitor, FrayLock, FraySemaphore, ...
+    Interception/         shims targeted by the IL rewriter (ControlledMonitor, ...)
     FrayTestRunner.cs     iteration loop, report saving, replay
+  src/Fray.Rewriter/      Mono.Cecil IL rewriter + `fray-rewrite` CLI
+  tests/Fray.TargetCode/  plain multithreaded code (no Fray reference) for rewriter tests
   tests/Fray.Tests/       xUnit suite: known bugs found, correct code passes
 ```
 
@@ -74,26 +77,58 @@ dotnet/
 Outside of a Fray run every wrapper falls through to the regular .NET
 primitive, so the same code runs normally in production-style tests.
 
-## The one architectural difference
+## Testing plain code with the IL rewriter
 
 The JVM implementation instruments real concurrency primitives (Java agent +
-JDK instrumentation + JVMTI), so arbitrary existing code can be tested, and
-the engine has to coordinate with the real primitives (helper thread,
-synchronization points, `sendSignalToObject`). Fray.NET v1 instead *models*
-primitives entirely inside the engine: a controlled thread only ever parks on
-its own `ThreadContext` signal, which removes that coordination machinery but
-requires code under test to use the `Fray*` wrappers.
+JDK instrumentation + JVMTI) so arbitrary existing code can be tested.
+Fray.NET provides the same capability through static IL rewriting with
+Mono.Cecil, the approach proven by Microsoft Coyote:
 
-The previous proof-of-concept in this repository explored the
-instrumentation route via the CLR Profiling API (`ICorProfiler`). That—or
-IL rewriting with Mono.Cecil, as done by Microsoft Coyote—remains the natural
-next step to lift the wrapper requirement; the engine underneath would stay
-exactly as it is, since `RunContext` only sees model operations either way.
+```bash
+dotnet run --project src/Fray.Rewriter -- MyCode.dll -o MyCode.fray.dll
+```
+
+The rewriter redirects calls into the `Fray.Interception` shims and inserts
+scheduling points around memory accesses:
+
+- `Monitor.Enter/Exit/TryEnter/Wait/Pulse/PulseAll` — including the
+  `Monitor.Enter(object, ref bool)` pattern emitted by the C# `lock`
+  statement — become `ControlledMonitor` calls
+- `new Thread(...)`, `Start`, `Join`, `Interrupt`, `Sleep`, `Yield` become
+  `ControlledThread` calls (the real `Thread` object is kept; its body is
+  wrapped with the Fray lifecycle protocol)
+- `Interlocked.*` becomes `ControlledInterlocked`
+- reads and writes of fields *declared in the rewritten assembly* get
+  `MemoryHooks` scheduling points (disable with `--no-memory`), so plain
+  `counter++` races are explored without any wrappers
+
+The shims check whether the calling thread is controlled, so a rewritten
+assembly still runs normally outside of Fray; `Fray.dll` just needs to be
+resolvable. `tests/Fray.Tests/RewriterTests.cs` exercises the whole pipeline:
+it rewrites `Fray.TargetCode` (plain `Thread`/`lock`/`Monitor`/`Interlocked`
+code with no Fray reference), then verifies Fray finds its lost update and
+its lock-inversion deadlock — and that its correct code passes and replays
+deterministically.
+
+Known rewriter limitations: accesses to fields of value types (structs) and
+generic-typed field *stores* are not instrumented; `ldflda`-based access
+(e.g. `ref` arguments) is covered only for the intercepted `Interlocked`
+methods; constructors are not memory-instrumented.
+
+## Engine vs. instrumentation
+
+The engine never knows which interception mode is in use: wrappers and
+rewritten IL both funnel into the same `RunContext` operations. The previous
+proof-of-concept in this repository explored runtime interception via the CLR
+Profiling API (`ICorProfiler`); that remains an option for attach-time
+instrumentation, but static rewriting covers the testing workflow without
+native code.
 
 Not yet ported: `StampedLock`, `LockSupport.park/unpark`, NIO/selector
 support, the SURW scheduler, timed virtual clock, RMI/MCP/IDE integrations.
-`Task`/`async` support requires IL rewriting (uncontrolled blocking inside the
-thread pool cannot be intercepted by wrappers) and is out of scope for v1.
+`Task`/`async` support requires rewriting the Task machinery itself
+(uncontrolled blocking inside the thread pool cannot be intercepted at the
+call site) and is the next candidate milestone.
 
 ## Building and testing
 
@@ -102,12 +137,13 @@ cd dotnet
 dotnet test
 ```
 
-The suite (27 tests, ~1s) checks both directions: seeded explorations *find*
+The suite (35 tests, ~2s) checks both directions: seeded explorations *find*
 known bugs (lost updates, ABBA deadlocks, lost wakeups, `if`-instead-of-
-`while` wait conditions, over-wide semaphores, check-then-act CAS races) and
-correct implementations pass hundreds of iterations without false positives.
-Replay tests verify that a saved failing schedule reproduces the identical
-bug and that seeded runs are fully deterministic.
+`while` wait conditions, over-wide semaphores, check-then-act CAS races —
+in wrapper-based and in rewritten plain code) and correct implementations
+pass hundreds of iterations without false positives. Replay tests verify
+that a saved failing schedule reproduces the identical bug and that seeded
+runs are fully deterministic.
 
 ## Reports and replay
 

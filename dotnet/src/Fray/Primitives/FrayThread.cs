@@ -59,28 +59,8 @@ public sealed class FrayThread
             _body();
             return;
         }
-        var context = _context!;
-        runContext.ThreadRun(context, _started);
-        try
-        {
-            _body();
-        }
-        catch (TargetTerminateException)
-        {
-            // The execution is winding down (bug found or main exited).
-        }
-        catch (Exception e)
-        {
-            if (!runContext.Config.IgnoreUnhandledExceptions)
-            {
-                runContext.ReportError(e);
-            }
-        }
-        finally
-        {
-            _completed = true;
-            runContext.ThreadCompleted(this, context);
-        }
+        ControlledThreadLifecycle.RunControlledBody(runContext, _context!, this, _started, _body,
+            () => _completed = true);
     }
 
     public void Join()
@@ -91,19 +71,7 @@ public sealed class FrayThread
             _thread.Join();
             return;
         }
-        // Java-style join: wait on the thread handle's monitor until completed.
-        runContext.MonitorEnter(this);
-        try
-        {
-            while (!_completed)
-            {
-                runContext.ObjectWait(this, BlockedOperation.NotTimed, canInterrupt: true);
-            }
-        }
-        finally
-        {
-            runContext.MonitorExit(this);
-        }
+        ControlledThreadLifecycle.Join(runContext, this, () => _completed, BlockedOperation.NotTimed);
     }
 
     public void Interrupt()
