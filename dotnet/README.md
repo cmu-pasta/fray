@@ -100,8 +100,18 @@ scheduling points around memory accesses:
 - the task-parallel subset of `Task` becomes `ControlledTask`:
   `Task.Run(Action)` / `Task.Run<TResult>(Func<TResult>)` bodies execute on
   controlled carrier threads (user code keeps holding a real `Task`), and
-  `Wait`, `Result`, `WaitAll`, `IsCompleted` (a yield point, so spin loops
-  make progress), and `Task.Delay` become model operations
+  `Wait`, `Result`, `WaitAll`, `WhenAll`, `IsCompleted` (a yield point, so
+  spin loops make progress), `Task.Delay`, and `TaskCompletionSource` become
+  model operations
+- **`async`/`await` is controlled**: calls into the compiler-generated
+  machinery (`AsyncTaskMethodBuilder` / `AsyncTaskMethodBuilder<T>` /
+  `TaskAwaiter`) are redirected to `ControlledAsync`. The real builder and
+  awaiter structs are kept — only their calls are intercepted, so all type
+  signatures stay intact. `MoveNext` runs inline up to the first suspension
+  exactly as in real .NET; at `AwaitUnsafeOnCompleted` the continuation
+  becomes a controlled carrier thread that model-joins the awaited task and
+  resumes the state machine, making every async method a schedulable unit of
+  the exploration (`Task.Yield` resumptions included)
 - `Interlocked.*` becomes `ControlledInterlocked`
 - reads and writes of fields *declared in the rewritten assembly* get
   `MemoryHooks` scheduling points (disable with `--no-memory`), so plain
@@ -118,10 +128,11 @@ deterministically.
 Known rewriter limitations: accesses to fields of value types (structs) and
 generic-typed field *stores* are not instrumented; `ldflda`-based access
 (e.g. `ref` arguments) is covered only for the intercepted `Interlocked`
-methods; constructors are not memory-instrumented. `async`/`await`, task
-continuations (`ContinueWith`), and the `Run(Func<Task>)` overloads stay
-uncontrolled: waiting on such a task inside a Fray run fails fast with
-`NotSupportedException` instead of stalling the exploration.
+methods; constructors are not memory-instrumented. `async void`,
+`ValueTask`, custom awaiters, `ConfigureAwait` awaiters without an
+extractable task, and explicit task continuations (`ContinueWith`) stay
+uncontrolled: waiting on (or resuming through) such a task inside a Fray run
+fails fast with `NotSupportedException` instead of stalling the exploration.
 
 ## Engine vs. instrumentation
 
@@ -134,9 +145,9 @@ native code.
 
 Not yet ported: `StampedLock`, `LockSupport.park/unpark`, NIO/selector
 support, the SURW scheduler, timed virtual clock, RMI/MCP/IDE integrations.
-Full `async`/`await` support requires rewriting the Task machinery itself
-(`AsyncTaskMethodBuilder`, awaiters, continuation scheduling — the deep end
-of what Microsoft Coyote does) and is the next candidate milestone.
+On the .NET side, `async void`/`ValueTask`/`ContinueWith` and custom
+awaiters remain uncontrolled (fail-fast), and a CI workflow for `dotnet
+test` is worth adding.
 
 ## Building and testing
 
@@ -145,7 +156,7 @@ cd dotnet
 dotnet test
 ```
 
-The suite (41 tests, ~2s) checks both directions: seeded explorations *find*
+The suite (47 tests, ~3s) checks both directions: seeded explorations *find*
 known bugs (lost updates, ABBA deadlocks, lost wakeups, `if`-instead-of-
 `while` wait conditions, over-wide semaphores, check-then-act CAS races —
 in wrapper-based and in rewritten plain code) and correct implementations

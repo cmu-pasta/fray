@@ -45,8 +45,14 @@ internal static class ControlledThreadLifecycle
         {
             while (!completed())
             {
-                if (!runContext.ObjectWait(joinHandle, blockedUntil, canInterrupt: true) &&
-                    blockedUntil != BlockedOperation.NotTimed)
+                var noTimeout = runContext.ObjectWait(joinHandle, blockedUntil, canInterrupt: true);
+                // A forced wakeup during wind-down means the awaited completion
+                // will never arrive: unwind instead of re-waiting forever.
+                if (!completed() && runContext.IsWindingDown)
+                {
+                    throw new TargetTerminateException();
+                }
+                if (!noTimeout && blockedUntil != BlockedOperation.NotTimed)
                 {
                     return completed();
                 }

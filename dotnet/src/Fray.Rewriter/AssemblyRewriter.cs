@@ -94,7 +94,7 @@ public static class AssemblyRewriter
                 instruction.Operand = module.ImportReference(shim);
                 redirected++;
             }
-            else if (TryRedirectGenericTaskCall(instruction, target, module))
+            else if (TryRedirectGenericCall(instruction, target, module))
             {
                 redirected++;
             }
@@ -116,46 +116,116 @@ public static class AssemblyRewriter
         body.OptimizeMacros();
     }
 
+    private static System.Reflection.MethodInfo ShimMethod(Type type, string name, int genericArity,
+        Func<System.Reflection.MethodInfo, bool>? filter = null) =>
+        type.GetMethods().Single(m =>
+            m.Name == name &&
+            m.GetGenericArguments().Length == genericArity &&
+            (filter == null || filter(m)));
+
     /// <summary>
-    /// Redirects the generic Task members that the exact-signature map cannot
-    /// express: <c>Task&lt;T&gt;.Result</c> and <c>Task.Run&lt;TResult&gt;(Func&lt;TResult&gt;)</c>.
+    /// Redirects the generic Task/async members that the exact-signature map
+    /// cannot express. Shim generic arguments are the declaring type's
+    /// arguments followed by the call's own method arguments.
     /// </summary>
-    private static bool TryRedirectGenericTaskCall(Instruction instruction, MethodReference target,
+    private static bool TryRedirectGenericCall(Instruction instruction, MethodReference target,
         ModuleDefinition module)
     {
-        // callvirt instance !0 Task`1<T>::get_Result()
-        if (target.DeclaringType is GenericInstanceType taskType &&
-            taskType.ElementType.FullName == "System.Threading.Tasks.Task`1" &&
-            target.Name == "get_Result" &&
-            target.Parameters.Count == 0)
+        var genericType = target.DeclaringType as GenericInstanceType;
+        var elementName = genericType?.ElementType.FullName ?? target.DeclaringType.FullName;
+        var genericCall = target as GenericInstanceMethod;
+
+        System.Reflection.MethodInfo? shim = null;
+        var genericArguments = new List<TypeReference>();
+
+        switch (elementName)
         {
-            var shim = typeof(Interception.ControlledTask).GetMethod(nameof(Interception.ControlledTask.Result))!;
-            var generic = new GenericInstanceMethod(module.ImportReference(shim));
-            generic.GenericArguments.Add(taskType.GenericArguments[0]);
-            instruction.OpCode = OpCodes.Call;
-            instruction.Operand = generic;
-            return true;
+            case "System.Threading.Tasks.Task`1"
+                when target.Name == "get_Result" && target.Parameters.Count == 0:
+                shim = ShimMethod(typeof(Interception.ControlledTask), nameof(Interception.ControlledTask.Result), 1);
+                genericArguments.Add(genericType!.GenericArguments[0]);
+                break;
+
+            // Task.Run<TResult>(Func<TResult>) — but not the Func<Task<TResult>>
+            // unwrapping overload (async lambdas are handled by the builder shims).
+            case "System.Threading.Tasks.Task"
+                when target.Name == "Run" &&
+                     genericCall is { GenericArguments.Count: 1 } &&
+                     genericCall.ElementMethod.Parameters.Count == 1 &&
+                     genericCall.ElementMethod.Parameters[0].ParameterType is GenericInstanceType funcType &&
+                     funcType.ElementType.FullName == "System.Func`1" &&
+                     funcType.GenericArguments[0] is GenericParameter:
+                shim = ShimMethod(typeof(Interception.ControlledTask), nameof(Interception.ControlledTask.Run), 1);
+                genericArguments.Add(genericCall.GenericArguments[0]);
+                break;
+
+            case "System.Runtime.CompilerServices.AsyncTaskMethodBuilder"
+                when target.Name is "AwaitUnsafeOnCompleted" or "AwaitOnCompleted" &&
+                     genericCall is { GenericArguments.Count: 2 }:
+                shim = ShimMethod(typeof(Interception.ControlledAsync), target.Name, 2,
+                    m => m.GetParameters()[0].ParameterType.FullName!.Contains("AsyncTaskMethodBuilder"));
+                genericArguments.AddRange(genericCall.GenericArguments);
+                break;
+
+            case "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1":
+                if (target.Name is "AwaitUnsafeOnCompleted" or "AwaitOnCompleted" &&
+                    genericCall is { GenericArguments.Count: 2 })
+                {
+                    shim = ShimMethod(typeof(Interception.ControlledAsync), target.Name, 3);
+                    genericArguments.Add(genericType!.GenericArguments[0]);
+                    genericArguments.AddRange(genericCall.GenericArguments);
+                }
+                else if (target.Name == "get_Task" && target.Parameters.Count == 0)
+                {
+                    shim = ShimMethod(typeof(Interception.ControlledAsync), "GetTask", 1);
+                    genericArguments.Add(genericType!.GenericArguments[0]);
+                }
+                else if (target.Name == "SetResult" && target.Parameters.Count == 1)
+                {
+                    shim = ShimMethod(typeof(Interception.ControlledAsync), "SetResult", 1);
+                    genericArguments.Add(genericType!.GenericArguments[0]);
+                }
+                else if (target.Name == "SetException" && target.Parameters.Count == 1)
+                {
+                    shim = ShimMethod(typeof(Interception.ControlledAsync), "SetException", 1);
+                    genericArguments.Add(genericType!.GenericArguments[0]);
+                }
+                break;
+
+            case "System.Threading.Tasks.TaskCompletionSource`1":
+                if (target.Name == "get_Task" && target.Parameters.Count == 0)
+                {
+                    shim = ShimMethod(typeof(Interception.ControlledTask), "GetTask", 1);
+                    genericArguments.Add(genericType!.GenericArguments[0]);
+                }
+                else if (target.Name is "SetResult" or "TrySetResult" && target.Parameters.Count == 1)
+                {
+                    shim = ShimMethod(typeof(Interception.ControlledTask), target.Name, 1);
+                    genericArguments.Add(genericType!.GenericArguments[0]);
+                }
+                else if (target.Name is "SetException" or "TrySetException" &&
+                         target.Parameters.Count == 1 &&
+                         target.Parameters[0].ParameterType.FullName == "System.Exception")
+                {
+                    shim = ShimMethod(typeof(Interception.ControlledTask), target.Name, 1,
+                        m => m.GetParameters()[1].ParameterType == typeof(Exception));
+                    genericArguments.Add(genericType!.GenericArguments[0]);
+                }
+                break;
         }
-        // call Task<TResult> Task::Run<TResult>(Func<TResult>) — but not the
-        // Func<Task<TResult>> unwrapping overload (async lambdas stay real).
-        if (target is GenericInstanceMethod genericCall &&
-            target.DeclaringType.FullName == "System.Threading.Tasks.Task" &&
-            target.Name == "Run" &&
-            genericCall.GenericArguments.Count == 1 &&
-            genericCall.ElementMethod.Parameters.Count == 1 &&
-            genericCall.ElementMethod.Parameters[0].ParameterType is GenericInstanceType funcType &&
-            funcType.ElementType.FullName == "System.Func`1" &&
-            funcType.GenericArguments[0] is GenericParameter)
+
+        if (shim == null)
         {
-            var shim = typeof(Interception.ControlledTask).GetMethods()
-                .Single(m => m.Name == nameof(Interception.ControlledTask.Run) && m.IsGenericMethodDefinition);
-            var generic = new GenericInstanceMethod(module.ImportReference(shim));
-            generic.GenericArguments.Add(genericCall.GenericArguments[0]);
-            instruction.OpCode = OpCodes.Call;
-            instruction.Operand = generic;
-            return true;
+            return false;
         }
-        return false;
+        var redirected = new GenericInstanceMethod(module.ImportReference(shim));
+        foreach (var argument in genericArguments)
+        {
+            redirected.GenericArguments.Add(argument);
+        }
+        instruction.OpCode = OpCodes.Call;
+        instruction.Operand = redirected;
+        return true;
     }
 
     private static bool TryInstrumentFieldAccess(MethodBody body, ILProcessor il, ModuleDefinition module,
@@ -378,6 +448,28 @@ public static class AssemblyRewriter
         Redirect(task.GetProperty("IsCompleted")!.GetGetMethod(), cta, "IsCompleted", new[] { task });
         Redirect(task.GetMethod("Delay", new[] { typeof(int) }), cta, "Delay", new[] { typeof(int) });
         Redirect(task.GetMethod("Delay", new[] { span }), cta, "Delay", new[] { span });
+        Redirect(task.GetMethod("WhenAll", new[] { typeof(System.Threading.Tasks.Task[]) }), cta, "WhenAll", new[] { typeof(System.Threading.Tasks.Task[]) });
+        Redirect(task.GetMethod("WhenAll", new[] { typeof(IEnumerable<System.Threading.Tasks.Task>) }), cta, "WhenAll", new[] { typeof(IEnumerable<System.Threading.Tasks.Task>) });
+
+        // Async machinery: instance calls on builder/awaiter struct addresses
+        // become static shim calls taking them by ref (same stack shape).
+        var asyncBuilder = typeof(System.Runtime.CompilerServices.AsyncTaskMethodBuilder);
+        var asyncBuilderRef = asyncBuilder.MakeByRefType();
+        var controlledAsync = typeof(ControlledAsync);
+        Redirect(asyncBuilder.GetProperty("Task")!.GetGetMethod(), controlledAsync, "GetTask", new[] { asyncBuilderRef });
+        Redirect(asyncBuilder.GetMethod("SetResult", Type.EmptyTypes), controlledAsync, "SetResult", new[] { asyncBuilderRef });
+        Redirect(asyncBuilder.GetMethod("SetException", new[] { typeof(Exception) }), controlledAsync, "SetException", new[] { asyncBuilderRef, typeof(Exception) });
+        var taskAwaiter = typeof(System.Runtime.CompilerServices.TaskAwaiter);
+        Redirect(taskAwaiter.GetMethod("GetResult", Type.EmptyTypes), controlledAsync, "GetResult", new[] { taskAwaiter.MakeByRefType() });
+
+        // TaskCompletionSource (the generic variant goes through the
+        // structural generic redirect).
+        var taskCompletionSource = typeof(System.Threading.Tasks.TaskCompletionSource);
+        Redirect(taskCompletionSource.GetProperty("Task")!.GetGetMethod(), cta, "GetTask", new[] { taskCompletionSource });
+        Redirect(taskCompletionSource.GetMethod("SetResult", Type.EmptyTypes), cta, "SetResult", new[] { taskCompletionSource });
+        Redirect(taskCompletionSource.GetMethod("TrySetResult", Type.EmptyTypes), cta, "TrySetResult", new[] { taskCompletionSource });
+        Redirect(taskCompletionSource.GetMethod("SetException", new[] { typeof(Exception) }), cta, "SetException", new[] { taskCompletionSource, typeof(Exception) });
+        Redirect(taskCompletionSource.GetMethod("TrySetException", new[] { typeof(Exception) }), cta, "TrySetException", new[] { taskCompletionSource, typeof(Exception) });
 
         // Interlocked.
         Redirect(interlocked.GetMethod("Increment", new[] { intRef }), ci, "Increment", new[] { intRef });

@@ -46,6 +46,8 @@ public class RewriterTests : IClassFixture<RewrittenAssemblyFixture>
 
     private Action TaskTarget(string methodName) => Target("Fray.TargetCode.TaskTargets", methodName);
 
+    private Action AsyncTarget(string methodName) => Target("Fray.TargetCode.AsyncTargets", methodName);
+
     [Fact]
     public void RewritesCallsAndFields()
     {
@@ -197,6 +199,79 @@ public class RewriterTests : IClassFixture<RewrittenAssemblyFixture>
 
         Assert.True(result.BugFound == null, result.ErrorReport);
         Assert.True(Environment.TickCount64 - start < 10_000, "Controlled Task.Delay took wall-clock time.");
+    }
+
+    [Fact]
+    public void FindsLostUpdateAcrossAwait()
+    {
+        var result = FrayTestRunner.Run(AsyncTarget("AsyncLostUpdate"), new FrayConfiguration
+        {
+            Iterations = 500,
+            Seed = 42,
+        });
+
+        Assert.NotNull(result.BugFound);
+        Assert.Contains("Lost update", result.BugFound!.Message);
+    }
+
+    [Fact]
+    public void AsyncMethodsWithLockHaveNoRace()
+    {
+        var result = FrayTestRunner.Run(AsyncTarget("AsyncLockedUpdate"), new FrayConfiguration
+        {
+            Iterations = 100,
+            Seed = 7,
+        });
+
+        Assert.True(result.BugFound == null, result.ErrorReport);
+    }
+
+    [Fact]
+    public void AsyncTaskCompositionComputesDeterministically()
+    {
+        var result = FrayTestRunner.Run(AsyncTarget("AsyncTaskComposition"), new FrayConfiguration
+        {
+            Iterations = 100,
+            Seed = 7,
+        });
+
+        Assert.True(result.BugFound == null, result.ErrorReport);
+    }
+
+    [Fact]
+    public void TaskCompletionSourceHandshakeWorksUnderControl()
+    {
+        var result = FrayTestRunner.Run(AsyncTarget("AsyncTcsHandshake"), new FrayConfiguration
+        {
+            Iterations = 100,
+            Seed = 7,
+        });
+
+        Assert.True(result.BugFound == null, result.ErrorReport);
+    }
+
+    [Fact]
+    public void AsyncFaultSurfacesAsAggregateException()
+    {
+        var result = FrayTestRunner.Run(AsyncTarget("AsyncFaultObservation"), new FrayConfiguration
+        {
+            Iterations = 100,
+            Seed = 7,
+        });
+
+        Assert.True(result.BugFound == null, result.ErrorReport);
+    }
+
+    [Fact]
+    public void AwaitedWhenAllJoinsAllTasks()
+    {
+        var result = FrayTestRunner.Run(AsyncTarget("AsyncWhenAll"), new FrayConfiguration
+        {
+            Iterations = 100,
+            Seed = 7,
+        });
+
+        Assert.True(result.BugFound == null, result.ErrorReport);
     }
 
     [Fact]
