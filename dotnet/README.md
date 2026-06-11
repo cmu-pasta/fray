@@ -97,6 +97,11 @@ scheduling points around memory accesses:
 - `new Thread(...)`, `Start`, `Join`, `Interrupt`, `Sleep`, `Yield` become
   `ControlledThread` calls (the real `Thread` object is kept; its body is
   wrapped with the Fray lifecycle protocol)
+- the task-parallel subset of `Task` becomes `ControlledTask`:
+  `Task.Run(Action)` / `Task.Run<TResult>(Func<TResult>)` bodies execute on
+  controlled carrier threads (user code keeps holding a real `Task`), and
+  `Wait`, `Result`, `WaitAll`, `IsCompleted` (a yield point, so spin loops
+  make progress), and `Task.Delay` become model operations
 - `Interlocked.*` becomes `ControlledInterlocked`
 - reads and writes of fields *declared in the rewritten assembly* get
   `MemoryHooks` scheduling points (disable with `--no-memory`), so plain
@@ -113,7 +118,10 @@ deterministically.
 Known rewriter limitations: accesses to fields of value types (structs) and
 generic-typed field *stores* are not instrumented; `ldflda`-based access
 (e.g. `ref` arguments) is covered only for the intercepted `Interlocked`
-methods; constructors are not memory-instrumented.
+methods; constructors are not memory-instrumented. `async`/`await`, task
+continuations (`ContinueWith`), and the `Run(Func<Task>)` overloads stay
+uncontrolled: waiting on such a task inside a Fray run fails fast with
+`NotSupportedException` instead of stalling the exploration.
 
 ## Engine vs. instrumentation
 
@@ -126,9 +134,9 @@ native code.
 
 Not yet ported: `StampedLock`, `LockSupport.park/unpark`, NIO/selector
 support, the SURW scheduler, timed virtual clock, RMI/MCP/IDE integrations.
-`Task`/`async` support requires rewriting the Task machinery itself
-(uncontrolled blocking inside the thread pool cannot be intercepted at the
-call site) and is the next candidate milestone.
+Full `async`/`await` support requires rewriting the Task machinery itself
+(`AsyncTaskMethodBuilder`, awaiters, continuation scheduling — the deep end
+of what Microsoft Coyote does) and is the next candidate milestone.
 
 ## Building and testing
 
@@ -137,7 +145,7 @@ cd dotnet
 dotnet test
 ```
 
-The suite (35 tests, ~2s) checks both directions: seeded explorations *find*
+The suite (41 tests, ~2s) checks both directions: seeded explorations *find*
 known bugs (lost updates, ABBA deadlocks, lost wakeups, `if`-instead-of-
 `while` wait conditions, over-wide semaphores, check-then-act CAS races —
 in wrapper-based and in rewritten plain code) and correct implementations

@@ -81,14 +81,21 @@ public static class AssemblyRewriter
 
         foreach (var instruction in body.Instructions)
         {
-            if ((instruction.OpCode.Code is Code.Call or Code.Callvirt or Code.Newobj) &&
-                instruction.Operand is MethodReference target &&
-                redirects.TryGetValue(SignatureKey(target), out var shim))
+            if (instruction.OpCode.Code is not (Code.Call or Code.Callvirt or Code.Newobj) ||
+                instruction.Operand is not MethodReference target)
+            {
+                continue;
+            }
+            if (redirects.TryGetValue(SignatureKey(target), out var shim))
             {
                 // Instance methods and constructors become static shim calls
                 // taking the instance / returning it: identical stack effect.
                 instruction.OpCode = OpCodes.Call;
                 instruction.Operand = module.ImportReference(shim);
+                redirected++;
+            }
+            else if (TryRedirectGenericTaskCall(instruction, target, module))
+            {
                 redirected++;
             }
         }
@@ -107,6 +114,48 @@ public static class AssemblyRewriter
         }
 
         body.OptimizeMacros();
+    }
+
+    /// <summary>
+    /// Redirects the generic Task members that the exact-signature map cannot
+    /// express: <c>Task&lt;T&gt;.Result</c> and <c>Task.Run&lt;TResult&gt;(Func&lt;TResult&gt;)</c>.
+    /// </summary>
+    private static bool TryRedirectGenericTaskCall(Instruction instruction, MethodReference target,
+        ModuleDefinition module)
+    {
+        // callvirt instance !0 Task`1<T>::get_Result()
+        if (target.DeclaringType is GenericInstanceType taskType &&
+            taskType.ElementType.FullName == "System.Threading.Tasks.Task`1" &&
+            target.Name == "get_Result" &&
+            target.Parameters.Count == 0)
+        {
+            var shim = typeof(Interception.ControlledTask).GetMethod(nameof(Interception.ControlledTask.Result))!;
+            var generic = new GenericInstanceMethod(module.ImportReference(shim));
+            generic.GenericArguments.Add(taskType.GenericArguments[0]);
+            instruction.OpCode = OpCodes.Call;
+            instruction.Operand = generic;
+            return true;
+        }
+        // call Task<TResult> Task::Run<TResult>(Func<TResult>) — but not the
+        // Func<Task<TResult>> unwrapping overload (async lambdas stay real).
+        if (target is GenericInstanceMethod genericCall &&
+            target.DeclaringType.FullName == "System.Threading.Tasks.Task" &&
+            target.Name == "Run" &&
+            genericCall.GenericArguments.Count == 1 &&
+            genericCall.ElementMethod.Parameters.Count == 1 &&
+            genericCall.ElementMethod.Parameters[0].ParameterType is GenericInstanceType funcType &&
+            funcType.ElementType.FullName == "System.Func`1" &&
+            funcType.GenericArguments[0] is GenericParameter)
+        {
+            var shim = typeof(Interception.ControlledTask).GetMethods()
+                .Single(m => m.Name == nameof(Interception.ControlledTask.Run) && m.IsGenericMethodDefinition);
+            var generic = new GenericInstanceMethod(module.ImportReference(shim));
+            generic.GenericArguments.Add(genericCall.GenericArguments[0]);
+            instruction.OpCode = OpCodes.Call;
+            instruction.Operand = generic;
+            return true;
+        }
+        return false;
     }
 
     private static bool TryInstrumentFieldAccess(MethodBody body, ILProcessor il, ModuleDefinition module,
@@ -318,6 +367,17 @@ public static class AssemblyRewriter
         Redirect(thread.GetMethod("Sleep", new[] { typeof(int) }), ct, "Sleep", new[] { typeof(int) });
         Redirect(thread.GetMethod("Sleep", new[] { span }), ct, "Sleep", new[] { span });
         Redirect(thread.GetMethod("Yield", Type.EmptyTypes), ct, "Yield", Type.EmptyTypes);
+
+        // Task-parallel subset (async/await stays real and fails fast on waits).
+        var task = typeof(System.Threading.Tasks.Task);
+        var cta = typeof(ControlledTask);
+        Redirect(task.GetMethod("Run", new[] { typeof(Action) }), cta, "Run", new[] { typeof(Action) });
+        Redirect(task.GetMethod("Wait", Type.EmptyTypes), cta, "Wait", new[] { task });
+        Redirect(task.GetMethod("Wait", new[] { typeof(int) }), cta, "Wait", new[] { task, typeof(int) });
+        Redirect(task.GetMethod("WaitAll", new[] { typeof(System.Threading.Tasks.Task[]) }), cta, "WaitAll", new[] { typeof(System.Threading.Tasks.Task[]) });
+        Redirect(task.GetProperty("IsCompleted")!.GetGetMethod(), cta, "IsCompleted", new[] { task });
+        Redirect(task.GetMethod("Delay", new[] { typeof(int) }), cta, "Delay", new[] { typeof(int) });
+        Redirect(task.GetMethod("Delay", new[] { span }), cta, "Delay", new[] { span });
 
         // Interlocked.
         Redirect(interlocked.GetMethod("Increment", new[] { intRef }), ci, "Increment", new[] { intRef });

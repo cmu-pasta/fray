@@ -36,11 +36,15 @@ public class RewriterTests : IClassFixture<RewrittenAssemblyFixture>
 
     public RewriterTests(RewrittenAssemblyFixture fixture) => _fixture = fixture;
 
-    private Action Target(string methodName)
+    private Action Target(string methodName) => Target("Fray.TargetCode.PlainTargets", methodName);
+
+    private Action Target(string typeName, string methodName)
     {
-        var type = _fixture.Assembly.GetType("Fray.TargetCode.PlainTargets")!;
+        var type = _fixture.Assembly.GetType(typeName)!;
         return (Action)type.GetMethod(methodName)!.CreateDelegate(typeof(Action));
     }
+
+    private Action TaskTarget(string methodName) => Target("Fray.TargetCode.TaskTargets", methodName);
 
     [Fact]
     public void RewritesCallsAndFields()
@@ -118,6 +122,81 @@ public class RewriterTests : IClassFixture<RewrittenAssemblyFixture>
         // Outside a Fray run all shims fall through to the real primitives.
         Target("LockedUpdate")();
         Target("InterlockedUpdate")();
+    }
+
+    [Fact]
+    public void FindsLostUpdateInPlainTaskCode()
+    {
+        var result = FrayTestRunner.Run(TaskTarget("TaskLostUpdate"), new FrayConfiguration
+        {
+            Iterations = 500,
+            Seed = 42,
+        });
+
+        Assert.NotNull(result.BugFound);
+        Assert.Contains("Lost update", result.BugFound!.Message);
+    }
+
+    [Fact]
+    public void PlainTaskWithLockHasNoRace()
+    {
+        var result = FrayTestRunner.Run(TaskTarget("TaskLockedUpdate"), new FrayConfiguration
+        {
+            Iterations = 100,
+            Seed = 7,
+        });
+
+        Assert.True(result.BugFound == null, result.ErrorReport);
+    }
+
+    [Fact]
+    public void PlainTaskResultsAreJoinedDeterministically()
+    {
+        var result = FrayTestRunner.Run(TaskTarget("TaskResults"), new FrayConfiguration
+        {
+            Iterations = 100,
+            Seed = 7,
+        });
+
+        Assert.True(result.BugFound == null, result.ErrorReport);
+    }
+
+    [Fact]
+    public void PlainTaskFaultSurfacesAsAggregateException()
+    {
+        var result = FrayTestRunner.Run(TaskTarget("TaskFaultObservation"), new FrayConfiguration
+        {
+            Iterations = 100,
+            Seed = 7,
+        });
+
+        Assert.True(result.BugFound == null, result.ErrorReport);
+    }
+
+    [Fact]
+    public void SpinningOnTaskIsCompletedMakesProgress()
+    {
+        var result = FrayTestRunner.Run(TaskTarget("TaskSpinOnIsCompleted"), new FrayConfiguration
+        {
+            Iterations = 100,
+            Seed = 7,
+        });
+
+        Assert.True(result.BugFound == null, result.ErrorReport);
+    }
+
+    [Fact]
+    public void PlainTaskDelayDoesNotConsumeWallClockTime()
+    {
+        var start = Environment.TickCount64;
+        var result = FrayTestRunner.Run(TaskTarget("TaskDelayCompletes"), new FrayConfiguration
+        {
+            Iterations = 20,
+            Seed = 7,
+        });
+
+        Assert.True(result.BugFound == null, result.ErrorReport);
+        Assert.True(Environment.TickCount64 - start < 10_000, "Controlled Task.Delay took wall-clock time.");
     }
 
     [Fact]
