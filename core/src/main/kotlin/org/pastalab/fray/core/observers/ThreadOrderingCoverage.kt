@@ -6,6 +6,8 @@ import kotlin.io.path.writeText
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.RacingOperation
 
+// This implements the abstract Lamport timeline described in
+// Greybox Fuzzing of Distributed Systems [CCS '23]
 class ThreadOrderingCoverage : TimelineCoverage {
   private val coveredTimelines = mutableSetOf<Int>()
   private var currentTimeline = ThreadTimeline()
