@@ -245,6 +245,9 @@ Disabling timeline coverage (`TimelineCoverageType.NONE`) removes all coverage t
 | `THREAD_ORDERING`   | Higher — stack walking per racing operation | When you need code-location-aware coverage        |
 | `NONE`              | Zero                                        | Replay, debugging, or maximum throughput          |
 
+> [!NOTE]  
+> Timeline coverage is only a rough indicator of testing progress. Comparing coverage numbers across different modes is not meaningful.
+
 ## NixOS
 
 Fray downloads Corretto JDK 25 and runs `ConcurrencyTest` with it by default. However, NixOS cannot run dynamically 
