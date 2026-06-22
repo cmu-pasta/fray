@@ -391,8 +391,7 @@ class MainCommand : CliktCommand() {
     val executionInfo =
         runConfig.getExecutionInfo(ignoreUnhandledExceptions, interleaveMemoryOps, maxScheduledStep)
     val randomnessProvider = randomnessProvider.getRandomnessProvider()
-    val resolveStackTraceHash =
-        scheduler is SURW || timelineCoverageType == TimelineCoverageType.THREAD_ORDERING
+    val resolveStackTraceHash = scheduler is SURW
     val configuration =
         Configuration(
             executionInfo,

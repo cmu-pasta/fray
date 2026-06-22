@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 import io.github.classgraph.ClassGraph;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,11 +28,8 @@ import org.pastalab.fray.core.command.SystemTimeDelegateType;
 import org.pastalab.fray.core.observers.TimelineCoverageType;
 import org.pastalab.fray.core.randomness.ControlledRandom;
 import org.pastalab.fray.core.randomness.ControlledRandomProvider;
-import org.pastalab.fray.core.randomness.RecordedRandomProvider;
 import org.pastalab.fray.core.scheduler.RandomScheduler;
-import org.pastalab.fray.core.scheduler.Scheduler;
 import org.pastalab.fray.test.core.fail.monitor.MonitorDeadlock;
-import org.pastalab.fray.test.core.success.threadpool.ScheduledThreadPoolWorkSteal;
 
 public class FrayTestCase {
 
@@ -53,51 +49,6 @@ public class FrayTestCase {
             assertEquals(null, result);
           }
         });
-  }
-
-  public void replay() throws IOException {
-    String basePath = "/tmp/report-ba/recording/";
-    Scheduler scheduler = org.pastalab.fray.core.utils.UtilsKt.schedulerFromRecording(basePath);
-    RecordedRandomProvider randomnessProvider =
-        new RecordedRandomProvider(basePath + "/random.json");
-    Configuration config =
-        new Configuration(
-            new ExecutionInfo(
-                new LambdaExecutor(
-                    () -> {
-                      try {
-                        ScheduledThreadPoolWorkSteal.main(new String[] {});
-                      } catch (Exception e) {
-                        throw new RuntimeException(e);
-                      }
-                      return null;
-                    }),
-                false,
-                false,
-                -1),
-            Path.of("/tmp/report2"),
-            1,
-            60,
-            scheduler,
-            randomnessProvider,
-            true,
-            false,
-            true,
-            true,
-            false,
-            false,
-            NetworkDelegateType.REACTIVE,
-            SystemTimeDelegateType.MOCK,
-            100_000L,
-            true,
-            false,
-            true,
-            false,
-            false,
-            true,
-            TimelineCoverageType.RESOURCE_ORDERING);
-    TestRunner runner = new TestRunner(config);
-    runner.run();
   }
 
   @Test
@@ -138,7 +89,7 @@ public class FrayTestCase {
             true,
             false,
             false,
-            true,
+            false,
             TimelineCoverageType.RESOURCE_ORDERING);
     TestRunner runner = new TestRunner(config);
     runner.run();
@@ -206,7 +157,7 @@ public class FrayTestCase {
                       true,
                       false,
                       false,
-                      true,
+                      false,
                       TimelineCoverageType.RESOURCE_ORDERING);
               tests.add(populateTest(classInfo.getName(), shouldFail, config));
             });

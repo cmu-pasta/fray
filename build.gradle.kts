@@ -70,7 +70,7 @@ allprojects {
 jreleaser {
   signing {
     active.set(Active.ALWAYS)
-    armored.set(true)
+    pgp { armored.set(true) }
   }
   deploy {
     maven {
