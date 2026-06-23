@@ -43,7 +43,7 @@ class ThreadTimeline {
   private val perThreadPairs = mutableMapOf<Int, MutableSet<Long>>()
 
   fun recordEvent(threadIndex: Int, operation: RacingOperation) {
-    val eventId = "${operation.javaClass.simpleName}:${operation.type}:${operation.stackTraceHash}"
+    val eventId = "${operation.javaClass.simpleName}:${operation.type}"
 
     val events = perThreadEvents.getOrPut(threadIndex) { mutableSetOf() }
     val pairs = perThreadPairs.getOrPut(threadIndex) { mutableSetOf() }

@@ -106,10 +106,7 @@ class FrayTestExtension : TestTemplateInvocationContextProvider {
         )
             null
         else concurrencyTest.collectTimelineCoverage
-    val resolveStackTraceHash =
-        scheduler is SURWScheduler ||
-            timelineCoverageType ==
-                org.pastalab.fray.core.observers.TimelineCoverageType.THREAD_ORDERING
+    val resolveStackTraceHash = scheduler is SURWScheduler
     val config =
         Configuration(
             ExecutionInfo(
