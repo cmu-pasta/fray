@@ -13,8 +13,8 @@ import org.pastalab.fray.core.command.NetworkDelegateType
 import org.pastalab.fray.core.command.SystemTimeDelegateType
 import org.pastalab.fray.core.observers.ScheduleVerifier
 import org.pastalab.fray.core.randomness.ControlledRandomProvider
+import org.pastalab.fray.core.randomness.Randomness
 import org.pastalab.fray.core.randomness.RandomnessProvider
-import org.pastalab.fray.core.randomness.RecordedRandomProvider
 import org.pastalab.fray.core.scheduler.POSScheduler
 import org.pastalab.fray.core.scheduler.SURWScheduler
 import org.pastalab.fray.core.scheduler.Scheduler
@@ -80,11 +80,13 @@ object FrayInTestLauncher {
   }
 
   fun launchFrayReplay(test: Runnable, path: String) {
-    val randomPath = "${path}/random.json"
-    val schedulerPath = "${path}/schedule.json"
-    val randomnessProvider = RecordedRandomProvider(randomPath)
-    val scheduler = Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
-    launchFray(test, scheduler, randomnessProvider, 1, 10000, true) {
+    // Reconstruct the scheduler from its recorded class name, fed the recorded randomness.
+    val className = File("${path}/scheduler").readText().trim()
+    val recordedRandom = Json.decodeFromString<Randomness>(File("${path}/random.json").readText())
+    val scheduler =
+        Class.forName(className).getConstructor(Randomness::class.java).newInstance(recordedRandom)
+            as Scheduler
+    launchFray(test, scheduler, ControlledRandomProvider(), 1, 10000, true) {
       val recording = Path("${path}/recording.json")
       if (recording.exists()) {
         val verifier = ScheduleVerifier(recording.absolutePathString())
