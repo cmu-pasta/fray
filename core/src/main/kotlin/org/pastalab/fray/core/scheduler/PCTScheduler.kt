@@ -1,18 +1,18 @@
 package org.pastalab.fray.core.scheduler
 
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.randomness.Randomness
 
-@Serializable
-class PCTScheduler(val rand: Randomness, val numSwitchPoints: Int, var maxStep: Int) : Scheduler {
+class PCTScheduler(rand: Randomness, val numSwitchPoints: Int, var maxStep: Int) : Scheduler(rand) {
   constructor() : this(ControlledRandom(), 3, 0)
 
-  @Transient var currentStep = 0
-  @Transient val threadPriorityQueue = mutableListOf<ThreadContext>()
-  @Transient val priorityChangePoints = mutableSetOf<Int>()
+  // Single-argument constructor used to reconstruct the scheduler for replay.
+  constructor(rand: Randomness) : this(rand, 3, 0)
+
+  var currentStep = 0
+  val threadPriorityQueue = mutableListOf<ThreadContext>()
+  val priorityChangePoints = mutableSetOf<Int>()
 
   init {
     if (maxStep != 0) {

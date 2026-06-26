@@ -1,15 +1,16 @@
 package org.pastalab.fray.core.scheduler
 
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.debugger.DebuggerRegistry
+import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.randomness.Randomness
 
-@Serializable
-class FrayIdeaPluginScheduler(val scheduler: Scheduler?) : Scheduler {
+// The debugger drives scheduling remotely; randomness only needs to satisfy the base class, so
+// delegate to the wrapped scheduler's stream when present.
+class FrayIdeaPluginScheduler(val scheduler: Scheduler?) :
+    Scheduler(scheduler?.rand ?: ControlledRandom()) {
   val remoteScheduler by lazy { DebuggerRegistry.getRemoteScheduler() }
-  @Contextual var previousScheduleDecision: ThreadContext? = null
+  var previousScheduleDecision: ThreadContext? = null
 
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,

@@ -202,8 +202,16 @@ class Replay : ScheduleAlgorithm("replay-from-scheduler", true) {
   val path by option("--path-to-scheduler").file().required()
 
   override fun getScheduler(randomness: Randomness): Scheduler {
-    val schedulerPath = "${path.absolutePath}/schedule.json"
-    return Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
+    // The schedule is fully determined by (scheduler class, randomness).
+    val className = File("${path.absolutePath}/scheduler").readText().trim()
+    val recordedRandom =
+        Json.decodeFromString<Randomness>(File("${path.absolutePath}/random.json").readText())
+    return this::class
+        .java
+        .classLoader
+        .loadClass(className)
+        .getConstructor(Randomness::class.java)
+        .newInstance(recordedRandom) as Scheduler
   }
 }
 
@@ -225,6 +233,44 @@ class PCT : ScheduleAlgorithm("pct", false) {
 class SURW : ScheduleAlgorithm("surw", false) {
   override fun getScheduler(randomness: Randomness): Scheduler {
     return SURWScheduler(randomness, mutableMapOf(), mutableSetOf())
+  }
+}
+
+class Fest : ScheduleAlgorithm("fest", false) {
+  val festBase by
+      option(
+              "--fest-base",
+              help =
+                  "Base RSBT algorithm that Fest adaptively guides. Fest mutates the recordings " +
+                      "produced by this algorithm.",
+          )
+          .choice("random", "pos", "pct")
+          .default("pos")
+  val mutationCount by
+      option(
+              "--fest-mutation-count",
+              help = "Average number of recorded values mutated per replay.",
+          )
+          .int()
+          .default(FestScheduler.DEFAULT_MUTATION_COUNT)
+  val mutationBudget by
+      option(
+              "--fest-mutation-budget",
+              help = "Number of mutations spent on each saved recording before moving to the next.",
+          )
+          .int()
+          .default(FestScheduler.DEFAULT_MUTATION_BUDGET)
+
+  override fun getScheduler(randomness: Randomness): Scheduler {
+    // Construct the base bound to the seed randomness; Fest shares that single stream with it.
+    val base =
+        when (festBase) {
+          "random" -> RandomScheduler(randomness)
+          "pos" -> POSScheduler(randomness)
+          "pct" -> PCTScheduler(randomness, 3, 0)
+          else -> RandomScheduler(randomness)
+        }
+    return FestScheduler(base, mutationCount, mutationBudget)
   }
 }
 
@@ -267,6 +313,7 @@ class MainCommand : CliktCommand() {
               "random" to Rand(),
               "pct" to PCT(),
               "surw" to SURW(),
+              "fest" to Fest(),
               "dynamic" to Dynamic(),
               "replay-from-recordings" to ReplayFromRecordings(),
               "replay" to Replay(),
@@ -457,10 +504,12 @@ data class Configuration(
         TimelineCoverageType.NONE -> null
         null -> null
       }
+          // Fest is feedback-guided and is meaningless without coverage: if none was specified,
+          // fall back to the default measurement so it still has a signal to steer by.
+          ?: if (scheduler is FestScheduler) ResourceOrderingCoverage() else null
   var nextSavedIndex = 0
   var currentIteration = 0
   val startTime = TimeSource.Monotonic.markNow()
-  var randomness = randomnessProvider.getRandomness()
 
   fun saveToReportFolder(index: Int): Path {
     val path =
@@ -470,8 +519,8 @@ data class Configuration(
           report / "recording"
         }
     path.createDirectories()
-    (path / "schedule.json").writeText(Json.encodeToString(scheduler))
-    (path / "random.json").writeText(Json.encodeToString(randomness))
+    (path / "scheduler").writeText(scheduler::class.java.name)
+    (path / "random.json").writeText(Json.encodeToString<Randomness>(scheduler.rand))
     testStatusObservers.forEach { it.saveToReportFolder(path) }
     return path
   }
@@ -487,6 +536,8 @@ data class Configuration(
       scheduleObservers.add(timelineCoverage)
       testStatusObservers.add(timelineCoverage)
     }
+    // Wire Fest to its coverage feedback source; it is carried forward across iterations.
+    (scheduler as? FestScheduler)?.coverage = timelineCoverage
     if (System.getProperty("fray.recordSchedule", "false").toBoolean()) {
       val scheduleRecorder = ScheduleRecorder()
       testStatusObservers.add(scheduleRecorder)
@@ -535,7 +586,6 @@ data class Configuration(
   fun nextIteration() {
     currentIteration++
     scheduler = scheduler.nextIteration(randomnessProvider.getRandomness())
-    randomness = randomnessProvider.getRandomness()
   }
 
   @OptIn(ExperimentalPathApi::class)

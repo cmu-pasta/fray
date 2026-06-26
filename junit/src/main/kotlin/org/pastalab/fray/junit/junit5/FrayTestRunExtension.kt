@@ -13,10 +13,9 @@ import org.pastalab.fray.core.command.ExecutionInfo
 import org.pastalab.fray.core.command.MethodExecutor
 import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.randomness.ControlledRandomProvider
-import org.pastalab.fray.core.randomness.RecordedRandomProvider
+import org.pastalab.fray.core.randomness.Randomness
 import org.pastalab.fray.core.scheduler.ReplayScheduler
 import org.pastalab.fray.core.scheduler.SURWScheduler
-import org.pastalab.fray.core.scheduler.Scheduler
 import org.pastalab.fray.junit.Common.getPath
 import org.pastalab.fray.junit.junit5.annotations.FrayTest
 
@@ -47,19 +46,21 @@ class FrayTestRunExtension : InvocationInterceptor {
     val (scheduler, random) =
         if (frayTestAnnotation.replay.isNotEmpty()) {
           val path = getPath(frayTestAnnotation.replay)
-          val randomPath = "${path.absolutePath}/random.json"
-          val recordingPath = "${path.absolutePath}/recording.json"
+          val recordedRandom =
+              Json.decodeFromString<Randomness>(File("${path.absolutePath}/random.json").readText())
           val scheduler =
               if (frayTestAnnotation.scheduler.java == ReplayScheduler::class.java) {
+                val recordingPath = "${path.absolutePath}/recording.json"
                 val scheduleRecordings =
                     Json.decodeFromString<List<ScheduleRecording>>(File(recordingPath).readText())
-                ReplayScheduler(scheduleRecordings)
+                ReplayScheduler(scheduleRecordings, recordedRandom)
               } else {
-                val schedulerPath = "${path.absolutePath}/schedule.json"
-                Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
+                // Reconstruct the scheduler from the annotated class, fed the recorded randomness.
+                frayTestAnnotation.scheduler.java
+                    .getConstructor(Randomness::class.java)
+                    .newInstance(recordedRandom)
               }
-          val randomnessProvider = RecordedRandomProvider(randomPath)
-          Pair(scheduler, randomnessProvider)
+          Pair(scheduler, ControlledRandomProvider())
         } else {
           val scheduler = frayTestAnnotation.scheduler.java.getConstructor().newInstance()
           Pair(scheduler, ControlledRandomProvider())

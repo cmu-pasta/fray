@@ -7,7 +7,6 @@ import kotlinx.serialization.json.Json
 import org.pastalab.fray.core.FrayInternalError
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.randomness.ControlledRandom
-import org.pastalab.fray.core.scheduler.Scheduler
 import org.pastalab.fray.rmi.ThreadInfo
 import org.pastalab.fray.runtime.Runtime
 import org.pastalab.fray.runtime.TargetTerminateException
@@ -64,11 +63,6 @@ val StackTraceElement.isFrayInternals
 
 fun List<ThreadContext>.toThreadInfos(): List<ThreadInfo> {
   return this.map { it.toThreadInfo() }
-}
-
-fun schedulerFromRecording(path: String): Scheduler {
-  val schedulerPath = "$path/schedule.json"
-  return Json.decodeFromString<Scheduler>(File(schedulerPath).readText())
 }
 
 fun randomFromRecording(path: String): ControlledRandom {

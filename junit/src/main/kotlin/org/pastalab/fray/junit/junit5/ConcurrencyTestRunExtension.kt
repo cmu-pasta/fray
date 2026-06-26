@@ -30,7 +30,6 @@ class ConcurrencyTestRunExtension(
           frayContext.config.scheduler.nextIteration(
               frayContext.config.randomnessProvider.getRandomness()
           )
-      frayContext.config.randomness = frayContext.config.randomnessProvider.getRandomness()
     }
     val synchronizer = DelegateSynchronizer(frayContext)
     Runtime.NETWORK_DELEGATE =
