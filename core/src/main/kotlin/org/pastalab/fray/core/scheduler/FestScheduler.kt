@@ -14,9 +14,6 @@ class FestScheduler(
 ) : Scheduler(base.rand) {
   constructor() : this(POSScheduler())
 
-  // Single-argument constructor used to reconstruct the scheduler for replay (default POS base).
-  constructor(rand: Randomness) : this(POSScheduler(rand))
-
   var exploration: FestExploration = FestExploration()
   var coverage: TimelineCoverage? = null
 
