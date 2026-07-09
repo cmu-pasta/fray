@@ -2,11 +2,15 @@ package org.pastalab.fray.core.scheduler
 
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.observers.ScheduleRecording
+import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.randomness.Randomness
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
-class ReplayScheduler(val recording: List<ScheduleRecording>) : Scheduler {
-  @Transient var index = 0
+class ReplayScheduler(
+    val recording: List<ScheduleRecording>,
+    rand: Randomness = ControlledRandom(),
+) : Scheduler(rand) {
+  var index = 0
 
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,

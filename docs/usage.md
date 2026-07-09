@@ -248,6 +248,37 @@ Disabling timeline coverage (`TimelineCoverageType.NONE`) removes all coverage t
 > [!NOTE]  
 > Timeline coverage is only a rough indicator of testing progress. Comparing coverage numbers across different modes is not meaningful.
 
+## Feedback-Guided Scheduling (Fest)
+
+The `fest` scheduler implements the feedback-guided adaptive scheduling algorithm from
+[*Feedback-guided Adaptive Testing of Distributed Systems Designs*](https://aoli.al/papers/fest-nsdi26.pdf)
+(NSDI '26). Instead of sampling schedules blindly, Fest uses **timeline coverage as feedback** to
+steer exploration toward unexplored behaviors — the concurrency-testing analogue of coverage-guided
+greybox fuzzing.
+
+Fest wraps the existing scheduling algorithms and treats an existing randomized
+algorithm (`random`, `pos`, or `pct`) as a parametric generator whose schedule is fully determined by
+the pseudo-random choices it consumes. 
+
+Run it from the command line:
+
+```shell
+--scheduler fest                       # feedback-guided adaptive scheduling
+--scheduler fest --fest-base pos       # base RSBT algorithm: random | pos (default) | pct
+--scheduler fest --fest-mutation-count 5    # avg. recorded values mutated per replay
+--scheduler fest --fest-mutation-budget 16  # mutations spent on each saved recording
+```
+
+Or via the annotation:
+
+```java
+@ConcurrencyTest(scheduler = FestScheduler.class)
+```
+
+Fest reuses the configured timeline coverage (`--timeline-coverage`) as its feedback signal, so it
+works with both `resource-ordering` and `thread-ordering`. Because the feedback is just the generic
+coverage count, any future coverage metric drives Fest without changes to the algorithm. 
+
 ## NixOS
 
 Fray downloads Corretto JDK 25 and runs `ConcurrencyTest` with it by default. However, NixOS cannot run dynamically 

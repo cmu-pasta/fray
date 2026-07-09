@@ -1,11 +1,10 @@
 package org.pastalab.fray.core.scheduler
 
-import kotlinx.serialization.Serializable
 import org.pastalab.fray.core.ThreadContext
+import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.randomness.Randomness
 
-@Serializable
-class FifoScheduler : Scheduler {
+class FifoScheduler(rand: Randomness = ControlledRandom()) : Scheduler(rand) {
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,
       allThreads: Collection<ThreadContext>,

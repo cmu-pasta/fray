@@ -1,8 +1,6 @@
 package org.pastalab.fray.core.scheduler
 
 import kotlin.math.max
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.MemoryOperation
 import org.pastalab.fray.core.concurrency.operations.RacingOperation
@@ -11,28 +9,30 @@ import org.pastalab.fray.core.randomness.Randomness
 import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
 // See https://dl.acm.org/doi/10.1145/3669940.3707214
-@Serializable
 class SURWScheduler(
-    val rand: Randomness,
+    rand: Randomness,
     val executionLengths: MutableMap<Int, Int>,
     val interestingOperations: MutableSet<Int>,
-) : Scheduler {
+) : Scheduler(rand) {
+  // Single-argument constructor used to reconstruct the scheduler for replay.
+  constructor(rand: Randomness) : this(rand, mutableMapOf(), mutableSetOf())
+
   // A mapping between thread id and its weight
   // We should use `ThreadContext.id` instead of `Thread.id` because
   // this information is shared across executions.
-  @Transient val weight = HashMap(executionLengths)
-  @Transient val blocked = mutableSetOf<Int>()
-  @Transient var nextIntendedThread = -1
+  val weight = HashMap(executionLengths)
+  val blocked = mutableSetOf<Int>()
+  var nextIntendedThread = -1
 
-  @Transient val createdThreads = mutableSetOf<Int>()
-  @Transient val childThreads = mutableMapOf<Int, MutableSet<Int>>()
+  val createdThreads = mutableSetOf<Int>()
+  val childThreads = mutableMapOf<Int, MutableSet<Int>>()
 
   // These fields are only used for the first trial to
   // construct interesting operations map.
 
   // Mapping from resource ID to thread ID to Location hashes
-  @Transient val interestingObjectMap = mutableMapOf<Int, MutableMap<Int, MutableSet<Int>>>()
-  @Transient val threadExecutionLengthCache = mutableMapOf<Int, Int>()
+  val interestingObjectMap = mutableMapOf<Int, MutableMap<Int, MutableSet<Int>>>()
+  val threadExecutionLengthCache = mutableMapOf<Int, Int>()
 
   fun updateNextIntendedThread(threads: List<ThreadContext>) {
     val totalWeight = threads.sumOf { weight[it.index] ?: 0 }

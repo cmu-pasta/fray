@@ -1,19 +1,16 @@
 package org.pastalab.fray.core.scheduler
 
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.concurrency.operations.NonRacingOperation
 import org.pastalab.fray.core.concurrency.operations.RacingOperation
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.randomness.Randomness
 
-@Serializable
-class POSScheduler(val rand: Randomness) : Scheduler {
+class POSScheduler(rand: Randomness) : Scheduler(rand) {
   constructor() : this(ControlledRandom())
 
-  @Transient val threadPriority = mutableMapOf<ThreadContext, Double>()
-  @Transient val nonRacingOperationBuffer = mutableListOf<ThreadContext>()
+  val threadPriority = mutableMapOf<ThreadContext, Double>()
+  val nonRacingOperationBuffer = mutableListOf<ThreadContext>()
 
   override fun scheduleNextOperation(
       threads: List<ThreadContext>,
