@@ -26,8 +26,23 @@ import org.pastalab.fray.instrumentation.base.visitors.TimedWaitInstrumenter
 import org.pastalab.fray.instrumentation.base.visitors.VolatileFieldsInstrumenter
 import org.pastalab.fray.runtime.Runtime
 
-class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
-    ClassFileTransformer {
+class ApplicationCodeTransformer(
+    val interleaveAllMemoryOps: Boolean = false,
+    private val excludedClassPrefixes: List<String> = configuredExcludedClassPrefixes(),
+) : ClassFileTransformer {
+
+  companion object {
+    const val EXCLUDE_PREFIXES_PROPERTY = "fray.transformation.excludePrefixes"
+
+    private fun configuredExcludedClassPrefixes(): List<String> =
+        System.getProperty(EXCLUDE_PREFIXES_PROPERTY, "")
+            .split(',')
+            .asSequence()
+            .map(String::trim)
+            .filter(String::isNotEmpty)
+            .map { it.replace('/', '.') }
+            .toList()
+  }
 
   val instrumentedClassCache = mutableMapOf<String, ByteArray>()
 
@@ -38,10 +53,11 @@ class ApplicationCodeTransformer(val interleaveAllMemoryOps: Boolean = false) :
       protectionDomain: ProtectionDomain?,
       classfileBuffer: ByteArray,
   ): ByteArray {
-    // Check if the class loader is null (bootstrap class loader)
-    // and if the class name starts with known JDK prefixes.
-    if (isFrayRuntimeClass(className)) {
-      // This is likely a JDK class, so skip transformation
+    // Skip Fray runtime classes and explicitly excluded classes.
+    if (
+        isFrayRuntimeClass(className) ||
+            excludedClassPrefixes.any(className.replace('/', '.')::startsWith)
+    ) {
       return classfileBuffer
     }
     val classIdentifier = (protectionDomain?.codeSource?.location?.path ?: "null:") + className
