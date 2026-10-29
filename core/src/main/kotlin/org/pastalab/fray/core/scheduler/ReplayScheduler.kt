@@ -4,7 +4,6 @@ import org.pastalab.fray.core.ThreadContext
 import org.pastalab.fray.core.observers.ScheduleRecording
 import org.pastalab.fray.core.randomness.ControlledRandom
 import org.pastalab.fray.core.randomness.Randomness
-import org.pastalab.fray.core.utils.Utils.verifyOrReport
 
 class ReplayScheduler(
     val recording: List<ScheduleRecording>,
@@ -20,13 +19,14 @@ class ReplayScheduler(
       return threads[0]
     }
     val rec = recording[index]
-    val thread = threads.firstOrNull { it.index == rec.scheduled }
-    verifyOrReport(
-        { thread != null },
-        "The scheduled thread ${rec.scheduled} is not in the current thread list.",
-    )
+    val thread =
+        threads.firstOrNull { it.index == rec.scheduled }
+            ?: throw IllegalStateException(
+                "Replay diverged at recording index $index: scheduled thread ${rec.scheduled} " +
+                    "is not runnable; runnable threads: ${threads.map { it.index }}"
+            )
     index++
-    return thread!!
+    return thread
   }
 
   override fun nextIteration(randomness: Randomness): Scheduler {
