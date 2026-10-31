@@ -9,6 +9,7 @@ dependencies {
   implementation(libs.commons.compress)
   testImplementation(platform(libs.junit.bom))
   testImplementation(libs.junit.jupiter)
+  testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 tasks.named<ShadowJar>("shadowJar") {

@@ -230,6 +230,7 @@ class FrayPlugin : Plugin<Project> {
   }
 
   companion object {
-    val supportedOsArchitectures = listOf("linux-x8664", "windows-x8664", "macos-aarch64")
+    val supportedOsArchitectures =
+        listOf("linux-x8664", "linux-aarch64", "windows-x8664", "macos-aarch64")
   }
 }

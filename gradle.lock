@@ -4569,6 +4569,20 @@
       "hash": "sha256-unroFwQMcqPCbTY6R/wTZIoc0MZOmjgYDd6YGKG1DjM="
     }
   },
+  "org.junit.platform:junit-platform-launcher:1.10.0": {
+    "junit-platform-launcher-1.10.0.jar": {
+      "url": "https://repo.maven.apache.org/maven2/org/junit/platform/junit-platform-launcher/1.10.0/junit-platform-launcher-1.10.0.jar",
+      "hash": "sha256-jGC2YawXBwGmNd/GdWXvu4yFtcXN1aSpV246AVxxEaQ="
+    },
+    "junit-platform-launcher-1.10.0.module": {
+      "url": "https://repo.maven.apache.org/maven2/org/junit/platform/junit-platform-launcher/1.10.0/junit-platform-launcher-1.10.0.module",
+      "hash": "sha256-9dy3QIxCQmA/mb1c3GNcQGbRioKNuF7TcAqo3T6vGmk="
+    },
+    "junit-platform-launcher-1.10.0.pom": {
+      "url": "https://repo.maven.apache.org/maven2/org/junit/platform/junit-platform-launcher/1.10.0/junit-platform-launcher-1.10.0.pom",
+      "hash": "sha256-Z3Xvl0dO7JwTo1If5iAPmqG4cegyc9q1VfgEgGW7wRI="
+    }
+  },
   "org.junit.platform:junit-platform-testkit:1.11.3": {
     "junit-platform-testkit-1.11.3.jar": {
       "url": "https://repo.maven.apache.org/maven2/org/junit/platform/junit-platform-testkit/1.11.3/junit-platform-testkit-1.11.3.jar",
