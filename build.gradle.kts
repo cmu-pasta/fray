@@ -39,7 +39,7 @@ dokka {
   pluginsConfiguration.html { footerMessage.set("(c) PASTA Lab, Carnegie Mellon University") }
 }
 
-tasks { wrapper { gradleVersion = "9.0.0" } }
+tasks { wrapper { gradleVersion = "9.1.0" } }
 
 allprojects {
   plugins.apply("com.diffplug.spotless")
