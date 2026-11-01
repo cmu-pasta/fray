@@ -19,6 +19,9 @@ to be easy to use and can be integrated into existing testing frameworks.
 
 # Quick Start
 
+Native agents are built and published for Linux (x86-64 and ARM64), Windows (x86-64),
+and macOS (ARM64). The Gradle and Maven plugins select the agent for the current platform.
+
 ## JUnit 5
 
 If you are using JUnit 5, you can use the `@FrayTest` annotation to mark a test as a concurrency test. You

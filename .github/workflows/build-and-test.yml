@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        operating-system: [ ubuntu-latest, windows-latest, macos-latest]
+        operating-system: [ ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-latest]
     permissions:
       checks: write
       pull-requests: write
@@ -40,3 +40,13 @@ jobs:
         if: failure()
         with:
           report_paths: '**/build/test-results/test/TEST-*.xml'
+      - name: Upload failure diagnostics
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: failure-diagnostics-${{ matrix.operating-system }}
+          path: |
+            **/build/test-results/**
+            **/build/reports/tests/**
+            **/build/fray/**
+            **/hs_err_pid*.log

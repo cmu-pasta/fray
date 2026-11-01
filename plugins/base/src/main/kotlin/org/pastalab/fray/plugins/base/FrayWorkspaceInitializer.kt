@@ -187,28 +187,46 @@ class FrayWorkspaceInitializer(
 
   val jdkVersion = "$jdkMajorVersion.$jdkMinorVersion.${jdkSecurityVersions.joinToString(".")}"
 
-  fun getDownloadUrl(osName: String): String {
+  @JvmOverloads
+  fun getDownloadUrl(osName: String, architecture: String = System.getProperty("os.arch")): String {
     return when {
       osName.contains("win") ->
           "https://corretto.aws/downloads/resources/$jdkVersion/amazon-corretto-$jdkVersion-windows-x64-jdk.zip"
       osName.contains("linux") ->
-          "https://corretto.aws/downloads/resources/$jdkVersion/amazon-corretto-$jdkVersion-linux-x64.tar.gz"
+          "https://corretto.aws/downloads/resources/$jdkVersion/amazon-corretto-$jdkVersion-linux-${linuxJDKArchitecture(architecture)}.tar.gz"
       osName.contains("mac") ->
           "https://corretto.aws/downloads/resources/$jdkVersion/amazon-corretto-$jdkVersion-macosx-aarch64.tar.gz"
       else -> throw RuntimeException("Unsupported OS: $osName")
     }
   }
 
-  fun getJDKFolderName(osName: String): String {
+  @JvmOverloads
+  fun getJDKFolderName(
+      osName: String,
+      architecture: String = System.getProperty("os.arch"),
+  ): String {
     return when {
       osName.contains("win") ->
           "jdk$jdkMajorVersion.$jdkMinorVersion.${jdkSecurityVersions[0]}" +
               if (jdkSecurityVersions.size > 1) "_${jdkSecurityVersions[1]}" else ""
-      osName.contains("linux") -> "amazon-corretto-$jdkVersion-linux-x64"
+      osName.contains("linux") ->
+          "amazon-corretto-$jdkVersion-linux-${linuxJDKArchitecture(architecture)}"
       osName.contains("mac") -> "amazon-corretto-$jdkMajorVersion.jdk/Contents/Home"
       else -> throw RuntimeException("Unsupported OS: $osName")
     }
   }
+
+  private fun linuxJDKArchitecture(architecture: String): String =
+      when (architecture.lowercase()) {
+        "amd64",
+        "x86_64",
+        "x86-64",
+        "x8664",
+        "x64" -> "x64"
+        "aarch64",
+        "arm64" -> "aarch64"
+        else -> throw IllegalArgumentException("Unsupported Linux architecture: $architecture")
+      }
 
   private fun readJDKFrayVersion(): String {
     return if (jdkVersionPath.exists()) {
