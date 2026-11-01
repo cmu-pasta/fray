@@ -70,9 +70,9 @@ jobs:
         if: runner.os == 'Linux' && runner.arch == 'X64'
         run: ./gradlew publish -Pversion=$VERSION --no-daemon
       - name: Publish to Maven Central
-        continue-on-error: true
         shell: bash
-        run: ./gradlew jreleaserFullRelease -Pversion=$VERSION --no-daemon
+        # GitHub releases are created separately below, once per version.
+        run: ./gradlew jreleaserDeploy -Pversion=$VERSION --no-daemon --stacktrace
         env:
           JRELEASER_MAVENCENTRAL_USERNAME: ${{secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
           JRELEASER_MAVENCENTRAL_PASSWORD: ${{secrets.JRELEASER_MAVENCENTRAL_PASSWORD}}
