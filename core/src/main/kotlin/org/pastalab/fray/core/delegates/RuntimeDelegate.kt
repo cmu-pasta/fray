@@ -92,16 +92,41 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
           { state },
       )
 
-  override fun onObjectWait(o: Any, timeout: Long) =
-      synchronizer.runInFrayStartNoSkip {
-        val timeout =
-            if (timeout == 0L) BLOCKED_OPERATION_NOT_TIMED
-            else timeout + context.timeController.currentTimeMillisRawNoIncrement()
-        context.objectWait(o, timeout)
-      }
+  /**
+   * True from the moment Fray has blocked this thread in its model of `Object.wait(long)` until
+   * that wait's native `wait0` reads it (a wait Fray lets through without blocking, such as one by
+   * a thread its lock model does not see holding the monitor, keeps its timeout). Fray models a
+   * timed wait as a timed block (`blockedUntil`) and wakes the thread itself: with a `notifyAll`
+   * once it schedules it after a notify, a timeout or a spurious wakeup, and through the real
+   * interrupt for an interrupt. So the JVM must block that wait untimed: with its own timeout it
+   * would return on wall-clock time while Fray still has the thread blocked, and the thread would
+   * run Fray's bookkeeping alongside the scheduled thread.
+   */
+  private val objectWaitModeled: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
 
-  override fun onObjectWaitDone(o: Any) =
-      synchronizer.runInFrayDoneNoSkip { context.objectWaitDone(o).map {} }
+  override fun onObjectWait(o: Any, timeout: Long) {
+    objectWaitModeled.set(false)
+    synchronizer.runInFrayStartNoSkip {
+      val timeout =
+          if (timeout == 0L) BLOCKED_OPERATION_NOT_TIMED
+          else timeout + context.timeController.currentTimeMillisRawNoIncrement()
+      context.objectWait(o, timeout).map { blocked -> if (blocked) objectWaitModeled.set(true) }
+    }
+  }
+
+  override fun onObjectWait0Timeout(timeoutMillis: Long): Long {
+    if (!objectWaitModeled.get()) {
+      return timeoutMillis
+    }
+    objectWaitModeled.set(false)
+    // JDK 25 rejects a negative timeout before wait0; a JDK that leaves it to wait0 keeps it.
+    return if (timeoutMillis <= 0L) timeoutMillis else 0L
+  }
+
+  override fun onObjectWaitDone(o: Any) {
+    objectWaitModeled.set(false)
+    synchronizer.runInFrayDoneNoSkip { context.objectWaitDone(o).map {} }
+  }
 
   override fun onObjectNotify(o: Any) = synchronizer.runInFrayDoneNoSkip { context.objectNotify(o) }
 

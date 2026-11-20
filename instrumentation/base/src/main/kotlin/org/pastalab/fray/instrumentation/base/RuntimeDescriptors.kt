@@ -22,6 +22,7 @@ object RuntimeDescriptors {
               "(Ljava/util/concurrent/locks/Condition;Ljava/util/concurrent/locks/Lock;)V",
           "onObjectWait" to "(Ljava/lang/Object;J)V",
           "onObjectWaitDone" to "(Ljava/lang/Object;)V",
+          "onObjectWait0Timeout" to "(J)J",
           "onObjectNotify" to "(Ljava/lang/Object;)V",
           "onObjectNotifyAll" to "(Ljava/lang/Object;)V",
           "onConditionAwait" to "(Ljava/util/concurrent/locks/Condition;)V",
