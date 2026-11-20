@@ -434,7 +434,12 @@ class RunContext(val config: Configuration) {
     }
   }
 
-  private fun objectWaitImpl(waitingObject: Any, canInterrupt: Boolean, blockedUntil: Long) {
+  /** Returns true when Fray blocked the thread on [waitingObject], false when it did not wait. */
+  private fun objectWaitImpl(
+      waitingObject: Any,
+      canInterrupt: Boolean,
+      blockedUntil: Long,
+  ): Boolean {
     val t = Thread.currentThread().id
     val objId = System.identityHashCode(waitingObject)
     val signalContext = signalManager.getContext(waitingObject)
@@ -458,7 +463,7 @@ class RunContext(val config: Configuration) {
       // If current thread is not lock holder, we should just continue because
       // JVM will throw IllegalMonitorStateException.
       context.pendingOperation = ObjectWaitResumeWithoutBlockingOperation()
-      return
+      return false
     }
 
     signalContext.addWaitingThread(context, blockedUntil, canInterrupt)
@@ -510,14 +515,17 @@ class RunContext(val config: Configuration) {
       lockContext.lockAndUnlock()
       scheduleNextOperationAndCheckDeadlock(false)
     }
+    return true
   }
 
+  /** Succeeds with true when Fray blocked the thread, so the JVM wait must not time out itself. */
   fun objectWait(o: Any, blockedUntil: Long) = mustBeCaught {
     objectWaitImpl(o, true, blockedUntil)
   }
 
   fun conditionAwait(o: Condition, canInterrupt: Boolean, blockedUntil: Long) = mustBeCaught {
     objectWaitImpl(o, canInterrupt, blockedUntil)
+    Unit
   }
 
   fun objectWaitDoneImpl(waitingObject: Any, canInterrupt: Boolean): Boolean {

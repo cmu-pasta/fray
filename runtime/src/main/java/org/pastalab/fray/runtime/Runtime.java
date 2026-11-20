@@ -105,6 +105,12 @@ public class Runtime {
     LOCK_DELEGATE.onObjectWaitDone(o);
   }
 
+  // Wraps the timeout Object.wait(long) passes to the JVM's
+  // native wait0, so that a wait Fray models blocks untimed and Fray delivers its timeout.
+  public static long onObjectWait0Timeout(long timeoutMillis) {
+    return LOCK_DELEGATE.onObjectWait0Timeout(timeoutMillis);
+  }
+
   public static void onObjectNotify(Object o) {
     LOCK_DELEGATE.onObjectNotify(o);
   }

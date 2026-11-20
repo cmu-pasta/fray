@@ -28,6 +28,10 @@ public class Delegate {
 
   public void onObjectWaitDone(Object o) {}
 
+  public long onObjectWait0Timeout(long timeoutMillis) {
+    return timeoutMillis;
+  }
+
   public void onObjectNotify(Object o) {}
 
   public void onObjectNotifyAll(Object o) {}
