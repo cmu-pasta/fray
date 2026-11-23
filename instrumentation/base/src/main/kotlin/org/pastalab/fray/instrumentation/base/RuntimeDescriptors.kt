@@ -20,7 +20,7 @@ object RuntimeDescriptors {
           "onLockUnlockDone" to "(Ljava/util/concurrent/locks/Lock;)V",
           "onLockNewCondition" to
               "(Ljava/util/concurrent/locks/Condition;Ljava/util/concurrent/locks/Lock;)V",
-          "onObjectWait" to "(Ljava/lang/Object;J)V",
+          "onObjectWait" to "(Ljava/lang/Object;J)J",
           "onObjectWaitDone" to "(Ljava/lang/Object;)V",
           "onObjectNotify" to "(Ljava/lang/Object;)V",
           "onObjectNotifyAll" to "(Ljava/lang/Object;)V",

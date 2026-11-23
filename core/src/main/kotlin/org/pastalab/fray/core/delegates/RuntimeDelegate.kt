@@ -92,13 +92,18 @@ class RuntimeDelegate(val context: RunContext, val synchronizer: DelegateSynchro
           { state },
       )
 
-  override fun onObjectWait(o: Any, timeout: Long) =
-      synchronizer.runInFrayStartNoSkip {
-        val timeout =
-            if (timeout == 0L) BLOCKED_OPERATION_NOT_TIMED
-            else timeout + context.timeController.currentTimeMillisRawNoIncrement()
-        context.objectWait(o, timeout)
-      }
+  override fun onObjectWait(o: Any, timeout: Long): Long =
+      synchronizer.runInFrayStart(
+          {
+            val blockedUntil =
+                if (timeout == 0L) BLOCKED_OPERATION_NOT_TIMED
+                else timeout + context.timeController.currentTimeMillisRawNoIncrement()
+            context.objectWait(o, blockedUntil).map { if (timeout < 0L) timeout else 0L }
+          },
+          false,
+          "",
+          { timeout },
+      )
 
   override fun onObjectWaitDone(o: Any) =
       synchronizer.runInFrayDoneNoSkip { context.objectWaitDone(o).map {} }

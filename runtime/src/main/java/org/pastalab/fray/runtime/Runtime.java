@@ -97,8 +97,8 @@ public class Runtime {
     LOCK_DELEGATE.onLockNewCondition(c, l);
   }
 
-  public static void onObjectWait(Object o, long timeout) {
-    LOCK_DELEGATE.onObjectWait(o, timeout);
+  public static long onObjectWait(Object o, long timeout) {
+    return LOCK_DELEGATE.onObjectWait(o, timeout);
   }
 
   public static void onObjectWaitDone(Object o) {

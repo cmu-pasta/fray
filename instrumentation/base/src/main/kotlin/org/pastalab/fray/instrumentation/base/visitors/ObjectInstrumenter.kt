@@ -23,6 +23,7 @@ class ObjectInstrumenter(cv: ClassVisitor) : ClassVisitorBase(cv, Object::class.
               descriptor,
               loadThis = true,
               loadArgs = true,
+              postCustomizer = { storeArg(0) },
           )
       return MethodExitVisitor(
           eMv,

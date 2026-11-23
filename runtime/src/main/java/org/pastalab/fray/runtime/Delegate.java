@@ -24,7 +24,9 @@ public class Delegate {
 
   public void onThreadEnd() {}
 
-  public void onObjectWait(Object o, long timeout) {}
+  public long onObjectWait(Object o, long timeout) {
+    return timeout;
+  }
 
   public void onObjectWaitDone(Object o) {}
 
