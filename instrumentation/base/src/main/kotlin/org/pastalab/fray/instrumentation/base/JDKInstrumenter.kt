@@ -32,6 +32,7 @@ fun instrumentClass(path: String, inputStream: InputStream): ByteArray {
     cv = VolatileFieldsInstrumenter(cv, instrumentingJdk = true, interleaveAllMemoryOps = false)
     cv = SleepInstrumenter(cv, true)
     cv = VarHandleInstrumenter(cv)
+    cv = UnsafeCallSiteInstrumenter(cv)
     cv =
         ReentrantReadWriteLockInstrumenter(
             cv,
