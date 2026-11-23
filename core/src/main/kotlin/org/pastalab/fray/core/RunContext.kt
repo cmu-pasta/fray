@@ -36,6 +36,7 @@ import org.pastalab.fray.core.concurrency.operations.*
 import org.pastalab.fray.core.concurrency.operations.InterruptionType
 import org.pastalab.fray.core.controllers.RunFinishedHandler
 import org.pastalab.fray.core.controllers.TimeController
+import org.pastalab.fray.core.map.WeakIdentityHashMap
 import org.pastalab.fray.core.scheduler.FrayIdeaPluginScheduler
 import org.pastalab.fray.core.utils.HelperThread
 import org.pastalab.fray.core.utils.SynchronizationManager
@@ -95,11 +96,23 @@ class RunContext(val config: Configuration) {
       }
   private val signalManager =
       ReferencedContextManager<SignalContext> {
-        val lockContext = lockManager.getContext(it)
-        verifyOrReport { it !is Condition }
-        val obj = ObjectNotifyContext(lockContext, it)
-        lockContext.signalContexts.add(obj)
-        obj
+        // A condition created in an earlier iteration has no context yet in this one, because
+        // done() clears this manager: rebuild it from the lock its newCondition() recorded. Without
+        // this, the fallback below makes the condition its own lock, so its awaiting thread is not
+        // the lock holder and Fray resumes it while the JVM parks it in the real await.
+        val conditionLock = (it as? Condition)?.let { condition -> lockOfCondition(condition) }
+        if (conditionLock != null) {
+          val lockContext = lockManager.getContext(conditionLock)
+          val conditionContext = ConditionSignalContext(lockContext, it as Condition)
+          lockContext.signalContexts.add(conditionContext)
+          conditionContext
+        } else {
+          val lockContext = lockManager.getContext(it)
+          verifyOrReport { it !is Condition }
+          val obj = ObjectNotifyContext(lockContext, it)
+          lockContext.signalContexts.add(obj)
+          obj
+        }
       }
   private val stampedLockManager =
       ReferencedContextManager<StampedLockContext> {
@@ -799,6 +812,7 @@ class RunContext(val config: Configuration) {
   fun lockUnlockDone(lock: Any) = verifyNoThrow { syncManager.wait(lockManager.getContext(lock)) }
 
   fun lockNewCondition(condition: Condition, lock: Lock) = verifyNoThrow {
+    rememberLockOfCondition(condition, lock)
     val lockContext = lockManager.getContext(lock)
     val conditionContext = ConditionSignalContext(lockContext, condition)
     lockContext.signalContexts.add(conditionContext)
@@ -1324,5 +1338,27 @@ class RunContext(val config: Configuration) {
 
   fun getThreadLocalRandomProbe() = verifyNoThrow {
     registeredThreads[Thread.currentThread().id]!!.localRandomProbe
+  }
+
+  companion object {
+    /**
+     * Each condition's lock, recorded when newCondition() runs under Fray and kept for as long as
+     * the condition lives, across iterations. The per-iteration context managers forget it at the
+     * end of the iteration that created the condition, but a condition held in a static field (a
+     * library's shared executor, for example) is still awaited in later iterations.
+     *
+     * The key is weak, so an entry goes when its condition does. The lock is held strongly: a
+     * ReentrantLock's condition references the lock's Sync, not the lock, so a weakly held lock
+     * could be collected while its condition is still in use, and the condition would fall back to
+     * being its own lock again.
+     */
+    private val conditionLocks = WeakIdentityHashMap<Condition, Lock>()
+
+    private fun rememberLockOfCondition(condition: Condition, lock: Lock) {
+      synchronized(conditionLocks) { conditionLocks[condition] = lock }
+    }
+
+    private fun lockOfCondition(condition: Condition): Lock? =
+        synchronized(conditionLocks) { conditionLocks[condition] }
   }
 }
