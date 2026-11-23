@@ -41,6 +41,7 @@ tasks.test {
             "${agent.base.archivesName.get()}-${agent.version}.jar"
     )
     jvmArgs("-Dfray.debug=true")
+    jvmArgs("--add-opens=java.base/java.util.concurrent=ALL-UNNAMED")
   }
 }
 
